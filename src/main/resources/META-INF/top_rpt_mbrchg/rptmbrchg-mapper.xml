@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="RptMbrchgMapper">
+	<select id="getMbrchgList" resultType="kr.co.toplac.toprptmbrchg.RptMbrchgVO" parameterType="HashMap">
+		SELECT  A.SUIM_RPT_NO suimRptNo
+		 	   ,A.SUIM_ACCEPT_NO suimAcceptNo
+		 	   ,A.TEAM_ID teamId
+			   ,getTopTmBscTeamName(A.team_id) teamNm 	   
+		 	   ,A.USER_NO userNo
+		 	   ,getTopMbrBscUserName(A.user_no) userNm		 	   		 	   
+		 	   ,A.POLICYHOLDER_NM policyholderNm
+		 	   ,A.BENEFICIARY_NM beneficiaryNm
+		 	   ,A.DAMAGED_NM damagedNm
+		 	   ,B.ACCIDENT_NO accidentNo
+		 	   ,B.POLICY_NO policyNo
+		 	   ,FROM_UNIXTIME(A.REG_DATE,'%Y-%m-%d') regDate
+		 	   ,C.reg_user_no regUserNo
+		 	   ,getTopMbrBscUserName(C.reg_user_no) regUserNm
+		 	   ,C.from_user_no fromUserNo
+		 	   ,getTopMbrBscUserName(C.from_user_no) fromUserNm
+		 	   ,C.to_user_no toUserNo
+			   ,getTopMbrBscUserName(C.to_user_no) toUserNm
+			   ,C.serial_no serialNo
+			   ,C.mbrchg_state mbrchgState
+			   ,getCodeValue('top_rpt_mbrchg', 'mbrchg_state', C.mbrchg_state) mbrchgStateVal
+			   ,C.mbrchg_reason mbrchgReason
+			   ,getCodeValue('top_rpt_mbrchg', 'mbrchg_reason', C.mbrchg_reason) mbrchgReasonVal
+			   ,from_unixtime(C.mbrchg_date,'%Y-%m-%d') mbrchgDate
+		  FROM top_rpt_head A
+		 INNER JOIN top_rpt_body B
+		    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		  LEFT OUTER JOIN top_rpt_mbrchg C
+		    ON A.SUIM_RPT_NO = C.SUIM_RPT_NO
+		 WHERE 1=1
+		   AND ( A.SUIM_RPT_TYPE1 = 14 OR A.SUIM_RPT_TYPE1 = 18 ) 
+		<choose>
+			<when test="code == 0">
+				AND A.SUIM_RPT_STATE = 0
+			 	AND A.DEL_DATE = 0
+				AND A.SUIM_RPT_NO NOT IN (SELECT SUIM_RPT_NO FROM top_rpt_mbrchg WHERE MBRCHG_STATE = 0)
+				<choose>
+			   		<when test="flag == 'user'">
+						AND A.USER_NO = #{user_no}
+						AND A.TEAM_ID = #{team_id}
+			   		</when> 
+			   		<when test="flag == 'team'">
+						AND A.TEAM_ID = #{team_id}
+			   		</when>
+		 			<when test="flag == 'center'">
+						AND A.TEAM_ID IN (SELECT TEAM_ID
+		 										FROM top_tm_bsc WHERE TEAM_GROUP_ORDER = (SELECT TEAM_GROUP_ORDER FROM top_tm_bsc WHERE TEAM_ID = #{team_id})) 
+			   		</when>
+			   	</choose>
+			</when>
+			
+			<when test="code == 1">
+				AND C.FROM_USER_NO = #{user_no}
+				AND C.MBRCHG_STATE = 0
+			</when>
+			
+			<when test="code == 2">
+				AND C.TO_USER_NO = #{user_no}
+				AND C.MBRCHG_STATE = 0
+			</when>
+			
+			<when test="code == 3">
+				<choose>
+			   		<when test="flag == 'user'">
+						AND (C.TO_USER_NO = #{user_no} OR C.FROM_USER_NO = #{user_no})
+			   		</when> 
+			   		
+			   		
+			   		<when test="flag == 'team'">
+						AND (
+								C.TO_USER_NO IN ( SELECT USER_NO
+											        FROM top_mbr_bsc
+											       WHERE TEAM_ID_MAIN = (SELECT TEAM_ID_MAIN FROM top_mbr_bsc WHERE USER_NO = #{user_no}) )
+						   OR C.FROM_USER_NO IN ( SELECT USER_NO
+											        FROM top_mbr_bsc
+											       WHERE TEAM_ID_MAIN = (SELECT TEAM_ID_MAIN FROM top_mbr_bsc WHERE USER_NO = #{user_no}) )				    
+							)
+			   		</when>
+		 			<when test="flag == 'center'">
+						AND (
+								C.TO_USER_NO IN ( SELECT USER_NO
+												    FROM top_mbr_bsc
+												   WHERE USER_STATE != 1
+													 AND TEAM_ID_MAIN in( SELECT TEAM_ID
+																			FROM top_tm_bsc
+																		   WHERE TEAM_GROUP_ORDER = ( SELECT TEAM_GROUP_ORDER
+																					 				    FROM top_tm_bsc
+																					 				   WHERE TEAM_ID = #{team_id} ) ) )
+						   OR C.FROM_USER_NO IN ( SELECT USER_NO
+												    FROM top_mbr_bsc
+												   WHERE USER_STATE != 1
+													 AND TEAM_ID_MAIN IN( SELECT TEAM_ID
+																			FROM top_tm_bsc
+																		   WHERE TEAM_GROUP_ORDER = ( SELECT TEAM_GROUP_ORDER
+																					 				    FROM top_tm_bsc
+																					 				   WHERE TEAM_ID = #{team_id} ) ) )											
+							)
+			   		</when>
+			   		<when test="flag =='admin'">
+						AND A.suim_rpt_no = C.suim_rpt_no			   			
+			   		</when>
+			   	</choose>
+			   	
+				
+			</when>
+		</choose>		   
+		
+		<!-- 보고서 접수일 -->
+		<if test="suimStartDate != ''">AND A.REG_DATE >= UNIX_TIMESTAMP(#{suimStartDate}) </if>
+		<if test="suimEndDate != ''">AND A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{suimEndDate},INTERVAL 1 day))</if>		   					
+   		
+   		<!-- 이첩 완료 및 회수일 -->
+ 		<if test="chgStartDate != ''">AND C.MBRCHG_DATE >= UNIX_TIMESTAMP(#{chgStartDate}) </if>
+		<if test="chgEndDate != ''">AND C.MBRCHG_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{chgEndDate},INTERVAL 1 day))</if>	
+	
+		<if test="srchAcceptNo != ''"><!-- 접수번호 -->
+			AND A.SUIM_ACCEPT_NO LIKE CONCAT('%',#{srchAcceptNo},'%')
+		</if>	
+			
+   		<if test="srchAccidentNo != ''"><!-- 사고번호 -->
+			AND B.ACCIDENT_NO LIKE CONCAT('%',#{srchAccidentNo},'%')
+		</if>	
+		
+		<if test="srchTmId != '999' and srchTmId != ''"><!-- 팀 -->
+			<choose>
+				<when test="code == 0">
+  					AND A.TEAM_ID = #{srchTmId}
+				</when>
+				<otherwise>
+					AND (
+							C.TO_TEAM_ID = #{srchTmId}
+					   OR C.FROM_TEAM_ID = #{srchTmId}						
+						)
+				</otherwise>
+			</choose>  			
+  			
+  			
+   		</if>
+   		
+		<if test="srchUserNm != ''"><!-- 담당자 -->
+			<choose>
+				<when test="code == 0">
+					AND A.USER_NO IN ( SELECT USER_NO
+										 FROM top_mbr_bsc
+										WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )
+				</when>
+				<otherwise>
+					AND (
+							C.TO_USER_NO IN ( SELECT USER_NO
+											   FROM top_mbr_bsc
+											  WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )
+					   OR C.FROM_USER_NO IN ( SELECT USER_NO
+											   FROM top_mbr_bsc
+											  WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )							
+						)			 
+				</otherwise>			
+			</choose>
+		</if>	
+
+   		<if test="srchPolicyNm != ''"><!-- 계약자 -->
+			AND ( 
+					A.POLICYHOLDER_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+					OR A.BENEFICIARY_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+					OR A.DAMAGED_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+				)
+		</if>
+		
+		<if test="code != 3">
+			GROUP BY A.SUIM_RPT_NO
+		</if>	
+		
+		<choose>
+			<when test="code == 0">
+ 				ORDER BY A.SUIM_RPT_NO DESC
+			</when>
+			<otherwise>
+				ORDER BY C.SERIAL_NO DESC
+			</otherwise>
+		</choose>
+		LIMIT #{limitPage}, #{sizePerPage} 
+	</select>
+
+	<select id="getMbrchgListCnt" resultType="Long" parameterType="HashMap">
+	
+		<if test="code != 3">
+		SELECT COUNT(*)
+		  FROM (
+		</if>
+					SELECT COUNT(*)
+					  FROM top_rpt_head A
+					 INNER JOIN top_rpt_body B
+					    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+					  LEFT OUTER JOIN top_rpt_mbrchg C
+					    ON A.SUIM_RPT_NO = C.SUIM_RPT_NO
+					 WHERE 1=1
+					   AND ( A.SUIM_RPT_TYPE1 = 14 OR  A.SUIM_RPT_TYPE1 = 18 )  
+					<choose>
+						<when test="code == 0">
+						 	AND A.SUIM_RPT_STATE = 0
+						 	AND A.DEL_DATE = 0
+							AND A.SUIM_RPT_NO NOT IN (SELECT SUIM_RPT_NO FROM top_rpt_mbrchg WHERE MBRCHG_STATE = 0)
+							<choose>
+						   		<when test="flag == 'user'">
+									AND A.USER_NO = #{user_no}
+									AND A.TEAM_ID = #{team_id}
+						   		</when> 
+						   		<when test="flag == 'team'">
+									AND A.TEAM_ID = #{team_id}
+						   		</when>
+					 			<when test="flag == 'center'">
+									AND A.TEAM_ID IN (SELECT TEAM_ID
+					 										FROM top_tm_bsc WHERE TEAM_GROUP_ORDER = (SELECT TEAM_GROUP_ORDER FROM top_tm_bsc WHERE TEAM_ID = #{team_id})) 
+						   		</when>
+						   	</choose>
+						</when>
+						
+						<when test="code == 1">
+							AND C.FROM_USER_NO = #{user_no}
+							AND C.MBRCHG_STATE = 0
+						</when>
+						
+						<when test="code == 2">
+							AND C.TO_USER_NO = #{user_no}
+							AND C.MBRCHG_STATE = 0
+						</when>
+						
+						<when test="code == 3">
+							<choose>
+						   		<when test="flag == 'user'">
+									AND (C.TO_USER_NO = #{user_no} OR C.FROM_USER_NO = #{user_no})
+						   		</when> 
+						   		
+						   		
+						   		<when test="flag == 'team'">
+									AND (
+											C.TO_USER_NO IN ( SELECT USER_NO
+														        FROM top_mbr_bsc
+														       WHERE TEAM_ID_MAIN = (SELECT TEAM_ID_MAIN FROM top_mbr_bsc WHERE USER_NO = #{user_no}) )
+									   OR C.FROM_USER_NO IN ( SELECT USER_NO
+														        FROM top_mbr_bsc
+														       WHERE TEAM_ID_MAIN = (SELECT TEAM_ID_MAIN FROM top_mbr_bsc WHERE USER_NO = #{user_no}) )				    
+										)
+						   		</when>
+					 			<when test="flag == 'center'">
+									AND (
+											C.TO_USER_NO IN ( SELECT USER_NO
+															    FROM top_mbr_bsc
+															   WHERE USER_STATE != 1
+																 AND TEAM_ID_MAIN in( SELECT TEAM_ID
+																						FROM top_tm_bsc
+																					   WHERE TEAM_GROUP_ORDER = ( SELECT TEAM_GROUP_ORDER
+																								 				    FROM top_tm_bsc
+																								 				   WHERE TEAM_ID = #{team_id} ) ) )
+									   OR C.FROM_USER_NO IN ( SELECT USER_NO
+															    FROM top_mbr_bsc
+															   WHERE USER_STATE != 1
+																 AND TEAM_ID_MAIN IN( SELECT TEAM_ID
+																						FROM top_tm_bsc
+																					   WHERE TEAM_GROUP_ORDER = ( SELECT TEAM_GROUP_ORDER
+																								 				    FROM top_tm_bsc
+																								 				   WHERE TEAM_ID = #{team_id} ) ) )											
+										)
+						   		</when>
+						   		<when test="flag =='admin'">
+									AND A.suim_rpt_no = C.suim_rpt_no			   			
+						   		</when>
+						   	</choose>
+						</when>
+					</choose>		   
+					
+					<!-- 보고서 접수일 -->
+					<if test="suimStartDate != ''">AND A.REG_DATE >= UNIX_TIMESTAMP(#{suimStartDate}) </if>
+					<if test="suimEndDate != ''">AND A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{suimEndDate},INTERVAL 1 day))</if>		   					
+			   		
+			   		<!-- 이첩 완료 및 회수일 -->
+			 		<if test="chgStartDate != ''">AND C.MBRCHG_DATE >= UNIX_TIMESTAMP(#{chgStartDate}) </if>
+					<if test="chgEndDate != ''">AND C.MBRCHG_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{chgEndDate},INTERVAL 1 day))</if>	
+				
+					<if test="srchAcceptNo != ''"><!-- 접수번호 -->
+						AND A.SUIM_ACCEPT_NO LIKE CONCAT('%',#{srchAcceptNo},'%')
+					</if>	
+						
+			   		<if test="srchAccidentNo != ''"><!-- 사고번호 -->
+						AND B.ACCIDENT_NO LIKE CONCAT('%',#{srchAccidentNo},'%')
+					</if>	
+					
+					<if test="srchTmId != '999' and srchTmId != ''"><!-- 팀 -->
+						<choose>
+							<when test="code == 0">
+			  					AND A.TEAM_ID = #{srchTmId}
+							</when>
+							<otherwise>
+								AND (
+										C.TO_TEAM_ID = #{srchTmId}
+								   OR C.FROM_TEAM_ID = #{srchTmId}						
+									)
+							</otherwise>
+						</choose>  			
+			  			
+			  			
+			   		</if>
+			   		
+					<if test="srchUserNm != ''"><!-- 담당자 -->
+						<choose>
+							<when test="code == 0">
+								AND A.USER_NO IN ( SELECT USER_NO
+													 FROM top_mbr_bsc
+													WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )
+							</when>
+							<otherwise>
+								AND (
+										C.TO_USER_NO IN ( SELECT USER_NO
+														   FROM top_mbr_bsc
+														  WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )
+								   OR C.FROM_USER_NO IN ( SELECT USER_NO
+														   FROM top_mbr_bsc
+														  WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )							
+									)			 
+							</otherwise>			
+						</choose>
+					</if>	
+			
+			   		<if test="srchPolicyNm != ''"><!-- 계약자 -->
+						AND ( 
+								A.POLICYHOLDER_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+								OR A.BENEFICIARY_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+								OR A.DAMAGED_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+							)
+					</if>
+					
+					<if test="code != 3">
+						GROUP BY A.SUIM_RPT_NO
+					</if>	
+					
+					<choose>
+						<when test="code == 0">
+			 				ORDER BY A.SUIM_RPT_NO DESC
+						</when>
+						<otherwise>
+							ORDER BY C.SERIAL_NO DESC
+						</otherwise>
+					</choose>
+			<if test="code != 3">
+			) aa
+			</if>
+	</select>
+		
+		
+		
+	<select id="getMbrchgListExcel" resultType="kr.co.toplac.toprptmbrchg.RptMbrchgVO" parameterType="HashMap">
+		SELECT  A.SUIM_RPT_NO suimRptNo
+		 	   ,A.SUIM_ACCEPT_NO suimAcceptNo
+		 	   ,A.TEAM_ID teamId
+			   ,getTopTmBscTeamName(A.team_id) teamNm 	   
+		 	   ,A.USER_NO userNo
+		 	   ,getTopMbrBscUserName(A.user_no) userNm		 	   		 	   
+		 	   ,A.POLICYHOLDER_NM policyholderNm
+		 	   ,A.BENEFICIARY_NM beneficiaryNm
+		 	   ,A.DAMAGED_NM damagedNm
+		 	   ,B.ACCIDENT_NO accidentNo
+		 	   ,B.POLICY_NO policyNo
+		 	   ,FROM_UNIXTIME(A.REG_DATE,'%Y-%m-%d') regDate
+		 	   ,C.reg_user_no regUserNo
+		 	   ,getTopMbrBscUserName(C.reg_user_no) regUserNm
+		 	   ,C.from_user_no fromUserNo
+		 	   ,getTopMbrBscUserName(C.from_user_no) fromUserNm
+		 	   ,C.to_user_no toUserNo
+			   ,getTopMbrBscUserName(C.to_user_no) toUserNm
+			   ,C.serial_no serialNo
+			   ,C.mbrchg_state mbrchgState
+			   ,getCodeValue('top_rpt_mbrchg', 'mbrchg_state', C.mbrchg_state) mbrchgStateVal
+			   ,C.mbrchg_reason mbrchgReason
+			   ,getCodeValue('top_rpt_mbrchg', 'mbrchg_reason', C.mbrchg_reason) mbrchgReasonVal
+			   ,from_unixtime(C.mbrchg_date,'%Y-%m-%d') mbrchgDate
+		  FROM top_rpt_head A
+		 INNER JOIN top_rpt_body B
+		    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		  LEFT OUTER JOIN top_rpt_mbrchg C
+		    ON A.SUIM_RPT_NO = C.SUIM_RPT_NO
+		 WHERE 1=1
+		   AND ( A.SUIM_RPT_TYPE1 = 14 OR A.SUIM_RPT_TYPE1 = 18 )
+		<choose>
+			<when test="code == 0">
+				AND A.SUIM_RPT_STATE = 0
+				AND A.DEL_DATE = 0
+				AND A.SUIM_RPT_NO NOT IN (SELECT SUIM_RPT_NO FROM top_rpt_mbrchg WHERE MBRCHG_STATE = 0)
+				<choose>
+			   		<when test="flag == 'user'">
+						AND A.USER_NO = #{user_no}
+						AND A.TEAM_ID = #{team_id}
+			   		</when> 
+			   		<when test="flag == 'team'">
+						AND A.TEAM_ID = #{team_id}
+			   		</when>
+		 			<when test="flag == 'center'">
+						AND A.TEAM_ID IN (SELECT TEAM_ID
+		 										FROM top_tm_bsc WHERE TEAM_GROUP_ORDER = (SELECT TEAM_GROUP_ORDER FROM top_tm_bsc WHERE TEAM_ID = #{team_id})) 
+			   		</when>
+			   	</choose>
+			</when>
+			
+			<when test="code == 1">
+				AND C.FROM_USER_NO = #{user_no}
+				AND C.MBRCHG_STATE = 0
+			</when>
+			
+			<when test="code == 2">
+				AND C.TO_USER_NO = #{user_no}
+				AND C.MBRCHG_STATE = 0
+			</when>
+			
+			<when test="code == 3">
+				<choose>
+			   		<when test="flag == 'user'">
+						AND (C.TO_USER_NO = #{user_no} OR C.FROM_USER_NO = #{user_no})
+			   		</when> 
+			   		
+			   		
+			   		<when test="flag == 'team'">
+						AND (
+								C.TO_USER_NO IN ( SELECT USER_NO
+											        FROM top_mbr_bsc
+											       WHERE TEAM_ID_MAIN = (SELECT TEAM_ID_MAIN FROM top_mbr_bsc WHERE USER_NO = #{user_no}) )
+						   OR C.FROM_USER_NO IN ( SELECT USER_NO
+											        FROM top_mbr_bsc
+											       WHERE TEAM_ID_MAIN = (SELECT TEAM_ID_MAIN FROM top_mbr_bsc WHERE USER_NO = #{user_no}) )				    
+							)
+			   		</when>
+		 			<when test="flag == 'center'">
+						AND (
+								C.TO_USER_NO IN ( SELECT USER_NO
+												    FROM top_mbr_bsc
+												   WHERE USER_STATE != 1
+													 AND TEAM_ID_MAIN in( SELECT TEAM_ID
+																			FROM top_tm_bsc
+																		   WHERE TEAM_GROUP_ORDER = ( SELECT TEAM_GROUP_ORDER
+																					 				    FROM top_tm_bsc
+																					 				   WHERE TEAM_ID = #{team_id} ) ) )
+						   OR C.FROM_USER_NO IN ( SELECT USER_NO
+												    FROM top_mbr_bsc
+												   WHERE USER_STATE != 1
+													 AND TEAM_ID_MAIN IN( SELECT TEAM_ID
+																			FROM top_tm_bsc
+																		   WHERE TEAM_GROUP_ORDER = ( SELECT TEAM_GROUP_ORDER
+																					 				    FROM top_tm_bsc
+																					 				   WHERE TEAM_ID = #{team_id} ) ) )											
+							)
+			   		</when>
+			   		<when test="flag =='admin'">
+						AND A.suim_rpt_no = C.suim_rpt_no			   			
+			   		</when>
+			   	</choose>
+			   	
+				
+			</when>
+		</choose>		   
+		
+		<!-- 보고서 접수일 -->
+		<if test="suimStartDate != ''">AND A.REG_DATE >= UNIX_TIMESTAMP(#{suimStartDate}) </if>
+		<if test="suimEndDate != ''">AND A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{suimEndDate},INTERVAL 1 day))</if>		   					
+   		
+   		<!-- 이첩 완료 및 회수일 -->
+ 		<if test="chgStartDate != ''">AND C.MBRCHG_DATE >= UNIX_TIMESTAMP(#{chgStartDate}) </if>
+		<if test="chgEndDate != ''">AND C.MBRCHG_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{chgEndDate},INTERVAL 1 day))</if>	
+	
+		<if test="srchAcceptNo != ''"><!-- 접수번호 -->
+			AND A.SUIM_ACCEPT_NO LIKE CONCAT('%',#{srchAcceptNo},'%')
+		</if>	
+			
+   		<if test="srchAccidentNo != ''"><!-- 사고번호 -->
+			AND B.ACCIDENT_NO LIKE CONCAT('%',#{srchAccidentNo},'%')
+		</if>	
+		
+		<if test="srchTmId != '999' and srchTmId != ''"><!-- 팀 -->
+			<choose>
+				<when test="code == 0">
+  					AND A.TEAM_ID = #{srchTmId}
+				</when>
+				<otherwise>
+					AND (
+							C.TO_TEAM_ID = #{srchTmId}
+					   OR C.FROM_TEAM_ID = #{srchTmId}						
+						)
+				</otherwise>
+			</choose>  			
+  			
+  			
+   		</if>
+   		
+		<if test="srchUserNm != ''"><!-- 담당자 -->
+			<choose>
+				<when test="code == 0">
+					AND A.USER_NO IN ( SELECT USER_NO
+										 FROM top_mbr_bsc
+										WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )
+				</when>
+				<otherwise>
+					AND (
+							C.TO_USER_NO IN ( SELECT USER_NO
+											   FROM top_mbr_bsc
+											  WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )
+					   OR C.FROM_USER_NO IN ( SELECT USER_NO
+											   FROM top_mbr_bsc
+											  WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%') )							
+						)			 
+				</otherwise>			
+			</choose>
+		</if>	
+
+   		<if test="srchPolicyNm != ''"><!-- 계약자 -->
+			AND ( 
+					A.POLICYHOLDER_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+					OR A.BENEFICIARY_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+					OR A.DAMAGED_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+				)
+		</if>
+		
+		<if test="code != 3">
+			GROUP BY A.SUIM_RPT_NO
+		</if>	
+		
+		<choose>
+			<when test="code == 0">
+ 				ORDER BY A.SUIM_RPT_NO DESC
+			</when>
+			<otherwise>
+				ORDER BY C.SERIAL_NO DESC
+			</otherwise>
+		</choose>
+	</select>		
+		
+		
+		
+		
+	
+	<insert id="insRptOut" parameterType="HashMap">
+		INSERT INTO top_rpt_mbrchg
+		(
+			 suim_rpt_no
+			,reg_user_no
+			,from_user_no
+			,from_team_id
+			,to_user_no
+			,to_team_id
+			,mbrchg_state
+			,mbrchg_reason
+			,reg_date	
+		)
+		VALUES
+		(
+			 #{suimRptNo}
+			,#{sessUserNo}
+			,#{fromUserNo}
+			,#{fromTeamId}
+			,#{toUserNo}
+			,#{toTeamId}
+			,0
+			,#{mbrchgReason}
+			,unix_timestamp(now())
+		)
+	</insert>
+	
+	<update id="udtRptOutCancel" parameterType="HashMap">
+		UPDATE top_rpt_mbrchg
+	       SET mbrchg_state = 2
+	          ,mbrchg_date = UNIX_TIMESTAMP(now())
+	     WHERE serial_no = #{serialNo}
+	</update>
+
+	<update id="udtRptIn" parameterType="HashMap">
+		UPDATE top_rpt_mbrchg
+	       SET mbrchg_state = 1
+	          ,mbrchg_date = UNIX_TIMESTAMP(now())
+	     WHERE serial_no = #{serialNo}
+	</update>
+
+	<update id="udtRptHeadUser" parameterType="HashMap">
+		UPDATE top_rpt_head
+	   	   SET team_id = #{sessTeamId}
+	   	      ,user_no = #{sessUserNo}
+	   	 WHERE suim_rpt_no = #{suimRptNo}
+	</update>	
+	
+ 	<select id="pmsTeamList" resultType="kr.co.toplac.topteam.TopTmBscVO" parameterType="HashMap">
+		SELECT team_id, team_name, team_level
+		  FROM top_tm_bsc
+ 		 WHERE 1=1
+ 		   AND team_level != 2
+		<choose>
+			<when test="flag == 'user' or flag == 'team'">
+				AND team_id = #{team_id}
+			</when>
+			<when test="flag == 'center'">
+				AND team_group_order = (SELECT team_group_order
+		  							      FROM top_tm_bsc
+										 WHERE team_id = #{team_id})
+			</when>
+		</choose>
+		 ORDER BY 
+			team_group_order desc, team_order desc
+	</select>
+	
+</mapper>
+

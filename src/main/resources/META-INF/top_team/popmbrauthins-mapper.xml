@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrAuthIns">
+	
+	<select  id="userAuth" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrAuthVO">
+		SELECT
+			serial_no,
+			user_no,
+			mbr_pms_1,
+			mbr_pms_2,
+			mbr_pms_3,
+			mbr_pms_4,
+			mbr_pms_5,
+			mbr_pms_6,
+			mbr_pms_7,
+			mbr_pms_8,
+			mbr_pms_9,
+			mbr_pms_10,
+			mbr_pms_11,
+			mbr_pms_12,
+			mbr_pms_13,
+			mbr_pms_14,
+			mbr_pms_15,
+			mbr_pms_16,
+			mbr_pms_17,
+			mbr_pms_18,
+			mbr_pms_19,
+			mbr_pms_20,
+			mbr_pms_21,
+			mbr_pms_22,
+			mbr_pms_23,
+			mbr_pms_24,
+			mbr_pms_25,
+			mbr_pms_26,
+			mbr_pms_27,
+			mbr_pms_28,
+			mbr_pms_29,
+			mbr_pms_30,
+			mbr_pms_31,
+			mbr_pms_32,
+			mbr_pms_33,
+			mbr_pms_34,
+			mbr_pms_35,
+			mbr_pms_36,
+			mbr_pms_37,
+			mbr_pms_38,
+			mbr_pms_39,
+			mbr_pms_40,
+			mbr_pms_41,
+			mbr_pms_42,
+			mbr_pms_43,
+			mbr_pms_44,
+			mbr_pms_45,
+			mbr_pms_46,
+			mbr_pms_47,
+			reg_date
+		FROM
+			top_mbr_pms
+		WHERE
+			user_no = #{user_no}
+	</select>
+	
+	
+	<insert id ="userAuthIns" parameterType="kr.co.toplac.topteam.TopMbrAuthVO">
+	
+		INSERT INTO top_mbr_pms
+			(
+				user_no, mbr_pms_1, mbr_pms_2, mbr_pms_3, mbr_pms_4, mbr_pms_5, mbr_pms_6, mbr_pms_7, mbr_pms_8,
+				mbr_pms_9, mbr_pms_10, mbr_pms_11, mbr_pms_12, mbr_pms_13, mbr_pms_14, mbr_pms_15, mbr_pms_16, mbr_pms_17, 
+				mbr_pms_18,mbr_pms_19,mbr_pms_20,mbr_pms_21,mbr_pms_22,mbr_pms_23,mbr_pms_24,mbr_pms_25,mbr_pms_26, mbr_pms_27,mbr_pms_28,mbr_pms_29,mbr_pms_30,mbr_pms_31,mbr_pms_32,mbr_pms_33,mbr_pms_34,mbr_pms_35,mbr_pms_36,mbr_pms_37,mbr_pms_38,mbr_pms_39,mbr_pms_40,mbr_pms_41,mbr_pms_42,mbr_pms_43,mbr_pms_44,mbr_pms_45,mbr_pms_46,mbr_pms_47,reg_date
+			)	
+		VALUES
+			(
+				#{user_no}, #{mbr_pms_1}, #{mbr_pms_2}, #{mbr_pms_3}, #{mbr_pms_4}, #{mbr_pms_5}, #{mbr_pms_6}, #{mbr_pms_7}, #{mbr_pms_8}, 
+				#{mbr_pms_9}, #{mbr_pms_10}, #{mbr_pms_11}, #{mbr_pms_12}, #{mbr_pms_13}, #{mbr_pms_14}, #{mbr_pms_15}, #{mbr_pms_16}, #{mbr_pms_17}, 
+				#{mbr_pms_18},#{mbr_pms_19},#{mbr_pms_20},#{mbr_pms_21},#{mbr_pms_22},#{mbr_pms_23},#{mbr_pms_24},#{mbr_pms_25},#{mbr_pms_26}, #{mbr_pms_27},#{mbr_pms_28},#{mbr_pms_29},#{mbr_pms_30},#{mbr_pms_31},#{mbr_pms_32},#{mbr_pms_33},#{mbr_pms_34},#{mbr_pms_35},#{mbr_pms_36},#{mbr_pms_37},#{mbr_pms_38},#{mbr_pms_39},#{mbr_pms_40},#{mbr_pms_41},#{mbr_pms_42},#{mbr_pms_43},#{mbr_pms_44},#{mbr_pms_45},#{mbr_pms_46},#{mbr_pms_47},unix_timestamp(now())  
+			)
+			
+	</insert>
+	
+	<insert id = "userAuthLogIns" parameterType="kr.co.toplac.topteam.TopMbrAuthVO">
+	
+		INSERT INTO top_mbr_pms_log
+			(
+				user_no, mbr_pms_1, mbr_pms_2, mbr_pms_3, mbr_pms_4, mbr_pms_5, mbr_pms_6, mbr_pms_7, mbr_pms_8,
+				mbr_pms_9, mbr_pms_10, mbr_pms_11, mbr_pms_12, mbr_pms_13, mbr_pms_14, mbr_pms_15, mbr_pms_16, mbr_pms_17, 
+				mbr_pms_18, mbr_pms_19, mbr_pms_20,mbr_pms_21,mbr_pms_22,mbr_pms_23,mbr_pms_24,mbr_pms_25,mbr_pms_26,mbr_pms_27,mbr_pms_28,mbr_pms_29,mbr_pms_30,mbr_pms_31,mbr_pms_32,mbr_pms_33,mbr_pms_34,mbr_pms_35,mbr_pms_36,mbr_pms_37,mbr_pms_38,mbr_pms_39,mbr_pms_40,mbr_pms_41,mbr_pms_42,mbr_pms_43,mbr_pms_44,mbr_pms_45,mbr_pms_46,mbr_pms_47,reg_user, reg_date
+			)	
+		VALUES
+			(
+				#{user_no}, #{mbr_pms_1}, #{mbr_pms_2}, #{mbr_pms_3}, #{mbr_pms_4}, #{mbr_pms_5}, #{mbr_pms_6}, #{mbr_pms_7}, #{mbr_pms_8}, 
+				#{mbr_pms_9}, #{mbr_pms_10}, #{mbr_pms_11}, #{mbr_pms_12}, #{mbr_pms_13}, #{mbr_pms_14}, #{mbr_pms_15}, #{mbr_pms_16}, #{mbr_pms_17}, 
+				#{mbr_pms_18}, #{mbr_pms_19},#{mbr_pms_20},#{mbr_pms_21},#{mbr_pms_22},#{mbr_pms_23},#{mbr_pms_24},#{mbr_pms_25},#{mbr_pms_26},#{mbr_pms_27},#{mbr_pms_28},#{mbr_pms_29},#{mbr_pms_30},#{mbr_pms_31},#{mbr_pms_32},#{mbr_pms_33},#{mbr_pms_34},#{mbr_pms_35},#{mbr_pms_36},#{mbr_pms_37},#{mbr_pms_38},#{mbr_pms_39},#{mbr_pms_40},#{mbr_pms_41},#{mbr_pms_42},#{mbr_pms_43},#{mbr_pms_44},#{mbr_pms_45},#{mbr_pms_46},#{mbr_pms_47},#{reg_user}, unix_timestamp(now())  
+			)
+	
+	</insert>
+	
+	<delete id ="userAuthDel" parameterType="String">
+	
+		DELETE FROM 
+			top_mbr_pms
+		WHERE
+			user_no = #{user_no}
+	</delete>
+	
+	
+	
+	
+	<!-- 인사관리 - 전산권한 부분 재 작성 -->	
+	<select id="selectMbrAuth" parameterType="String" resultType="HashMap">
+		SELECT serial_no
+			  ,user_no
+			  ,mbr_pms_1
+			  ,mbr_pms_2
+			  ,mbr_pms_3
+			  ,mbr_pms_4
+			  ,mbr_pms_5
+			  ,mbr_pms_6
+			  ,mbr_pms_7
+			  ,mbr_pms_8
+			  ,mbr_pms_9
+			  ,mbr_pms_10
+			  ,mbr_pms_11
+			  ,mbr_pms_12
+			  ,mbr_pms_13
+			  ,mbr_pms_14
+			  ,mbr_pms_15
+			  ,mbr_pms_16
+			  ,mbr_pms_17
+			  ,mbr_pms_18
+			  ,mbr_pms_19
+			  ,mbr_pms_20
+			  ,mbr_pms_21
+			  ,mbr_pms_22
+			  ,mbr_pms_23
+			  ,mbr_pms_24
+			  ,mbr_pms_25
+			  ,mbr_pms_26
+			  ,mbr_pms_27
+			  ,mbr_pms_28
+			  ,mbr_pms_28_v
+			  ,mbr_pms_29
+			  ,mbr_pms_30
+			  ,mbr_pms_31
+			  ,mbr_pms_32
+			  ,mbr_pms_33
+			  ,mbr_pms_34
+			  ,mbr_pms_35
+			  ,mbr_pms_36
+			  ,mbr_pms_37
+			  ,mbr_pms_38
+			  ,mbr_pms_39
+			  ,mbr_pms_40
+			  ,mbr_pms_41
+			  ,mbr_pms_42
+			  ,mbr_pms_43
+			  ,mbr_pms_44
+			  ,mbr_pms_45
+			  ,mbr_pms_46
+			  ,mbr_pms_47
+			  ,reg_date
+		  FROM top_mbr_pms
+		 WHERE user_no = #{_parameter}
+	</select>
+	
+	<update id="updateMbrAuth" parameterType="HashMap">
+		UPDATE top_mbr_pms 
+		   SET mbr_pms_1 = #{mbr_pms_1}
+		   	  ,mbr_pms_2 = #{mbr_pms_2}
+		   	  ,mbr_pms_3 = #{mbr_pms_3}
+		   	  ,mbr_pms_4 = #{mbr_pms_4}
+		   	  ,mbr_pms_5 = #{mbr_pms_5}
+		   	  ,mbr_pms_6 = #{mbr_pms_6}
+		   	  ,mbr_pms_7 = #{mbr_pms_7}
+		   	  ,mbr_pms_8 = #{mbr_pms_8}
+		   	  ,mbr_pms_9 = #{mbr_pms_9}
+		   	  ,mbr_pms_10 = #{mbr_pms_10}
+		   	  ,mbr_pms_11 = #{mbr_pms_11}
+		   	  ,mbr_pms_12 = #{mbr_pms_12}
+		   	  ,mbr_pms_13 = #{mbr_pms_13}
+		   	  ,mbr_pms_14 = #{mbr_pms_14}
+		   	  ,mbr_pms_15 = #{mbr_pms_15}
+		   	  ,mbr_pms_16 = #{mbr_pms_16}
+		   	  ,mbr_pms_17 = #{mbr_pms_17}
+		   	  ,mbr_pms_18 = #{mbr_pms_18}
+		   	  ,mbr_pms_19 = #{mbr_pms_19}
+		   	  ,mbr_pms_20 = #{mbr_pms_20}
+		   	  ,mbr_pms_21 = #{mbr_pms_21}
+		   	  ,mbr_pms_22 = #{mbr_pms_22}
+		   	  ,mbr_pms_23 = #{mbr_pms_23}
+		   	  ,mbr_pms_24 = #{mbr_pms_24}
+		   	  ,mbr_pms_25 = #{mbr_pms_25}
+		   	  ,mbr_pms_26 = #{mbr_pms_26}
+		   	  ,mbr_pms_27 = #{mbr_pms_27}
+		   	  ,mbr_pms_28 = #{mbr_pms_28}
+		   	  ,mbr_pms_28_v = #{mbr_pms_28_v}
+		   	  ,mbr_pms_29 = #{mbr_pms_29}
+		   	  ,mbr_pms_30 = #{mbr_pms_30}
+		   	  ,mbr_pms_31 = #{mbr_pms_31}
+		   	  ,mbr_pms_32 = #{mbr_pms_32}
+		   	  ,mbr_pms_33 = #{mbr_pms_33}
+		   	  ,mbr_pms_34 = #{mbr_pms_34}
+		   	  ,mbr_pms_35 = #{mbr_pms_35}
+		   	  ,mbr_pms_36 = #{mbr_pms_36}
+		   	  ,mbr_pms_37 = #{mbr_pms_37}
+		   	  ,mbr_pms_38 = #{mbr_pms_38}
+		   	  ,mbr_pms_39 = #{mbr_pms_39}
+		   	  ,mbr_pms_40 = #{mbr_pms_40}
+		   	  ,mbr_pms_41 = #{mbr_pms_41}
+		   	  ,mbr_pms_42 = #{mbr_pms_42}
+		   	  ,mbr_pms_43 = #{mbr_pms_43}
+		   	  ,mbr_pms_44 = #{mbr_pms_44}
+		   	  ,mbr_pms_45 = #{mbr_pms_45}
+		   	  ,mbr_pms_46 = #{mbr_pms_46}
+		   	  ,mbr_pms_47 = #{mbr_pms_47}
+		 WHERE user_no = #{userNo} 
+	</update>
+	
+	<update id="insertMbrAuthLog" parameterType="HashMap">
+		INSERT INTO top_mbr_pms_log
+		(
+			 mbr_pms_1 
+			,mbr_pms_2 
+			,mbr_pms_3
+			,mbr_pms_4 
+			,mbr_pms_5 
+			,mbr_pms_6 
+			,mbr_pms_7
+			,mbr_pms_8
+			,mbr_pms_9
+			,mbr_pms_10
+			,mbr_pms_11
+			,mbr_pms_12 
+			,mbr_pms_13 
+			,mbr_pms_14
+			,mbr_pms_15
+			,mbr_pms_16
+			,mbr_pms_17 
+			,mbr_pms_18
+			,mbr_pms_19
+			,mbr_pms_20 
+			,mbr_pms_21 
+			,mbr_pms_22
+			,mbr_pms_23 
+			,mbr_pms_24 
+			,mbr_pms_25 
+			,mbr_pms_26
+			,mbr_pms_27 
+			,mbr_pms_28
+			,mbr_pms_29
+			,mbr_pms_30
+			,mbr_pms_31
+			,mbr_pms_32
+			,mbr_pms_33
+			,mbr_pms_34
+			,mbr_pms_35
+			,mbr_pms_36
+			,mbr_pms_37
+			,mbr_pms_38
+			,mbr_pms_39
+			,mbr_pms_40
+			,mbr_pms_41
+			,mbr_pms_42
+			,mbr_pms_43
+			,mbr_pms_44
+			,mbr_pms_45
+			,mbr_pms_46
+			,mbr_pms_47
+			,user_no
+			,reg_user
+			,reg_date
+		)
+		VALUES
+		(
+			 #{mbr_pms_1} 
+			,#{mbr_pms_2} 
+			,#{mbr_pms_3}
+			,#{mbr_pms_4} 
+			,#{mbr_pms_5} 
+			,#{mbr_pms_6}
+			,#{mbr_pms_7}
+			,#{mbr_pms_8}
+			,#{mbr_pms_9}
+			,#{mbr_pms_10}
+			,#{mbr_pms_11}
+			,#{mbr_pms_12} 
+			,#{mbr_pms_13} 
+			,#{mbr_pms_14}
+			,#{mbr_pms_15}
+			,#{mbr_pms_16}
+			,#{mbr_pms_17} 
+			,#{mbr_pms_18}
+			,#{mbr_pms_19}
+			,#{mbr_pms_20} 
+			,#{mbr_pms_21} 
+			,#{mbr_pms_22}
+			,#{mbr_pms_23} 
+			,#{mbr_pms_24} 
+			,#{mbr_pms_25} 
+			,#{mbr_pms_26}
+			,#{mbr_pms_27} 
+			,#{mbr_pms_28}
+			,#{mbr_pms_29} 
+			,#{mbr_pms_30}
+			,#{mbr_pms_31}
+			,#{mbr_pms_32}
+			,#{mbr_pms_33}
+			,#{mbr_pms_34}
+			,#{mbr_pms_35}
+			,#{mbr_pms_36}
+			,#{mbr_pms_37}
+			,#{mbr_pms_38}
+			,#{mbr_pms_39}
+			,#{mbr_pms_40}
+			,#{mbr_pms_41}
+			,#{mbr_pms_42}
+			,#{mbr_pms_43}
+			,#{mbr_pms_44}
+			,#{mbr_pms_45}
+			,#{mbr_pms_46}
+			,#{mbr_pms_47}
+			,#{userNo}
+			,#{sessUserNo}
+			,UNIX_TIMESTAMP(now())		
+		) 
+		  
+	</update>
+	
+	<select id="selectPmsLength" resultType="Integer" parameterType="hashmap">
+		SELECT COUNT(*)-3  
+		  FROM information_schema.columns 
+		 WHERE TABLE_NAME = 'top_mbr_pms'
+		   AND TABLE_SCHEMA = #{dbName}
+	</select>
+	
+		
+</mapper>

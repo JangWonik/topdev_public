@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Suitability12UnitMapper">
+
+	<select id="Suit12_U" parameterType="java.util.List" resultType="kr.co.toplac.lslog.Suitability12UnitVO">
+		select a.user_no user_id, b.user_name name, b.team_id_main team_id, getTopTmBscTeamName(b.team_id_main) team_name
+				, a.rstPptyNvCpltYn, a.reg_date, a.close_date end_date
+		from top_suitability_12 a, top_mbr_bsc b
+		where (a.reg_date >= unix_timestamp(#{fromdate}) and a.reg_date &lt; unix_timestamp(#{todate}))
+		or (a.close_date >= unix_timestamp(#{fromdate}) and a.close_date &lt; unix_timestamp(#{todate}))
+		and a.user_no = b.user_no
+		group by a.user_no
+	</select>
+
+	<select id="Suit12_UList" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.Suitability12UnitVO">
+		select 
+		ifnull(reg_m, 0) reg_m, ifnull(reg_y, 0) reg_y, ifnull(endok_m, 0) endok_m, ifnull(endok_y, 0) endok_y, 
+		ifnull(endno_m, 0) endno_m, ifnull(endno_y, 0) endno_y, 
+		ifnull(endok_m + endno_m, 0) end_sum_m, ifnull(endok_y + endno_y, 0) end_sum_y, 
+		ifnull(rid_mi, 0) rid_mi, 
+		ifnull(price_g*30000, 0) price_g, ifnull(price_f*30000, 0) price_f, 
+		ifnull(price_g*30000 + price_f*30000, 0) price_sum
+		from
+		(select count(suim_rpt_no) reg_m 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and suim_rpt_state!='3' 
+		and reg_date >= unix_timestamp(#{fromdate}) and reg_date &lt; unix_timestamp(#{todate})
+		)a,
+		(select count(suim_rpt_no) reg_y 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and suim_rpt_state!='3' 
+		and reg_date>='20160301' and reg_date &lt; '20160331'
+		)b,
+		(select count(suim_rpt_no) endok_m 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and rstPptyNvCpltYn='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate})
+		)c,
+		(select count(suim_rpt_no) endok_y 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and rstPptyNvCpltYn!='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate})
+		)d,
+		(select count(suim_rpt_no) endno_m 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and rstPptyNvCpltYn='1' 
+		and close_date>='20160301' and close_date &lt; '20160331'
+		)e,
+		(select count(suim_rpt_no) endno_y 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and rstPptyNvCpltYn!='1' 
+		and close_date>='20160301' and close_date &lt; '20160331'
+		)f,
+		(select count(suim_rpt_no) rid_mi 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and suim_rpt_state &lt; '2'
+		)g,
+		(select count(suim_rpt_no) price_g 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and rstPptyNvCpltYn='1' and bd_type='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate})
+		)h,
+		(select count(suim_rpt_no) price_f 
+		from top_suitability_12 
+		where user_no = #{tmpUI} and rstPptyNvCpltYn='1' and bd_type!='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate})
+		)i;
+	</select>
+
+</mapper>

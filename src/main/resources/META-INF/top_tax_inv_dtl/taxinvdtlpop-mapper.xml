@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="TaxInvDtlPopMapper">
+
+	<select id="getTaxInvDtlPop" parameterType="String" resultType="kr.co.toplac.toptaxinv.TopTaxInvDtlCompositVO" >
+		SELECT a.rpt_invoice_no, a.suim_rpt_no
+			 	,a.tax_invoice_no
+			 	,a.tax_date
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%Y'), '') tax_date_y
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%y'), '') tax_date_y2
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%m'), '') tax_date_m
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%d'), '') tax_date_d
+			 	,a.amt_total
+			 	,c.suim_accept_no
+			 	,c.ptnr_id
+			 	,c.policyholder_nm
+			 	,c.beneficiary_nm
+			 	,c.damaged_nm
+			 	,b.ptnr_name, b.ptnr_ceo_nm
+			 	,b.ptnr_biz_reg_no, b.ptnr_biz_type1, b.ptnr_biz_type2
+			 	,b.ptnr_postcode, b.ptnr_addr1, b.ptnr_addr2
+			 	,(SELECT policy_no FROM top_rpt_body WHERE suim_rpt_no = a.suim_rpt_no) policy_no
+		FROM top_rpt_invoice a, top_ptnr_bsc b, top_rpt_head c, top_rpt_body d
+		WHERE a.rpt_invoice_no = #{rpt_invoice_no}
+		AND	c.ptnr_id = b.ptnr_id 
+		AND	a.suim_rpt_no = c.suim_rpt_no
+		AND c.suim_rpt_no = d.suim_rpt_no
+	</select>
+
+	<select id="getPrimBizTaxInvDtlPop" parameterType="String" resultType="kr.co.toplac.toptaxinv.TopTaxInvDtlCompositVO">
+		SELECT a.rpt_invoice_no, a.suim_rpt_no
+			 	,a.tax_invoice_no
+			 	,a.tax_date
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%Y'), '') tax_date_y
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%y'), '') tax_date_y2
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%m'), '') tax_date_m
+			 	,IF(a.tax_date != null and a.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%d'), '') tax_date_d
+			 	,a.amt_total
+			 	,c.suim_accept_no
+			 	,c.ptnr_id
+			 	,c.policyholder_nm
+			 	,c.beneficiary_nm
+			 	,c.damaged_nm
+			 	,b.ptnr_name, b.ptnr_ceo_nm
+			 	,b.ptnr_biz_reg_no, b.ptnr_biz_type1, b.ptnr_biz_type2
+			 	,b.ptnr_postcode, b.ptnr_addr1, b.ptnr_addr2
+			 	,(SELECT policy_no FROM top_rpt_body WHERE suim_rpt_no = a.suim_rpt_no) policy_no
+		FROM top_prim_biz_inv a, top_ptnr_bsc b, top_prim_biz_rpt_head c, top_prim_biz_rpt_body d
+		WHERE a.rpt_invoice_no = #{rpt_invoice_no}
+		AND	c.ptnr_id = b.ptnr_id 
+		AND	a.suim_rpt_no = c.suim_rpt_no
+		AND c.suim_rpt_no = d.suim_rpt_no
+	</select>                    
+
+</mapper>

@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PrimBizSuimUdtMapper">
+
+	<select id="getPrimBizSuimUdt" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		
+		select
+		a.suim_rpt_no,           
+		a.suim_accept_no,        
+		a.suim_close_no,         
+		a.suim_rpt_type1,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1", a.suim_rpt_type1) suim_rpt_type1_nm,
+		a.suim_rpt_state,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_state", a.suim_rpt_state) suim_rpt_state_nm,        
+		a.suim_rpt_type1_close12,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1_close12", a.suim_rpt_type1_close12) suim_rpt_type1_close12_nm,
+		a.team_id,
+		getTopTmBscTeamName(a.team_id) team_name,              
+		a.user_no,
+		getTopMbrBscUserName(a.user_no) user_name,              
+		a.ptnr_id,
+		getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name,              
+		a.ptnr_dept_id,
+		<!-- getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_name, -->
+		(SELECT IFNULL(ptnr_tm_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no) AS ptnr_dept_name,		
+		a.ptnr_mbr_no,
+		getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_name,           
+		a.ptnr_dept_nm_4edit,    
+		a.ptnr_mbr_nm_4edit,    
+		a.policyholder_nm,       
+		a.beneficiary_nm,        
+		a.damaged_nm,            
+		a.suim_rpt_ea,
+		DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d') accident_date,
+		DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date,       
+		DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d') suim_cancel_date,             
+		DATE_FORMAT(FROM_UNIXTIME(a.lawsuit_date), '%Y-%m-%d') lawsuit_date,     
+		DATE_FORMAT(FROM_UNIXTIME(a.suim_rpt_aprv_date), '%Y-%m-%d') suim_rpt_aprv_date,         
+		DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') close_date,   
+		DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d') del_date,           
+		a.lock_flag,
+		b.moral_flag,            
+		b.minwon_flag,           
+		b.accident_no,           
+		b.policy_no,             
+		b.insurance_nm,          
+		b.policyholder_ssn,      
+		b.policyholder_tel,      
+		b.beneficiary_ssn,       
+		b.beneficiary_tel,       
+		b.damaged_tel,           
+		b.accident_facts,        
+		b.amt_estimated_damage,  
+		b.amt_definite,          
+		b.amt_reduction,         
+		b.commission_estimated,  
+		b.amt_claimed,           
+		b.amt_settlement,        
+		b.amt_self_pay,          
+		b.amt_insu_payment,
+		b.investigate_addr1,
+		b.investigate_addr2,
+		b.investigate_postcode,
+		c.amt_basic,       
+		c.amt_basic_dtl,   
+		c.amt_daily,       
+		c.amt_daily_dtl,   
+		c.amt_counsel,     
+		c.amt_counsel_dtl, 
+		c.amt_traffic,     
+		c.amt_traffic_dtl, 
+		c.amt_etc,         
+		c.amt_etc_dtl,     
+		(c.amt_basic + c.amt_daily + c.amt_traffic + c.amt_counsel + c.amt_etc) amt_total,
+		DATE_FORMAT(FROM_UNIXTIME(c.invoice_date), '%Y-%m-%d') invoice_date       
+		
+		from
+		top_prim_biz_rpt_head a, top_prim_biz_rpt_body b, top_prim_biz_inv c
+		where
+		a.suim_rpt_no = b.suim_rpt_no and
+		a.suim_rpt_no = c.suim_rpt_no and
+		a.suim_rpt_no = #{suim_rpt_no}                 
+		
+	</select>
+	
+	<update id="updatePrimBizRptHead" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+	UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_type1 = #{suim_rpt_type1},
+			policyholder_nm = #{policyholder_nm},
+			beneficiary_nm = #{beneficiary_nm},
+			damaged_nm = #{damaged_nm},
+			accident_date = unix_timestamp(#{accident_date}),
+			reg_date = unix_timestamp(#{reg_date})
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	</update>
+	<update id="updatePrimBizRptBody" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	UPDATE 
+			top_prim_biz_rpt_body
+		SET	
+			moral_flag = #{moral_flag},
+			minwon_flag = #{minwon_flag},
+			accident_no = #{accident_no},
+			policy_no = #{policy_no},
+			insurance_nm = #{insurance_nm},
+			policyholder_ssn = #{policyholder_ssn},
+			policyholder_tel = #{policyholder_tel},
+			beneficiary_ssn = #{beneficiary_ssn},
+			beneficiary_tel = #{beneficiary_tel },
+			damaged_tel = #{damaged_tel},
+			accident_facts = #{accident_facts},
+			investigate_postcode = #{investigate_postcode},
+			investigate_addr1 = #{investigate_addr1},
+			investigate_addr2 = #{investigate_addr2},
+			amt_estimated_damage = #{amt_estimated_damage},
+			commission_estimated = #{commission_estimated}
+			
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}			
+	
+	</update>
+	
+	<update id="updatePrimBizRptEndBody" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+		UPDATE 
+			top_prim_biz_rpt_body
+		SET
+			     		
+			amt_claimed = #{amt_claimed}  			
+			,amt_estimated_damage = #{amt_estimated_damage}   
+			,amt_settlement = #{amt_settlement}         
+			,amt_self_pay = #{amt_self_pay}    		
+			,amt_insu_payment = #{amt_insu_payment}  		
+			,amt_reduction = #{amt_reduction} 		
+				
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}				
+	
+	</update>
+	
+	<update id="updatePrimBizRptEndHead" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET
+			suim_rpt_ea = #{suim_rpt_ea}
+			,suim_rpt_type1_close12 = #{suim_rpt_type1_close12}   			
+				
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}				
+	
+	</update>
+	
+	<update id="updatePrimBizRptEnd" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+		UPDATE 
+			top_prim_biz_inv
+		SET
+			amt_basic_dtl = #{amt_basic_dtl}  		
+			,amt_basic = #{amt_basic}  			
+			,amt_daily_dtl = #{amt_daily_dtl}    		
+			,amt_daily = #{amt_daily}    			
+			,amt_traffic_dtl = #{amt_traffic_dtl}  		
+			,amt_traffic = #{amt_traffic} 			
+			,amt_counsel_dtl = #{amt_counsel_dtl} 		
+			,amt_counsel = #{amt_counsel}   			
+			,amt_etc_dtl = #{amt_etc_dtl}			
+			,amt_etc = #{amt_etc}				
+			,amt_total = #{amt_total}				
+			,invoice_date = unix_timestamp(#{invoice_date})
+			
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+			
+	</update>
+
+	<!-- 농작물 보고서 원본 파일 올리기 키 값 구하기 -->
+	<insert id="primBizRptOrgFileUploadForSelectKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		INSERT INTO top_prim_biz_rpt_file
+		( suim_rpt_no, file_path, file_name, reg_date)
+		VALUES
+		( #{suimRptNo}, #{filePath}, #{fileName}, unix_timestamp(now()))
+
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+
+	</insert>
+
+	<!-- 농작물 보고서 원본 파일 올리기 -->
+	<update id="primBizRptOrgFileUpload" parameterType="java.util.HashMap">
+		UPDATE top_prim_biz_rpt_file
+		SET file_path = #{filePath}
+		, file_name = #{fileName}
+		WHERE serial_no = #{nextPrimBizRptFileSerial}
+	</update>
+
+	<!-- 농작물 보고서 파일 삭제용 풀패스 가져오기  -->
+	<select id="getPrimBizRptOrgFilePathForDel" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path, file_name) file_path
+ 		FROM 
+ 			top_prim_biz_rpt_file
+ 		WHERE 
+ 			serial_no = #{serialNo}
+	
+	</select>
+	
+	<!-- 농작물 보고서 원본 파일 삭제하기 -->
+	<delete id="delPrimBizRptOrgFile" parameterType="String">
+	
+		DELETE FROM
+			top_prim_biz_rpt_file
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+	
+	<!-- 차기 보고서 파일 시리얼 No 가져오기 -->
+	<select id="nextPrimBizRptFileSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_prim_biz_rpt_file'
+	
+	</select>
+	
+ 	
+ 	<!-- 보고서 파일 다운로드용 파일명 가져오기  -->
+	<select id="getPrimBizRptOrgFileNameForDown" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path, file_name) file_name
+ 		FROM 
+ 			top_prim_biz_rpt_file
+ 		WHERE 
+ 			serial_no = #{key}
+	
+	</select>
+	
+	
+	
+	<select id="getPrimBizRptAction" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+		SELECT 
+ 			sum(share_amt_basic) sum_share_basic,
+ 			sum(share_amt_daily) sum_share_daily,
+ 			sum(share_amt_traffic) sum_share_traffic,
+ 			sum(share_amt_counsel) sum_share_counsel,
+ 			sum(share_amt_etc) sum_share_etc,
+ 			sum(share_ea) sum_share_ea,
+ 			sum(share_amt_total) sum_share_total
+ 		FROM
+ 		
+ 			top_prim_biz_inv_share
+ 			
+ 		WHERE 
+ 		
+ 			rpt_invoice_no = #{rpt_invoice_no}
+	
+	</select>
+	
+	<select id="getPrimBizRptInvAction" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+		SELECT 
+ 			a.amt_basic,
+ 			a.amt_daily,
+ 			a.amt_traffic,
+ 			a.amt_etc,
+ 			a.amt_counsel,
+ 			(a.amt_basic + a.amt_daily + a.amt_traffic + a.amt_etc + a.amt_counsel) amt_total,
+ 			b.suim_rpt_ea
+ 			
+ 		FROM
+ 		
+ 			top_prim_biz_inv a,
+ 			top_prim_biz_rpt_head b
+ 			
+ 		WHERE 
+ 			a.suim_rpt_no = b.suim_rpt_no
+ 			and a.suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<insert id="PrimBizRptLogAdd" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+	insert into top_prim_biz_rpt_head_log
+		(suim_rpt_no, 
+		suim_rpt_type1, 
+		suim_rpt_state, 
+		suim_rpt_type1_close12, 
+		reg_date, 
+		suim_cancel_date, 
+		suim_rpt_aprv_date,
+		close_date, 
+		del_date, 
+		lock_flag, 
+		moral_flag, 
+		minwon_flag, 
+		log_date, 
+		log_ip, 
+		log_user_no)
+		select
+		a.suim_rpt_no, 
+		a.suim_rpt_type1, 
+		a.suim_rpt_state, 
+		a.suim_rpt_type1_close12, 
+		unix_timestamp(now()), 
+		a.suim_cancel_date, 
+		a.suim_rpt_aprv_date,
+		a.close_date, 
+		a.del_date, 
+		a.lock_flag, 
+		b.moral_flag, 
+		b.minwon_flag, 
+		unix_timestamp(now()), 
+		#{log_ip}, 
+		#{log_user_no}
+		from top_prim_biz_rpt_head a, top_prim_biz_rpt_body b
+		where
+		a.suim_rpt_no = b.suim_rpt_no
+		and a.suim_rpt_no = #{suim_rpt_no}
+	
+	</insert>
+	
+	
+	
+	<!-- 결재 올리기 -->
+	<update id="primBizRptActionRptSubmit" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 1
+			,suim_rpt_aprv_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 결재 취소하기 -->
+	<update id="primBizRptActionSangsinCancel" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 0
+			,suim_rpt_aprv_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 반려하기 -->
+	<update id="primBizRptActionRptReturn" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			 suim_rpt_state ='11'
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 반려 취소 -->
+	<update id="primBizRptActionRptReturnCancel" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			 suim_rpt_state='1'
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결하기 일반 보험사 --> 
+	<!-- <update id="primBizRptActionRptEnd" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			 suim_rpt_state='2'
+			 ,close_date = unix_timestamp(#{closeDate})
+			 ,suim_close_no = #{nextCloseNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update> -->
+	
+	<!-- 종결하기 : 인보이스 업데이트 ( 인보이스의 제출일이 존재하면 그대로, 아닐경우 수임건의 종결일을 인보이스 제출일로 업데이트! 컨트롤러 참고  ) --> 
+	<!-- <update id="primBizRptActionRptEndInv" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_prim_biz_inv
+		SET	
+			invoice_date = unix_timestamp(#{invoiceDate})
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update> -->
+	
+	
+	<!-- 상신하기 -->
+	<!-- <update id="primBizRptActionSangsin" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 1
+			,suim_rpt_aprv_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update> -->
+	
+	<!-- 상신 취소하기 -->
+	<!-- <update id="primBizRptActionSangsinCancel" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 0
+			,suim_rpt_aprv_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update> -->
+	
+	<!-- 종결 취소하기 -->
+	<update id="primBizRptActionEndedCancel" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 1
+			,suim_accept_no = ''
+			,close_date = 0          <!-- 운영은 종결 취소 시 이전 종결일을 남겨두고 있음 Tobe 에서는 0으로 업덷이트 -->
+			,suim_close_no = ''
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<update id="primBizRptInvActionEndedCancel" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_inv
+		SET	
+			invoice_date = 0
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 위임 취소하기 -->
+	<update id="primBizRptActionCancel" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 3
+			,suim_rpt_aprv_date = 0
+			,suim_cancel_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 위임 취소를 취소하기 -->
+	<update id="primBizRptActionCancelX" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			 suim_rpt_state = 0
+			,suim_cancel_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 락 해제하기 -->
+	<update id="primBizRptActionUnLock" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			lock_flag = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 소송건 -->
+	<update id="primBizRptActionLawsuit" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 4,
+			suim_rpt_aprv_date = 0,
+			lawsuit_date = unix_timestamp(now())
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 소송건 -->
+	<update id="primBizRptActionLawsuitCancel" parameterType="String">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			suim_rpt_state = 0,
+			lawsuit_date = 0
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 보고서 Head 정보 삭제 -->
+	<delete id="primBizRptActionDelHead" parameterType="String">
+		DELETE FROM 
+			top_prim_biz_rpt_head
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 보고서 Body 정보 삭제 -->
+	<delete id="primBizRptActionDelBody" parameterType="String">
+		DELETE FROM 
+			top_prim_biz_rpt_body
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 보고서 인보이스 정보 삭제 -->
+	<delete id="primBizRptActionDelInv" parameterType="String">
+		DELETE FROM 
+			top_prim_biz_inv
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 공동 조사자 정보 삭제 -->
+	<delete id="primBizRptActionDelShare" parameterType="String">
+		DELETE FROM 
+			top_prim_biz_inv_share
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 메모 정보 삭제 -->
+	<delete id="primBizRptActionDelMemo" parameterType="String">
+		DELETE FROM 
+			top_prim_biz_rpt_memo
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<update id="rptActionRptEnd" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_prim_biz_rpt_head a
+		SET	
+			 a.suim_rpt_state='2'
+			 ,a.close_date = unix_timestamp(#{closeDate})
+			 ,suim_close_no = #{nextCloseNo}
+			 <!-- ,a.close_ptnr_dept_nm = getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) -->
+			 ,a.close_ptnr_dept_nm = (SELECT IFNULL(ptnr_tm_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no)
+			 ,a.close_ptnr_tm2_nm = (SELECT IFNULL(ptnr_tm2_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no)
+		WHERE
+			a.suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결하기 일반 보험사--> 
+	<update id="rptActionRptEnd_20210209" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_prim_biz_rpt_head
+		SET	
+			 suim_rpt_state='2'
+			 ,close_date = unix_timestamp(#{closeDate})
+			 ,suim_close_no = #{nextCloseNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결하기 : 인보이스 업데이트 ( 인보이스의 제출일이 존재하면 그대로, 아닐경우 수임건의 종결일을 인보이스 제출일로 업데이트! 컨트롤러 참고  )--> 
+	<update id="rptActionRptEndInv" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_prim_biz_inv
+		SET	
+			invoice_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	
+
+</mapper>

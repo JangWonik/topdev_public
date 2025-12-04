@@ -1,0 +1,838 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="EndIgMapper">
+
+	<select id="selend1ig" parameterType="java.util.List" resultType="kr.co.toplac.lslog.EndIgVO">
+		select ptnr_id ig_id, ptnr_nick ig_nick
+		from top_ptnr_bsc 
+		where ptnr_level='1'
+		and statistics_yn='1' 
+		order by ptnr_order desc, ptnr_id asc
+	</select>
+
+	<select id="endkind1" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.EndIgVO">
+		select ifnull(end_rid,0) end_rid, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_traffic,0) price_traffic, ifnull(price_qr,0) price_qr, 
+	ifnull(end_rid2,0) end_rid2, ifnull(price_assess2,0) price_assess2, ifnull(price_time2,0) price_time2, ifnull(price_traffic2,0) price_traffic2, ifnull(price_qr2,0) price_qr2,  
+	ifnull(end_rid3,0) end_rid3, ifnull(price_assess3,0) price_assess3, ifnull(price_time3,0) price_time3, ifnull(price_traffic3,0) price_traffic3, ifnull(price_qr3,0) price_qr3, 
+	ifnull(end_rid4,0) end_rid4, ifnull(price_assess4,0) price_assess4, ifnull(price_time4,0) price_time4, ifnull(price_traffic4,0) price_traffic4, ifnull(price_qr4,0) price_qr4, 
+	ifnull(end_rid5,0) end_rid5, ifnull(price_assess5,0) price_assess5, ifnull(price_time5,0) price_time5, ifnull(price_traffic5,0) price_traffic5, ifnull(price_qr5,0) price_qr5, 
+	ifnull(end_rid6,0) end_rid6, ifnull(price_assess6,0) price_assess6, ifnull(price_time6,0) price_time6, ifnull(price_traffic6,0) price_traffic6, ifnull(price_qr6,0) price_qr6, 
+	ifnull(end_rid7,0) end_rid7, ifnull(price_assess7,0) price_assess7, ifnull(price_time7,0) price_time7, ifnull(price_traffic7,0) price_traffic7, ifnull(price_qr7,0) price_qr7, 
+	ifnull(end_rid8,0) end_rid8, ifnull(price_assess8,0) price_assess8, ifnull(price_time8,0) price_time8, ifnull(price_traffic8,0) price_traffic8, ifnull(price_qr8,0) price_qr8, 
+	ifnull(end_rid9,0) end_rid9, ifnull(price_assess9,0) price_assess9, ifnull(price_time9,0) price_time9, ifnull(price_traffic9,0) price_traffic9, ifnull(price_qr9,0) price_qr9, 
+	ifnull(end_rid10,0) end_rid10, ifnull(price_assess10,0) price_assess10, ifnull(price_time10,0) price_time10, ifnull(price_traffic10,0) price_traffic10, ifnull(price_qr10,0) price_qr10, 
+	ifnull(end_rid11,0) end_rid11, ifnull(price_assess11,0) price_assess11, ifnull(price_time11,0) price_time11, ifnull(price_traffic11,0) price_traffic11, ifnull(price_qr11,0) price_qr11, 
+	ifnull(end_rid12,0) end_rid12, ifnull(price_assess12,0) price_assess12, ifnull(price_time12,0) price_time12, ifnull(price_traffic12,0) price_traffic12, ifnull(price_qr12,0) price_qr12,  
+	ifnull(end_rid + end_rid2 + end_rid3 + end_rid4 + end_rid5 + end_rid6 + end_rid7 + end_rid8 + end_rid9 + end_rid10 + end_rid11 + end_rid12, 0) end_sum,
+	ifnull(price_assess + price_assess2 + price_assess3 + price_assess4 + price_assess5 + price_assess6 + price_assess7 + price_assess8 + price_assess9 + price_assess10 + price_assess11 + price_assess12, 0) price_assess_sum,
+	ifnull(price_time + price_time2 + price_time3 + price_time4 + price_time5 + price_time6 + price_time7 + price_time8 + price_time9 + price_time10 + price_time11 + price_time12, 0) price_time_sum,
+	ifnull(price_traffic + price_traffic2 + price_traffic3 + price_traffic4 + price_traffic5 + price_traffic6 + price_traffic7 + price_traffic8 + price_traffic9 + price_traffic10 + price_traffic11 + price_traffic12, 0) price_traffic_sum,
+	ifnull(price_qr + price_qr2 + price_qr3 + price_qr4 + price_qr5 + price_qr6 + price_qr7 + price_qr8 + price_qr9 + price_qr10 + price_qr11 + price_qr12, 0) price_qr_sum,
+	ifnull(price_assess + price_time + price_traffic + price_qr ,0) price_total,
+	ifnull(price_assess2 + price_time2 + price_traffic2 + price_qr2 ,0) price_total2,
+	ifnull(price_assess3 + price_time3 + price_traffic3 + price_qr3 ,0) price_total3,
+	ifnull(price_assess4 + price_time4 + price_traffic4 + price_qr4 ,0) price_total4,
+	ifnull(price_assess5 + price_time5 + price_traffic5 + price_qr5 ,0) price_total5,
+	ifnull(price_assess6 + price_time6 + price_traffic6 + price_qr6 ,0) price_total6,
+	ifnull(price_assess7 + price_time7 + price_traffic7 + price_qr7 ,0) price_total7,
+	ifnull(price_assess8 + price_time8 + price_traffic8 + price_qr8 ,0) price_total8,
+	ifnull(price_assess9 + price_time9 + price_traffic9 + price_qr9 ,0) price_total9,
+	ifnull(price_assess10 + price_time10 + price_traffic10 + price_qr10 ,0) price_total10,
+	ifnull(price_assess11 + price_time11 + price_traffic11 + price_qr11 ,0) price_total11,
+	ifnull(price_assess12 + price_time12 + price_traffic12 + price_qr12 ,0) price_total12,
+	ifnull(price_assess + price_assess2 + price_assess3 + price_assess4 + price_assess5 + price_assess6 + price_assess7 + price_assess8 + price_assess9 + price_assess10 + price_assess11 + price_assess12
+	+ price_time + price_time2 + price_time3 + price_time4 + price_time5 + price_time6 + price_time7 + price_time8 + price_time9 + price_time10 + price_time11 + price_time12
+	+ price_traffic + price_traffic2 + price_traffic3 + price_traffic4 + price_traffic5 + price_traffic6 + price_traffic7 + price_traffic8 + price_traffic9 + price_traffic10 + price_traffic11 + price_traffic12
+	+ price_qr + price_qr2 + price_qr3 + price_qr4 + price_qr5 + price_qr6 + price_qr7 + price_qr8 + price_qr9 + price_qr10 + price_qr11 + price_qr12 ,0) price_total_sum
+	from 
+		(select COUNT(suim_rpt_no) end_rid
+		from top_rpt_head
+		where ptnr_id = #{tmpIgid}
+		and suim_rpt_state = '2'
+		and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and close_date >= unix_timestamp(#{fromdate})
+		and close_date &lt; unix_timestamp(#{todate})
+		)a,
+		(select ifnull(sum(amt_basic), 0) price_assess
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)b,
+		(select ifnull(sum(amt_daily), 0) price_time
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)c,
+		(select ifnull(sum(amt_traffic), 0) price_traffic
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(#{fromdate}) 
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)d,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)e,
+
+		(select count(suim_rpt_no) end_rid2 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		)f,
+		(select ifnull(sum(amt_basic), 0) price_assess2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)g,
+		(select ifnull(sum(amt_daily), 0) price_time2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)h,
+		(select ifnull(sum(amt_traffic), 0) price_traffic2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)i,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)j,
+		
+		(select count(suim_rpt_no) end_rid3 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		)k,
+		(select ifnull(sum(amt_basic), 0) price_assess3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)l,
+		(select ifnull(sum(amt_daily), 0) price_time3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)m,
+		(select ifnull(sum(amt_traffic), 0) price_traffic3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)n,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)o,
+		
+		(select count(suim_rpt_no) end_rid4 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		)p,
+		(select ifnull(sum(amt_basic), 0) price_assess4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)q,
+		(select ifnull(sum(amt_daily), 0) price_time4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)r,
+		(select ifnull(sum(amt_traffic), 0) price_traffic4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)s,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)t,
+		
+		(select count(suim_rpt_no) end_rid5 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		)u,
+		(select ifnull(sum(amt_basic), 0) price_assess5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)v,
+		(select ifnull(sum(amt_daily), 0) price_time5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)w,
+		(select ifnull(sum(amt_traffic), 0) price_traffic5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)x,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)y,
+		
+		(select count(suim_rpt_no) end_rid6 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		)z,
+		(select ifnull(sum(amt_basic), 0) price_assess6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a1,
+		(select ifnull(sum(amt_daily), 0) price_time6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a2,
+		(select ifnull(sum(amt_traffic), 0) price_traffic6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a3,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a4,
+		
+		(select count(suim_rpt_no) end_rid7 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		)a5,
+		(select ifnull(sum(amt_basic), 0) price_assess7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a6,
+		(select ifnull(sum(amt_daily), 0) price_time7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a7,
+		(select ifnull(sum(amt_traffic), 0) price_traffic7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a8,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a9,
+		
+		(select count(suim_rpt_no) end_rid8 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		)a10,
+		(select ifnull(sum(amt_basic), 0) price_assess8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a11,
+		(select ifnull(sum(amt_daily), 0) price_time8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a12,
+		(select ifnull(sum(amt_traffic), 0) price_traffic8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a13,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a14,
+		
+		(select count(suim_rpt_no) end_rid9 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		)a15,
+		(select ifnull(sum(amt_basic), 0) price_assess9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a16,
+		(select ifnull(sum(amt_daily), 0) price_time9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a17,
+		(select ifnull(sum(amt_traffic), 0) price_traffic9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a18,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a19,
+		
+		(select count(suim_rpt_no) end_rid10 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		)a20,
+		(select ifnull(sum(amt_basic), 0) price_assess10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a21,
+		(select ifnull(sum(amt_daily), 0) price_time10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a22,
+		(select ifnull(sum(amt_traffic), 0) price_traffic10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a23,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a24,
+		
+		(select count(suim_rpt_no) end_rid11 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		)a25,
+		(select ifnull(sum(amt_basic), 0) price_assess11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a26,
+		(select ifnull(sum(amt_daily), 0) price_time11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a27,
+		(select ifnull(sum(amt_traffic), 0) price_traffic11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a28,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a29,
+		
+		(select count(suim_rpt_no) end_rid12 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		)a30,
+		(select ifnull(sum(amt_basic), 0) price_assess12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a31,
+		(select ifnull(sum(amt_daily), 0) price_time12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a32,
+		(select ifnull(sum(amt_traffic), 0) price_traffic12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a33,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a34;
+	</select>
+
+	<select id="selend4ig" parameterType="java.util.List" resultType="kr.co.toplac.lslog.EndIgVO">
+		select ptnr_id ig_id, ptnr_nick ig_nick
+		from top_ptnr_bsc 
+		where ptnr_level='1'
+		and statistics_yn='1' 
+		order by ptnr_order desc, ptnr_id asc
+	</select>
+
+	<select id="endkind4" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.EndIgVO">
+		select ifnull(end_rid,0) end_rid, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_traffic,0) price_traffic, ifnull(price_qr,0) price_qr, 
+	ifnull(end_rid2,0) end_rid2, ifnull(price_assess2,0) price_assess2, ifnull(price_time2,0) price_time2, ifnull(price_traffic2,0) price_traffic2, ifnull(price_qr2,0) price_qr2,  
+	ifnull(end_rid3,0) end_rid3, ifnull(price_assess3,0) price_assess3, ifnull(price_time3,0) price_time3, ifnull(price_traffic3,0) price_traffic3, ifnull(price_qr3,0) price_qr3, 
+	ifnull(end_rid4,0) end_rid4, ifnull(price_assess4,0) price_assess4, ifnull(price_time4,0) price_time4, ifnull(price_traffic4,0) price_traffic4, ifnull(price_qr4,0) price_qr4, 
+	ifnull(end_rid5,0) end_rid5, ifnull(price_assess5,0) price_assess5, ifnull(price_time5,0) price_time5, ifnull(price_traffic5,0) price_traffic5, ifnull(price_qr5,0) price_qr5, 
+	ifnull(end_rid6,0) end_rid6, ifnull(price_assess6,0) price_assess6, ifnull(price_time6,0) price_time6, ifnull(price_traffic6,0) price_traffic6, ifnull(price_qr6,0) price_qr6, 
+	ifnull(end_rid7,0) end_rid7, ifnull(price_assess7,0) price_assess7, ifnull(price_time7,0) price_time7, ifnull(price_traffic7,0) price_traffic7, ifnull(price_qr7,0) price_qr7, 
+	ifnull(end_rid8,0) end_rid8, ifnull(price_assess8,0) price_assess8, ifnull(price_time8,0) price_time8, ifnull(price_traffic8,0) price_traffic8, ifnull(price_qr8,0) price_qr8, 
+	ifnull(end_rid9,0) end_rid9, ifnull(price_assess9,0) price_assess9, ifnull(price_time9,0) price_time9, ifnull(price_traffic9,0) price_traffic9, ifnull(price_qr9,0) price_qr9, 
+	ifnull(end_rid10,0) end_rid10, ifnull(price_assess10,0) price_assess10, ifnull(price_time10,0) price_time10, ifnull(price_traffic10,0) price_traffic10, ifnull(price_qr10,0) price_qr10, 
+	ifnull(end_rid11,0) end_rid11, ifnull(price_assess11,0) price_assess11, ifnull(price_time11,0) price_time11, ifnull(price_traffic11,0) price_traffic11, ifnull(price_qr11,0) price_qr11, 
+	ifnull(end_rid12,0) end_rid12, ifnull(price_assess12,0) price_assess12, ifnull(price_time12,0) price_time12, ifnull(price_traffic12,0) price_traffic12, ifnull(price_qr12,0) price_qr12,  
+	ifnull(end_rid + end_rid2 + end_rid3 + end_rid4 + end_rid5 + end_rid6 + end_rid7 + end_rid8 + end_rid9 + end_rid10 + end_rid11 + end_rid12, 0) end_sum,
+	ifnull(price_assess + price_assess2 + price_assess3 + price_assess4 + price_assess5 + price_assess6 + price_assess7 + price_assess8 + price_assess9 + price_assess10 + price_assess11 + price_assess12, 0) price_assess_sum,
+	ifnull(price_time + price_time2 + price_time3 + price_time4 + price_time5 + price_time6 + price_time7 + price_time8 + price_time9 + price_time10 + price_time11 + price_time12, 0) price_time_sum,
+	ifnull(price_traffic + price_traffic2 + price_traffic3 + price_traffic4 + price_traffic5 + price_traffic6 + price_traffic7 + price_traffic8 + price_traffic9 + price_traffic10 + price_traffic11 + price_traffic12, 0) price_traffic_sum,
+	ifnull(price_qr + price_qr2 + price_qr3 + price_qr4 + price_qr5 + price_qr6 + price_qr7 + price_qr8 + price_qr9 + price_qr10 + price_qr11 + price_qr12, 0) price_qr_sum,
+	ifnull(price_assess + price_time + price_traffic + price_qr ,0) price_total,
+	ifnull(price_assess2 + price_time2 + price_traffic2 + price_qr2 ,0) price_total2,
+	ifnull(price_assess3 + price_time3 + price_traffic3 + price_qr3 ,0) price_total3,
+	ifnull(price_assess4 + price_time4 + price_traffic4 + price_qr4 ,0) price_total4,
+	ifnull(price_assess5 + price_time5 + price_traffic5 + price_qr5 ,0) price_total5,
+	ifnull(price_assess6 + price_time6 + price_traffic6 + price_qr6 ,0) price_total6,
+	ifnull(price_assess7 + price_time7 + price_traffic7 + price_qr7 ,0) price_total7,
+	ifnull(price_assess8 + price_time8 + price_traffic8 + price_qr8 ,0) price_total8,
+	ifnull(price_assess9 + price_time9 + price_traffic9 + price_qr9 ,0) price_total9,
+	ifnull(price_assess10 + price_time10 + price_traffic10 + price_qr10 ,0) price_total10,
+	ifnull(price_assess11 + price_time11 + price_traffic11 + price_qr11 ,0) price_total11,
+	ifnull(price_assess12 + price_time12 + price_traffic12 + price_qr12 ,0) price_total12,
+	ifnull(price_assess + price_assess2 + price_assess3 + price_assess4 + price_assess5 + price_assess6 + price_assess7 + price_assess8 + price_assess9 + price_assess10 + price_assess11 + price_assess12
+	+ price_time + price_time2 + price_time3 + price_time4 + price_time5 + price_time6 + price_time7 + price_time8 + price_time9 + price_time10 + price_time11 + price_time12
+	+ price_traffic + price_traffic2 + price_traffic3 + price_traffic4 + price_traffic5 + price_traffic6 + price_traffic7 + price_traffic8 + price_traffic9 + price_traffic10 + price_traffic11 + price_traffic12
+	+ price_qr + price_qr2 + price_qr3 + price_qr4 + price_qr5 + price_qr6 + price_qr7 + price_qr8 + price_qr9 + price_qr10 + price_qr11 + price_qr12 ,0) price_total_sum
+	from 
+		(select COUNT(suim_rpt_no) end_rid
+		from top_rpt_head
+		where ptnr_id = #{tmpIgid}
+		and suim_rpt_state = '2'
+		and suim_rpt_type1 in (3,4)
+		and close_date >= unix_timestamp(#{fromdate})
+		and close_date &lt; unix_timestamp(#{todate})
+		)a,
+		(select ifnull(sum(amt_basic), 0) price_assess
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)b,
+		(select ifnull(sum(amt_daily), 0) price_time
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)c,
+		(select ifnull(sum(amt_traffic), 0) price_traffic
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(#{fromdate}) 
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)d,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr
+		from top_rpt_head rpt, top_rpt_invoice inv
+		where rpt.ptnr_id= #{tmpIgid}
+		and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(#{todate})
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)e,
+
+		(select count(suim_rpt_no) end_rid2 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		)f,
+		(select ifnull(sum(amt_basic), 0) price_assess2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)g,
+		(select ifnull(sum(amt_daily), 0) price_time2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)h,
+		(select ifnull(sum(amt_traffic), 0) price_traffic2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)i,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr2 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)j,
+		
+		(select count(suim_rpt_no) end_rid3 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		)k,
+		(select ifnull(sum(amt_basic), 0) price_assess3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)l,
+		(select ifnull(sum(amt_daily), 0) price_time3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)m,
+		(select ifnull(sum(amt_traffic), 0) price_traffic3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)n,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr3 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)o,
+		
+		(select count(suim_rpt_no) end_rid4 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		)p,
+		(select ifnull(sum(amt_basic), 0) price_assess4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)q,
+		(select ifnull(sum(amt_daily), 0) price_time4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)r,
+		(select ifnull(sum(amt_traffic), 0) price_traffic4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)s,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr4 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)t,
+		
+		(select count(suim_rpt_no) end_rid5 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		)u,
+		(select ifnull(sum(amt_basic), 0) price_assess5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)v,
+		(select ifnull(sum(amt_daily), 0) price_time5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)w,
+		(select ifnull(sum(amt_traffic), 0) price_traffic5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)x,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr5 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)y,
+		
+		(select count(suim_rpt_no) end_rid6 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		)z,
+		(select ifnull(sum(amt_basic), 0) price_assess6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a1,
+		(select ifnull(sum(amt_daily), 0) price_time6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a2,
+		(select ifnull(sum(amt_traffic), 0) price_traffic6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a3,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr6 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a4,
+		
+		(select count(suim_rpt_no) end_rid7 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		)a5,
+		(select ifnull(sum(amt_basic), 0) price_assess7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a6,
+		(select ifnull(sum(amt_daily), 0) price_time7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a7,
+		(select ifnull(sum(amt_traffic), 0) price_traffic7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a8,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr7 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a9,
+		
+		(select count(suim_rpt_no) end_rid8 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		)a10,
+		(select ifnull(sum(amt_basic), 0) price_assess8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a11,
+		(select ifnull(sum(amt_daily), 0) price_time8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a12,
+		(select ifnull(sum(amt_traffic), 0) price_traffic8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a13,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr8 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a14,
+		
+		(select count(suim_rpt_no) end_rid9 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		)a15,
+		(select ifnull(sum(amt_basic), 0) price_assess9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a16,
+		(select ifnull(sum(amt_daily), 0) price_time9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a17,
+		(select ifnull(sum(amt_traffic), 0) price_traffic9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a18,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr9 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a19,
+		
+		(select count(suim_rpt_no) end_rid10 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		)a20,
+		(select ifnull(sum(amt_basic), 0) price_assess10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a21,
+		(select ifnull(sum(amt_daily), 0) price_time10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a22,
+		(select ifnull(sum(amt_traffic), 0) price_traffic10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a23,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr10 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a24,
+		
+		(select count(suim_rpt_no) end_rid11 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		)a25,
+		(select ifnull(sum(amt_basic), 0) price_assess11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a26,
+		(select ifnull(sum(amt_daily), 0) price_time11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a27,
+		(select ifnull(sum(amt_traffic), 0) price_traffic11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a28,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr11 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a29,
+		
+		(select count(suim_rpt_no) end_rid12 from top_rpt_head rpt
+		where rpt.ptnr_id= #{tmpIgid} and suim_rpt_state='2' and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		)a30,
+		(select ifnull(sum(amt_basic), 0) price_assess12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4)
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a31,
+		(select ifnull(sum(amt_daily), 0) price_time12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a32,
+		(select ifnull(sum(amt_traffic), 0) price_traffic12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a33,
+		(select ifnull(sum(amt_counsel+amt_etc), 0) price_qr12 from top_rpt_head rpt, top_rpt_invoice inv 
+		where rpt.ptnr_id= #{tmpIgid} and rpt.suim_rpt_type1 in (3,4) 
+		and rpt.close_date>= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16')) 
+		and rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+		and rpt.suim_rpt_no = inv.suim_rpt_no
+		)a34;
+	</select>
+
+</mapper>

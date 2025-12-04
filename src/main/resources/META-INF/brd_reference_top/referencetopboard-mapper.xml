@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BoardReferenceTopMapper">
+
+	<select id="getBoardFileList" parameterType="String" resultType="hashmap">
+		SELECT 
+			a.title
+			,b.board_file_no
+			,b.file_name	
+		FROM brd_reference_top a, brd_reference_top_file b
+		WHERE a.board_no = b.board_no
+		AND a.board_no = #{board_no}
+		ORDER BY b.board_file_no
+	</select>
+
+	<select id="boardList" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no
+			, a.category_id
+			, a.user_no
+			, b.user_name user_nm
+			, a.category_id
+			, getCodeValue('brd_ref_report', 'cate_code', a.category_id) category_id_nm
+			, a.event_id
+			, getCodeValue('brd_ref_report', 'event_code', a.event_id) event_id_nm
+			, a.type_id
+			, getCodeValue('brd_ref_report', 'type_code', a.type_id) type_id_nm
+			, a.title
+			, a.contents
+			, a.reg_ip
+			, a.reg_date
+			<!-- , DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt -->
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+			, a.view_cnt
+			, (select count(board_file_no) FROM brd_reference_top_file where board_no = a.board_no) file_cnt
+			, (SELECT MAX(board_file_no) FROM brd_reference_top_file WHERE board_no = a.board_no) board_file_no
+			, (select count(*) from brd_reference_top_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_reference_top a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND a.category_id = #{cateSearch}
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="eventSearch != null and eventSearch != 0">
+			AND a.event_id = #{eventSearch}
+		</if>
+		<if test="typeSearch != null and typeSearch != 0">
+			AND a.type_id = #{typeSearch}
+		</if>	
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 15
+	</select>
+
+	<select id="boardListCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_reference_top a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND a.category_id = #{cateSearch}
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="eventSearch != null and eventSearch != 0">
+			AND a.event_id = #{eventSearch}
+		</if>
+		<if test="typeSearch != null and typeSearch != 0">
+			AND a.type_id = #{typeSearch}
+		</if>
+	</select>
+	
+	<insert id="boardWrite" parameterType="kr.co.toplac.brd.common.BoardVO" useGeneratedKeys="true" keyProperty="board_no" keyColumn="board_no">
+		INSERT INTO brd_reference_top (
+			user_no
+			,category_id
+			,event_id
+			,type_id
+			,title
+			,contents
+			,reg_ip
+			,reg_date
+			,view_cnt
+		)VALUES(
+			#{user_no}
+			,#{category_id}
+			,#{event_id}
+			,#{type_id}
+			,#{title}
+			,#{contents}
+			,#{reg_ip}
+			,unix_timestamp(now())
+			,0
+		)
+			<selectKey keyProperty="board_no" resultType="String" >
+				SELECT LAST_INSERT_ID()
+			</selectKey>
+	</insert>
+
+	<select id="getBoardNo" parameterType="kr.co.toplac.brd.common.BoardVO" resultType = "String">
+		SELECT max(board_no)
+		FROM brd_reference_top
+		WHERE user_no = #{user_no}
+	</select>
+
+	<insert id="boardFileWrite" parameterType="kr.co.toplac.brd.common.BoardFileVO" >
+		INSERT INTO brd_reference_top_file (board_no,file_path,file_name,reg_date)
+		VALUES(#{board_no}, #{file_path}, #{file_name}, unix_timestamp(now()))
+	</insert>
+
+	<select id="boardDetail" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT board_no			
+			, category_id
+			, getCodeValue('brd_ref_report', 'cate_code', category_id) category_id_nm
+			, event_id
+			, getCodeValue('brd_ref_report', 'event_code', event_id) event_id_nm
+			, type_id
+			, getCodeValue('brd_ref_report', 'type_code', type_id) type_id_nm
+			, user_no
+			, getTopMbrBscUserName(user_no) user_nm
+			, title
+			, contents
+			, reg_ip
+			, reg_date
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, view_cnt
+		FROM brd_reference_top
+		WHERE board_no = #{board_no}
+		ORDER BY board_no DESC
+	</select>
+
+	<select id="boardFileList" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardFileVO">
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_reference_top_file
+		WHERE board_no = #{board_no}
+		ORDER BY board_file_no
+	</select>
+	
+	<update id="boardCategoryUpdate" parameterType="hashmap" >
+		UPDATE brd_reference_top SET 
+			category_id = #{category_id}
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="boardAddCnt" parameterType="String" >
+		UPDATE brd_reference_top SET view_cnt = view_cnt + 1
+		WHERE board_no = #{board_no}
+	</update>
+
+	<delete id="boardDelete" parameterType="String" >
+		DELETE FROM brd_reference_top
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFilesDelete" parameterType="String" >
+		DELETE FROM brd_reference_top_file
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFileDelete" parameterType="String" >
+		DELETE FROM brd_reference_top_file
+		WHERE board_file_no = #{fileNo}
+	</delete>
+
+	<update id="boardUpdate" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_reference_top SET 
+			event_id = #{event_id}
+			,type_id = #{type_id}			
+			,title = #{title}
+			,contents = #{contents}
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="updateCKPath" parameterType="java.util.HashMap" >
+		UPDATE brd_reference_top SET contents = REPLACE(contents,#{oldStr},#{newStr})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<select id="refTopFileOneSelect" parameterType="String" resultType="kr.co.toplac.brd.common.BoardFileVO" >
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_reference_top_file
+		WHERE board_file_no = #{fileNo}
+	</select>
+
+</mapper>

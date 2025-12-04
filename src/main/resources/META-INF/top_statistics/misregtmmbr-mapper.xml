@@ -1,0 +1,757 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisRegTmMbrMapper">
+
+	<select id="getMisRegWrittenTmMbr1" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT
+			GA.user_no
+			,SUM(GA.reg_12) reg_12, SUM(GA.reg_11) reg_11, SUM(GA.reg_10) reg_10, SUM(GA.reg_9) reg_9, SUM(GA.reg_8) reg_8, SUM(GA.reg_7) reg_7, SUM(GA.reg_6) reg_6, SUM(GA.reg_5) reg_5, SUM(GA.reg_4) reg_4, SUM(GA.reg_3) reg_3, SUM(GA.reg_2) reg_2, SUM(GA.reg_1) reg_1			 
+			,SUM(GA.cls_12) cls_12, SUM(GA.cls_11) cls_11, SUM(GA.cls_10) cls_10, SUM(GA.cls_9) cls_9, SUM(GA.cls_8) cls_8, SUM(GA.cls_7) cls_7, SUM(GA.cls_6) cls_6, SUM(GA.cls_5) cls_5, SUM(GA.cls_4) cls_4, SUM(GA.cls_3) cls_3, SUM(GA.cls_2) cls_2, SUM(GA.cls_1) cls_1		 			 
+		FROM
+		(
+			SELECT
+				#{user_no} as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1				
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1				
+			FROM DUAL
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no					
+				,IFNULL(SUM(suim_cnt),0) AS reg_12
+				,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1					
+				,IFNULL(SUM(end_cnt),0) AS cls_12					
+				,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore12}
+			AND base_date &lt; #{monBefore11}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12					
+				,IFNULL(SUM(suim_cnt),0) AS reg_11
+				,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12					
+				,IFNULL(SUM(end_cnt),0) AS cls_11					
+				,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore11}
+			AND base_date &lt; #{monBefore10}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11					
+				,IFNULL(SUM(suim_cnt),0) AS reg_10
+				,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11					
+				,IFNULL(SUM(end_cnt),0) AS cls_10					
+				,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore10}
+			AND base_date &lt; #{monBefore9}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10					
+				,IFNULL(SUM(suim_cnt),0) AS reg_9
+				,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10					
+				,IFNULL(SUM(end_cnt),0) AS cls_9					
+				,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore9}
+			AND base_date &lt; #{monBefore8}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9					
+				,IFNULL(SUM(suim_cnt),0) AS reg_8
+				,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9					
+				,IFNULL(SUM(end_cnt),0) AS cls_8					
+				,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore8}
+			AND base_date &lt; #{monBefore7}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8					
+				,IFNULL(SUM(suim_cnt),0) AS reg_7
+				,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8					
+				,IFNULL(SUM(end_cnt),0) AS cls_7					
+				,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore7}
+			AND base_date &lt; #{monBefore6}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7					
+				,IFNULL(SUM(suim_cnt),0) AS reg_6
+				,0 reg_5,0 reg_4,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7					
+				,IFNULL(SUM(end_cnt),0) AS cls_6					
+				,0 cls_5,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore6}
+			AND base_date &lt; #{monBefore5}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6					
+				,IFNULL(SUM(suim_cnt),0) AS reg_5
+				,0 reg_4,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6					
+				,IFNULL(SUM(end_cnt),0) AS cls_5					
+				,0 cls_4,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore5}
+			AND base_date &lt; #{monBefore4}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5					
+				,IFNULL(SUM(suim_cnt),0) AS reg_4
+				,0 reg_3,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5					
+				,IFNULL(SUM(end_cnt),0) AS cls_4					
+				,0 cls_3,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore4}
+			AND base_date &lt; #{monBefore3}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4					
+				,IFNULL(SUM(suim_cnt),0) AS reg_3
+				,0 reg_2,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4					
+				,IFNULL(SUM(end_cnt),0) AS cls_3
+				,0 cls_2,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore3}
+			AND base_date &lt; #{monBefore2}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3					
+				,IFNULL(SUM(suim_cnt),0) AS reg_2
+				,0 reg_1
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3					
+				,IFNULL(SUM(end_cnt),0) AS cls_2
+				,0 cls_1					
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore2}
+			AND base_date &lt; #{monBefore1}
+			
+			UNION ALL
+				
+			SELECT
+				"" as user_no
+				,0 reg_12,0 reg_11,0 reg_10,0 reg_9,0 reg_8,0 reg_7,0 reg_6,0 reg_5,0 reg_4,0 reg_3,0 reg_2					
+				,IFNULL(SUM(suim_cnt),0) AS reg_1				
+				,0 cls_12,0 cls_11,0 cls_10,0 cls_9,0 cls_8,0 cls_7,0 cls_6,0 cls_5,0 cls_4,0 cls_3,0 cls_2					
+				,IFNULL(SUM(end_cnt),0) AS cls_1
+			FROM top_rpt_written_info 
+			WHERE user_no = #{user_no}
+			AND base_date >= #{monBefore1}
+			AND base_date &lt; #{monBefore0}
+			
+		) GA
+	</select>
+	
+	<select id="getMisRegTmMbr1" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+        SELECT  GA.user_no 
+               ,GA.user_name
+               ,GB.team_id
+               ,getTopTmBscCenterName(GB.team_id) AS center_name               
+               ,getTopTmBscTeamName(GB.team_id) AS team_name
+               ,(SELECT team_written FROM top_tm_bsc WHERE team_id = GB.team_id) AS team_written
+               ,GB.reg_12 ,GB.reg_11 ,GB.reg_10 ,GB.reg_9 ,GB.reg_8 ,GB.reg_7 ,GB.reg_6 ,GB.reg_5 ,GB.reg_4 ,GB.reg_3 ,GB.reg_2 ,GB.reg_1
+               ,GB.cls_12 ,GB.cls_11 ,GB.cls_10 ,GB.cls_9 ,GB.cls_8 ,GB.cls_7 ,GB.cls_6 ,GB.cls_5 ,GB.cls_4 ,GB.cls_3 ,GB.cls_2 ,GB.cls_1
+               ,CASE GA.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order 
+          FROM  top_mbr_bsc GA
+          LEFT  JOIN (
+                      SELECT  C.USER_NO
+                      		 ,C.TEAM_ID
+                             ,SUM(C.REG_12) AS reg_12
+                             ,SUM(C.REG_11) AS reg_11
+                             ,SUM(C.REG_10) AS reg_10
+                             ,SUM(C.REG_9) AS reg_9
+                             ,SUM(C.REG_8) AS reg_8
+                             ,SUM(C.REG_7) AS reg_7
+                             ,SUM(C.REG_6) AS reg_6
+                             ,SUM(C.REG_5) AS reg_5
+                             ,SUM(C.REG_4) AS reg_4
+                             ,SUM(C.REG_3) AS reg_3
+                             ,SUM(C.REG_2) AS reg_2
+                             ,SUM(C.REG_1) AS reg_1
+                             
+                             ,SUM(C.CLS_12) AS cls_12
+                             ,SUM(C.CLS_11) AS cls_11
+                             ,SUM(C.CLS_10) AS cls_10
+                             ,SUM(C.CLS_9) AS cls_9
+                             ,SUM(C.CLS_8) AS cls_8
+                             ,SUM(C.CLS_7) AS cls_7
+                             ,SUM(C.CLS_6) AS cls_6
+                             ,SUM(C.CLS_5) AS cls_5
+                             ,SUM(C.CLS_4) AS cls_4
+                             ,SUM(C.CLS_3) AS cls_3
+                             ,SUM(C.CLS_2) AS cls_2
+                             ,SUM(C.CLS_1) AS cls_1                             
+                        FROM  (
+                        
+							  SELECT  0 AS USER_NO
+							  		 ,0 AS TEAM_ID
+		                             ,0 AS reg_12
+		                             ,0 AS reg_11
+		                             ,0 AS reg_10
+		                             ,0 AS reg_9
+		                             ,0 AS reg_8
+		                             ,0 AS reg_7
+		                             ,0 AS reg_6
+		                             ,0 AS reg_5
+		                             ,0 AS reg_4
+		                             ,0 AS reg_3
+		                             ,0 AS reg_2
+		                             ,0 AS reg_1
+		                             
+		                             ,0 AS cls_12
+		                             ,0 AS cls_11
+		                             ,0 AS cls_10
+		                             ,0 AS cls_9
+		                             ,0 AS cls_8
+		                             ,0 AS cls_7
+		                             ,0 AS cls_6
+		                             ,0 AS cls_5
+		                             ,0 AS cls_4
+		                             ,0 AS cls_3
+		                             ,0 AS cls_2
+		                             ,0 AS cls_1		                             
+		                        FROM  DUAL          			
+							<if test='basicYN == "Y"'>
+		          			   UNION ALL                        
+                              SELECT  A.USER_NO 
+                                     ,A.TEAM_ID
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+                                     ,0,0,0,0,0,0,0,0,0,0,0,0
+                                FROM  top_rpt_head A 
+                               WHERE  1=1
+                                 -- AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                 AND  A.TEAM_ID = #{team_id}
+                                 AND  A.SUIM_RPT_STATE != '3'
+                                 AND  A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+                                 
+                                UNION ALL                        	
+                              SELECT  A.USER_NO 
+                                     ,A.TEAM_ID
+                                     ,0,0,0,0,0,0,0,0,0,0,0,0
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                                FROM  top_rpt_head A 
+                               WHERE  1=1
+                                 -- AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                 AND  A.TEAM_ID = #{team_id}                                 
+                                 AND  A.SUIM_RPT_STATE != '3'
+                                 AND  A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})                               
+							</if>
+							
+                            <if test='primYN == "Y"'>
+                              UNION ALL
+                              SELECT  B.USER_NO 
+                                     ,B.TEAM_ID
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+									 ,0,0,0,0,0,0,0,0,0,0,0,0
+                                FROM  top_prim_biz_rpt_head B 
+                               WHERE  1=1
+								 AND  B.TEAM_ID = #{team_id}
+                                 AND  B.SUIM_RPT_STATE != '3'
+                                 AND  B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+                                 
+                              UNION ALL
+                              SELECT  B.USER_NO 
+                                     ,B.TEAM_ID
+									 ,0,0,0,0,0,0,0,0,0,0,0,0                                     
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                                FROM  top_prim_biz_rpt_head B 
+                               WHERE  1=1
+								 AND  B.TEAM_ID = #{team_id}                                 
+                                 AND  B.SUIM_RPT_STATE != '3'
+                                 AND  B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})                                 
+							</if>
+                               ) C
+                      GROUP BY C.USER_NO  
+                      
+                     ) GB
+            ON  GA.USER_NO = GB.USER_NO  
+         WHERE  1=1
+           AND  GB.TEAM_ID = #{team_id}
+		   AND (
+				  (GA.user_state ='1' AND GA.out_date >= UNIX_TIMESTAMP(#{monBefore12})) OR  
+				  (GA.user_state!='1' AND GA.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{monBefore0},INTERVAL 1 day)))
+			   )          
+		 ORDER BY new_work_order ASC, GA.WORK_LEVEL DESC, GA.USER_NO ASC		    
+	</select>
+	
+	
+	
+	
+	
+    <select id="getMisRegTmMbr1_BACKUP_20170519" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+        SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id_main team_id, getTopTmBscTeamName(tmMbr.team_id_main) team_name
+            , reg_12, reg_11, reg_10, reg_9, reg_8, reg_7, reg_6, reg_5, reg_4, reg_3, reg_2, reg_1
+            , cls_12, cls_11, cls_10, cls_9, cls_8, cls_7, cls_6, cls_5, cls_4, cls_3, cls_2, cls_1
+        FROM top_mbr_bsc tmMbr
+            LEFT JOIN (SELECT user_no, IFNULL(count(suim_rpt_no),'-') reg_12
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore12})
+                        AND reg_date &lt; unix_timestamp(#{monBefore11})
+                    ) a1 ON tmMbr.user_no = a1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_12
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore12})
+                        AND close_date &lt; unix_timestamp(#{monBefore11})
+                    ) a2 ON tmMbr.user_no = a2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_11
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore11})
+                        AND reg_date &lt; unix_timestamp(#{monBefore10})
+                    ) b1 ON tmMbr.user_no = b1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_11
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore11})
+                        AND close_date &lt; unix_timestamp(#{monBefore10})
+                    ) b2 ON tmMbr.user_no = b2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_10
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore10})
+                        AND reg_date &lt; unix_timestamp(#{monBefore9})
+                    ) c1 ON tmMbr.user_no = c1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_10
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore10})
+                        AND close_date &lt; unix_timestamp(#{monBefore9})
+                    ) c2 ON tmMbr.user_no = c2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_9
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore9})
+                        AND reg_date &lt; unix_timestamp(#{monBefore8})
+                    ) d1 ON tmMbr.user_no = d1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_9
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore9})
+                        AND close_date &lt; unix_timestamp(#{monBefore8})
+                    ) d2 ON tmMbr.user_no = d2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_8
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore8})
+                        AND reg_date &lt; unix_timestamp(#{monBefore7})
+                    ) e1 ON tmMbr.user_no = e1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_8
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore8})
+                        AND close_date &lt; unix_timestamp(#{monBefore7})
+                    ) e2 ON tmMbr.user_no = e2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_7
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore7})
+                        AND reg_date &lt; unix_timestamp(#{monBefore6})
+                    ) f1 ON tmMbr.user_no = f1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_7
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore7})
+                        AND close_date &lt; unix_timestamp(#{monBefore6})
+                    ) f2 ON tmMbr.user_no = f2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_6
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore6})
+                        AND reg_date &lt; unix_timestamp(#{monBefore5})
+                    ) g1 ON tmMbr.user_no = g1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_6
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore6})
+                        AND close_date &lt; unix_timestamp(#{monBefore5})
+                    ) g2 ON tmMbr.user_no = g2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_5
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore5})
+                        AND reg_date &lt; unix_timestamp(#{monBefore4})
+                    ) h1 ON tmMbr.user_no = h1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_5
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore5})
+                        AND close_date &lt; unix_timestamp(#{monBefore4})
+                    ) h2 ON tmMbr.user_no = h2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_4
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore4})
+                        AND reg_date &lt; unix_timestamp(#{monBefore3})
+                    ) i1 ON tmMbr.user_no = i1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_4
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore4})
+                        AND close_date &lt; unix_timestamp(#{monBefore3})
+                    ) i2 ON tmMbr.user_no = i2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_3
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore3})
+                        AND reg_date &lt; unix_timestamp(#{monBefore2})
+                    ) j1 ON tmMbr.user_no = j1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_3
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore3})
+                        AND close_date &lt; unix_timestamp(#{monBefore2})
+                    ) j2 ON tmMbr.user_no = j2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_2
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore2})
+                        AND reg_date &lt; unix_timestamp(#{monBefore1})
+                    ) k1 ON tmMbr.user_no = k1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_2
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore2})
+                        AND close_date &lt; unix_timestamp(#{monBefore1})
+                    ) k2 ON tmMbr.user_no = k2.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_1
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND reg_date >= unix_timestamp(#{monBefore1})
+                        AND reg_date &lt; unix_timestamp(#{monBefore0})
+                    ) l1 ON tmMbr.user_no = l1.user_no
+            LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_1
+                        FROM top_rpt_head
+                        WHERE user_no = #{user_no}
+                        AND suim_rpt_state!='3'
+                        AND close_date >= unix_timestamp(#{monBefore1})
+                        AND close_date &lt; unix_timestamp(#{monBefore0})
+                    ) l2 ON tmMbr.user_no = l2.user_no
+        WHERE tmMbr.user_no = #{user_no}
+    </select>	
+
+	<select id="getMisRegTmMbr1_170215" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, reg_12, reg_11, reg_10, reg_9, reg_8, reg_7, reg_6, reg_5, reg_4, reg_3, reg_2, reg_1
+			, cls_12, cls_11, cls_10, cls_9, cls_8, cls_7, cls_6, cls_5, cls_4, cls_3, cls_2, cls_1
+		FROM
+			(SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name
+			FROM top_mbr_bsc mbrBsc
+			WHERE mbrBsc.team_id_main = #{team_id}
+			AND ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{monBefore12}))
+				OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{monBefore0},INTERVAL 1 day))))
+			ORDER BY mbrBsc.work_type, mbrBsc.work_level DESC, mbrBsc.user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, IFNULL(count(suim_rpt_no),'-') reg_12
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore12})
+						AND reg_date &lt; unix_timestamp(#{monBefore11})
+						GROUP BY user_no) a1 ON tmMbr.user_no = a1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_12
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore12})
+						AND close_date &lt; unix_timestamp(#{monBefore11})
+						GROUP BY user_no) a2 ON tmMbr.user_no = a2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_11
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore11})
+						AND reg_date &lt; unix_timestamp(#{monBefore10})
+						GROUP BY user_no) b1 ON tmMbr.user_no = b1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_11
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore11})
+						AND close_date &lt; unix_timestamp(#{monBefore10})
+						GROUP BY user_no) b2 ON tmMbr.user_no = b2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_10
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore10})
+						AND reg_date &lt; unix_timestamp(#{monBefore9})
+						GROUP BY user_no) c1 ON tmMbr.user_no = c1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_10
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore10})
+						AND close_date &lt; unix_timestamp(#{monBefore9})
+						GROUP BY user_no) c2 ON tmMbr.user_no = c2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_9
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore9})
+						AND reg_date &lt; unix_timestamp(#{monBefore8})
+						GROUP BY user_no) d1 ON tmMbr.user_no = d1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_9
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore9})
+						AND close_date &lt; unix_timestamp(#{monBefore8})
+						GROUP BY user_no) d2 ON tmMbr.user_no = d2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_8
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore8})
+						AND reg_date &lt; unix_timestamp(#{monBefore7})
+						GROUP BY user_no) e1 ON tmMbr.user_no = e1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_8
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore8})
+						AND close_date &lt; unix_timestamp(#{monBefore7})
+						GROUP BY user_no) e2 ON tmMbr.user_no = e2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_7
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore7})
+						AND reg_date &lt; unix_timestamp(#{monBefore6})
+						GROUP BY user_no) f1 ON tmMbr.user_no = f1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_7
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore7})
+						AND close_date &lt; unix_timestamp(#{monBefore6})
+						GROUP BY user_no) f2 ON tmMbr.user_no = f2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_6
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore6})
+						AND reg_date &lt; unix_timestamp(#{monBefore5})
+						GROUP BY user_no) g1 ON tmMbr.user_no = g1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_6
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore6})
+						AND close_date &lt; unix_timestamp(#{monBefore5})
+						GROUP BY user_no) g2 ON tmMbr.user_no = g2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_5
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore5})
+						AND reg_date &lt; unix_timestamp(#{monBefore4})
+						GROUP BY user_no) h1 ON tmMbr.user_no = h1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_5
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore5})
+						AND close_date &lt; unix_timestamp(#{monBefore4})
+						GROUP BY user_no) h2 ON tmMbr.user_no = h2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_4
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore4})
+						AND reg_date &lt; unix_timestamp(#{monBefore3})
+						GROUP BY user_no) i1 ON tmMbr.user_no = i1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_4
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore4})
+						AND close_date &lt; unix_timestamp(#{monBefore3})
+						GROUP BY user_no) i2 ON tmMbr.user_no = i2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_3
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore3})
+						AND reg_date &lt; unix_timestamp(#{monBefore2})
+						GROUP BY user_no) j1 ON tmMbr.user_no = j1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_3
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore3})
+						AND close_date &lt; unix_timestamp(#{monBefore2})
+						GROUP BY user_no) j2 ON tmMbr.user_no = j2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_2
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore2})
+						AND reg_date &lt; unix_timestamp(#{monBefore1})
+						GROUP BY user_no) k1 ON tmMbr.user_no = k1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_2
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore2})
+						AND close_date &lt; unix_timestamp(#{monBefore1})
+						GROUP BY user_no) k2 ON tmMbr.user_no = k2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) reg_1
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND reg_date >= unix_timestamp(#{monBefore1})
+						AND reg_date &lt; unix_timestamp(#{monBefore0})
+						GROUP BY user_no) l1 ON tmMbr.user_no = l1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) cls_1
+						FROM top_rpt_head
+						WHERE team_id=#{team_id}
+						AND suim_rpt_state!='3'
+						AND close_date >= unix_timestamp(#{monBefore1})
+						AND close_date &lt; unix_timestamp(#{monBefore0})
+						GROUP BY user_no) l2 ON tmMbr.user_no = l2.user_no
+	</select>
+
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TopMainBoardMapper">
+
+	<select id="topMainBoardNoticeList" resultType="kr.co.toplac.brd.common.BoardVO">
+		SELECT 1 board_type, title, board_no, `contents`, reg_date_fmt, memo_cnt, day_cnt, title_text, title_classify, '' as ptnr_name, 0 AS category_id FROM
+			(SELECT CONCAT(getCodeValue('brd_notice_top', 'title_classify', title_classify), ' ', title) title			
+			, board_no
+			, REPLACE(`contents`,'\"','\'') `contents`
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date_fmt
+			, (SELECT count(memo_no) FROM brd_notice_top_memo WHERE fk_no = board_no) memo_cnt
+			, FLOOR((UNIX_TIMESTAMP(NOW()) - reg_date) / 24 / 60 / 60) day_cnt
+			, title as title_text
+			, title_classify
+			, ''
+			, 0
+			FROM brd_notice_top
+			ORDER BY board_no DESC
+			LIMIT 7) a
+		UNION ALL
+		SELECT 2 board_type, title, board_no, `contents`, reg_date_fmt, memo_cnt, day_cnt, title_text, title_classify, ptnr_name, category_id FROM
+			(SELECT CONCAT(getTopPtnrBscPtnrNick(ptnr_id), ' ', getCodeValue('brd_notice_top', 'title_classify', title_classify), ' ', title) title			
+			, board_no
+			, REPLACE(`contents`,'\"','\'') `contents`
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date_fmt
+			, (SELECT count(memo_no) FROM brd_reference_ptnr_memo WHERE fk_no = board_no) memo_cnt
+			, FLOOR((UNIX_TIMESTAMP(NOW()) - reg_date) / 24 / 60 / 60) day_cnt
+			, title as title_text
+			, title_classify
+			, CASE 
+				WHEN (ptnr_id != 0 )
+				THEN getTopPtnrBscPtnrNick(ptnr_id)
+				ELSE ''
+			  END AS ptnr_name
+			, category_id			
+			FROM brd_reference_ptnr
+			<!-- WHERE category_id = 0 -->
+			ORDER BY board_no DESC
+			LIMIT 7) b
+	</select>
+
+	<select id="topMainBoardFreeList" resultType="kr.co.toplac.brd.common.BoardVO">
+		SELECT title, board_no
+		, REPLACE(`contents`,'\"','\'') `contents`
+		, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date_fmt
+		, (SELECT count(memo_no) FROM brd_free_memo WHERE fk_no = board_no) memo_cnt
+		, FLOOR((UNIX_TIMESTAMP(NOW()) - reg_date) / 24 / 60 / 60) day_cnt
+		FROM brd_free
+		ORDER BY reg_date DESC
+		LIMIT 7
+	</select>
+	
+	<select id="topMainBoardGuideList" parameterType="hashmap"  resultType="AsraMap">
+		SELECT  GUIDE_NO
+			   ,TITLE
+			   ,GUIDE_TYPE	
+			   ,REPLACE(CONTENTS,'\"','\'')	CONTENTS
+			   ,DATE_FORMAT(REG_DATE, '%Y-%m-%d') REG_DATE_FMT
+			   ,FLOOR((UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(REG_DATE)) / 24 / 60 / 60) DAY_CNT
+		  FROM  brd_guide
+	  ORDER BY  REG_DATE DESC
+	     LIMIT 7
+	</select>
+</mapper>

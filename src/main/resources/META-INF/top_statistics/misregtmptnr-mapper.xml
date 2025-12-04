@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisRegTmPtnrMapper">
+
+	<select id="getMisRegTmPtnr1" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+        SELECT  GA.ptnr_id 
+               ,GA.ptnr_nick
+               ,GB.reg_12 ,GB.reg_11 ,GB.reg_10 ,GB.reg_9 ,GB.reg_8 ,GB.reg_7 ,GB.reg_6 ,GB.reg_5 ,GB.reg_4 ,GB.reg_3 ,GB.reg_2 ,GB.reg_1
+               ,GC.cls_12 ,GC.cls_11 ,GC.cls_10 ,GC.cls_9 ,GC.cls_8 ,GC.cls_7 ,GC.cls_6 ,GC.cls_5 ,GC.cls_4 ,GC.cls_3 ,GC.cls_2 ,GC.cls_1 
+          FROM  top_ptnr_bsc GA
+          LEFT  JOIN (
+                      SELECT  C.PTNR_ID
+                             ,SUM(C.REG_12) AS reg_12
+                             ,SUM(C.REG_11) AS reg_11
+                             ,SUM(C.REG_10) AS reg_10
+                             ,SUM(C.REG_9) AS reg_9
+                             ,SUM(C.REG_8) AS reg_8
+                             ,SUM(C.REG_7) AS reg_7
+                             ,SUM(C.REG_6) AS reg_6
+                             ,SUM(C.REG_5) AS reg_5
+                             ,SUM(C.REG_4) AS reg_4
+                             ,SUM(C.REG_3) AS reg_3
+                             ,SUM(C.REG_2) AS reg_2
+                             ,SUM(C.REG_1) AS reg_1
+                        FROM  (
+
+                              SELECT  0 AS PTNR_ID 
+                                     ,0 AS SUIM_RPT_NO
+                                     ,0 AS REG_12
+                                     ,0 AS REG_11
+                                     ,0 AS REG_10
+                                     ,0 AS REG_9
+                                     ,0 AS REG_8
+                                     ,0 AS REG_7
+                                     ,0 AS REG_6
+                                     ,0 AS REG_5
+                                     ,0 AS REG_4
+                                     ,0 AS REG_3
+                                     ,0 AS REG_2
+                                     ,0 AS REG_1
+                                FROM  DUAL   
+							<if test='basicYN == "Y"'>
+                              UNION ALL
+                              SELECT  A.PTNR_ID 
+                                     ,A.SUIM_RPT_NO
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+                                FROM  top_rpt_head A 
+                               WHERE  1=1
+                                 AND  A.TEAM_ID = #{team_id}
+                                 AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 14)
+                                 AND  A.SUIM_RPT_STATE != '3'
+                                 AND  A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>
+							<if test='primYN == "Y"'>
+                              UNION ALL
+                              SELECT  B.PTNR_ID 
+                                     ,B.SUIM_RPT_NO
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+                                FROM  top_prim_biz_rpt_head B 
+                               WHERE  1=1
+                                 AND  B.TEAM_ID = #{team_id}
+                                 AND  B.SUIM_RPT_STATE != '3'
+                                 AND  B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>	                                 
+                               ) C
+                       WHERE  1=1
+                      GROUP BY C.PTNR_ID  
+                     ) GB
+            ON  GA.PTNR_ID = GB.PTNR_ID  
+          LEFT  JOIN (
+                      SELECT  C.PTNR_ID
+                             ,SUM(C.CLS_12) AS cls_12
+                             ,SUM(C.CLS_11) AS cls_11
+                             ,SUM(C.CLS_10) AS cls_10
+                             ,SUM(C.CLS_9) AS cls_9
+                             ,SUM(C.CLS_8) AS cls_8
+                             ,SUM(C.CLS_7) AS cls_7
+                             ,SUM(C.CLS_6) AS cls_6
+                             ,SUM(C.CLS_5) AS cls_5
+                             ,SUM(C.CLS_4) AS cls_4
+                             ,SUM(C.CLS_3) AS cls_3
+                             ,SUM(C.CLS_2) AS cls_2
+                             ,SUM(C.CLS_1) AS cls_1
+                        FROM  (
+                              SELECT  0 AS PTNR_ID 
+                                     ,0 AS SUIM_RPT_NO
+                                     ,0 AS CLS_12
+                                     ,0 AS CLS_11
+                                     ,0 AS CLS_10
+                                     ,0 AS CLS_9
+                                     ,0 AS CLS_8
+                                     ,0 AS CLS_7
+                                     ,0 AS CLS_6
+                                     ,0 AS CLS_5
+                                     ,0 AS CLS_4
+                                     ,0 AS CLS_3
+                                     ,0 AS CLS_2
+                                     ,0 AS CLS_1
+                                FROM  DUAL                           
+							<if test='basicYN == "Y"'>                        
+                              UNION ALL                        
+                              SELECT  A.PTNR_ID 
+                                     ,A.SUIM_RPT_NO
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                                FROM  top_rpt_head A 
+                               WHERE  1=1
+                                 AND  A.TEAM_ID = #{team_id}
+                                 AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                 AND  A.SUIM_RPT_STATE != '3'
+                                 AND  A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>
+							<if test='primYN == "Y"'>
+                              UNION ALL
+                              SELECT  B.PTNR_ID 
+                                     ,B.SUIM_RPT_NO
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                                FROM  top_prim_biz_rpt_head B 
+                               WHERE  1=1
+                                 AND  B.TEAM_ID = #{team_id}
+                                 AND  B.SUIM_RPT_STATE != '3'
+                                 AND  B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>
+                               ) C
+                       WHERE  1=1
+                      GROUP BY C.PTNR_ID    
+                     ) GC
+            ON  GA.PTNR_ID = GC.PTNR_ID  
+         WHERE  1=1
+           AND  GA.PTNR_LEVEL = 1
+           AND  GA.STATISTICS_YN = 1 
+        ORDER BY GA.STATISTICS_ORDER ASC, GA.PTNR_ORDER DESC, GA.PTNR_ID ASC 
+	</select>
+
+	<select id="getMisRegTmPtnr4" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+        SELECT  GA.ptnr_id 
+               ,GA.ptnr_nick
+               ,GB.reg_12 ,GB.reg_11 ,GB.reg_10 ,GB.reg_9 ,GB.reg_8 ,GB.reg_7 ,GB.reg_6 ,GB.reg_5 ,GB.reg_4 ,GB.reg_3 ,GB.reg_2 ,GB.reg_1
+               ,GC.cls_12 ,GC.cls_11 ,GC.cls_10 ,GC.cls_9 ,GC.cls_8 ,GC.cls_7 ,GC.cls_6 ,GC.cls_5 ,GC.cls_4 ,GC.cls_3 ,GC.cls_2 ,GC.cls_1 
+          FROM  top_ptnr_bsc GA
+          LEFT  JOIN (
+                      SELECT  C.PTNR_ID
+                             ,SUM(C.REG_12) AS reg_12
+                             ,SUM(C.REG_11) AS reg_11
+                             ,SUM(C.REG_10) AS reg_10
+                             ,SUM(C.REG_9) AS reg_9
+                             ,SUM(C.REG_8) AS reg_8
+                             ,SUM(C.REG_7) AS reg_7
+                             ,SUM(C.REG_6) AS reg_6
+                             ,SUM(C.REG_5) AS reg_5
+                             ,SUM(C.REG_4) AS reg_4
+                             ,SUM(C.REG_3) AS reg_3
+                             ,SUM(C.REG_2) AS reg_2
+                             ,SUM(C.REG_1) AS reg_1
+                        FROM  (
+                              SELECT  0 AS PTNR_ID 
+                                     ,0 AS SUIM_RPT_NO
+                                     ,0 AS REG_12
+                                     ,0 AS REG_11
+                                     ,0 AS REG_10
+                                     ,0 AS REG_9
+                                     ,0 AS REG_8
+                                     ,0 AS REG_7
+                                     ,0 AS REG_6
+                                     ,0 AS REG_5
+                                     ,0 AS REG_4
+                                     ,0 AS REG_3
+                                     ,0 AS REG_2
+                                     ,0 AS REG_1
+                                FROM  DUAL                           
+							<if test='basicYN == "Y"'>                        
+                              UNION ALL                                         
+                              SELECT  A.PTNR_ID 
+                                     ,A.SUIM_RPT_NO
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                                     ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+                                FROM  top_rpt_head A 
+                               WHERE  1=1
+                                 AND  A.TEAM_ID = #{team_id}
+                                 AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                 AND  A.SUIM_RPT_STATE != '3'
+                                 AND  A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>
+							<if test='primYN == "Y"'>         
+                              UNION ALL
+                              SELECT  B.PTNR_ID 
+                                     ,B.SUIM_RPT_NO
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                                     ,CASE WHEN B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+                                FROM  top_prim_biz_rpt_head B 
+                               WHERE  1=1
+                                 AND  B.TEAM_ID = #{team_id}
+                                 AND  B.SUIM_RPT_STATE != '3'
+                                 AND  B.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  B.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>         
+                               ) C
+                       WHERE  1=1
+                      GROUP BY C.PTNR_ID  
+                     ) GB
+            ON  GA.PTNR_ID = GB.PTNR_ID  
+          LEFT  JOIN (
+                      SELECT  C.PTNR_ID
+                             ,SUM(C.CLS_12) AS cls_12
+                             ,SUM(C.CLS_11) AS cls_11
+                             ,SUM(C.CLS_10) AS cls_10
+                             ,SUM(C.CLS_9) AS cls_9
+                             ,SUM(C.CLS_8) AS cls_8
+                             ,SUM(C.CLS_7) AS cls_7
+                             ,SUM(C.CLS_6) AS cls_6
+                             ,SUM(C.CLS_5) AS cls_5
+                             ,SUM(C.CLS_4) AS cls_4
+                             ,SUM(C.CLS_3) AS cls_3
+                             ,SUM(C.CLS_2) AS cls_2
+                             ,SUM(C.CLS_1) AS cls_1
+                        FROM  (
+                              SELECT  0 AS PTNR_ID 
+                                     ,0 AS SUIM_RPT_NO
+                                     ,0 AS CLS_12
+                                     ,0 AS CLS_11
+                                     ,0 AS CLS_10
+                                     ,0 AS CLS_9
+                                     ,0 AS CLS_8
+                                     ,0 AS CLS_7
+                                     ,0 AS CLS_6
+                                     ,0 AS CLS_5
+                                     ,0 AS CLS_4
+                                     ,0 AS CLS_3
+                                     ,0 AS CLS_2
+                                     ,0 AS CLS_1
+                                FROM  DUAL                           
+							<if test='basicYN == "Y"'>                        
+                              UNION ALL                        
+                              SELECT  A.PTNR_ID 
+                                     ,A.SUIM_RPT_NO
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                                     ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                                FROM  top_rpt_head A 
+                               WHERE  1=1
+                                 AND  A.TEAM_ID = #{team_id}
+                                 AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                 AND  A.SUIM_RPT_STATE != '3'
+                                 AND  A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>
+							<if test='primYN == "Y"'>                                 
+                              UNION ALL
+                              SELECT  B.PTNR_ID 
+                                     ,B.SUIM_RPT_NO
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                                     ,CASE WHEN B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                                FROM  top_prim_biz_rpt_head B 
+                               WHERE  1=1
+                                 AND  B.TEAM_ID = #{team_id}
+                                 AND  B.SUIM_RPT_STATE != '3'
+                                 AND  B.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                                 AND  B.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+							</if>                                 
+                               ) C
+                       WHERE  1=1
+                      GROUP BY C.PTNR_ID    
+                     ) GC
+            ON  GA.PTNR_ID = GC.PTNR_ID  
+         WHERE  1=1
+           AND  GA.PTNR_LEVEL = 1
+           AND  GA.STATISTICS_YN = 1 
+        ORDER BY GA.STATISTICS_ORDER ASC, GA.PTNR_ORDER DESC, GA.PTNR_ID ASC 
+	</select>
+	    
+</mapper>

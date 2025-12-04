@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SuimTmMbrPopMapper"> 
+
+	<select id="suimTmMbrSMSYN" parameterType="java.lang.String" resultType="kr.co.toplac.util.mbr.SuimTmMbrPopSMSVO">
+		SELECT ptnr_sms1, ptnr_sms2, ptnr_sms3
+		FROM top_ptnr_bsc
+		WHERE ptnr_id = (SELECT ptnr_id FROM
+							<choose>
+								<when test="gbNo == 1 or gbNo == 5">
+									top_rpt_head
+								</when>
+								<when test="gbNo == 2">
+									top_prim_biz_rpt_head
+								</when>
+								<when test="gbNo == 310">
+									top_suitability_10
+								</when>
+								<when test="gbNo == 312">
+									top_suitability_12
+								</when>
+								<when test="gbNo == 317">
+									top_suitability_17
+								</when>
+								<when test="gbNo == 318">
+									top_contract
+								</when>
+							</choose>
+						WHERE suim_rpt_no = #{smNo})
+	</select>
+
+	<update id="suimTmMbrChg" parameterType="kr.co.toplac.util.mbr.SuimTmMbrPopViewVO" >
+		UPDATE
+			<choose>
+				<when test="gbNo == 1 or gbNo == 5">
+					top_rpt_head
+				</when>
+				<when test="gbNo == 2">
+					top_prim_biz_rpt_head
+				</when>
+				<when test="gbNo == 310">
+					top_suitability_10
+				</when>
+				<when test="gbNo == 312">
+					top_suitability_12
+				</when>
+				<when test="gbNo == 317">
+					top_suitability_17
+				</when>
+				<when test="gbNo == 318">
+					top_contract
+				</when>
+			</choose>
+		<choose>
+			<when test="gbNo == 5">
+				SET onestop_team_id = #{tmNo}, onestop_mbr_no = #{mbrNo}
+			</when>
+			<otherwise>
+				SET team_id = #{tmNo}, user_no = #{mbrNo}
+			</otherwise>
+		</choose>
+		WHERE suim_rpt_no = #{smNo}
+	</update>
+	
+	<update id="helpTmMbrChg" parameterType="kr.co.toplac.util.mbr.SuimTmMbrPopViewVO" >
+		UPDATE top_rpt_help
+		   SET accept_team = #{tmNo}
+		   	  ,accept_id = #{mbrNo}
+		 WHERE serial_no = #{smNo}
+	</update>
+	
+	
+	<select id="suimTmMbrChgSMS" parameterType="kr.co.toplac.util.mbr.SuimTmMbrPopViewVO" resultType="kr.co.toplac.util.mbr.SuimTmMbrPopSMSVO">
+		SELECT a.ptnr_id, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_nm
+			, a.beneficiary_nm
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, b.ptnr_sms2, b.ptnr_sms2_msg
+			, REPLACE(c.handphone,'-','') handphone
+		FROM
+			<choose>
+				<when test="gbNo == 1">
+					top_rpt_head a
+				</when>
+				<when test="gbNo == 2">
+					top_prim_biz_rpt_head a
+				</when>
+			</choose>
+	INNER JOIN top_ptnr_bsc b
+		   ON a.ptnr_id = b.ptnr_id
+		 LEFT JOIN top_mbr_bsc c
+		   ON a.user_no = c.user_no
+		WHERE suim_rpt_no = #{smNo}	
+	</select>
+	
+	
+	<insert id="insertRptUserLog" parameterType="kr.co.toplac.util.mbr.SuimTmMbrPopViewVO" >
+		INSERT INTO top_rpt_user_log
+		(
+			 gubun
+			,suim_rpt_no
+			,bef_team_id
+			,bef_user_no
+			,aft_team_id
+			,aft_user_no
+			,reg_date
+		)
+		SELECT #{gbNo}
+			  ,#{smNo}
+			  ,team_id
+			  ,user_no
+			  ,#{tmNo}
+			  ,#{mbrNo}
+			  ,unix_timestamp(now())
+		<choose>
+			<when test="gbNo == 1 or gbNo == 5">
+				FROM top_rpt_head
+			</when>
+			<when test="gbNo == 2">
+				FROM top_prim_biz_rpt_head
+			</when>
+			<when test="gbNo == 310">
+				FROM top_suitability_10
+			</when>
+			<when test="gbNo == 312">
+				FROM top_suitability_12
+			</when>
+			<when test="gbNo == 317">
+				FROM top_suitability_17
+			</when>
+			<when test="gbNo == 318">
+				FROM top_contract
+			</when>
+		</choose>
+		WHERE suim_rpt_no = #{smNo} 	
+	</insert>
+	
+</mapper>

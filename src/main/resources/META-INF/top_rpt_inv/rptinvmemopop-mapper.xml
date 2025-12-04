@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="InvoiceMemoPopMapper">
+	
+	<select id="getInvoiceMemo" resultType="kr.co.toplac.toprptinv.TopRptInvCompositeVO">
+		
+		select 
+			 a.rpt_invoice_no,
+			 a.suim_rpt_no,
+			 a.amt_total,
+			 a.rpt_invoice_memo,
+			 b.team_id,
+			 getTopTmBscTeamName(team_id) team_name,
+			 b.user_no,
+			 getTopMbrBscUserName(user_no) user_name,
+			 b.ptnr_mbr_no,
+			 getTopPtnrMbrBscPtnrMbrName(ptnr_mbr_no) ptnr_mbr_name,
+			 b.ptnr_id,
+			 getTopPtnrBscPtnrNick(ptnr_id) ptnr_name,
+			 b.policyholder_nm,
+			 b.beneficiary_nm,
+			 b.suim_accept_no,
+			 b.suim_close_no,
+			 c.accident_no,
+			 c.policy_no
+		from top_rpt_invoice a , top_rpt_head b, top_rpt_body c
+		where a.rpt_invoice_no = #{rpt_invoice_no}
+	    and a.suim_rpt_no=b.suim_rpt_no
+	    and a.suim_rpt_no=c.suim_rpt_no
+		;
+
+	</select>
+	
+	<update id="updateRptInvMemoPop" parameterType="kr.co.toplac.toprptinv.TopRptInvCompositeVO">
+		update
+		top_rpt_invoice
+		set
+		
+		<if test="rpt_invoice_memo != null">
+		rpt_invoice_memo = #{rpt_invoice_memo}
+		</if>
+		
+		where rpt_invoice_no = #{rpt_invoice_no}
+	</update>
+
+</mapper>

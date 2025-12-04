@@ -1,0 +1,92 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+							<div class="tableStyle2">
+								<table>
+									<thead>
+										<tr>
+											<th width="5%">번호</th>
+											<th width="5%">상태</th>
+											<th width="10%">구분</th>
+											<th>제목</th>
+											<th width="5%">첨부</th>
+											<th width="10%">요청부서</th>
+											<th width="10%">요청자</th>
+											<th width="10%">요청일</th>
+											<th width="10%">접수일</th>
+											<th width="10%">완료일</th>
+											<th width="5%">조회</th>
+										</tr>
+									</thead>
+									<tbody>
+										<c:forEach items="${boardListMail}" var="boardList">
+											<tr>
+													<!--번호-->
+													<td>${boardList.board_no}</td>
+													<!--상태-->
+													<td>${boardList.solve_state_nm}</td>
+													<!--구분-->
+													<td>${boardList.accept_classify_nm}</td>
+													<!--제목-->
+													<td style="text-align:left;padding-left:7px;">
+														<div style="width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;">
+														<a href="./helpDeskBoardDetail?boardNo=${boardList.board_no}&boardSrcType=${searchVO.boardSrcType}&boardSrcWord=${searchVO.boardSrcWord}&reqPgNo=${reqPgNoInt1}">
+															${boardList.title}
+														</a>
+														<c:if test="${boardList.memo_cnt > 0}"> [ ${boardList.memo_cnt} ] </c:if>
+														</div>
+													</td>
+													<!--첨부-->
+													<td>
+														<c:if test="${boardList.file_cnt > 0}">
+															<img alt="" src="./resources/ls_img/ls_board/icon_disket.gif">
+														</c:if>
+													</td>
+													<!--요청부서-->
+													<td>${boardList.team_name}</td>
+													<!--요청자-->
+													<td>${boardList.user_nm}</td>
+													<!--작성일-->
+													<td>${boardList.reg_date_fmt}</td>
+													<!--접수일-->
+													<td>${boardList.accept_date_fmt}</td>
+													<!--완료일-->
+													<td>${boardList.solve_date_fmt}</td>
+													<!--조회-->
+													<td>${boardList.view_cnt}</td>
+											</tr>
+										</c:forEach>
+									</tbody>
+								</table>
+							</div>
+							<table border="0" style="margin-top:7px;">
+								<tr>
+									<td align="center">
+										<!-- page -->
+	<c:if test="${pgNm7 != null}">
+		<c:if test="${startPgNoInt7 > 10}">
+			<a href="javascript:reqPgNoClick(${startPgNoInt7 - 1},'mail');">&lt;</a>
+		</c:if>
+
+		<c:forEach var="pageNo" begin="${startPgNoInt7}" end="${endPgNoInt7}" step="1">
+			<c:choose>
+				<c:when test="${reqPgNoInt7 != pageNo}">
+					<a href="javascript:reqPgNoClick(${pageNo},'mail');"><c:out value="${pageNo}" /></a>
+					&nbsp;&nbsp;
+				</c:when>
+				<c:otherwise>
+					<font color="red"><c:out value="${pageNo}" /></font>
+					&nbsp;&nbsp;
+				</c:otherwise>
+			</c:choose>
+		</c:forEach>
+
+		<c:if test="${totPgCntInt7 >= endPgNoInt7 + 1}">
+			<a href="javascript:reqPgNoClick(${endPgNoInt7 + 1},'mail');">&gt;</a>
+		</c:if>
+	</c:if>
+										<!-- //page -->
+									</td>
+								</tr>
+							</table>

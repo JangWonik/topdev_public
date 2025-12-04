@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="LogNscTeamMapper">
+
+	<select id="teamsnkind1" parameterType="java.util.List" resultType="kr.co.toplac.lslog.LogNscTeamVO">
+		select team_id, team_name
+		from top_tm_bsc
+		where team_type='1'
+		and team_statistics1='0'
+		order by team_order desc, team_id asc
+	</select>
+
+	<select id="lognkind1" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogNscTeamVO">
+		select ifnull(unit_cn,0) unit_cn
+				, ifnull(nsc_price_assess,0) nsc_price_assess, ifnull(nsc_price_time,0) nsc_price_time, ifnull(nsc_price_assess+nsc_price_time,0) nsc_price_sum1
+				, ifnull(nsc_price_traffic,0) nsc_price_traffic, ifnull(nsc_price_question,0) nsc_price_question, ifnull(nsc_price_receipt,0) nsc_price_receipt
+				, ifnull(nsc_price_assess+nsc_price_time+nsc_price_traffic+nsc_price_question+nsc_price_receipt,0) nsc_price_sum2
+				, ifnull(nsc_price_total,0) nsc_price_total
+				, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum1
+				, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+				, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum2
+				, ifnull(price_total,0) price_total
+		from
+		(select count(distinct user_no) unit_cn
+			from top_rpt_head
+			where team_id=#{tmpStr}
+			and close_date >= unix_timestamp(#{fromdate}) 
+			and close_date &lt; unix_timestamp(#{todate})) a
+		,(select ifnull(sum(amt_basic),0) nsc_price_assess
+				, ifnull(sum(amt_daily),0) nsc_price_time
+				, ifnull(sum(amt_traffic),0) nsc_price_traffic
+				, ifnull(sum(amt_counsel),0) nsc_price_question
+				, ifnull(sum(amt_etc),0) nsc_price_receipt
+			from top_prim_biz_rpt_head a, top_prim_biz_inv b
+			where a.team_id = #{tmpStr}
+			and a.close_date >= unix_timestamp(#{fromdate})
+			and a.close_date &lt; unix_timestamp(#{todate})
+			and a.suim_rpt_no = b.suim_rpt_no) b
+		, (select ifnull(sum(amt_total),0) nsc_price_total
+			from top_prim_biz_rpt_head a, top_prim_biz_inv b
+			where a.team_id = #{tmpStr}
+			and a.close_date > 0
+			and a.suim_rpt_no = b.suim_rpt_no
+			and b.deposit_date &lt; 1) e
+		, (select ifnull(sum(amt_basic),0) price_assess
+				, ifnull(sum(amt_daily),0) price_time
+				, ifnull(sum(amt_traffic),0) price_traffic
+				, ifnull(sum(amt_counsel),0) price_question
+				, ifnull(sum(amt_etc),0) price_receipt
+			from top_rpt_head a, top_rpt_invoice b
+			where a.team_id = #{tmpStr}
+			and a.close_date >= unix_timestamp(#{fromdate})
+			and a.close_date &lt; unix_timestamp(#{todate})
+			and a.suim_rpt_no = b.suim_rpt_no) f
+		, (select ifnull(sum(amt_total),0) price_total
+			from top_rpt_head a, top_rpt_invoice b
+			where a.team_id = #{tmpStr}
+			and a.close_date > 0
+			and a.suim_rpt_no = b.suim_rpt_no
+			and b.deposit_date &lt; 1) i;
+	</select>
+
+	<select id="teamsnkind4" parameterType="java.util.List" resultType="kr.co.toplac.lslog.LogNscTeamVO">
+		select team_id, team_name
+		from top_tm_bsc
+		where team_type='4'
+		and team_statistics4='0'
+		order by team_order desc, team_id asc
+	</select>
+
+	<select id="lognkind4" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogNscTeamVO">
+		select ifnull(unit_cn,0) unit_cn
+				, ifnull(nsc_price_assess,0) nsc_price_assess, ifnull(nsc_price_time,0) nsc_price_time, ifnull(nsc_price_assess+nsc_price_time,0) nsc_price_sum1
+				, ifnull(nsc_price_traffic,0) nsc_price_traffic, ifnull(nsc_price_question,0) nsc_price_question, ifnull(nsc_price_receipt,0) nsc_price_receipt
+				, ifnull(nsc_price_assess+nsc_price_time+nsc_price_traffic+nsc_price_question+nsc_price_receipt,0) nsc_price_sum2
+				, ifnull(nsc_price_total,0) nsc_price_total
+				, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum1
+				, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+				, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum2
+				, ifnull(price_total,0) price_total
+		from
+		(select count(distinct user_no) unit_cn
+			from top_rpt_head
+			where team_id=#{tmpStr}
+			and close_date >= unix_timestamp(#{fromdate}) 
+			and close_date &lt; unix_timestamp(#{todate})) a
+		,(select ifnull(sum(amt_basic),0) nsc_price_assess
+				, ifnull(sum(amt_daily),0) nsc_price_time
+				, ifnull(sum(amt_traffic),0) nsc_price_traffic
+				, ifnull(sum(amt_counsel),0) nsc_price_question
+				, ifnull(sum(amt_etc),0) nsc_price_receipt
+			from top_prim_biz_rpt_head a, top_prim_biz_inv b
+			where a.team_id = #{tmpStr}
+			and a.close_date >= unix_timestamp(#{fromdate})
+			and a.close_date &lt; unix_timestamp(#{todate})
+			and a.suim_rpt_no = b.suim_rpt_no) b
+		, (select ifnull(sum(amt_total),0) nsc_price_total
+			from top_prim_biz_rpt_head a, top_prim_biz_inv b
+			where a.team_id = #{tmpStr}
+			and a.close_date > 0
+			and a.suim_rpt_no = b.suim_rpt_no
+			and b.deposit_date &lt; 1) e
+		, (select ifnull(sum(amt_basic),0) price_assess
+				, ifnull(sum(amt_daily),0) price_time
+				, ifnull(sum(amt_traffic),0) price_traffic
+				, ifnull(sum(amt_counsel),0) price_question
+				, ifnull(sum(amt_etc),0) price_receipt
+			from top_rpt_head a, top_rpt_invoice b
+			where a.team_id = #{tmpStr}
+			and a.close_date >= unix_timestamp(#{fromdate})
+			and a.close_date &lt; unix_timestamp(#{todate})
+			and a.suim_rpt_no = b.suim_rpt_no) f
+		, (select ifnull(sum(amt_total),0) price_total
+			from top_rpt_head a, top_rpt_invoice b
+			where a.team_id = #{tmpStr}
+			and a.close_date > 0
+			and a.suim_rpt_no = b.suim_rpt_no
+			and b.deposit_date &lt; 1) i;
+	</select>
+
+</mapper>

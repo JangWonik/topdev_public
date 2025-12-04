@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyCostInsNewMapper">
+
+	
+	<select id="getMyCostInsNewList" resultType="kr.co.toplac.topindividual.MyCostInsListVO" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		SELECT cost_no
+				,team_id
+				,user_no
+				,cost_occur_date
+				,DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date_fmt
+				,cost_class_no
+				,getCodeValue('top_cost_item','cost_class_no',cost_class_no) cost_class_no_nm
+				,cost_pay_type
+				,getCodeValue('top_cost_item','cost_pay_type',cost_pay_type) cost_pay_type_nm
+				,cost_bill_ea
+				,cost_pay_amt
+				,cost_pay_place
+				,cost_involved_com
+				,cost_involved_man
+				,cost_memo
+				,cost_aprv_state
+				,getCodeValue('top_cost_item','cost_aprv_state',cost_aprv_state) cost_aprv_state_nm
+				,cost_deposit_amt
+		FROM top_cost_item
+		WHERE user_no = #{user_no}
+		AND cost_class_no != '999'
+		AND cost_gubun is null
+		AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+		<if test="select_class_no != 0 and select_class_no != 999">
+			and cost_class_no = #{select_class_no}
+		</if>
+		ORDER BY cost_reg_date
+	</select>
+	
+	<select id="getMyCostInsClaimNewList" resultType="kr.co.toplac.topindividual.MyCostInsListVO" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		SELECT cost_no
+				,team_id
+				,user_no
+				,cost_occur_date
+				,DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date_fmt
+				,cost_class_no
+				,getCodeValue('top_cost_item','cost_class_no',cost_class_no) cost_class_no_nm
+				,cost_pay_type
+				,getCodeValue('top_cost_item','cost_pay_type',cost_pay_type) cost_pay_type_nm
+				,cost_bill_ea
+				,cost_pay_amt
+				,cost_pay_place
+				,cost_involved_com
+				,cost_involved_man
+				,cost_memo
+				,cost_aprv_state
+				,getCodeValue('top_cost_item','cost_aprv_state',cost_aprv_state) cost_aprv_state_nm
+				,cost_deposit_amt
+				,cost_class_no_claim
+				,cost_suim_accept_no
+				,cost_distance
+		FROM top_cost_item
+		WHERE user_no = #{user_no}
+		AND cost_class_no = '999'
+		AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+		<if test="srch_subclass_no != null and srch_subclass_no != 0 and srch_subclass_no != ''">
+			and cost_class_no_claim = #{srch_subclass_no}
+		</if>
+		ORDER BY cost_reg_date
+	</select>
+
+	<select id="getMyCostInsAddList" resultType="kr.co.toplac.topindividual.MyCostInsListVO" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		SELECT cost_no
+				,team_id
+				,user_no
+				,cost_occur_date
+				,DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date_fmt
+				,DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date_fmt
+				,cost_class_no
+				,getCodeValue('top_cost_item','cost_class_no',cost_class_no) cost_class_no_nm
+				,cost_pay_type
+				,getCodeValue('top_cost_item','cost_pay_type',cost_pay_type) cost_pay_type_nm
+				,cost_bill_ea
+				,cost_pay_amt
+				,cost_pay_place
+				,cost_involved_com
+				,cost_involved_man
+				,cost_memo
+				,cost_aprv_state
+				,getCodeValue('top_cost_item','cost_aprv_state',cost_aprv_state) cost_aprv_state_nm
+				,cost_deposit_amt
+		FROM top_cost_item
+		WHERE user_no = #{user_no}
+		AND cost_gubun = 3
+		AND cost_reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+		<if test="select_class_no != 0 and select_class_no != 999">
+			and cost_class_no = #{select_class_no}
+		</if>
+		ORDER BY cost_reg_date
+	</select>
+	
+	<select id="getMyCostInsNewDate" resultType="kr.co.toplac.topstatistics.StatisticsNowVO" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		SELECT if(DAY(#{cost_occur_date}) &lt; 16
+					,DATE_FORMAT(DATE_SUB(#{cost_occur_date},INTERVAL 1 month),'%Y-%m-16')
+					,DATE_FORMAT(#{cost_occur_date},'%Y-%m-16')) now_from
+				, if(DAY(#{cost_occur_date}) &lt; 16
+					,DATE_FORMAT(#{cost_occur_date},'%Y-%m-15')
+					,DATE_FORMAT(DATE_ADD(#{cost_occur_date},INTERVAL 1 month),'%Y-%m-15')) now_to
+	</select>
+
+	<select id="getMyCostInsNewDepositCloseYN" resultType="int" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		SELECT COUNT(cost_no)
+		FROM top_cost_item
+		WHERE user_no = #{user_no}
+		AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+		AND (cost_deposit_date IS NOT NULL AND cost_deposit_date > 0)
+	</select>
+
+	<insert id = "myCostInsNewAdd" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO" >
+		INSERT INTO top_cost_item
+			(	cost_class_no, team_id, user_no, cost_occur_date,
+				cost_pay_place, cost_involved_com, cost_involved_man, cost_memo,
+				cost_pay_amt, cost_pay_type, cost_bill_ea, cost_reg_date, cost_aprv_state, cost_class_no_claim,
+				cost_suim_accept_no, cost_distance)
+		VALUES (	#{cost_class_no}, #{team_id}, #{user_no}, unix_timestamp(#{cost_occur_date}), 
+					#{cost_pay_place}, #{cost_involved_com}, #{cost_involved_man}, #{cost_memo},
+					#{cost_pay_amt}, #{cost_pay_type}, #{cost_bill_ea}, unix_timestamp(now()), 0, #{cost_class_no_claim},
+					#{cost_suim_accept_no}, #{cost_distance})
+	</insert>
+	
+	<insert id = "myCostInsNewAdditionAdd" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO" >
+		INSERT INTO top_cost_item
+			(	cost_class_no, team_id, user_no, cost_gubun, cost_occur_date, 
+				cost_pay_place, cost_involved_com, cost_involved_man, cost_memo,
+				cost_pay_amt, cost_pay_type, cost_bill_ea, cost_reg_date, cost_aprv_state, cost_class_no_claim,
+				cost_suim_accept_no, cost_distance)
+		VALUES (	#{cost_class_no}, #{team_id}, #{user_no}, 3, unix_timestamp(#{cost_occur_date}), 
+					#{cost_pay_place}, #{cost_involved_com}, #{cost_involved_man}, #{cost_memo},
+					#{cost_pay_amt}, #{cost_pay_type}, #{cost_bill_ea}, unix_timestamp(#{cost_apply_date}), 0, #{cost_class_no_claim},
+					#{cost_suim_accept_no}, #{cost_distance})
+	</insert>
+	
+	
+	<select id="getMyCostInsNewDepositNo" resultType="java.lang.String" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		SELECT cost_deposit_no
+		FROM top_cost_deposit
+		WHERE user_no = #{user_no}
+		AND date_mbr_ins = UNIX_TIMESTAMP(#{viewFromDate})
+	</select>
+
+	<update id="myCostInsNewDepositUdt_170202" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		UPDATE top_cost_deposit
+		SET cost_sum_mbr_ins = (SELECT SUM(cost_pay_amt)
+									FROM top_cost_item
+									WHERE user_no = #{user_no}
+									AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+									AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day)))
+		WHERE cost_deposit_no = #{cost_deposit_no}
+	</update>
+
+	<insert id = "myCostInsNewDepositAdd_170202" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO" >
+		INSERT INTO top_cost_deposit
+		( team_id, user_no
+			, cost_sum_mbr_ins
+			, date_mbr_ins, reg_date )
+		VALUES ( #{team_id}, #{user_no}
+					, (SELECT SUM(cost_pay_amt)
+						FROM top_cost_item
+						WHERE user_no = #{user_no}
+						AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+						AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day)))
+					, unix_timestamp(#{viewFromDate}), unix_timestamp(now()) )
+	</insert>
+
+	<update id="myCostInsNewDepositUdt" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		UPDATE top_cost_deposit
+		SET cost_sum_mbr_ins = IFNULL((SELECT SUM(cost_pay_amt)
+									FROM top_cost_item
+									WHERE user_no = #{user_no}
+									AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+									AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))),0)
+		WHERE cost_deposit_no = #{cost_deposit_no}
+	</update>
+
+	<insert id = "myCostInsNewDepositAdd" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO" >
+		INSERT INTO top_cost_deposit
+		( team_id, user_no
+			, cost_sum_mbr_ins
+			, date_mbr_ins, reg_date )
+		VALUES ( #{team_id}, #{user_no}
+					, IFNULL((SELECT SUM(cost_pay_amt)
+						FROM top_cost_item
+						WHERE user_no = #{user_no}
+						AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+						AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))),0)
+					, unix_timestamp(#{viewFromDate}), unix_timestamp(now()) )
+	</insert>
+
+	<delete id="myCostInsNewDelMyCost" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		DELETE FROM top_cost_item WHERE cost_no = #{cost_no}
+	</delete>
+
+	<update id="myCostInsNewUdtMyCost" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		UPDATE top_cost_item
+		SET	cost_occur_date = unix_timestamp(#{cost_occur_date}),
+			cost_class_no = #{cost_class_no},
+			cost_pay_type = #{cost_pay_type},
+			cost_bill_ea = #{cost_bill_ea},
+			cost_pay_amt = #{cost_pay_amt},
+			cost_pay_place = #{cost_pay_place},
+			cost_involved_com = #{cost_involved_com},
+			cost_involved_man = #{cost_involved_man},
+			cost_memo = #{cost_memo},
+			cost_reg_date = unix_timestamp(now())
+		WHERE cost_no = #{cost_no}
+	</update>
+
+	<update id="myCostInsAddUdtMyCost" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		UPDATE  top_cost_item
+			 SET	 cost_occur_date = unix_timestamp(#{cost_occur_date}),
+					 cost_class_no = #{cost_class_no},
+					 cost_pay_type = #{cost_pay_type},
+					 cost_bill_ea = #{cost_bill_ea},
+					 cost_pay_amt = #{cost_pay_amt},
+					 cost_pay_place = #{cost_pay_place},
+					 cost_involved_com = #{cost_involved_com},
+					 cost_involved_man = #{cost_involved_man},
+					 cost_memo = #{cost_memo},
+					 cost_reg_date = unix_timestamp(#{cost_apply_date})
+		WHERE   cost_no = #{cost_no}
+	</update>
+	
+	<update id="myCostInsNewUdtMyCostClaim" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		UPDATE top_cost_item
+		SET	cost_occur_date = unix_timestamp(#{cost_occur_date}),
+			cost_class_no_claim = #{cost_class_no_claim},
+			cost_pay_type = #{cost_pay_type},
+			cost_bill_ea = #{cost_bill_ea},
+			cost_pay_amt = #{cost_pay_amt},
+			cost_involved_com = #{cost_involved_com},
+			cost_involved_man = #{cost_involved_man},
+			cost_memo = #{cost_memo},
+			cost_reg_date = unix_timestamp(now()),
+			cost_suim_accept_no = #{cost_suim_accept_no},
+			cost_distance = #{cost_distance}
+		WHERE cost_no = #{cost_no}
+	</update>
+
+</mapper>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimBookListMapper">
+
+	<select id="getSuimBookList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		<!-- , getDateDiff(a.reg_date) + 1 past_date -->
+		<!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+		, DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+		, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+		, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		, IFNULL(a.del_date,0) delDate
+		FROM top_rpt_head a, top_rpt_body b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		and a.del_date >= 0
+		ORDER BY a.suim_rpt_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getSuimBookListCnt" resultType = "int">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_rpt_head a
+		WHERE a.del_date >= 0
+	</select>
+
+	<select id="getSuimBookListNotUseBecauseRowNum" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+			, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+			, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+			, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+			, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+			, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.ptnr_mbr_sanction ptnrMbrSanction
+			, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+			, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+			, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+			, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+			, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+			<!-- , getDateDiff(a.reg_date) + 1 past_date -->
+			<!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+			, DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+			, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+			, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+			, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+			, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+			, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+			, IFNULL(a.del_date,0) delDate
+			FROM top_rpt_head a, top_rpt_body b
+			WHERE a.suim_rpt_no = b.suim_rpt_no
+			ORDER BY a.close_date
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+</mapper>

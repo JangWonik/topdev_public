@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="HolidayMapper"> 
+
+	<select id="countWorkDay" resultType="integer" parameterType="String">
+		SELECT 
+			COUNT(*) + 1 AS nCnt
+		FROM sysadm_holiday 
+		WHERE holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+		AND holiday_date > #{regDateFmt}
+		AND holiday_code NOT IN (0,1,7)
+	</select>
+
+	<select id="yearList" resultType="java.lang.String">
+		SELECT distinct LEFT(holiday_date, 4) yearList
+		FROM sysadm_holiday
+		ORDER BY holiday_date
+	</select>
+
+	<select id="oneMonthList" parameterType="kr.co.toplac.sysadm.HolidayViewVO" resultType="kr.co.toplac.sysadm.SysAdmHolidayVO">
+		SELECT	holiday_date, DAYOFWEEK(holiday_date) holiday_yoil
+				, holiday_code, getCodeValue('sysadm_holiday', 'holiday_code', holiday_code) holiday_code_nm
+				, holiday_basis
+		FROM sysadm_holiday
+		WHERE holiday_date like '%${searchString}%'
+		ORDER BY holiday_date
+	</select>
+	
+	<select id="oneMonthList2" parameterType="String" resultType="kr.co.toplac.sysadm.SysAdmHolidayVO">
+		SELECT	holiday_date, DAYOFWEEK(holiday_date) holiday_yoil
+				, holiday_code, getCodeValue('sysadm_holiday', 'holiday_code', holiday_code) holiday_code_nm
+				, holiday_basis, right(holiday_date,2) day
+		FROM sysadm_holiday
+		WHERE  holiday_date like CONCAT('%',#{_parameter},'%')
+		ORDER BY holiday_date
+	</select>
+
+	<select id="holidaySearch" parameterType="kr.co.toplac.sysadm.HolidayViewVO" resultType="kr.co.toplac.sysadm.SysAdmHolidayVO">
+		SELECT	holiday_date, DAYOFWEEK(holiday_date) holiday_yoil
+				, holiday_code, getCodeValue('sysadm_holiday', 'holiday_code', holiday_code) holiday_code_nm
+				, holiday_basis
+		FROM sysadm_holiday
+		WHERE holiday_date = #{searchString}
+	</select>
+
+	<update id = "holidayUpdate" parameterType="kr.co.toplac.sysadm.HolidayViewVO">
+		UPDATE sysadm_holiday
+		SET holiday_code = 0, holiday_basis = #{selectBasis}
+		WHERE holiday_date = #{searchString}
+	</update>
+
+	<update id = "restoreHolidayUpdate" parameterType="kr.co.toplac.sysadm.HolidayViewVO">
+		UPDATE sysadm_holiday
+		SET holiday_code = DAYOFWEEK(holiday_date), holiday_basis = null
+		WHERE holiday_date = #{searchString}
+	</update>
+
+</mapper>

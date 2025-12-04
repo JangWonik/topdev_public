@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MigPrint17UtilMapper">
+
+	<delete id="print172DeleteAll">
+		DELETE FROM top_rpt_print_17_2
+	</delete>
+
+	<select id="report17Forprint172List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		SELECT a.rid, replace(a.b_1,'|','-breakpoint-') splitTargetData
+		FROM ls_report_17 a
+		WHERE a.b_1 != ''
+		ORDER BY a.rid
+	</select>
+
+	<insert id="print172Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		INSERT INTO top_rpt_print_17_2 (suim_rpt_no
+			,chunggu_dtl_1,chunggu_dtl_2,chunggu_dtl_3,chunggu_dtl_4,chunggu_dtl_5
+			,chunggu_dtl_6,chunggu_dtl_7,chunggu_dtl_8,chunggu_dtl_9,chunggu_dtl_10)
+		VALUES(#{suim_rpt_no}
+			, #{chunggu_dtl_1}, #{chunggu_dtl_2}, #{chunggu_dtl_3}, #{chunggu_dtl_4}, #{chunggu_dtl_5}
+			, #{chunggu_dtl_6}, #{chunggu_dtl_7}, #{chunggu_dtl_8}, #{chunggu_dtl_9}, #{chunggu_dtl_10})
+	</insert>
+
+	<update id="print172UpdateSpaceData1">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_1 = ''
+		WHERE chunggu_dtl_1 = '-'
+		OR chunggu_dtl_1 = '--'
+		OR chunggu_dtl_1 = '---'
+		OR chunggu_dtl_1 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData2">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_2 = ''
+		WHERE chunggu_dtl_2 = '-'
+		OR chunggu_dtl_2 = '--'
+		OR chunggu_dtl_2 = '---'
+		OR chunggu_dtl_2 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData3">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_3 = ''
+		WHERE chunggu_dtl_3 = '-'
+		OR chunggu_dtl_3 = '--'
+		OR chunggu_dtl_3 = '---'
+		OR chunggu_dtl_3 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData4">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_4 = ''
+		WHERE chunggu_dtl_4 = '-'
+		OR chunggu_dtl_4 = '--'
+		OR chunggu_dtl_4 = '---'
+		OR chunggu_dtl_4 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData5">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_5 = ''
+		WHERE chunggu_dtl_5 = '-'
+		OR chunggu_dtl_5 = '--'
+		OR chunggu_dtl_5 = '---'
+		OR chunggu_dtl_5 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData6">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_6 = ''
+		WHERE chunggu_dtl_6 = '-'
+		OR chunggu_dtl_6 = '--'
+		OR chunggu_dtl_6 = '---'
+		OR chunggu_dtl_6 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData7">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_7 = ''
+		WHERE chunggu_dtl_7 = '-'
+		OR chunggu_dtl_7 = '--'
+		OR chunggu_dtl_7 = '---'
+		OR chunggu_dtl_7 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData8">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_8 = ''
+		WHERE chunggu_dtl_8 = '-'
+		OR chunggu_dtl_8 = '--'
+		OR chunggu_dtl_8 = '---'
+		OR chunggu_dtl_8 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData9">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_9 = ''
+		WHERE chunggu_dtl_9 = '-'
+		OR chunggu_dtl_9 = '--'
+		OR chunggu_dtl_9 = '---'
+		OR chunggu_dtl_9 = '----'
+	</update>
+
+	<update id="print172UpdateSpaceData10">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_10 = ''
+		WHERE chunggu_dtl_10 = '-'
+		OR chunggu_dtl_10 = '--'
+		OR chunggu_dtl_10 = '---'
+		OR chunggu_dtl_10 = '----'
+	</update>
+
+	<delete id="print172DeleteSpaceData">
+		DELETE FROM top_rpt_print_17_2
+		WHERE chunggu_dtl_1 = ''
+		AND chunggu_dtl_2 = ''
+		AND chunggu_dtl_3 = ''
+		AND chunggu_dtl_4 = ''
+		AND chunggu_dtl_5 = ''
+		AND chunggu_dtl_6 = ''
+		AND chunggu_dtl_7 = ''
+		AND chunggu_dtl_8 = ''
+		AND chunggu_dtl_9 = ''
+		AND chunggu_dtl_10 = ''
+	</delete>
+
+	<update id="print172UpdateSpaceData11">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_1 = LEFT(chunggu_dtl_1,CHAR_LENGTH(chunggu_dtl_1)-1)
+		WHERE RIGHT(chunggu_dtl_1,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData110">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_10 = RIGHT(chunggu_dtl_10,CHAR_LENGTH(chunggu_dtl_10)-1)
+		WHERE LEFT(chunggu_dtl_10,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData121">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_2 = LEFT(chunggu_dtl_2,CHAR_LENGTH(chunggu_dtl_2)-1)
+		WHERE RIGHT(chunggu_dtl_2,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData122">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_2 = RIGHT(chunggu_dtl_2,CHAR_LENGTH(chunggu_dtl_2)-1)
+		WHERE LEFT(chunggu_dtl_2,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData131">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_3 = LEFT(chunggu_dtl_3,CHAR_LENGTH(chunggu_dtl_3)-1)
+		WHERE RIGHT(chunggu_dtl_3,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData132">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_3 = RIGHT(chunggu_dtl_3,CHAR_LENGTH(chunggu_dtl_3)-1)
+		WHERE LEFT(chunggu_dtl_3,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData141">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_4 = LEFT(chunggu_dtl_4,CHAR_LENGTH(chunggu_dtl_4)-1)
+		WHERE RIGHT(chunggu_dtl_4,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData142">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_4 = RIGHT(chunggu_dtl_4,CHAR_LENGTH(chunggu_dtl_4)-1)
+		WHERE LEFT(chunggu_dtl_4,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData151">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_5 = LEFT(chunggu_dtl_5,CHAR_LENGTH(chunggu_dtl_5)-1)
+		WHERE RIGHT(chunggu_dtl_5,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData152">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_5 = RIGHT(chunggu_dtl_5,CHAR_LENGTH(chunggu_dtl_5)-1)
+		WHERE LEFT(chunggu_dtl_5,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData161">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_6 = LEFT(chunggu_dtl_6,CHAR_LENGTH(chunggu_dtl_6)-1)
+		WHERE RIGHT(chunggu_dtl_6,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData162">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_6 = RIGHT(chunggu_dtl_6,CHAR_LENGTH(chunggu_dtl_6)-1)
+		WHERE LEFT(chunggu_dtl_6,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData171">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_7 = LEFT(chunggu_dtl_7,CHAR_LENGTH(chunggu_dtl_7)-1)
+		WHERE RIGHT(chunggu_dtl_7,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData172">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_7 = RIGHT(chunggu_dtl_7,CHAR_LENGTH(chunggu_dtl_7)-1)
+		WHERE LEFT(chunggu_dtl_7,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData181">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_8 = LEFT(chunggu_dtl_8,CHAR_LENGTH(chunggu_dtl_8)-1)
+		WHERE RIGHT(chunggu_dtl_8,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData182">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_8 = RIGHT(chunggu_dtl_8,CHAR_LENGTH(chunggu_dtl_8)-1)
+		WHERE LEFT(chunggu_dtl_8,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData191">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_9 = LEFT(chunggu_dtl_9,CHAR_LENGTH(chunggu_dtl_9)-1)
+		WHERE RIGHT(chunggu_dtl_9,1) = '-'
+	</update>
+
+	<update id="print172UpdateSpaceData192">
+		UPDATE top_rpt_print_17_2 SET chunggu_dtl_9 = RIGHT(chunggu_dtl_9,CHAR_LENGTH(chunggu_dtl_9)-1)
+		WHERE LEFT(chunggu_dtl_9,1) = '-'
+	</update>
+
+	<delete id="print174DeleteAll">
+		DELETE FROM top_rpt_print_17_4
+	</delete>
+
+	<select id="report17Forprint174List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		SELECT a.rid, replace(replace(d_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_17 a
+		WHERE a.d_1cn > 0
+		ORDER BY a.rid
+	</select>
+
+	<insert id="print174Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		INSERT INTO top_rpt_print_17_4 (suim_rpt_no, other_insu_com, other_insu_join_date, other_insu_join_amt, other_insu_premium, other_insu_agent)
+		VALUES(#{suim_rpt_no}, #{other_insu_com}, #{other_insu_join_date}, #{other_insu_join_amt}, #{other_insu_premium}, #{other_insu_agent})
+	</insert>
+
+	<update id="print174UpdateSpaceData1">
+		UPDATE top_rpt_print_17_4 SET other_insu_com = ''
+		WHERE other_insu_com = '-'
+		OR other_insu_com = '--'
+		OR other_insu_com = '---'
+		OR other_insu_com = '----'
+	</update>
+
+	<update id="print174UpdateSpaceData2">
+		UPDATE top_rpt_print_17_4 SET other_insu_join_date = ''
+		WHERE other_insu_join_date = '-'
+		OR other_insu_join_date = '--'
+		OR other_insu_join_date = '---'
+		OR other_insu_join_date = '----'
+	</update>
+
+	<update id="print174UpdateSpaceData3">
+		UPDATE top_rpt_print_17_4 SET other_insu_join_amt = ''
+		WHERE other_insu_join_amt = '-'
+		OR other_insu_join_amt = '--'
+		OR other_insu_join_amt = '---'
+		OR other_insu_join_amt = '----'
+	</update>
+
+	<update id="print174UpdateSpaceData4">
+		UPDATE top_rpt_print_17_4 SET other_insu_premium = ''
+		WHERE other_insu_premium = '-'
+		OR other_insu_premium = '--'
+		OR other_insu_premium = '---'
+		OR other_insu_premium = '----'
+	</update>
+
+	<update id="print174UpdateSpaceData5">
+		UPDATE top_rpt_print_17_4 SET other_insu_agent = ''
+		WHERE other_insu_agent = '-'
+		OR other_insu_agent = '--'
+		OR other_insu_agent = '---'
+		OR other_insu_agent = '----'
+	</update>
+
+	<delete id="print174DeleteSpaceData">
+		DELETE FROM top_rpt_print_17_4
+		WHERE other_insu_com = ''
+		AND other_insu_join_date = ''
+		AND other_insu_join_amt = ''
+		AND other_insu_premium = ''
+		AND other_insu_agent = ''
+	</delete>
+
+	<update id="print174UpdateSpaceData11">
+		UPDATE top_rpt_print_17_4 SET other_insu_com = LEFT(other_insu_com,CHAR_LENGTH(other_insu_com)-1)
+		WHERE RIGHT(other_insu_com,1) = '-'
+	</update>
+
+	<update id="print174UpdateSpaceData15">
+		UPDATE top_rpt_print_17_4 SET other_insu_agent = RIGHT(other_insu_agent,CHAR_LENGTH(other_insu_agent)-1)
+		WHERE LEFT(other_insu_agent,1) = '-'
+	</update>
+
+	<update id="print174UpdateSpaceData121">
+		UPDATE top_rpt_print_17_4 SET other_insu_join_date = LEFT(other_insu_join_date,CHAR_LENGTH(other_insu_join_date)-1)
+		WHERE RIGHT(other_insu_join_date,1) = '-'
+	</update>
+
+	<update id="print174UpdateSpaceData122">
+		UPDATE top_rpt_print_17_4 SET other_insu_join_date = RIGHT(other_insu_join_date,CHAR_LENGTH(other_insu_join_date)-1)
+		WHERE LEFT(other_insu_join_date,1) = '-'
+	</update>
+
+	<update id="print174UpdateSpaceData131">
+		UPDATE top_rpt_print_17_4 SET other_insu_join_amt = LEFT(other_insu_join_amt,CHAR_LENGTH(other_insu_join_amt)-1)
+		WHERE RIGHT(other_insu_join_amt,1) = '-'
+	</update>
+
+	<update id="print174UpdateSpaceData132">
+		UPDATE top_rpt_print_17_4 SET other_insu_join_amt = RIGHT(other_insu_join_amt,CHAR_LENGTH(other_insu_join_amt)-1)
+		WHERE LEFT(other_insu_join_amt,1) = '-'
+	</update>
+
+	<update id="print174UpdateSpaceData141">
+		UPDATE top_rpt_print_17_4 SET other_insu_premium = LEFT(other_insu_premium,CHAR_LENGTH(other_insu_premium)-1)
+		WHERE RIGHT(other_insu_premium,1) = '-'
+	</update>
+
+	<update id="print174UpdateSpaceData142">
+		UPDATE top_rpt_print_17_4 SET other_insu_premium = RIGHT(other_insu_premium,CHAR_LENGTH(other_insu_premium)-1)
+		WHERE LEFT(other_insu_premium,1) = '-'
+	</update>
+
+	<delete id="print177DeleteAll">
+		DELETE FROM top_rpt_print_17_7
+	</delete>
+
+	<select id="report17Forprint177List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		SELECT a.rid, replace(replace(g_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_17 a
+		WHERE a.g_1cn > 0
+		ORDER BY a.rid
+	</select>
+
+	<insert id="print177Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		INSERT INTO top_rpt_print_17_7 (suim_rpt_no, medical_history_period, medical_history_hospital, medical_history_diagnosis, medical_history_test, medical_history_medicine)
+		VALUES(#{suim_rpt_no}, #{medical_history_period}, #{medical_history_hospital}, #{medical_history_diagnosis}, #{medical_history_test}, #{medical_history_medicine})
+	</insert>
+
+	<update id="print177UpdateSpaceData1">
+		UPDATE top_rpt_print_17_7 SET medical_history_period = ''
+		WHERE medical_history_period = '-'
+		OR medical_history_period = '--'
+		OR medical_history_period = '---'
+		OR medical_history_period = '----'
+	</update>
+
+	<update id="print177UpdateSpaceData2">
+		UPDATE top_rpt_print_17_7 SET medical_history_hospital = ''
+		WHERE medical_history_hospital = '-'
+		OR medical_history_hospital = '--'
+		OR medical_history_hospital = '---'
+		OR medical_history_hospital = '----'
+	</update>
+
+	<update id="print177UpdateSpaceData3">
+		UPDATE top_rpt_print_17_7 SET medical_history_diagnosis = ''
+		WHERE medical_history_diagnosis = '-'
+		OR medical_history_diagnosis = '--'
+		OR medical_history_diagnosis = '---'
+		OR medical_history_diagnosis = '----'
+	</update>
+
+	<update id="print177UpdateSpaceData4">
+		UPDATE top_rpt_print_17_7 SET medical_history_test = ''
+		WHERE medical_history_test = '-'
+		OR medical_history_test = '--'
+		OR medical_history_test = '---'
+		OR medical_history_test = '----'
+	</update>
+
+	<update id="print177UpdateSpaceData5">
+		UPDATE top_rpt_print_17_7 SET medical_history_medicine = ''
+		WHERE medical_history_medicine = '-'
+		OR medical_history_medicine = '--'
+		OR medical_history_medicine = '---'
+		OR medical_history_medicine = '----'
+	</update>
+
+	<delete id="print177DeleteSpaceData">
+		DELETE FROM top_rpt_print_17_7
+		WHERE medical_history_period = ''
+		AND medical_history_hospital = ''
+		AND medical_history_diagnosis = ''
+		AND medical_history_test = ''
+		AND medical_history_medicine = ''
+	</delete>
+
+	<update id="print177UpdateSpaceData11">
+		UPDATE top_rpt_print_17_7 SET medical_history_period = LEFT(medical_history_period,CHAR_LENGTH(medical_history_period)-1)
+		WHERE RIGHT(medical_history_period,1) = '-'
+	</update>
+
+	<update id="print177UpdateSpaceData15">
+		UPDATE top_rpt_print_17_7 SET medical_history_medicine = RIGHT(medical_history_medicine,CHAR_LENGTH(medical_history_medicine)-1)
+		WHERE LEFT(medical_history_medicine,1) = '-'
+	</update>
+
+	<update id="print177UpdateSpaceData121">
+		UPDATE top_rpt_print_17_7 SET medical_history_hospital = LEFT(medical_history_hospital,CHAR_LENGTH(medical_history_hospital)-1)
+		WHERE RIGHT(medical_history_hospital,1) = '-'
+	</update>
+
+	<update id="print177UpdateSpaceData122">
+		UPDATE top_rpt_print_17_7 SET medical_history_hospital = RIGHT(medical_history_hospital,CHAR_LENGTH(medical_history_hospital)-1)
+		WHERE LEFT(medical_history_hospital,1) = '-'
+	</update>
+
+	<update id="print177UpdateSpaceData131">
+		UPDATE top_rpt_print_17_7 SET medical_history_diagnosis = LEFT(medical_history_diagnosis,CHAR_LENGTH(medical_history_diagnosis)-1)
+		WHERE RIGHT(medical_history_diagnosis,1) = '-'
+	</update>
+
+	<update id="print177UpdateSpaceData132">
+		UPDATE top_rpt_print_17_7 SET medical_history_diagnosis = RIGHT(medical_history_diagnosis,CHAR_LENGTH(medical_history_diagnosis)-1)
+		WHERE LEFT(medical_history_diagnosis,1) = '-'
+	</update>
+
+	<update id="print177UpdateSpaceData141">
+		UPDATE top_rpt_print_17_7 SET medical_history_test = LEFT(medical_history_test,CHAR_LENGTH(medical_history_test)-1)
+		WHERE RIGHT(medical_history_test,1) = '-'
+	</update>
+
+	<update id="print177UpdateSpaceData142">
+		UPDATE top_rpt_print_17_7 SET medical_history_test = RIGHT(medical_history_test,CHAR_LENGTH(medical_history_test)-1)
+		WHERE LEFT(medical_history_test,1) = '-'
+	</update>
+
+	<delete id="print1713DeleteAll">
+		DELETE FROM top_rpt_print_17_13
+	</delete>
+
+	<select id="report17Forprint1713List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		SELECT a.rid, replace(replace(k_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_17 a
+		WHERE a.k_1cn > 0
+		ORDER BY a.rid
+	</select>
+
+	<insert id="print1713Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint17VO">
+		INSERT INTO top_rpt_print_17_13 (suim_rpt_no, questioning_hospital, questioning_basis, questioning_visit, questioning_etc)
+		VALUES(#{suim_rpt_no}, #{questioning_hospital}, #{questioning_basis}, #{questioning_visit}, #{questioning_etc})
+	</insert>
+
+	<update id="print1713UpdateSpaceData1">
+		UPDATE top_rpt_print_17_13 SET questioning_hospital = ''
+		WHERE questioning_hospital = '-'
+		OR questioning_hospital = '--'
+		OR questioning_hospital = '---'
+		OR questioning_hospital = '----'
+	</update>
+
+	<update id="print1713UpdateSpaceData2">
+		UPDATE top_rpt_print_17_13 SET questioning_basis = ''
+		WHERE questioning_basis = '-'
+		OR questioning_basis = '--'
+		OR questioning_basis = '---'
+		OR questioning_basis = '----'
+	</update>
+
+	<update id="print1713UpdateSpaceData3">
+		UPDATE top_rpt_print_17_13 SET questioning_visit = ''
+		WHERE questioning_visit = '-'
+		OR questioning_visit = '--'
+		OR questioning_visit = '---'
+		OR questioning_visit = '----'
+	</update>
+
+	<update id="print1713UpdateSpaceData4">
+		UPDATE top_rpt_print_17_13 SET questioning_etc = ''
+		WHERE questioning_etc = '-'
+		OR questioning_etc = '--'
+		OR questioning_etc = '---'
+		OR questioning_etc = '----'
+	</update>
+
+	<delete id="print1713DeleteSpaceData">
+		DELETE FROM top_rpt_print_17_13
+		WHERE questioning_hospital = ''
+		AND questioning_basis = ''
+		AND questioning_visit = ''
+		AND questioning_etc = ''
+	</delete>
+
+	<update id="print1713UpdateSpaceData11">
+		UPDATE top_rpt_print_17_13 SET questioning_hospital = LEFT(questioning_hospital,CHAR_LENGTH(questioning_hospital)-1)
+		WHERE RIGHT(questioning_hospital,1) = '-'
+	</update>
+
+	<update id="print1713UpdateSpaceData14">
+		UPDATE top_rpt_print_17_13 SET questioning_etc = RIGHT(questioning_etc,CHAR_LENGTH(questioning_etc)-1)
+		WHERE LEFT(questioning_etc,1) = '-'
+	</update>
+
+	<update id="print1713UpdateSpaceData121">
+		UPDATE top_rpt_print_17_13 SET questioning_basis = LEFT(questioning_basis,CHAR_LENGTH(questioning_basis)-1)
+		WHERE RIGHT(questioning_basis,1) = '-'
+	</update>
+
+	<update id="print1713UpdateSpaceData122">
+		UPDATE top_rpt_print_17_13 SET questioning_basis = RIGHT(questioning_basis,CHAR_LENGTH(questioning_basis)-1)
+		WHERE LEFT(questioning_basis,1) = '-'
+	</update>
+
+	<update id="print1713UpdateSpaceData131">
+		UPDATE top_rpt_print_17_13 SET questioning_visit = LEFT(questioning_visit,CHAR_LENGTH(questioning_visit)-1)
+		WHERE RIGHT(questioning_visit,1) = '-'
+	</update>
+
+	<update id="print1713UpdateSpaceData132">
+		UPDATE top_rpt_print_17_13 SET questioning_visit = RIGHT(questioning_visit,CHAR_LENGTH(questioning_visit)-1)
+		WHERE LEFT(questioning_visit,1) = '-'
+	</update>
+
+</mapper>

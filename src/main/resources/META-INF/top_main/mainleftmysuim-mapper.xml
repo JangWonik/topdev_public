@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MainLeftMySuimMapper">
+
+	<select id="mainLeftMySuimState" resultType="kr.co.toplac.topmain.MainLeftSuimVO">
+		SELECT
+			(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no}) suimTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 0) suimState0Cnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.user_no = #{user_no} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 0 AND a.site_date > 0) siteCnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.user_no = #{user_no} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 1 AND a.site_date > 0) interimCnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_head a, top_rpt_site_interim b
+				WHERE a.user_no = #{user_no} AND a.suim_rpt_state = 0
+				AND a.suim_rpt_no = b.suim_rpt_no
+				AND b.interim_flag = 1
+				AND (b.site_date > 0 AND b.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))) interimCnt2
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 1) suimState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 11) suimState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND ptnr_mbr_sanction = 2) aIACnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 2) suimState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 3) suimState3Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 0) cHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 1) cHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 2) cHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 3) cHelpState3Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 0) aHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 1) aHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 2) aHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 3) aHelpState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no}) suit10TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit10State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit10State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit10State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit10State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit10State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no}) suit12TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit12State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit12State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit12State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit12State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit12State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no}) suit17TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit17State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit17State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit17State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit17State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit17State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no}) suit18TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit18State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit18State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit18State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit18State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit18State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no}) primTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 0) primState0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 1) primState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 11) primState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 2) primState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 3) primState3Cnt
+	</select>
+
+	<select id="mainLeftTmSuimState" resultType="kr.co.toplac.topmain.MainLeftSuimVO">
+		SELECT
+			(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id}) suimTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0) suimState0Cnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.team_id = #{team_id} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 0 AND a.site_date > 0) siteCnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.team_id = #{team_id} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 1 AND a.site_date > 0) interimCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 1) suimState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 11) suimState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND ptnr_mbr_sanction = 2) aIACnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE suim_rpt_state = 1 AND ptnr_mbr_sanction = 1) aIACntState1AllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE suim_rpt_state = 11 AND ptnr_mbr_sanction = 1) aIACntState11AllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_mbr_sanction = 2) aIACntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 2) suimState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 3) suimState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0 AND IFNULL(user_no,0) = 0 AND IFNULL(del_date,0) = 0) suimNoUserCnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 0) cHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 1) cHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 2) cHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 3) cHelpState3Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 0) aHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 1) aHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 2) aHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 3) aHelpState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id}) suit10TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit10State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit10State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit10State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit10State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit10State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id}) suit12TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit12State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit12State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit12State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit12State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit12State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id}) suit17TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit17State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit17State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit17State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit17State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit17State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id}) suit18TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit18State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit18State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit18State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit18State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit18State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE suim_rpt_state = 1) suit10State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE suim_rpt_state = 1) suit12State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE suim_rpt_state = 1) suit17State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE suim_rpt_state = 1) suit18State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id}) primTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0) primState0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 1) primState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 11) primState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 2) primState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 3) primState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 19 AND suim_rpt_state = 0) ptnr19State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 19 AND suim_rpt_state = 1) ptnr19State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 27 AND suim_rpt_state = 0) ptnr27State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 27 AND suim_rpt_state = 1) ptnr27State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 26 AND suim_rpt_state = 0) ptnr26State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 26 AND suim_rpt_state = 1) ptnr26State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 29 AND suim_rpt_state = 0) ptnr29State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 29 AND suim_rpt_state = 1) ptnr29State1CntAllTm
+			,(SELECT COUNT(board_no) FROM brd_help_desk WHERE solve_state = 0) reqHelpDesk
+			,(SELECT COUNT(serial_no) FROM top_emp_cert WHERE issue_state = 0) reqEmpCert
+			,(SELECT COUNT(user_no) FROM top_dayoff WHERE team_id = #{team_id} AND state = 1) dayoffStateCnt
+			,(SELECT COUNT(user_no) FROM top_dayoff WHERE (team_id = 129 OR team_id= 128 OR team_id = 44) AND state = 1) dayoffStateMainCnt
+			,(SELECT COUNT(user_no) FROM top_dayoff WHERE state = 5) dayoffFinalCnt
+			,(SELECT COUNT(user_no) FROM top_duty WHERE duty_status = 10) dutyCostAppCnt
+			,(SELECT COUNT(user_no) FROM top_duty WHERE duty_status = 20) dutyCostDepCnt
+	</select>
+
+</mapper>

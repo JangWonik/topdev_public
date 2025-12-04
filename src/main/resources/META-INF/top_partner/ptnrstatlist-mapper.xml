@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PtnrListMapper">
+
+	<select id="ptnrlist" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+	
+		SELECT a.* , b.top_accnt_bank bank_title
+		FROM top_ptnr_bsc a, top_accnt_bsc b
+		WHERE a.top_accnt_id = b.top_accnt_id
+		      and a.del_state != 1
+		ORDER BY a.ptnr_group_order DESC, a.ptnr_level, a.ptnr_order
+	
+	</select>
+
+
+</mapper>

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimSuit17DtlMapper">
+
+	<select id="getSuimSuit17DtlBsc" resultType="kr.co.toplac.topsuit17.SuimSuit_17VO" parameterType="kr.co.toplac.topsuit17.SuimSuit_17VO">
+		SELECT 
+			suim_rpt_no suimRptNo
+			, suim_accept_no suimAcceptNo
+			, suim_close_no suimCloseNo
+			, suim_rpt_state suimRptState
+			, team_id teamId
+			, getTopTmBscTeamName(team_id) teamName, getTopTmBscTeamMark(team_id) teamMark
+			, user_no userNo
+			, getTopMbrBscUserName(user_no) userName
+			, ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(ptnr_id) ptnrNick, getTopPtnrBscPtnrName(ptnr_id) ptnrName
+			, policyholder_nm policyholderNm
+			, policyholder_tel1 policyholderTel1
+			, policyholder_tel2 policyholderTel2
+			, policyholder_hp policyholderHp
+			, reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDateFmt
+			, suim_cancel_date cancelDate
+			, suim_rpt_aprv_date suimCancelDate
+			, close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') closeDateFmt
+			, del_date delDate
+			, lock_flag lockFlag
+			, bd_type bdType
+			, info_a infoA
+			, info_b infoB
+			, info_c infoC
+			, info_d infoD
+			, info_e infoE
+			, info_f infoF
+			, info_g infoG
+			, info_h infoH
+			, info_i infoI
+			, info_j infoJ
+			, info_k infoK
+			, info_m infoM
+			, info_n infoN
+			, info_o infoO
+			, info_p infoP
+			, info_u infoU
+			, info_ua infoUa
+			, info_ub infoUb
+			, info_v infoV
+			, info_w infoW
+			, info_x infoX
+			, info_y infoY
+			, info_z infoZ
+			, info_aa infoAa
+			, info_ab infoAb
+			, info_ac infoAc
+			, info_ad infoAd
+			, info_ae infoAe
+			, info_af infoAf
+			, d_1 d1
+			, d_2 d2
+			, d_3 d3
+			, d_4 d4
+			, d_5 d5
+			, d_8 d8
+			, d_9 d9
+			, d_10 d10
+			, d_11 d11
+			, d_12 d12
+			, d_13 d13
+			, d_16 d16
+			, d_17 d17
+			, d_18 d18
+			, d_19 d19
+			, d_20 d20
+			, b_2_code b2code
+			, report_1 report1
+			, re_c reC
+			, re_f reF
+			, re_g reG
+			, re_h reH
+			, re_i reI
+			, re_j reJ
+			, re_k reK
+			, re_l reL
+			, re_p reP
+			, re_q reQ
+			, re_r reR
+			, re_t reT
+			, re_u reU
+			, re_v reV
+			, re_w reW
+			, re_x reX
+			, re_y reY
+			, re_z reZ
+			, re_aa reAa
+			, re_ab reAb
+			, re_ac reAc
+			, getTopRptCloseAuthYN(team_id, #{user_no_session}) closeAuthYN
+			, getTopRptEditYN(team_id, #{user_no_session}) editYN
+			, getTopRptMbrChgYN(team_id, #{user_no_session}) mbrChgYN
+			, getTopRptPtnrMbrChgYN(team_id, #{user_no_session}) ptnrMbrChgYN
+			, getTopSuit17EditYN2(#{suimRptNo},team_id, #{user_no_session}) editYN2
+
+			FROM top_suitability_17
+			where
+			suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<update id="udtSuimSiut17Dtl" parameterType="kr.co.toplac.topsuit17.SuimSuit_17VO">
+		UPDATE top_suitability_17
+		SET
+			report_1 = #{report1},
+			re_c = #{reC},     
+			re_f = #{reF},     
+			re_g = #{reG},     
+			re_h = #{reH},     
+			re_i = #{reI},     
+			re_j = #{reJ},     
+			re_k = #{reK},     
+			re_l = #{reL},     
+			re_p = #{reP},     
+			re_q = #{reQ},     
+			re_p = #{reP},     
+			re_t = #{reT},     
+			re_u = #{reU},    
+			re_v = #{reV},    
+			re_w = #{reW},     
+			re_x = #{reX},     
+			re_y = #{reY},     
+			re_z = #{reZ},     
+			re_aa = #{reAa},    
+			re_ab = #{reAb},    
+			re_ac = #{reAc}
+		WHERE suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<select id="getSuimSuit17DtlView" parameterType="java.lang.String" resultType="kr.co.toplac.topsuit17.SuimSuit_17VO">
+		SELECT 
+							
+			info_ac infoAc,
+			policyholder_tel2 policyholderTel2,
+			info_w infoW,
+			info_z infoZ
+							
+		FROM
+		top_suitability_17
+		WHERE suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<select id="b2CodeList" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd, col_val
+		FROM sysadm_codedic
+		WHERE tbl_nm = 'top_suitability_17'
+		AND col_nm = 'b_2_code'
+		ORDER BY col_cd
+	</select>
+	
+	<update id="udtSuimSiut17DtlRpt" parameterType="kr.co.toplac.topsuit17.SuimSuit_17VO">
+		UPDATE top_suitability_17
+		SET
+			d_18 = #{d18},
+			b_2_code = #{b2code},     
+			d_19 = #{d19},     
+			d_20 = #{d20},     
+			re_g = #{reG},
+			d_1 = #{d1},
+			d_2 = #{d2},
+			d_3 = #{d3},     
+			d_4 = #{d4},     
+			d_5 = #{d5},     
+			d_16 = #{d16},     
+			d_8 = #{d8},     
+			d_9 = #{d9},     
+			d_10 = #{d10},     
+			d_11 = #{d11},    
+			d_12 = #{d12},    
+			d_13 = #{d13},     
+			d_17 = #{d17}  
+		WHERE suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<!-- 보고서 원본 파일 -->
+	<select id="suimSuit17FileList" parameterType="java.util.HashMap" resultType="kr.co.toplac.topsuit17.SuimSuit17OrgFileVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+		FROM
+			top_suitability_17_file
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<!-- 차기 영수증 파일 시리얼 No 가져오기 -->
+	<select id="nextSuimSuit17RptFileSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_suitability_17_file'
+	
+	</select>
+	
+	<!-- 보고서 파일 올리기 -->
+	<insert id="suimSuit17RptFileUploadForKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		
+		INSERT INTO top_suitability_17_file
+		( suim_rpt_no, file_path, file_name, reg_date)
+		VALUES
+		( #{suimRptNo}, #{filePath}, #{fileName}, unix_timestamp(now()))
+		
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+	</insert>
+	
+	<!-- 현장보고서 dummy 컬럼에 실제 Data Update -->
+	<update id="suimSuit17RptFileUploadForUpdate" parameterType="java.util.HashMap">
+		UPDATE 
+			top_suitability_17_file 
+		SET 
+			  suim_rpt_no = #{suimRptNo}
+			, file_path = #{filePath}			
+			, file_name = #{fileName}	  		
+		WHERE 
+			serial_no = #{nextSuimSuit17RptFileSerial}
+	</update>
+
+	
+	<!-- 보고서 파일 다운로드용 파일명 가져오기  -->
+	<select id="getSuimSuit17RptFileNameForDown" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,file_name) Path 
+ 		FROM 
+ 			top_suitability_17_file
+ 		WHERE 
+ 			serial_no = #{key}
+	
+	</select>
+	
+	
+	<!-- 보고서 파일 삭제용 풀패스 가져오기  -->
+	<select id="getSuimSuit17RptFilePathForDel" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path, file_name) filePath 
+ 		FROM 
+ 			top_suitability_17_file
+ 		WHERE 
+ 			serial_no = #{serialNo}
+	
+	</select>
+	
+	<!-- 보고서 원본 파일 삭제하기 -->
+	<delete id="delSuimSuit17RptFile" parameterType="String">
+	
+		DELETE FROM
+			top_suitability_17_file
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+
+
+</mapper>

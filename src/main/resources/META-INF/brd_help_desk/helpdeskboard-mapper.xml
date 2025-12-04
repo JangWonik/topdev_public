@@ -1,0 +1,789 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BoardHelpDeskMapper">
+
+	<!-- 게시글 신청자 정보가져오기 -->
+	<select id="getHelpdeskUserInfo" parameterType="kr.co.toplac.brd.common.BoardVO" resultType="HashMap">
+		SELECT a.user_no
+			,a.user_name
+			,a.handphone
+		FROM top_mbr_bsc a, brd_help_desk b
+		WHERE a.user_no = b.user_no
+		AND b.board_no = #{board_no}
+	</select>
+
+	<!-- 재직중인 전산담당자 연락처 목록-->
+	<select id="selectItHandphoneList" resultType="HashMap">
+		SELECT handphone FROM top_mbr_bsc WHERE user_state = 9 AND out_date IS NULL
+	</select>
+	
+	<!-- 전산권한 결재대기중인 목록 -->
+	<select id="selectApprovalResultCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM brd_help_desk
+		WHERE 
+			accept_classify = 7
+			AND solve_state = 3
+			<choose>
+				<when test='approval_auth == "1" '>			
+					AND auth_type = 1
+				</when>
+				<when test='approval_auth == "4" '>			
+					AND auth_type = 4
+				</when>
+			</choose>
+	</select>
+
+	<select id="boardList" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND solve_state != 2
+		<choose>
+			<when test='approval_auth != "5" '>			
+				AND a.solve_state IN (0,1)
+			</when>
+		</choose>
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND solve_state != 2
+		<choose>
+			<when test='approval_auth != "5" '>			
+				AND a.solve_state IN (0,1)
+			</when>
+		</choose>
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+
+	<select id="boardListIntra" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 1
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListIntraCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 1
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+
+	<select id="boardListPc" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 2
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListPcCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 2
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+
+	<select id="boardListTel" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 3
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListTelCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 3
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+
+	<select id="boardListSecu" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 4
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListSecuCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 4
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+	
+	<select id="boardListAuthAll" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+			, auth_memo
+			, auth_type
+			, drafter_no, getTopMbrBscUserName(drafter_no) drafter_nm
+			, draft_date, DATE_FORMAT(FROM_UNIXTIME(draft_date), '%Y-%m-%d %H:%i:%s') draft_date_fmt
+			, approval_no, getTopMbrBscUserName(approval_no) approval_nm
+			, approval_comment
+			, approval_date, DATE_FORMAT(FROM_UNIXTIME(approval_date), '%Y-%m-%d %H:%i:%s') approval_date_fmt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 7
+		order by a.reg_date desc
+	</select>
+	
+	<select id="boardListAuth" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+			, auth_memo
+			, auth_type
+			, drafter_no, getTopMbrBscUserName(drafter_no) drafter_nm
+			, draft_date, DATE_FORMAT(FROM_UNIXTIME(draft_date), '%Y-%m-%d %H:%i:%s') draft_date_fmt
+			, approval_no, getTopMbrBscUserName(approval_no) approval_nm
+			, approval_comment
+			, approval_date, DATE_FORMAT(FROM_UNIXTIME(approval_date), '%Y-%m-%d %H:%i:%s') approval_date_fmt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 7
+		
+		<choose>
+			<when test='approval_auth == "1" '>
+				AND a.auth_type != 4
+			</when>
+			<when test='approval_auth == "4" '>
+				AND a.auth_type != 1
+			</when>
+			<when test='approval_auth == "0" '>
+				AND a.solve_state IN (0,1,2)
+			</when>
+		</choose>
+		
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListAuthCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 7
+		<choose>
+			<when test='approval_auth == "1" '>
+				AND a.auth_type != 4
+			</when>
+			<when test='approval_auth == "4" '>
+				AND a.auth_type != 1
+			</when>
+			<when test='approval_auth == "0" '>
+				AND a.solve_state IN (0,1,2)
+			</when>
+		</choose>
+		
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		
+	</select>
+	
+	<select id="boardListEquip" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+			, auth_memo
+			, auth_type
+			, drafter_no, getTopMbrBscUserName(drafter_no) drafter_nm
+			, draft_date, DATE_FORMAT(FROM_UNIXTIME(draft_date), '%Y-%m-%d %H:%i:%s') draft_date_fmt
+			, approval_no, getTopMbrBscUserName(approval_no) approval_nm
+			, approval_comment
+			, approval_date, DATE_FORMAT(FROM_UNIXTIME(approval_date), '%Y-%m-%d %H:%i:%s') approval_date_fmt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 8
+		
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+	
+	<select id="boardListEquipCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 8
+		
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		
+	</select>
+
+	<select id="boardListMail" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 6
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListMailCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 6
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+
+
+	<select id="boardListEtc" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, b.user_name user_nm, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_help_desk_file where board_no = a.board_no) file_cnt
+			, a.solve_state, getCodeValue('brd_help_desk', 'solve_state', a.solve_state) solve_state_nm
+			, a.accept_date, DATE_FORMAT(FROM_UNIXTIME(a.accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, a.accept_user_no, getTopMbrBscUserName(a.accept_user_no) accept_user_nm
+			, a.accept_classify, getCodeValue('brd_help_desk', 'accept_classify', a.accept_classify) accept_classify_nm
+			, a.solve_date, DATE_FORMAT(FROM_UNIXTIME(a.solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, a.solve_user_no, getTopMbrBscUserName(a.solve_user_no) solve_user_nm
+			, a.solve_memo
+			, (select count(memo_no) from brd_help_desk_memo where fk_no = a.board_no) memo_cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 5
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListEtcCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_help_desk a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND accept_classify = 5
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+
+	<insert id="boardWrite" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		INSERT INTO brd_help_desk (team_id, user_no,title,contents,reg_ip,reg_date,view_cnt,solve_state)
+		VALUES(#{team_id}, #{user_no}, #{title}, #{contents}, #{reg_ip}, unix_timestamp(now()), 0, 0)
+	</insert>
+
+	<select id="getBoardNo" parameterType="kr.co.toplac.brd.common.BoardVO" resultType = "String">
+		SELECT max(board_no)
+		FROM brd_help_desk
+		WHERE user_no = #{user_no}
+	</select>
+
+	<insert id="boardFileWrite" parameterType="kr.co.toplac.brd.common.BoardFileVO" >
+		INSERT INTO brd_help_desk_file (board_no,file_path,file_name,reg_date)
+		VALUES(#{board_no}, #{file_path}, #{file_name}, unix_timestamp(now()))
+	</insert>
+
+	<select id="boardDetail" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT board_no, team_id, getTopTmBscTeamName(team_id) team_name
+			, user_no, getTopMbrBscUserName(user_no) user_nm, title, contents, reg_ip
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, view_cnt
+			, solve_state, getCodeValue('brd_help_desk', 'solve_state', solve_state) solve_state_nm
+			, accept_date, DATE_FORMAT(FROM_UNIXTIME(accept_date), '%Y-%m-%d %H:%i:%s') accept_date_fmt
+			, accept_user_no, getTopMbrBscUserName(accept_user_no) accept_user_nm
+			, accept_classify, getCodeValue('brd_help_desk', 'accept_classify', accept_classify) accept_classify_nm
+			, solve_date, DATE_FORMAT(FROM_UNIXTIME(solve_date), '%Y-%m-%d %H:%i:%s') solve_date_fmt
+			, solve_user_no, getTopMbrBscUserName(solve_user_no) solve_user_nm
+			, solve_memo
+			, auth_memo
+			, auth_type
+			, drafter_no, getTopMbrBscUserName(drafter_no) drafter_nm
+			, draft_date, DATE_FORMAT(FROM_UNIXTIME(draft_date), '%Y-%m-%d %H:%i:%s') draft_date_fmt
+			, approval_no, getTopMbrBscUserName(approval_no) approval_nm
+			, approval_comment
+			, approval_date, DATE_FORMAT(FROM_UNIXTIME(approval_date), '%Y-%m-%d %H:%i:%s') approval_date_fmt			
+		FROM brd_help_desk
+		WHERE board_no = #{board_no}
+		ORDER BY board_no DESC
+	</select>
+
+	<select id="boardFileList" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardFileVO">
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_help_desk_file
+		WHERE board_no = #{board_no}
+		ORDER BY board_file_no
+	</select>
+
+	<update id="boardAddCnt" parameterType="String" >
+		UPDATE brd_help_desk SET view_cnt = view_cnt + 1
+		WHERE board_no = #{board_no}
+	</update>
+
+	<delete id="boardDelete" parameterType="String" >
+		DELETE FROM brd_help_desk
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFilesDelete" parameterType="String" >
+		DELETE FROM brd_help_desk_file
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFileDelete" parameterType="String" >
+		DELETE FROM brd_help_desk_file
+		WHERE board_file_no = #{fileNo}
+	</delete>
+
+	<update id="boardUpdate" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_help_desk SET title = #{title}, contents = #{contents}
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="updateCKPath" parameterType="java.util.HashMap" >
+		UPDATE brd_help_desk SET contents = REPLACE(contents,#{oldStr},#{newStr})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<update id="helpDeskAccept" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_help_desk SET accept_date = unix_timestamp(now()), accept_user_no = #{user_no}
+			, accept_classify = #{accept_classify}, solve_state = 1
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="helpDeskSolve" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_help_desk SET solve_date = unix_timestamp(now()), solve_user_no = #{user_no}
+			, solve_memo = #{solve_memo}, solve_state = 2
+		WHERE board_no = #{board_no}
+	</update>
+
+	<select id="helpDeskFileOneSelect" parameterType="String" resultType="kr.co.toplac.brd.common.BoardFileVO" >
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_help_desk_file
+		WHERE board_file_no = #{fileNo}
+	</select>
+	
+	<update id="helpDeskAuth" parameterType="hashmap" >
+		UPDATE brd_help_desk SET 
+			auth_type = #{auth_type}
+			, drafter_no = #{drafter_no}
+			, auth_memo = #{auth_memo}			
+			, solve_state = #{solve_state}
+			, draft_date = unix_timestamp(now())
+		WHERE board_no = #{board_no}
+	</update>
+	
+	<update id="helpDeskApproval" parameterType="hashmap" >
+		UPDATE brd_help_desk SET
+			approval_no = #{approval_no}
+			, approval_comment = #{approval_comment}
+			, solve_state = #{solve_state}			
+			, approval_date = unix_timestamp(now())
+		WHERE board_no = #{board_no}
+	</update>
+
+</mapper>

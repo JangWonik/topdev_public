@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SetupEndMapper"> 
+
+	<select id="getSetupEndInfo" resultType="kr.co.toplac.sysadm.TopEndSetupVO">
+	
+		SELECT
+		 	close_rpt_yn_1 closeRptYn1,
+		 	close_rpt_yn_4 closeRptYn4
+		FROM
+		 	sysadm_setup
+		WHERE
+			serial_no = 1
+	</select>
+	
+	<update id = "udtSetupEnd" parameterType="kr.co.toplac.sysadm.TopEndSetupVO">
+	
+		UPDATE
+			sysadm_setup
+		SET
+			close_rpt_yn_1 = #{closeRptYn1},
+			close_rpt_yn_4 = #{closeRptYn4}
+		WHERE
+			serial_no = 1
+	
+	</update>
+
+</mapper>

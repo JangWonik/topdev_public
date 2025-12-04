@@ -1,0 +1,1569 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimReportMapper">
+
+	<!-- 보고서 추정금액 갱신 -->
+	<update id="updateEstimationValue" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1
+		SET 
+			estimation_amount = #{estimation_amount}
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<!-- 조사결과 데이터 가져오기 -->	
+	<select id="selectReportResult" parameterType="hashmap" resultType="AsraMap">
+		SELECT
+			serial_no
+			,suim_rpt_no
+			,option_1
+			,option_2
+			,option_3
+			,option_4
+			,noti_content
+			,regdate			
+		FROM top_rpt_print_1_result
+		WHERE 1=1
+		AND	suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<delete id="deleteSagoListValue">
+		DELETE FROM top_rpt_ctrl WHERE serial_no = #{serial_no}	
+	</delete>
+	
+	<insert id="insertSagoListValue" parameterType="hashmap">
+		INSERT INTO top_rpt_ctrl
+		(
+			suim_rpt_no
+			<if test='control_subject != null and control_subject != ""'>
+				,control_subject
+			</if>
+			<if test='control_memo != null and control_memo != ""'>
+				,control_memo
+			</if>
+			<if test='control_date != null and control_date != ""'>
+				,control_date
+			</if>			
+			,reg_date
+			
+		) VALUES (
+			#{suim_rpt_no}
+			<if test='control_subject != null and control_subject != ""'>
+				,#{control_subject}
+			</if>
+			<if test='control_memo != null and control_memo != ""'>
+				,#{control_memo}
+			</if>
+			<if test='control_date != null and control_date != ""'>
+				,#{control_date}
+			</if>
+			,unix_timestamp(now())
+		)		
+	</insert>
+	
+	<update id="updateSagoListValue" parameterType="hashmap">
+		UPDATE 
+			top_rpt_ctrl
+		SET
+			reg_date = unix_timestamp(now())
+			,control_subject = #{control_subject}
+			,control_memo = #{control_memo} 
+			,control_date = #{control_date}			
+		WHERE
+			serial_no = #{serial_no}		
+	</update>
+	
+	<update id="updateSummaryValue" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1_summary
+		SET
+			regdate = now()
+			,write_date = #{write_date}
+			,first_date = #{first_date}
+			,income_date = #{income_date}
+			,income_content = #{income_content}
+			,disease_name = #{disease_name}
+			,inspection_content = #{inspection_content}
+			,operation_content = #{operation_content}
+			,obstacle_date = #{obstacle_date}
+			,obstacle_subject = #{obstacle_subject}
+			,obstacle_content = #{obstacle_content}
+			,enter_interval = #{enter_interval}			
+			,going_interval = #{going_interval}
+			,past_disease = #{past_disease}
+			,outing_content = #{outing_content}
+			,option_content = #{option_content}
+			,doctor_opinion = #{doctor_opinion}	
+			,remark_content = #{remark_content}						
+		WHERE serial_no = #{serial_no}	
+	</update>
+	
+	<update id="updateSummaryValue_20200311" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1_summary
+		SET
+			regdate = now()
+			<if test='write_date != null and write_date != ""'>
+				,write_date = #{write_date}
+			</if>
+			<if test='first_date != null and first_date != ""'>
+				,first_date = #{first_date}
+			</if>
+			<if test='income_date != null and income_date != ""'>
+				,income_date = #{income_date}
+			</if>
+			<if test='income_content != null and income_content != ""'>
+				,income_content = #{income_content}
+			</if>
+			<if test='disease_name != null and disease_name != ""'>
+				,disease_name = #{disease_name}
+			</if>
+			<if test='inspection_content != null and inspection_content != ""'>
+				,inspection_content = #{inspection_content}
+			</if>
+			<if test='operation_content != null and operation_content != ""'>
+				,operation_content = #{operation_content}
+			</if>
+			<if test='obstacle_date != null and obstacle_date != ""'>
+				,obstacle_date = #{obstacle_date}
+			</if>
+			<if test='obstacle_subject != null and obstacle_subject != ""'>
+				,obstacle_subject = #{obstacle_subject}
+			</if>
+			<if test='obstacle_content != null and obstacle_content != ""'>
+				,obstacle_content = #{obstacle_content}
+			</if>
+			<if test='enter_interval != null and enter_interval != ""'>
+				,enter_interval = #{enter_interval}
+			</if>
+			<if test='going_interval != null and going_interval != ""'>
+				,going_interval = #{going_interval}
+			</if>
+			<if test='past_disease != null and past_disease != ""'>
+				,past_disease = #{past_disease}
+			</if>
+			<if test='outing_content != null and outing_content != ""'>
+				,outing_content = #{outing_content}
+			</if>
+			<if test='option_content != null and option_content != ""'>
+				,option_content = #{option_content}
+			</if>
+			<if test='doctor_opinion != null and doctor_opinion != ""'>
+				,doctor_opinion = #{doctor_opinion}
+			</if>
+			<if test='remark_content != null and remark_content != ""'>
+				,remark_content = #{remark_content}
+			</if>			
+		WHERE serial_no = #{serial_no}	
+	</update>
+	
+	<update id="updateReportOfficeValue7" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()
+			,search_list_7 = #{search_list_7}			
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<update id="updateReportOfficeValue6" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()
+			,unique_content_6 = #{unique_content_6}
+			,insure_address_6 = #{insure_address_6}			
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<update id="updateReportOfficeValue5" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()						
+			,confirm_content_5 = #{confirm_content_5}						
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<update id="updateReportOfficeValue4" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()			
+			,write_date_4 = #{write_date_4}
+			,option_4 = #{option_4}
+			,remark_content_4 = #{remark_content_4}						
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<update id="updateReportOfficeValue3" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()			
+			,write_date_3 = #{write_date_3}
+			,occur_date_3 = #{occur_date_3}
+			,occur_spot_3 = #{occur_spot_3}
+			,dead_date_3 = #{dead_date_3}
+			,dead_cause_3 = #{dead_cause_3}
+			,agree_content_3 = #{agree_content_3}
+			,result_info_3 = #{result_info_3}
+			,result_comment_3 = #{result_comment_3}
+			,family_comment_3 = #{family_comment_3}
+			,option_3 = #{option_3}
+			,remark_content_3 = #{remark_content_3}						
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<update id="updateReportOfficeValue2" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()			
+			,write_date_2 = #{write_date_2}
+			,personal_info_2 = #{personal_info_2}
+			,hire_date_2 = #{hire_date_2}
+			,hire_type_2 = #{hire_type_2}
+			,office_name_2 = #{office_name_2}
+			,disaster_date_2 = #{disaster_date_2}
+			,disaster_type_2 = #{disaster_type_2}
+			,disaster_content_2 = #{disaster_content_2}
+			,obstacle_level_2 = #{obstacle_level_2}
+			,option_2 = #{option_2}
+			,remark_content_2 = #{remark_content_2}						
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<update id="updateReportOfficeValue1" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()			
+			,write_date_1 = #{write_date_1}
+			,check_date_1 = #{check_date_1}
+			,occur_spot_1 = #{occur_spot_1}
+			,occur_type_1 = #{occur_type_1}
+			,disaster_1 = #{disaster_1}
+			,trans_hospital_1 = #{trans_hospital_1}
+			,remark_content_1 = #{remark_content_1}						
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<update id="updateReportOfficeValue" parameterType="hashmap">
+		UPDATE 
+			top_rpt_print_1_office
+		SET
+			regdate = now()
+			<if test='write_date_1 != null and write_date_1 != ""'>
+				,write_date_1 = #{write_date_1}
+			</if>
+			<if test='check_date_1 != null and check_date_1 != ""'>
+				,check_date_1 = #{check_date_1}
+			</if>
+			<if test='occur_spot_1 != null and occur_spot_1 != ""'>
+				,occur_spot_1 = #{occur_spot_1}
+			</if>
+			<if test='occur_type_1 != null and occur_type_1 != ""'>
+				,occur_type_1 = #{occur_type_1}
+			</if>
+			<if test='disaster_1 != null and disaster_1 != ""'>
+				,disaster_1 = #{disaster_1}
+			</if>
+			<if test='trans_hospital_1 != null and trans_hospital_1 != ""'>
+				,trans_hospital_1 = #{trans_hospital_1}
+			</if>
+			<if test='remark_content_1 != null and remark_content_1 != ""'>
+				,remark_content_1 = #{remark_content_1}
+			</if>
+			<if test='write_date_2 != null and write_date_2 != ""'>
+				,write_date_2 = #{write_date_2}
+			</if>
+			<if test='personal_info_2 != null and personal_info_2 != ""'>
+				,personal_info_2 = #{personal_info_2}
+			</if>
+			<if test='hire_date_2 != null and hire_date_2 != ""'>
+				,hire_date_2 = #{hire_date_2}
+			</if>
+			<if test='hire_type_2 != null and hire_type_2 != ""'>
+				,hire_type_2 = #{hire_type_2}
+			</if>
+			<if test='office_name_2 != null and office_name_2 != ""'>
+				,office_name_2 = #{office_name_2}
+			</if>
+			<if test='disaster_date_2 != null and disaster_date_2 != ""'>
+				,disaster_date_2 = #{disaster_date_2}
+			</if>
+			<if test='disaster_type_2 != null and disaster_type_2 != ""'>
+				,disaster_type_2 = #{disaster_type_2}
+			</if>
+			<if test='disaster_content_2 != null and disaster_content_2 != ""'>
+				,disaster_content_2 = #{disaster_content_2}
+			</if>
+			<if test='obstacle_level_2 != null and obstacle_level_2 != ""'>
+				,obstacle_level_2 = #{obstacle_level_2}
+			</if>
+			<if test='option_2 != null and option_2 != ""'>
+				,option_2 = #{option_2}
+			</if>
+			<if test='remark_content_2 != null and remark_content_2 != ""'>
+				,remark_content_2 = #{remark_content_2}
+			</if>
+			<if test='write_date_3 != null and write_date_3 != ""'>
+				,write_date_3 = #{write_date_3}
+			</if>
+			<if test='occur_date_3 != null and occur_date_3 != ""'>
+				,occur_date_3 = #{occur_date_3}
+			</if>
+			<if test='occur_spot_3 != null and occur_spot_3 != ""'>
+				,occur_spot_3 = #{occur_spot_3}
+			</if>
+			<if test='dead_date_3 != null and dead_date_3 != ""'>
+				,dead_date_3 = #{dead_date_3}
+			</if>
+			<if test='dead_cause_3 != null and dead_cause_3 != ""'>
+				,dead_cause_3 = #{dead_cause_3}
+			</if>
+			<if test='agree_content_3 != null and agree_content_3 != ""'>
+				,agree_content_3 = #{agree_content_3}
+			</if>
+			<if test='result_info_3 != null and result_info_3 != ""'>
+				,result_info_3 = #{result_info_3}
+			</if>
+			<if test='result_comment_3 != null and result_comment_3 != ""'>
+				,result_comment_3 = #{result_comment_3}
+			</if>
+			<if test='family_comment_3 != null and family_comment_3 != ""'>
+				,family_comment_3 = #{family_comment_3}
+			</if>
+			<if test='option_3 != null and option_3 != ""'>
+				,option_3 = #{option_3}
+			</if>
+			<if test='remark_content_3 != null and remark_content_3 != ""'>
+				,remark_content_3 = #{remark_content_3}
+			</if>
+			<if test='write_date_4 != null and write_date_4 != ""'>
+				,write_date_4 = #{write_date_4}
+			</if>
+			<if test='option_4 != null and option_4 != ""'>
+				,option_4 = #{option_4}
+			</if>
+			<if test='remark_content_4 != null and remark_content_4 != ""'>
+				,remark_content_4 = #{remark_content_4}
+			</if>			
+			<if test='confirm_content_5 != null and confirm_content_5 != ""'>
+				,confirm_content_5 = #{confirm_content_5}
+			</if>
+			<if test='unique_content_6 != null and unique_content_6 != ""'>
+				,unique_content_6 = #{unique_content_6}
+			</if>
+			<if test='insure_address_6 != null and insure_address_6 != ""'>
+				,insure_address_6 = #{insure_address_6}
+			</if>
+			<if test='search_list_7 != null and search_list_7 != ""'>
+				,search_list_7 = #{search_list_7}
+			</if>
+		WHERE suim_rpt_no = #{suim_rpt_no}  
+	</update>
+	
+	<insert id="insertReportOfficeValue" parameterType="hashmap">
+		INSERT INTO
+			top_rpt_print_1_office
+		(
+			suim_rpt_no
+			<if test='write_date_1 != ""'>
+				,write_date_1
+			</if>
+			<if test='check_date_1 != ""'>
+				,check_date_1
+			</if>
+			<if test='occur_spot_1 != ""'>
+				,occur_spot_1
+			</if>
+			<if test='occur_type_1 != ""'>
+				,occur_type_1
+			</if>
+			<if test='disaster_1 != ""'>
+				,disaster_1
+			</if>
+			<if test='trans_hospital_1 != ""'>
+				,trans_hospital_1
+			</if>
+			<if test='remark_content_1 != ""'>
+				,remark_content_1
+			</if>
+			<if test='write_date_2 != ""'>
+				,write_date_2
+			</if>
+			<if test='personal_info_2 != ""'>
+				,personal_info_2
+			</if>
+			<if test='hire_date_2 != ""'>
+				,hire_date_2
+			</if>
+			<if test='hire_type_2 != ""'>
+				,hire_type_2
+			</if>
+			<if test='office_name_2 != ""'>
+				,office_name_2
+			</if>
+			<if test='disaster_date_2 != ""'>
+				,disaster_date_2
+			</if>
+			<if test='disaster_type_2 != ""'>
+				,disaster_type_2
+			</if>
+			<if test='disaster_content_2 != ""'>
+				,disaster_content_2
+			</if>
+			<if test='obstacle_level_2 != ""'>
+				,obstacle_level_2
+			</if>
+			<if test='option_2 != ""'>
+				,option_2
+			</if>
+			<if test='remark_content_2 != ""'>
+				,remark_content_2
+			</if>
+			<if test='write_date_3 != ""'>
+				,write_date_3
+			</if>
+			<if test='occur_date_3 != ""'>
+				,occur_date_3
+			</if>
+			<if test='occur_spot_3 != ""'>
+				,occur_spot_3
+			</if>
+			<if test='dead_date_3 != ""'>
+				,dead_date_3
+			</if>
+			<if test='dead_cause_3 != ""'>
+				,dead_cause_3
+			</if>
+			<if test='agree_content_3 != ""'>
+				,agree_content_3
+			</if>
+			<if test='result_info_3 != ""'>
+				,result_info_3
+			</if>
+			<if test='result_comment_3 != ""'>
+				,result_comment_3
+			</if>
+			<if test='family_comment_3 != ""'>
+				,family_comment_3
+			</if>
+			<if test='option_3 != ""'>
+				,option_3
+			</if>
+			<if test='remark_content_3 != ""'>
+				,remark_content_3
+			</if>
+			<if test='write_date_4 != ""'>
+				,write_date_4
+			</if>
+			<if test='option_4 != ""'>
+				,option_4
+			</if>
+			<if test='remark_content_4 != ""'>
+				,remark_content_4
+			</if>
+			<if test='confirm_content_5 != ""'>
+				,confirm_content_5
+			</if>
+			<if test='unique_content_6 != ""'>
+				,unique_content_6
+			</if>
+			<if test='insure_address_6 != ""'>
+				,insure_address_6
+			</if>
+			<if test='search_list_7 != ""'>
+				,search_list_7
+			</if>
+			,regdate			
+		) VALUES (
+			#{suim_rpt_no}			
+			<if test='write_date_1 != ""'>
+				,#{write_date_1}
+			</if>
+			<if test='check_date_1 != ""'>
+				,#{check_date_1}
+			</if>
+			<if test='occur_spot_1 != ""'>
+				,#{occur_spot_1}
+			</if>
+			<if test='occur_type_1 != ""'>
+				,#{occur_type_1}
+			</if>
+			<if test='disaster_1 != ""'>
+				,#{disaster_1}
+			</if>
+			<if test='trans_hospital_1 != ""'>
+				,#{trans_hospital_1}
+			</if>
+			<if test='remark_content_1 != ""'>
+				,#{remark_content_1}
+			</if>
+			<if test='write_date_2 != ""'>
+				,#{write_date_2}
+			</if>
+			<if test='personal_info_2 != ""'>
+				,#{personal_info_2}
+			</if>
+			<if test='hire_date_2 != ""'>
+				,#{hire_date_2}
+			</if>
+			<if test='hire_type_2 != ""'>
+				,#{hire_type_2}
+			</if>
+			<if test='office_name_2 != ""'>
+				,#{office_name_2}
+			</if>
+			<if test='disaster_date_2 != ""'>
+				,#{disaster_date_2}
+			</if>
+			<if test='disaster_type_2 != ""'>
+				,#{disaster_type_2}
+			</if>
+			<if test='disaster_content_2 != ""'>
+				,#{disaster_content_2}
+			</if>
+			<if test='obstacle_level_2 != ""'>
+				,#{obstacle_level_2}
+			</if>
+			<if test='option_2 != ""'>
+				,#{option_2}
+			</if>
+			<if test='remark_content_2 != ""'>
+				,#{remark_content_2}
+			</if>
+			<if test='write_date_3 != ""'>
+				,#{write_date_3}
+			</if>
+			<if test='occur_date_3 != ""'>
+				,#{occur_date_3}
+			</if>
+			<if test='occur_spot_3 != ""'>
+				,#{occur_spot_3}
+			</if>
+			<if test='dead_date_3 != ""'>
+				,#{dead_date_3}
+			</if>
+			<if test='dead_cause_3 != ""'>
+				,#{dead_cause_3}
+			</if>
+			<if test='agree_content_3 != ""'>
+				,#{agree_content_3}
+			</if>
+			<if test='result_info_3 != ""'>
+				,#{result_info_3}
+			</if>
+			<if test='result_comment_3 != ""'>
+				,#{result_comment_3}
+			</if>
+			<if test='family_comment_3 != ""'>
+				,#{family_comment_3}
+			</if>
+			<if test='option_3 != ""'>
+				,#{option_3}
+			</if>
+			<if test='remark_content_3 != ""'>
+				,#{remark_content_3}
+			</if>
+			<if test='write_date_4 != ""'>
+				,#{write_date_4}
+			</if>
+			<if test='option_4 != ""'>
+				,#{option_4}
+			</if>
+			<if test='remark_content_4 != ""'>
+				,#{remark_content_4}
+			</if>
+			<if test='confirm_content_5 != ""'>
+				,#{confirm_content_5}
+			</if>
+			<if test='unique_content_6 != ""'>
+				,#{unique_content_6}
+			</if>
+			<if test='insure_address_6 != ""'>
+				,#{insure_address_6}
+			</if>
+			<if test='search_list_7 != ""'>
+				,#{search_list_7}
+			</if>
+			,now()
+		)	
+	</insert>
+	
+	<insert id="insertSummaryValue" parameterType="hashmap">
+		INSERT INTO 
+			top_rpt_print_1_summary
+		(
+		suim_rpt_no
+		<if test='write_date != ""'>
+			,write_date
+		</if>
+		<if test='first_date != ""'>
+			,first_date
+		</if>
+		<if test='income_date != ""'>
+			,income_date
+		</if>
+		<if test='income_content != ""'>
+			,income_content
+		</if>
+		<if test='disease_name != ""'>
+			,disease_name
+		</if>
+		<if test='inspection_content != ""'>
+			,inspection_content
+		</if>
+		<if test='operation_content != ""'>
+			,operation_content
+		</if>
+		<if test='obstacle_date != ""'>
+			,obstacle_date
+		</if>
+		<if test='obstacle_subject != ""'>
+			,obstacle_subject
+		</if>
+		<if test='obstacle_content != ""'>
+			,obstacle_content
+		</if>
+		<if test='enter_interval != ""'>
+			,enter_interval
+		</if>
+		<if test='going_interval != ""'>
+			,going_interval
+		</if>
+		<if test='past_disease != ""'>
+			,past_disease
+		</if>
+		<if test='outing_content != ""'>
+			,outing_content
+		</if>
+		<if test='option_content != ""'>
+			,option_content
+		</if>
+		<if test='doctor_opinion != ""'>
+			,doctor_opinion
+		</if>
+		<if test='remark_content != ""'>
+			,remark_content
+		</if>
+		<if test='summary_insu_subject != ""'>
+			,summary_insu_subject
+		</if>		
+			,regdate		
+		) VALUES (		
+		#{suim_rpt_no}
+		<if test='write_date != ""'>
+			,#{write_date}
+		</if>
+		<if test='first_date != ""'>
+			,#{first_date}
+		</if>
+		<if test='income_date != ""'>
+			,#{income_date}
+		</if>
+		<if test='income_content != ""'>
+			,#{income_content}
+		</if>
+		<if test='disease_name != ""'>
+			,#{disease_name}
+		</if>
+		<if test='inspection_content != ""'>
+			,#{inspection_content}
+		</if>
+		<if test='operation_content != ""'>
+			,#{operation_content}
+		</if>
+		<if test='obstacle_date != ""'>
+			,#{obstacle_date}
+		</if>
+		<if test='obstacle_subject != ""'>
+			,#{obstacle_subject}
+		</if>
+		<if test='obstacle_content != ""'>
+			,#{obstacle_content}
+		</if>
+		<if test='enter_interval != ""'>
+			,#{enter_interval}
+		</if>
+		<if test='going_interval != ""'>
+			,#{going_interval}
+		</if>
+		<if test='past_disease != ""'>
+			,#{past_disease}
+		</if>
+		<if test='outing_content != ""'>
+			,#{outing_content}
+		</if>
+		<if test='option_content != ""'>
+			,#{option_content}
+		</if>
+		<if test='doctor_opinion != ""'>
+			,#{doctor_opinion}
+		</if>
+		<if test='remark_content != ""'>
+			,#{remark_content}
+		</if>
+		<if test='summary_insu_subject != ""'>
+			,#{summary_insu_subject}
+		</if>
+			,now()
+		)		
+	</insert>
+	
+	<!-- 총괄경과표 데이터 삭제 -->
+	<update id="deleteSummaryValue" parameterType="hashmap">
+		DELETE FROM
+			top_rpt_print_1_summary		
+		WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 조사결과 옵션5 추가 -->
+	<insert id="insertResultOption5Value" parameterType="hashmap">
+		INSERT INTO
+			top_rpt_print_1_result			
+		(
+			suim_rpt_no
+			,noti_content
+			,regdate
+		) VALUES (
+			#{suim_rpt_no}
+			,#{noti_content}
+			,now()
+		)	
+	</insert>
+	
+	<!-- 조사결과 옵션4 추가 -->
+	<insert id="insertResultOption4Value" parameterType="hashmap">
+		INSERT INTO
+			top_rpt_print_1_result			
+		(
+			suim_rpt_no
+			,option_4
+			,regdate
+		) VALUES (
+			#{suim_rpt_no}
+			,#{result_option4}
+			,now()
+		)	
+	</insert>
+	
+	<!-- 조사결과 옵션3 추가 -->
+	<insert id="insertResultOption3Value" parameterType="hashmap">
+		INSERT INTO
+			top_rpt_print_1_result			
+		(
+			suim_rpt_no
+			,option_3
+			,regdate
+		) VALUES (
+			#{suim_rpt_no}
+			,#{result_option3}
+			,now()
+		)	
+	</insert>
+	
+	<!-- 조사결과 옵션2 추가 -->
+	<insert id="insertResultOption2Value" parameterType="hashmap">
+		INSERT INTO
+			top_rpt_print_1_result			
+		(
+			suim_rpt_no
+			,option_2
+			,regdate
+		) VALUES (
+			#{suim_rpt_no}
+			,#{result_option2}
+			,now()
+		)	
+	</insert>
+	
+	<!-- 조사결과 옵션1 추가 -->
+	<insert id="insertResultOption1Value" parameterType="hashmap">
+		INSERT INTO
+			top_rpt_print_1_result			
+		(
+			suim_rpt_no
+			,option_1
+			,regdate
+		) VALUES (
+			#{suim_rpt_no}
+			,#{result_option1}
+			,now()
+		)	
+	</insert>
+	
+	<!-- 조사결과 옵션5 갱신 -->
+	<update id="updateResultOption5Value" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1_result
+		SET 
+			noti_content = #{noti_content}
+			,regdate = now()
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<!-- 조사결과 옵션4 갱신 -->
+	<update id="updateResultOption4Value" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1_result
+		SET 
+			option_4 = #{result_option4}
+			,regdate = now()
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<!-- 조사결과 옵션3 갱신 -->
+	<update id="updateResultOption3Value" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1_result
+		SET 
+			option_3 = #{result_option3}
+			,regdate = now()
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<!-- 조사결과 옵션2 갱신 -->
+	<update id="updateResultOption2Value" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1_result
+		SET 
+			option_2 = #{result_option2}
+			,regdate = now()
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<!-- 조사결과 옵션1 갱신 -->
+	<update id="updateResultOption1Value" parameterType="hashmap">
+		UPDATE
+			top_rpt_print_1_result
+		SET 
+			option_1 = #{result_option1}
+			,regdate = now()
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<!-- 조사결과 데이터 카운트 -->
+	<select id="selectResultOption1Cnt" parameterType="String" resultType="Integer">
+		SELECT
+			COUNT(*) AS cnt
+		FROM top_rpt_print_1_result
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<!-- 관공서 관련사항 데이터 카운트 -->
+	<select id="selectReportOfficeCnt" parameterType="String" resultType="Integer">
+		SELECT
+			COUNT(*) AS cnt
+		FROM top_rpt_print_1_office
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+		
+	<!-- 조사결과 옵션1 가져오기-->
+	<select id="selectResultOption1Value" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(option_1,"") as option_1
+		FROM top_rpt_print_1_result
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<!-- 조사결과 옵션2 가져오기-->
+	<select id="selectResultOption2Value" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(option_2,"") as option_2
+		FROM top_rpt_print_1_result
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<!-- 조사결과 옵션3 가져오기-->
+	<select id="selectResultOption3Value" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(option_3,"") as option_3
+		FROM top_rpt_print_1_result
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<!-- 조사결과 옵션4 가져오기-->
+	<select id="selectResultOption4Value" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(option_4,"") as option_4
+		FROM top_rpt_print_1_result
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<!-- 조사결과 옵션5 가져오기-->
+	<select id="selectResultOption5Value" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(noti_content,"") as noti_content
+		FROM top_rpt_print_1_result
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+
+	<!-- 보고서 내 추정금액 가져오기-->
+	<select id="selectEstimationValue" parameterType="String" resultType="String">
+		SELECT 
+			estimation_amount
+		FROM top_rpt_print_1
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+
+    <select id="selectCodeList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.COL_CD
+               ,A.COL_VAL
+          FROM  sysadm_codedic A
+         WHERE  1=1
+           AND  A.TBL_NM = #{tbl_nm}
+           AND  A.COL_NM = #{col_nm}
+    </select>
+
+    <select id="selectSuimReport" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SUIM_RPT_NO
+               ,A.SUIM_ACCEPT_NO
+               ,A.SUIM_RPT_TYPE1
+               ,A.TEAM_ID
+               ,A.USER_NO
+               ,B.SUIM_RPT_APRV_USER_NO  -- 결재 승인자
+               ,A.POLICYHOLDER_NM  -- 계약자 이름
+               ,B.POLICYHOLDER_SSN
+               ,B.POLICYHOLDER_TEL
+               ,A.BENEFICIARY_NM -- 피보험자 이름
+               ,B.BENEFICIARY_SSN
+               ,B.BENEFICIARY_TEL
+               ,B.POLICY_NO  -- 증권번호
+               ,B.INSURANCE_NM -- 보험종목
+               ,B.ACCIDENT_NO  -- 사고번호
+               ,FROM_UNIXTIME(A.ACCIDENT_DATE, '%Y-%m-%d') AS ACCIDENT_DATE
+               ,C.PTNR_ID
+               ,C.PTNR_NAME
+               ,D.PTNR_DEPT_NM
+               ,E.PTNR_MBR_NM
+               ,E.PTNR_MBR_HP
+               ,E.PTNR_MBR_OFFICE_TEL
+               ,FROM_UNIXTIME(F.INVOICE_DATE, '%Y.%m.%d') AS INVOICE_DATE
+               ,FROM_UNIXTIME(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+          FROM  top_rpt_head A
+         INNER  JOIN top_rpt_body B
+            ON  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+          LEFT  JOIN top_ptnr_bsc C
+            ON  A.PTNR_ID = C.PTNR_ID
+          LEFT  JOIN top_ptnr_dept_bsc D
+            ON  A.PTNR_DEPT_ID = D.PTNR_DEPT_ID
+          LEFT  JOIN top_ptnr_mbr_bsc E
+            ON  A.PTNR_MBR_NO = E.PTNR_MBR_NO
+          LEFT  JOIN top_rpt_invoice F
+            ON  A.SUIM_RPT_NO = F.SUIM_RPT_NO
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+    </select>
+
+    <select id="selectSuimReportTeam" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.TEAM_ID
+               ,A.TEAM_NAME
+               ,A.TEAM_LEVEL
+               ,A.TEAM_ADDR
+               ,A.TEAM_INTERPHONE
+               ,A.TEAM_TELEPHONE
+               ,A.TEAM_FAX
+               ,A.TEAM_TYPE
+          FROM  top_tm_bsc A
+         WHERE  1=1
+           AND  A.TEAM_ID = (
+                              SELECT  CASE WHEN TEAM_LEVEL = 2 THEN TEAM_ANCESTOR2 ELSE TEAM_ID END AS TEAM_ID
+                                FROM  top_tm_bsc
+                               WHERE  TEAM_ID = #{team_id}
+                            )
+    </select>
+
+    <select id="selectUserInfo" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.USER_NO
+               ,A.USER_ID
+               ,A.USER_NAME
+               ,A.EMAIL
+               ,A.OFFICE_TEL
+               ,A.OFFICE_FAX
+               ,A.HANDPHONE
+               ,A.WORK_LEVEL
+               ,GETCODEVALUE('top_mbr_bsc', 'work_level', A.WORK_LEVEL) AS DIS_WORK_LEVEL
+               ,A.PICTURE
+               ,IFNULL(B.USER_SIGN,'') AS USER_SIGN
+          FROM  top_mbr_bsc A
+          LEFT  JOIN top_mbr_sgn B
+            ON  A.USER_NO = B.USER_NO AND B.DEL_STATE = 0
+         WHERE  1=1
+           AND  A.USER_NO = #{user_no}
+   </select>
+
+    <select id="selectReportPrint1" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.RPT_PRINT_NO
+               ,A.SUIM_RPT_NO
+               ,A.INSU_TERM_1               
+               ,DATE_FORMAT(A.INSU_TERM_1_SDATE, '%Y-%m-%d') INSU_TERM_1_SDATE
+               ,DATE_FORMAT(A.INSU_TERM_1_EDATE, '%Y-%m-%d') INSU_TERM_1_EDATE               
+               ,A.DIAGNOSIS_DISEASE_3
+               ,A.DIAGNOSIS_HOSPITAL_3
+               ,A.FACE_INSURED_JOB_6
+               ,A.INSPECT_POINT_4
+               ,A.INSPECT_RESULT_4
+               ,A.ADJUST_RESULT_7
+               ,A.ADJUST_RESULT7_USE_AT
+               ,A.PRINTCTRL_ALL_DELAY_CNT
+               ,A.PRINTCTRL_INSU_DELAY_CNT
+               ,A.PRINTCTRL_NOTINSU_DELAY_CNT
+               ,A.SAGODOC_FLAG
+               ,A.ESTIMATION_AMOUNT
+          FROM  top_rpt_print_1 A
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+    </select>
+
+    <insert id="insertReportPrint1ForExist" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1(SUIM_RPT_NO) VALUES (#{suim_rpt_no})
+    </insert>
+    
+    <select id="selectReportOfficeList7" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		office_no
+    		,suim_rpt_no
+    		,search_list_7
+    	FROM top_rpt_print_1_office
+    	WHERE 1=1 
+    	AND suim_rpt_no = #{suim_rpt_no}    
+    </select>
+    
+    <select id="selectReportOfficeList6" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		office_no
+    		,suim_rpt_no
+    		,unique_content_6
+    		,insure_address_6
+    	FROM top_rpt_print_1_office
+    	WHERE 1=1 
+    	AND suim_rpt_no = #{suim_rpt_no}    
+    </select>
+    
+    <select id="selectReportOfficeList5" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		office_no
+    		,suim_rpt_no
+    		,confirm_content_5
+    	FROM top_rpt_print_1_office
+    	WHERE 1=1 
+    	AND suim_rpt_no = #{suim_rpt_no}    
+    </select>
+    
+    <select id="selectReportOfficeList4" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		office_no
+    		,suim_rpt_no
+    		,write_date_4
+    		,date_format(write_date_4,'%Y-%m-%d') as write_date_4_fmt    		    		
+    		,option_4
+    		,remark_content_4
+    	FROM top_rpt_print_1_office
+    	WHERE 1=1 
+    	AND suim_rpt_no = #{suim_rpt_no}    
+    </select>
+    
+    <select id="selectReportOfficeList3" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		office_no
+    		,suim_rpt_no
+    		,write_date_3
+    		,date_format(write_date_3,'%Y-%m-%d') as write_date_3_fmt
+    		,occur_date_3
+    		,occur_spot_3
+    		,dead_date_3
+    		,dead_cause_3
+    		,agree_content_3
+    		,result_info_3
+    		,result_comment_3
+    		,family_comment_3    		
+    		,option_3
+    		,remark_content_3
+    	FROM top_rpt_print_1_office
+    	WHERE 1=1 
+    	AND suim_rpt_no = #{suim_rpt_no}    
+    </select>
+    
+    <select id="selectReportOfficeList2" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		office_no
+    		,suim_rpt_no
+    		,write_date_2
+    		,date_format(write_date_2,'%Y-%m-%d') as write_date_2_fmt
+    		,personal_info_2
+    		,hire_date_2
+    		,date_format(hire_date_2,'%Y-%m-%d') as hire_date_2_fmt
+    		,hire_type_2
+    		,office_name_2
+    		,disaster_date_2
+    		,date_format(disaster_date_2,'%Y-%m-%d') as disaster_date_2_fmt
+    		,disaster_type_2
+    		,disaster_content_2
+    		,obstacle_level_2
+    		,option_2
+    		,remark_content_2
+    	FROM top_rpt_print_1_office
+    	WHERE 1=1 
+    	AND suim_rpt_no = #{suim_rpt_no}    
+    </select>
+    
+    <select id="selectReportOfficeList1" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		office_no
+    		,suim_rpt_no
+    		,write_date_1
+    		,date_format(write_date_1,'%Y-%m-%d') as write_date_1_fmt
+    		,check_date_1
+    		,occur_spot_1
+    		,occur_type_1
+    		,disaster_1
+    		,trans_hospital_1
+    		,remark_content_1
+    	FROM top_rpt_print_1_office
+    	WHERE 1=1 
+    	AND suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectReportSummaryList" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		serial_no
+    		,suim_rpt_no
+    		,write_date
+    		,date_format(write_date,'%Y-%m-%d') as write_date_fmt
+    		,first_date
+    		,date_format(first_date,'%Y-%m-%d') as first_date_fmt
+    		,income_date
+    		,date_format(income_date,'%Y-%m-%d') as income_date_fmt
+    		,income_content
+    		,disease_name
+    		,inspection_content
+    		,operation_content
+    		,obstacle_date
+    		,date_format(obstacle_date,'%Y-%m-%d') as obstacle_date_fmt
+    		,obstacle_subject
+    		,obstacle_content
+    		,enter_interval
+    		,going_interval
+    		,past_disease
+    		,outing_content
+    		,option_content
+    		,doctor_opinion
+    		,remark_content
+    		,summary_insu_subject
+    		,regdate
+    		,date_format(regdate,'%Y-%m-%d') as regdate_fmt    		
+    	FROM top_rpt_print_1_summary
+    	WHERE 1=1
+    	AND suim_rpt_no = #{suim_rpt_no} 
+    	ORDER BY write_date    
+    </select>
+
+    <select id="selectReportPrint1AssureList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.RPT_PRINT_NO
+               ,A.ASSURE_DTL
+               ,A.JOIN_AMOUNT
+               ,A.ESTIMATION_AMOUNT
+          FROM  top_rpt_print_1_assure A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rpt_print_no}
+        ORDER BY A.SERIAL_NO ASC
+    </select>
+    
+    <select id="selectReportPrint1AssureListSub" parameterType="hashmap" resultType="AsraMap">
+        SELECT  serial_no
+               ,rpt_print_no
+               ,mortgage_type
+               ,mortgage_amount
+               ,regdate
+          FROM  top_rpt_print_1_assure_sub
+         WHERE  1=1
+           AND  rpt_print_no = #{rpt_print_no}
+        ORDER BY regdate
+    </select>
+    
+    <update id="updateSuimReportContract" parameterType="hashmap">
+        UPDATE  top_rpt_body
+           SET  POLICY_NO = #{policy_no}
+               ,INSURANCE_NM = #{insurance_nm}
+         WHERE  SUIM_RPT_NO = #{suim_rpt_no}
+    </update>
+    
+    <update id="updateReportPrint1Contract" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET INSU_TERM_1 = #{insu_term1}
+				,INSU_TERM_1_SDATE = #{insu_term1_sdate}
+				,INSU_TERM_1_EDATE = #{insu_term1_edate}
+				,FACE_INSURED_JOB_6 = #{face_insured_job6}
+         WHERE  SUIM_RPT_NO = #{suim_rpt_no}
+    </update>
+
+    <update id="updateReportPrint1Claim" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET  DIAGNOSIS_DISEASE_3 = #{diagnosis_disease3}
+               ,DIAGNOSIS_HOSPITAL_3 = #{diagnosis_hospital3}
+         WHERE  SUIM_RPT_NO = #{suim_rpt_no}
+    </update>
+
+    <insert id="insertReportPrint1ClaimSub" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1_assure (RPT_PRINT_NO, ASSURE_DTL, JOIN_AMOUNT, ESTIMATION_AMOUNT)
+        VALUES(#{rpt_print_no}, #{assure_dtl}, #{join_amount}, #{estimation_amount})
+    </insert>
+    
+    <insert id="insertReportPrint1ClaimSub2" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1_assure_sub (rpt_print_no, mortgage_type, mortgage_amount, regdate)
+        VALUES(#{rpt_print_no}, #{mortgage_type}, #{mortgage_amount}, now())
+    </insert>
+
+    <update id="updateReportPrint1ClaimSub" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_assure
+           SET  ASSURE_DTL = #{assure_dtl}
+               ,JOIN_AMOUNT = #{join_amount}
+               ,ESTIMATION_AMOUNT = #{estimation_amount}
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+
+    <delete id="deleteReportPrint1ClaimSub" parameterType="hashmap">
+        DELETE FROM top_rpt_print_1_assure WHERE SERIAL_NO = #{serial_no}
+    </delete>
+    
+    <update id="updateReportPrint1ClaimSub2" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_assure_sub
+           SET  MORTGAGE_TYPE = #{mortgage_type}
+               ,MORTGAGE_AMOUNT = #{mortgage_amount}               
+               <!-- ,REGDATE = now() -->
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+    
+    <delete id="deleteReportPrint1ClaimSub2" parameterType="hashmap">
+        DELETE FROM top_rpt_print_1_assure_sub WHERE SERIAL_NO = #{serial_no}
+    </delete>
+
+    <select id="selectOtherInsuList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.RPT_PRINT_NO
+               ,A.OTHER_INSU_COM
+               ,A.OTHER_INSU_DTL
+               ,A.OTHER_INSU_CONTRACT
+          FROM  top_rpt_print_1_2 A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rpt_print_no}
+        ORDER BY A.SERIAL_NO ASC
+    </select>
+
+    <insert id="insertReportOtherInsu" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1_2 (RPT_PRINT_NO, OTHER_INSU_COM, OTHER_INSU_DTL, OTHER_INSU_CONTRACT)
+        VALUES(#{rpt_print_no}, #{other_insu_com}, #{other_insu_dtl}, #{other_insu_contract})
+    </insert>
+
+    <update id="updateReportOtherInsu" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_2
+           SET  OTHER_INSU_COM = #{other_insu_com}
+               ,OTHER_INSU_DTL = #{other_insu_dtl}
+               ,OTHER_INSU_CONTRACT = #{other_insu_contract}
+        WHERE  SERIAL_NO = #{serial_no}
+    </update>
+
+    <delete id="deleteReportOtherInsu" parameterType="hashmap">
+        DELETE FROM top_rpt_print_1_2 WHERE SERIAL_NO = #{serial_no}
+    </delete>
+
+    <update id="updateEmphasisInvest" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET  INSPECT_POINT_4 = #{inspect_point_4}
+         WHERE  RPT_PRINT_NO = #{rpt_print_no}
+    </update>
+
+    <update id="updateEmphasisResult" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET  INSPECT_RESULT_4 = #{inspect_result_4}
+         WHERE  RPT_PRINT_NO = #{rpt_print_no}
+    </update>
+
+    <select id="selectGeneralPassList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.INVESTIGATE_TO_DATE
+               ,A.INVESTIGATE_FROM_DATE
+               ,A.INVESTIGATE_DATE_DTL
+               ,A.INVESTIGATE_OUTLINE
+               ,A.INVESTIGATE_DTL
+               ,A.SORT_SN
+          FROM  top_rpt_print_1_6_1 A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rpt_print_no}
+        ORDER BY A.SORT_SN ASC, A.SERIAL_NO ASC
+    </select>
+
+    <insert id="insertGeneralPass" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1_6_1 (RPT_PRINT_NO, INVESTIGATE_TO_DATE, INVESTIGATE_FROM_DATE, INVESTIGATE_DATE_DTL, INVESTIGATE_OUTLINE, INVESTIGATE_DTL, SORT_SN)
+        VALUES (#{rpt_print_no}, #{investigate_to_date}, #{investigate_from_date}, #{investigate_date_dtl}, #{investigate_outline}, #{investigate_dtl}, #{sort_sn})
+    </insert>
+    <update id="updateGeneralPass" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_6_1
+           SET  INVESTIGATE_TO_DATE = #{investigate_to_date}
+               ,INVESTIGATE_FROM_DATE = #{investigate_from_date}
+               ,INVESTIGATE_DATE_DTL = #{investigate_date_dtl}
+               ,INVESTIGATE_OUTLINE = #{investigate_outline}
+               ,INVESTIGATE_DTL = #{investigate_dtl}
+               ,SORT_SN = #{sort_sn}
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+    <delete id="deleteGeneralPass" parameterType="hashmap">
+        DELETE FROM top_rpt_print_1_6_1 WHERE SERIAL_NO = #{serial_no}
+    </delete>
+
+    <select id="selectDetailConfirmList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.RPT_PRINT_NO
+               ,A.DETAIL_GUBUN
+               ,A.DETAIL_TITLE
+               ,A.DETAIL_CONTENT
+               ,A.DETAIL_CONTENT_SUB
+               ,A.USE_FLAG
+          FROM  top_rpt_print_1_detail_check A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rpt_print_no}
+        ORDER BY A.DETAIL_GUBUN ASC, A.SERIAL_NO ASC
+    </select>
+
+    <select id="selectDetailConfirmExistCnt" parameterType="hashmap" resultType="Long">
+        SELECT COUNT(*) AS CNT FROM top_rpt_print_1_detail_check WHERE RPT_PRINT_NO = #{rpt_print_no} AND DETAIL_GUBUN = #{detail_gubun}
+    </select>
+
+    <insert id="insertDetailConfirm" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1_detail_check (RPT_PRINT_NO, DETAIL_GUBUN, DETAIL_TITLE, DETAIL_CONTENT, DETAIL_CONTENT_SUB, USE_FLAG)
+        VALUES (#{rpt_print_no}, #{detail_gubun}, #{detail_title}, #{detail_content}, #{detail_content_sub}, #{use_flag})
+        <selectKey resultType="int" keyProperty="serial_no" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="updateDetailConfirmUseFlag" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_detail_check
+           SET  USE_FLAG = #{use_flag}
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+
+    <update id="updateDetailConfirm" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_detail_check
+           SET  DETAIL_TITLE = #{detail_title}
+               ,DETAIL_CONTENT = #{detail_content}
+               ,DETAIL_CONTENT_SUB = #{detail_content_sub}
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+
+    <delete id="deleteDetailConfirm" parameterType="hashmap">
+        DELETE FROM top_rpt_print_1_detail_check WHERE SERIAL_NO = #{serial_no}
+    </delete>
+
+    <!-- 손해사정결과 (조사자 의견) 사용 미사용 처리 -->
+    <update id="updateEmphasisOpinionUseAt" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET  ADJUST_RESULT7_USE_AT = #{use_at}
+         WHERE  RPT_PRINT_NO = #{rpt_print_no}
+    </update>
+
+    <update id="updateEmphasisOpinion" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET  ADJUST_RESULT_7 = #{adjust_result_7}
+         WHERE  RPT_PRINT_NO = #{rpt_print_no}
+    </update>
+    
+    <!-- 사고 처리 과정표를 기본보고서에서 가져오는 방식으로 변경 by top3009 -->
+    <select id="getSagoList" parameterType="hashmap" resultType="AsraMap">	
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no sagoNo
+			, control_subject item
+			, control_memo content
+			, control_date regDate			
+		FROM
+			top_rpt_ctrl
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+			ORDER BY control_date, reg_date
+	</select>
+
+    <!-- 사고 처리 과정표 처리과정 리스트-->
+    <select id="selectReportPrint1CtrlList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.CONTROL_DATE
+               ,A.CONTROL_END_DATE
+               ,A.CONTROL_DATE_CNT
+               ,A.CONTROL_SUBJECT
+               ,A.CONTROL_MEMO
+               ,A.CONTROL_DELAY_AGENT
+               ,A.CONTROL_DELAY_CNT
+          FROM  top_rpt_print_1_ctrl A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rpt_print_no}
+    </select>
+
+    <insert id="insertAccidentProcess" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1_ctrl
+                    (RPT_PRINT_NO
+                    ,CONTROL_DATE
+                    ,CONTROL_END_DATE
+                    ,CONTROL_DATE_CNT
+                    ,CONTROL_SUBJECT
+                    ,CONTROL_MEMO
+                    ,CONTROL_DELAY_AGENT
+                    ,CONTROL_DELAY_CNT
+                    ,REG_DATE) VALUES (
+                     #{rpt_print_no}
+                    ,#{control_date}
+                    ,#{control_end_date}
+                    ,#{control_date_cnt}
+                    ,#{control_subject}
+                    ,#{control_memo}
+                    ,#{control_delay_agent}
+                    ,#{control_delay_cnt}
+                    ,UNIX_TIMESTAMP(NOW())
+                    )
+    </insert>
+    <update id="updateAccidentProcess" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_ctrl
+           SET  CONTROL_DATE        = #{control_date}
+               ,CONTROL_END_DATE    = #{control_end_date}
+               ,CONTROL_DATE_CNT    = #{control_date_cnt}
+               ,CONTROL_SUBJECT     = #{control_subject}
+               ,CONTROL_MEMO        = #{control_memo}
+               ,CONTROL_DELAY_AGENT = #{control_delay_agent}
+               ,CONTROL_DELAY_CNT   = #{control_delay_cnt}
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+    <delete id="deleteAccidentProcess" parameterType="hashmap">
+      DELETE FROM top_rpt_print_1_ctrl WHERE SERIAL_NO = #{serial_no}
+    </delete>
+
+    <update id="updateAccidentProcessPrint1" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET  PRINTCTRL_ALL_DELAY_CNT     = #{printctrl_all_delay_cnt}
+               ,PRINTCTRL_INSU_DELAY_CNT    = #{printctrl_insu_delay_cnt}
+               ,PRINTCTRL_NOTINSU_DELAY_CNT = #{printctrl_notinsu_delay_cnt}
+        WHERE  RPT_PRINT_NO = #{rpt_print_no}
+    </update>
+
+    <!-- 첨부 서류 시작 -->
+    <select id="selectAttachDocList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.ATTACH_NAME
+               ,A.ATTACH_COPY
+               ,A.ATTACH_ETC_MEMO
+          FROM  top_rpt_print_1_8 A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rpt_print_no}
+        ORDER BY A.SERIAL_NO ASC
+    </select>
+
+    <update id="updateAttachDocUseFlag" parameterType="hashmap">
+        UPDATE  top_rpt_print_1
+           SET  SAGODOC_FLAG     = #{use_flag}
+        WHERE  RPT_PRINT_NO = #{rpt_print_no}
+    </update>
+
+    <insert id="insertAttachDoc" parameterType="hashmap">
+        INSERT INTO top_rpt_print_1_8
+                    (RPT_PRINT_NO
+                    ,ATTACH_NAME
+                    ,ATTACH_COPY
+                    ,ATTACH_ETC_MEMO) VALUES (
+                     #{rpt_print_no}
+                    ,#{attach_name}
+                    ,#{attach_copy}
+                    ,#{attach_etc_memo}
+                    )
+    </insert>
+    <update id="updateAttachDoc" parameterType="hashmap">
+        UPDATE  top_rpt_print_1_8
+           SET  ATTACH_NAME     = #{attach_name}
+               ,ATTACH_COPY     = #{attach_copy}
+               ,ATTACH_ETC_MEMO = #{attach_etc_memo}
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+    <delete id="deleteAttachDoc" parameterType="hashmap">
+      DELETE FROM top_rpt_print_1_8 WHERE SERIAL_NO = #{serial_no}
+    </delete>
+    <!-- 첨부 서류 끝 -->
+
+    <!-- 병 의원 탐문 기록지 -->
+    <select id="selectHospitalQuestionList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.HSPT_NAME
+               ,A.HSPT_ADDRESS
+               ,A.HSPT_TEL
+               ,A.HSPT_CONFIRM
+          FROM  top_rpt_print_hspt_qestn A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rpt_print_no}
+        ORDER BY A.SERIAL_NO ASC
+    </select>
+
+    <insert id="insertHospitalQuestion"  parameterType="hashmap">
+        INSERT INTO top_rpt_print_hspt_qestn
+                    (RPT_PRINT_NO
+                    ,HSPT_NAME
+                    ,HSPT_ADDRESS
+                    ,HSPT_TEL
+                    ,HSPT_CONFIRM) VALUES (
+                     #{rpt_print_no}
+                    ,#{hspt_name}
+                    ,#{hspt_address}
+                    ,#{hspt_tel}
+                    ,#{hspt_confirm}
+                    )
+    </insert>
+    <update id="updateHospitalQuestion"  parameterType="hashmap">
+        UPDATE  top_rpt_print_hspt_qestn
+           SET  HSPT_NAME       = #{hspt_name}
+               ,HSPT_ADDRESS    = #{hspt_address}
+               ,HSPT_TEL        = #{hspt_tel}
+               ,HSPT_CONFIRM    = #{hspt_confirm}
+         WHERE  SERIAL_NO       = #{serial_no}
+    </update>
+    <delete id="deleteHospitalQuestion"  parameterType="hashmap">
+        DELETE FROM top_rpt_print_hspt_qestn WHERE SERIAL_NO = #{serial_no}
+    </delete>
+
+    <!-- 첨부 이미지 -->
+    <select id="selectAttachImageList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.FILE_PATH
+               ,A.IMG_NAME
+               ,A.IMG_MEMO
+               ,A.IMG_RANK
+          FROM  top_rpt_img A
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+        ORDER BY A.IMG_RANK ASC, A.SERIAL_NO ASC
+    </select>
+
+    <select id="selectAttachImage" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.FILE_PATH
+               ,A.IMG_NAME
+               ,A.IMG_MEMO
+               ,A.IMG_RANK
+          FROM  top_rpt_img A
+         WHERE  1=1
+           AND  A.SERIAL_NO = #{serial_no}
+    </select>
+
+    <update id="updateAttachImage"  parameterType="hashmap">
+        UPDATE  top_rpt_img
+           SET  IMG_RANK        = #{img_rank}
+               ,IMG_MEMO        = #{img_memo}
+         WHERE  SERIAL_NO       = #{serial_no}
+    </update>
+
+    <delete id="deleteAttachImage"  parameterType="hashmap">
+        DELETE FROM top_rpt_img WHERE SERIAL_NO = #{serial_no}
+    </delete>
+
+</mapper>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MbrRegInsMapper">
+
+	<insert id="addNewMember" parameterType="kr.co.toplac.topteam.TopMbrBscVO"
+			useGeneratedKeys="true" keyProperty="user_no">
+				INSERT INTO top_mbr_bsc(user_id ,team_id_main,team_id_loc, user_pwd, user_name, user_state
+					, jumin_no1, jumin_no2,reg_date, work_level, work_type, handphone)
+				VALUES(#{user_id}, 999 ,999, #{user_pw}, #{user_name}, 2
+					, #{jumin_no1}, #{jumin_no2}, unix_timestamp(now()), 0, 0, ' ');
+
+		<selectKey keyProperty="user_no" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="insertMbrBscLog" parameterType="String">
+		INSERT INTO top_mbr_bsc_log
+		(
+			 user_no
+			,user_state
+			,log_memo
+			,reg_date)
+		VALUES
+		(
+			 #{_parameter}
+			,0
+			,"사원등록"
+			,UNIX_TIMESTAMP(now())
+		)
+	</insert>
+
+	<select id="juminCheck" resultType="Integer" parameterType="java.util.HashMap">
+		SELECT 
+			count(*)
+		FROM
+			top_mbr_bsc
+		WHERE
+			jumin_no1 = #{ju1} and jumin_no2 = #{ju2}
+	</select>
+	
+	<select id="memberIdCheck" resultType="Integer" parameterType="String">
+		SELECT 
+			count(*)
+		FROM
+			top_mbr_bsc
+		WHERE
+			BINARY user_id = #{memberId}
+	</select>
+	
+	<select id="memberNameCheck" resultType="Integer" parameterType="String">
+		SELECT 
+			count(*)
+		FROM
+			top_mbr_bsc
+		WHERE
+			BINARY user_name = #{memberName}
+		AND user_state != 1 	
+	</select>	
+	
+	<insert id ="joinUserAuthIns"  parameterType="String">
+		INSERT INTO top_mbr_pms
+			(
+				user_no, 
+				mbr_pms_1, mbr_pms_2, mbr_pms_3, mbr_pms_4, mbr_pms_5, mbr_pms_6, mbr_pms_7, mbr_pms_8, mbr_pms_9, mbr_pms_10, 
+				mbr_pms_11, mbr_pms_12, mbr_pms_13, mbr_pms_14, mbr_pms_15, mbr_pms_16, mbr_pms_17, mbr_pms_18, mbr_pms_19, mbr_pms_20,
+				mbr_pms_21, mbr_pms_22,mbr_pms_23,mbr_pms_24,mbr_pms_25,mbr_pms_26,mbr_pms_27,mbr_pms_28, reg_date
+			)	
+		VALUES
+			(
+				#{user_no}, 
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+				0, 0, 0, 0, 0, 0, 0, 0,  
+				unix_timestamp(now())  
+			)
+	</insert>
+	
+	
+	<insert id ="joinUserAuth2Ins"  parameterType="String">
+		INSERT INTO ls_admin 
+		(user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1)
+		VALUES 
+		(#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','')
+	</insert>
+
+	<insert id = "joinUserAuthLogIns"  parameterType="String">
+	
+		INSERT INTO top_mbr_pms_log
+			(
+				user_no, mbr_pms_1, mbr_pms_2, mbr_pms_3, mbr_pms_4, mbr_pms_5, mbr_pms_6, mbr_pms_7, mbr_pms_8,
+				mbr_pms_9, mbr_pms_10, mbr_pms_11, mbr_pms_12, mbr_pms_13, mbr_pms_14, mbr_pms_15, mbr_pms_16, mbr_pms_17, 
+				mbr_pms_18, mbr_pms_19, mbr_pms_20,mbr_pms_21,reg_user, reg_date
+			)	
+		VALUES
+			(
+				#{user_no}, 0, 0, 0, 0, 0, 0, 0, 0, 
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 
+				0, 0, 0, 0, 0, unix_timestamp(now())  
+			)
+	
+	</insert>
+
+</mapper>

@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="SuimRegInsMapper">
+ 
+ 	<select id="suimInvoiceChk" parameterType="String" resultType="integer">
+ 		SELECT 
+ 			COUNT(*) AS nCnt
+ 		FROM top_rpt_invoice
+ 		WHERE suim_rpt_no = #{suimRptNo}
+ 	</select>
+ 	
+ 	<select id="suimInvoiceNoOne" parameterType="String" resultType="String">
+ 		SELECT 
+ 			rpt_invoice_no
+ 		FROM top_rpt_invoice
+ 		WHERE suim_rpt_no = #{suimRptNo}
+ 	</select>
+ 	
+ 	<select id="topTeamList" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT
+			team_id, team_name, team_level
+		  FROM
+			top_tm_bsc
+ 		 WHERE team_level != 2
+		 ORDER BY 
+			team_group_order desc, team_order desc
+	</select>
+	
+	<select id="getScode" parameterType="String" resultType="String">
+	
+		SELECT suim_scode
+		  FROM top_tm_bsc
+		 WHERE team_id = #{team_id}
+	
+	</select>
+	
+	<select id="getEcode" parameterType="String" resultType="String">
+	
+		SELECT suim_ecode
+		FROM top_tm_bsc
+		WHERE team_id = #{team_id}
+	
+	</select>
+	
+	<!-- 스피드 접수/종결 차기 종결 뒷번호 추출 -->
+	<select id="getCloseNoForSpeed" parameterType="String" resultType="Integer">
+		SELECT 
+			max(SUBSTRING(suim_close_no,8,4))+1 
+		FROM 
+			top_rpt_head 
+		WHERE 
+			suim_close_no like CONCAT(#{searchStr},'%')
+	</select>
+	
+	<!-- 일반보고서 사고번호로 접수번호 불러오기 (1건만 가져오도록 수정)-->
+	<select id="existAccNoForHeadIns" parameterType="String" resultType="String">
+		SELECT 
+			b.suim_accept_no
+		FROM 
+			top_rpt_body a, top_rpt_head b 
+		WHERE 
+			a.accident_no = #{accNo}
+			AND a.suim_rpt_no = b.suim_rpt_no			
+			AND b.suim_rpt_state != 3
+			ORDER BY a.suim_rpt_no DESC
+			LIMIT 1
+	</select>
+	
+	<!-- 계약자와 사고일자로 보고서 갯수 가져오기 -->
+	<select id="policyNmAccDateForHeadCnt" parameterType="hashmap" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM top_rpt_head
+		WHERE policyholder_nm = #{policyholder_nm}
+		AND accident_date = UNIX_TIMESTAMP(#{accident_date})
+		AND suim_rpt_state != 3
+	</select>
+	
+	<!-- 계약자와 사고일자로 보고서 접수번호 가져오기 -->
+	<select id="policyNmAccDateForHeadAccNo" parameterType="hashmap" resultType="String">
+		SELECT
+			suim_accept_no
+		FROM top_rpt_head
+		WHERE policyholder_nm = #{policyholder_nm}
+		AND accident_date = UNIX_TIMESTAMP(#{accident_date})
+		AND suim_rpt_state != 3
+		ORDER BY suim_rpt_no DESC
+		LIMIT 1		
+	</select>
+	
+	<!-- 일반보고서 사고번호 중복 조회 -->
+	<select id="existAccNoForHeadInsCnt" parameterType="String" resultType="integer">
+		SELECT 
+			count(*)
+		FROM 
+			top_rpt_body a, top_rpt_head b 
+		WHERE 
+			a.accident_no = #{accNo}
+			AND a.suim_rpt_no = b.suim_rpt_no			
+			AND b.suim_rpt_state != 3
+	</select>
+	
+	<!-- 스피드 접수/종결 사고번호 중복 조회 -->
+	<select id="existAccNoForSpeedIns" parameterType="String" resultType="Integer">
+		SELECT 
+			count(a.suim_rpt_no) 
+		FROM 
+			top_rpt_body a, top_rpt_head b 
+		WHERE 
+			a.accident_no = #{accNo}
+			and a.suim_rpt_no = b.suim_rpt_no
+			and (b.suim_rpt_type1 = 14 or b.suim_rpt_type1 = 18)
+			and b.suim_rpt_state != 3
+	</select>
+
+	<!-- 일반수임 등록 시 수임코드 뒷자리 구하기 --><!-- //notUse-2016.11.02.rjh -->
+	<select id="getMaxNo" resultType="String" parameterType="String" >
+		SELECT SUBSTR(suim_accept_no,8,4)+1
+		FROM top_rpt_head
+		WHERE suim_accept_no like CONCAT(#{thisSuimCodeFront},'%')  
+		ORDER BY suim_accept_no DESC
+ 		LIMIT 1
+	</select>
+
+	<!-- 일반수임 등록 시 수임코드 뒷자리 구하기 -->
+	<update id="getSuimAcceptSeqNo" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET suim_accept_seq_no = suim_accept_seq_no + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT suim_accept_seq_no
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+	    </selectKey>
+
+	</update>
+
+	<!-- 농작물 등록 시 수임코드 뒷자리 구하기 --><!-- //notUse-2016.11.02.rjh -->
+	<select id="getMaxNoForNsc" resultType="String" parameterType="String" >
+		SELECT SUBSTR(suim_accept_no,8,4)+1
+		FROM top_prim_biz_rpt_head
+		WHERE suim_accept_no like CONCAT(#{thisSuimCodeFront},'%')  
+		ORDER BY suim_accept_no DESC
+ 		LIMIT 1
+	</select>
+
+	<!-- 농작물 등록 시 수임코드 뒷자리 구하기 -->
+	<update id="getPrimbizAcceptSeqNo" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET primbiz_accept_seq_no = primbiz_accept_seq_no + 1
+		WHERE `year_month` = CONCAT(DATE_FORMAT(NOW(), '%y'),'12')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT primbiz_accept_seq_no
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = CONCAT(DATE_FORMAT(NOW(), '%y'),'12')
+	    </selectKey>
+
+	</update>
+
+	<!-- 일반 수임건 직전 입력된 serial 가져오기 -->
+	<select id="getSuimRptNo" resultType="String">
+	
+		SELECT suim_rpt_no
+		FROM top_rpt_head
+		WHERE suim_accept_no = #{suimAcceptNo}
+	
+	</select>
+	
+	<!-- 농작물 수임건 직전 입력된 serial 가져오기 -->
+	<select id="getSuimRptNoForNsc" resultType="String">
+	
+		SELECT suim_rpt_no
+		FROM top_prim_biz_rpt_head
+		WHERE suim_accept_no = #{suimAcceptNo}
+	
+	</select>
+	
+	
+	<select id="ptnrList" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		SELECT a.* , b.top_accnt_bank bank_title
+		FROM top_ptnr_bsc a, top_accnt_bsc b
+		WHERE a.top_accnt_id = b.top_accnt_id
+		      and a.del_state != 1
+		ORDER BY a.ptnr_group_order DESC, a.ptnr_level, a.ptnr_order DESC
+	</select>
+	
+	
+	<select id="getThisDeptMbr" parameterType="String" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		SELECT ptnr_mbr_no, ptnr_mbr_nm
+		  FROM top_ptnr_mbr_bsc
+		 WHERE ptnr_id = #{ptnr_id}
+		       and del_state != 1 
+		 ORDER BY 
+		 		ptnr_mbr_nm ;
+	</select>
+	
+	
+	<select id="getThisDept" parameterType="String" resultType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+		SELECT a.ptnr_dept_nm as ptnr_dept_nm, a.ptnr_dept_id as ptnr_dept_id, b.ptnr_tm2_nm ptnr_tm2_nm
+		  FROM top_ptnr_dept_bsc a
+		  JOIN top_ptnr_mbr_bsc b
+		 WHERE a.ptnr_dept_id = b.ptnr_dept_id
+   	       AND ptnr_mbr_no = #{ptnr_mbr_id};
+	</select>
+	
+	
+	<!--
+	<select id="getThisDept" resultType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+		SELECT ptnr_dept_nm, ptnr_dept_id
+		FROM top_ptnr_dept_bsc
+		WHERE ptnr_id = #{ptnr_id}
+		      and del_state != 1 
+	</select>
+	<select id="getThisDeptMbr" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		SELECT ptnr_mbr_no, ptnr_mbr_nm
+		FROM top_ptnr_mbr_bsc
+		WHERE ptnr_dept_id = #{ptnr_dept_id}
+		      and del_state != 1 
+	</select>
+	 -->
+ 	
+ 	<select id = "getThisTeamMbr" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrBscVO">
+ 		SELECT
+			user_no, user_name, team_id_main
+		FROM
+			top_mbr_bsc 
+		WHERE
+			1 = 1
+			<if test='_parameter != "0"'>
+				AND team_id_main = #{_parameter}
+			</if>
+			and user_state != 1
+ 	
+ 	</select>
+ 	
+ 	<!-- 일반 수임건 head 정보 입력 -->
+ 	<insert id = "suimInsHead1" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+ 	
+ 		INSERT INTO top_rpt_head
+ 		
+ 		(
+ 			suim_rpt_type1, suim_accept_no, suim_rpt_type2, team_id, user_no, ptnr_id, ptnr_dept_id, ptnr_mbr_no, policyholder_nm, beneficiary_nm
+ 			, damaged_nm, accident_date, reg_date, pendncy_trget_at, workload_type, workload_ea
+ 			, ptnr_assign_gubun, ptnr_detail_gubun, registrant, ptnr_id_sub, period_flag
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptType1}, #{suimAcceptNo} , #{suimRptType2} ,#{teamId},#{userNo},#{ptnrId},#{ptnrDeptId},#{ptnrMbrNo},#{policyholderNm},#{beneficiaryNm},
+ 			#{damagedNm},unix_timestamp(#{accidentDate}),unix_timestamp(#{regDate}), #{pendncyTrgetAt}, #{workloadType}, #{workloadEa}
+ 			, #{ptnrAssignGubun}, #{ptnrDetailGubun}, #{registrant}, #{ptnrIdSub}, #{periodFlag}
+ 		)
+		
+ 	</insert>
+ 	
+ 	
+
+ 	<!-- 스피드 수임건 head 정보 입력 -->
+ 	<insert id = "suimInsSpeedHead1" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+ 	
+ 		INSERT INTO top_rpt_head
+ 		
+ 		(
+ 			suim_rpt_type1, suim_accept_no, suim_rpt_type2, team_id, user_no, ptnr_id, ptnr_dept_id, ptnr_mbr_no, policyholder_nm, beneficiary_nm
+ 			, accident_date, reg_date, suim_rpt_type1_close12, suim_rpt_ea, suim_rpt_state, speed_type, damaged_nm, speed_onestop, onestop_team_id, onestop_mbr_no
+ 			, workload_type, workload_ea, registrant, ptnr_id_sub, period_flag
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptType1}, #{suimAcceptNo} , 1 ,#{teamId},#{userNo},#{ptnrId},#{ptnrDeptId},#{ptnrMbrNo},#{policyholderNm},#{beneficiaryNm},
+ 			unix_timestamp(#{accidentDate}),unix_timestamp(#{regDate}), #{suimRptType1Close12}, #{reportEa}, 0, #{speedType}, #{damagedNm}, #{speed_onestop} ,#{onestopTeamId}, #{onestopMbrNo}
+ 			, #{workloadType}, #{workloadEa}, #{registrant}, #{ptnrIdSub}, #{periodFlag}
+ 		)
+ 		
+		<selectKey resultType="String" keyProperty="suimRptNo" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>		
+		
+ 	</insert>
+ 	
+ 	<!-- 농작물 수임건 head 정보 입력 -->
+ 	<insert id = "suimInsHead1ForNsc" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+ 	
+ 		INSERT INTO top_prim_biz_rpt_head
+ 		
+ 		(
+ 			suim_rpt_type1, suim_accept_no, team_id, user_no, ptnr_id, ptnr_dept_id, ptnr_mbr_no, policyholder_nm, beneficiary_nm
+ 			, damaged_nm, accident_date, reg_date
+ 			, workload_type, workload_ea, registrant, ptnr_id_sub, period_flag
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptType1}, #{suimAcceptNo} ,#{teamId},#{userNo},#{ptnrId},#{ptnrDeptId},#{ptnrMbrNo},#{policyholderNm},#{beneficiaryNm},
+ 			#{damagedNm},unix_timestamp(#{accidentDate}),unix_timestamp(#{regDate})
+ 			, #{workloadType} , #{workloadEa}, #{registrant}, #{ptnrIdSub}, #{periodFlag}
+ 		)
+		
+ 	</insert>
+ 	
+ 	<!-- 일반 수임건 body 정보 입력 -->
+ 	<insert id = "suimInsBody1" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+ 	
+ 		INSERT INTO top_rpt_body
+ 		
+ 		(
+ 			suim_rpt_no, accident_no, policy_no, insurance_nm, policyholder_tel, beneficiary_tel, damaged_tel, accident_facts
+ 			,investigate_postcode, investigate_addr1, investigate_addr2
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptNo}, #{accidentNo}, #{policyNo}, #{insuranceNm}, #{policyholderTel}, #{beneficiaryTel}, #{damagedTel}, #{accidentFacts}, 
+ 			#{investigatePostcode}, #{investigateAddr1}, #{investigateAddr2}
+ 		)
+ 	
+ 	</insert>
+
+ 	<insert id = "suimInsBody1_backup20170602" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+
+ 		INSERT INTO top_rpt_body
+
+ 		(
+ 			suim_rpt_no, accident_no, policy_no, insurance_nm, policyholder_tel, beneficiary_tel, damaged_tel, accident_facts
+ 			,investigate_postcode, investigate_addr1, investigate_addr2, amt_estimated_damage, commission_estimated, moral_flag
+ 		)
+
+ 		VALUES
+
+ 		(
+ 			#{suimRptNo}, #{accidentNo}, #{policyNo}, #{insuranceNm}, #{policyholderTel}, #{beneficiaryTel}, #{damagedTel}, #{accidentFacts},
+ 			#{investigatePostcode}, #{investigateAddr1}, #{investigateAddr2}, #{damagedAmtEstimated}, #{commissionEstimated} ,0
+ 		)
+
+ 	</insert>
+
+ 	<!-- 스피드 수임건 body 정보 입력 -->
+ 	<insert id = "suimInsSpeedBody1" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+ 	
+ 		INSERT INTO top_rpt_body
+
+ 		(
+ 			suim_rpt_no, accident_no, policy_no, moral_flag, amt_insu_payment, policyholder_tel, beneficiary_tel, damaged_tel
+ 		)
+
+ 		VALUES
+
+ 		(
+ 			#{suimRptNo}, #{accidentNo}, #{policyNo}, null, #{amtInsuPayment}, #{policyholderTel}, #{beneficiaryTel}, #{damagedTel}
+ 		)
+ 	</insert>
+ 	
+ 	<insert id = "suimInsSpeedBody1_backup20170612" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+
+ 		INSERT INTO top_rpt_body
+
+ 		(
+ 			suim_rpt_no, accident_no, policy_no, moral_flag, amt_insu_payment
+ 		)
+
+ 		VALUES
+
+ 		(
+ 			#{suimRptNo}, #{accidentNo}, #{policyNo},0, #{amtInsuPayment}
+ 		)
+
+ 	</insert>
+
+ 	<!-- 농작물 수임건 body 정보 입력 -->
+ 	<insert id = "suimInsBody1ForNsc" parameterType="kr.co.toplac.topsuim.SuimRegInsViewVO">
+ 	
+ 		INSERT INTO top_prim_biz_rpt_body
+
+ 		(
+ 			suim_rpt_no, accident_no, policy_no, insurance_nm, policyholder_tel, beneficiary_tel, damaged_tel, accident_facts
+ 			,investigate_postcode, investigate_addr1, investigate_addr2, amt_estimated_damage, commission_estimated, moral_flag
+ 		)
+
+ 		VALUES
+
+ 		(
+ 			#{suimRptNo}, #{accidentNo}, #{policyNo}, #{insuranceNm}, #{policyholderTel}, #{beneficiaryTel}, #{damagedTel}, #{accidentFacts},
+ 			#{investigatePostcode}, #{investigateAddr1}, #{investigateAddr2}, #{damagedAmtEstimated}, #{commissionEstimated} ,0
+ 		)
+ 	
+ 	</insert>
+
+ 	<!-- 로그 입력 : 최초 수임건 등록 시 -->
+ 	<insert id = "suimInsLog" parameterType="kr.co.toplac.topsuim.SuimLogVO">
+ 	
+ 		INSERT INTO top_rpt_head_log
+ 		
+ 		(
+ 			suim_rpt_type1, suim_rpt_no,speed_type, suim_rpt_state, suim_rpt_type1_close12,suim_rpt_type1_close34
+ 			 , reg_date, suim_cancel_date, suim_rpt_aprv_date, close_date, del_date, lock_flag, minwon_flag, log_date,
+ 			 log_ip, log_user_no, team_id, user_no, action, workload_type, workload_ea
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptType1}, #{suimRptNo} , #{speedType} ,#{suimRptState},0,0
+ 			,unix_timestamp(#{regDate}),0,0,0,0,#{lockFlag},#{minwonFlag},unix_timestamp(now())
+ 			,#{logIp},#{logUserNo}, #{team_id}, #{user_no},'suim_reg', #{workloadType}, #{workloadEa}
+ 		)
+		
+ 	</insert>
+ 	
+	<select id="getSuimBookList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		<!-- SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM ( -->
+			SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no, a.suim_rpt_type1
+			, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+			, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.accident_date, DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y/%m/%d') accident_date_fmt
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y/%m/%d') reg_date_fmt
+			, a.close_date, DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y/%m/%d') close_date_fmt
+			FROM top_rpt_head a
+			WHERE a.suim_rpt_type1 &lt; 400
+			ORDER BY a.suim_rpt_no DESC
+		<!-- 	) AS TB,
+		(SELECT @RN:=0) AS R -->
+		limit 30
+	</select>
+	
+	<select id="getSuimBookList4" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		<!-- SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM ( -->
+			SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no, a.suim_rpt_type1
+			, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+			, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.accident_date, DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y/%m/%d') accident_date_fmt
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y/%m/%d') reg_date_fmt
+			, a.close_date, DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y/%m/%d') close_date_fmt
+			FROM top_rpt_head a
+			WHERE a.suim_rpt_type1 >= 400
+			ORDER BY a.suim_rpt_no DESC
+		<!-- 	) AS TB,
+		(SELECT @RN:=0) AS R -->
+		limit 30
+	</select>
+	
+	<select id="getSearchSuimBookList" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		<!-- SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM ( -->
+			SELECT a.suim_rpt_no, a.suim_accept_no
+			, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no
+			, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.accident_date, DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y/%m/%d') accident_date_fmt
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y/%m/%d') reg_date_fmt
+			
+			FROM top_rpt_head a
+			WHERE a.suim_accept_no like CONCAT('%',#{accept_no},'%')
+			AND a.suim_rpt_type1 &lt; 400
+			ORDER BY a.suim_rpt_no DESC
+		<!-- 	) AS TB,
+		(SELECT @RN:=0) AS R -->
+	</select>
+	
+	<select id="getSearchSuimBookList4" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		<!-- SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM ( -->
+			SELECT a.suim_rpt_no, a.suim_accept_no
+			, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no
+			, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.accident_date, DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y/%m/%d') accident_date_fmt
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y/%m/%d') reg_date_fmt
+			
+			FROM top_rpt_head a
+			WHERE a.suim_accept_no like CONCAT('%',#{accept_no},'%')
+			AND a.suim_rpt_type1 >= 400
+			ORDER BY a.suim_rpt_no DESC
+		<!-- 	) AS TB,
+		(SELECT @RN:=0) AS R -->
+	</select>
+ 	
+ 	
+ 	<select id="getSearchSuimOne" resultType="kr.co.toplac.topsuim.TopRptHeadAndBodyVO" parameterType="String">
+		
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no
+			, a.suim_rpt_type1
+			, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.suim_rpt_type2
+			, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+			, a.team_id
+			, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no
+			, getTopMbrBscUserName(a.user_no) user_name
+			, a.ptnr_id
+			, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick
+			, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_dept_id
+			<!-- , getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm -->
+			, (SELECT IFNULL(ptnr_tm_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no) AS ptnr_dept_nm
+			, a.ptnr_mbr_no
+			, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.accident_date
+			, DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d') accident_date_fmt
+			, a.reg_date
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+			, b.accident_no
+			, b.policy_no
+			, b.insurance_nm
+			, b.policyholder_tel
+			, b.beneficiary_tel
+			, b.damaged_tel
+			, b.accident_facts
+			, b.investigate_postcode
+			, b.investigate_addr1
+			, b.investigate_addr2
+			, b.amt_estimated_damage
+			, b.commission_estimated
+			, a.ptnr_id_sub
+			, a.period_flag
+			
+			FROM top_rpt_head a , top_rpt_body b
+			WHERE 
+				a.suim_rpt_no = #{rpt_no}
+				and b.suim_rpt_no = a.suim_rpt_no
+			
+			ORDER BY a.suim_rpt_no
+		
+	</select>
+	
+	<!-- 일반 보고서 인보이스 등록 -->
+	<insert id="suimInsInvoice" parameterType="String">
+	
+		INSERT INTO top_rpt_invoice
+ 		
+ 		(
+ 			suim_rpt_no, amt_basic, amt_total, reg_date
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptNo}, 0, 0, unix_timestamp(now())
+ 		)
+	
+	</insert>
+	
+	
+	<insert id="suimInsSpeedInvoice" parameterType="String">
+		INSERT INTO top_rpt_invoice
+ 		
+ 		(
+ 			suim_rpt_no, reg_date, amt_basic, amt_total
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptNo}, unix_timestamp(now()), #{amtBasic}, #{amtBasic}
+ 		)
+	</insert>
+	
+	<!-- 스피드 접수 종결 인보이스 등록 -->
+	<!-- 스피드 미결 관리로 인하여 미사용 not used, 170719 LDS
+	<insert id="suimInsSpeedInvoice" parameterType="String">
+		INSERT INTO top_rpt_invoice
+ 		
+ 		(
+ 			suim_rpt_no, reg_date, amt_basic, amt_total,invoice_date
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptNo}, unix_timestamp(now()), #{amtBasic}, #{amtBasic}, unix_timestamp(now())
+ 		)
+	</insert>
+	 -->
+	
+	<!-- 농작물 보고서 인보이스 등록 -->
+	<insert id="suimInsInvoiceForNsc" parameterType="String">
+	
+		INSERT INTO top_prim_biz_inv
+ 		
+ 		(
+ 			suim_rpt_no, reg_date
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptNo}, unix_timestamp(now())
+ 		)
+	
+	</insert>
+	
+	
+ 	
+ 	<!-- 메리츠 일괄 등록 시 사원, 팀정보 추출 -->
+	<select id="getMbrDtlForMeritzAll" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrBscVO">
+		
+		SELECT
+			a.team_id_main,
+			a.user_name,
+			a.user_no,
+			a.user_id,
+			b.team_name
+			
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+				a.team_id_main = b.team_id
+			and a.user_name = #{userName}
+		ORDER BY
+			user_no desc
+		
+	</select>
+	
+	<!-- 스피드 종결번호 따오기 -->
+	<update id="getSuimEndSeqNo" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET suim_close_seq_no2 = suim_close_seq_no2 + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%12')
+
+		<selectKey keyProperty="suim_close_seq_no2" resultType="String" >
+	        SELECT suim_close_seq_no2
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%12')
+	    </selectKey>
+	</update>
+	
+	<!-- 메리츠 일괄 등록 보험사 직원, 팀정보 추출 -->
+	<select id="getPtnrMbrDtlForMeritzAll" parameterType="String" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		
+		SELECT
+			ptnr_tm_nm,
+			ptnr_mbr_no,
+			ptnr_mbr_nm,
+			ptnr_dept_id
+		FROM
+			top_ptnr_mbr_bsc
+		WHERE
+			ptnr_mbr_nm = #{ptnrMbrName}
+			and ptnr_id = '16'
+		ORDER BY
+			ptnr_mbr_no desc
+	</select>
+	
+	<!-- 한화적부 수임번호 -->
+	<update id="getSuit12AcceptSeqNo" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET suit12_accept_seq_no = suit12_accept_seq_no + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT suit12_accept_seq_no
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+	    </selectKey>
+	</update>
+	
+	<select id="selectPrimAcceptNoByPolicyNo" parameterType="hashMap" resultType="String">
+		SELECT
+			GA.suim_accept_no
+		FROM 
+		(
+			SELECT
+				COUNT(*) AS cnt
+				,IFNULL(a.suim_accept_no,"") AS suim_accept_no
+			FROM top_prim_biz_rpt_head a, top_prim_biz_rpt_body b
+			WHERE a.suim_rpt_no = b.suim_rpt_no
+			AND a.accident_date = UNIX_TIMESTAMP(#{accident_date})
+			AND b.policy_no = #{policy_no}
+		)GA		
+	</select>
+	
+	<select id="selectAcceptNoByPolicyNo" parameterType="hashMap" resultType="String">
+		SELECT
+			GA.suim_accept_no
+		FROM 
+		(
+			SELECT
+				COUNT(*) AS cnt
+				,IFNULL(a.suim_accept_no,"") AS suim_accept_no
+			FROM top_rpt_head a, top_rpt_body b
+			WHERE a.suim_rpt_no = b.suim_rpt_no
+			AND a.accident_date = UNIX_TIMESTAMP(#{accident_date})
+			AND b.policy_no = #{policy_no}
+		)GA		
+	</select>
+	
+	<select id="getPeriodFlagInfoCount" parameterType="hashMap" resultType="integer">
+		SELECT 
+			COUNT(*) AS nCnt 
+		FROM top_rpt_period
+			WHERE period_flag = 1
+			AND ptnr_id = #{ptnr_id}
+			AND ptnr_id_sub = #{ptnr_id_sub}	
+	</select>
+	
+	<!-- 수입등록시 보험사 세부코드 -->
+	<select id="getPtnrIdSubInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT  a.tbl_nm
+			,a.col_nm
+			,a.col_cd1
+			,a.col_cd2
+			,a.col_val
+		FROM  sysadm_codedic2 a
+			WHERE  1=1
+			AND  a.tbl_nm = #{tbl_nm}
+			AND  a.col_nm = #{col_nm}
+			AND  a.col_cd1 = #{col_cd1}			
+	</select>
+
+	<!-- 수임등록 시, 보험사 직원 SELECT 170731 -->
+	<select id="getPtnrMbrInfo" parameterType="java.util.HashMap" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		SELECT  a.ptnr_mbr_no
+			   ,a.ptnr_mbr_nm
+			   ,b.ptnr_dept_nm as ptnr_dept_nm
+			   ,b.ptnr_dept_id as ptnr_dept_id
+			   ,a.ptnr_tm2_nm ptnr_tm2_nm
+		  FROM top_ptnr_mbr_bsc a
+	 	 INNER JOIN top_ptnr_dept_bsc b
+	 	    ON a.ptnr_dept_id = b.ptnr_dept_id
+		 WHERE a.del_state != 1 
+		   AND a.ptnr_id = #{ptnrId}
+		<if test="ptnrMbrNo.size != 0">
+		   AND a.ptnr_mbr_no in  
+	   	   	<foreach collection="ptnrMbrNo" item="item" open="(" close=")" separator=",">
+		      #{item}
+		    </foreach>
+	   	</if>
+		   
+		 ORDER BY a.ptnr_mbr_nm ;		 		
+	</select>		
+	
+ </mapper>

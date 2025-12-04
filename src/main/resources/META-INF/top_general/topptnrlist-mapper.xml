@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="TopPtnrListMapper">
+
+	<!-- 관련업체 정보 갯수 불러오기 -->
+	<select id="getPtnrListSearchCnt" parameterType="HashMap" resultType="integer">
+		select 
+			COUNT(*) AS nCnt
+		from top_ptnr_bsc 
+		where 1=1
+			<if test="srchPtnrType != 0">
+				and ptnr_type = #{srchPtnrType}	
+			</if>	
+			<if test='srchPtnrTel != null and srchPtnrTel != ""'>
+				AND ptnr_tel LIKE CONCAT('%',#{srchPtnrTel},'%')
+			</if>
+			<if test='srchPtnrName != null and srchPtnrName != ""'>
+				AND ptnr_name LIKE CONCAT('%',#{srchPtnrName},'%')
+			</if>		 
+			and ptnr_level = '1' 
+			and del_state != 1
+	</select>
+	
+	<select id="insuTemplateList" parameterType="hashmap" resultType="kr.co.toplac.brd.noticeptnr.InsuTemplateBean">
+		SELECT
+			a.tkey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.ptnr_id
+			,getTopPtnrBscPtnrNick(a.ptnr_id) as ptnr_name
+			,a.category_id
+			,getCodeValue('top_insu_template','category_id',a.category_id) as category_name
+			,a.nofile_content
+			,getCodeValue('top_insu_template','nofile_content',a.nofile_content) as nofile_content_val
+			,a.file_path
+			,a.template_enc_file
+			,a.template_org_file
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt		
+		FROM top_insu_template a
+		WHERE 1=1
+		and a.ptnr_id = #{ptnr_id}
+		ORDER BY a.category_id, a.reg_date desc
+	</select>
+	
+	<select id="getPtnrListSearchOne" parameterType="HashMap" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		SELECT
+			ptnr_id
+			,ptnr_type
+			,ptnr_level
+			,ptnr_group_order
+			,ptnr_order
+			,ptnr_nick
+			,ptnr_name
+			,ptnr_biz_reg_no
+			,ptnr_ceo_nm
+			,ptnr_biz_type1
+			,ptnr_biz_type2
+			,ptnr_postcode
+			,ptnr_addr1
+			,ptnr_addr2
+			,ptnr_addr
+			,ptnr_tel
+			,ptnr_homepage   
+			,ptnr_url
+			,ptnr_img_small
+		FROM top_ptnr_bsc 
+		WHERE ptnr_id = #{ptnr_id}
+	</select>
+	
+	<!-- 통계용 보험사 정렬 순서 갱신 -->
+	<update id="updateOrderPtnrInfo" parameterType="HashMap">
+		UPDATE top_ptnr_bsc SET
+			statistics_order = #{upOrderNum} 
+		WHERE ptnr_id = #{upPtnrId}
+	</update>	
+	
+	<!-- 한단계 정렬 하위 보험사 정보를 가져온다. -->
+	<select id="selectOrderDownPtnrInfo" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			ptnr_id
+			,statistics_order
+		FROM top_ptnr_bsc
+		WHERE 1=1
+			AND ptnr_level = '1'
+			AND statistics_yn='1' 
+			AND del_state != 1			
+			AND statistics_order > #{statistics_order}
+			ORDER BY statistics_order
+			LIMIT 1
+	</select>
+	
+	<!-- 한단계 정렬 상위 보험사 정보를 가져온다. -->
+	<select id="selectOrderUpPtnrInfo" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			ptnr_id
+			,statistics_order
+		FROM top_ptnr_bsc
+		WHERE 1=1
+			AND ptnr_level = '1'
+			AND statistics_yn='1' 
+			AND del_state != 1			
+			AND statistics_order &lt; #{statistics_order}
+			LIMIT 1
+	</select>
+	
+	<!-- 보험사 정렬 정보 불러오기 -->
+	<select id="getPtnrOrderListAll" parameterType="HashMap" resultType="HashMap">
+		select 
+			a.ptnr_level
+			, a.ptnr_type
+			, a.ptnr_id
+			, a.ptnr_name
+			, a.ptnr_tel
+			, a.ptnr_img_small
+			, a.ptnr_homepage
+			, a.ptnr_url
+			, (select count(*) from top_insu_template where ptnr_id = a.ptnr_id) as template_cnt
+			, (select count(*) from brd_notice_ptnr1 where ptnr_id = a.ptnr_id) as notice_ptnr1_cnt
+			, (select count(*) from brd_notice_ptnr4 where ptnr_id = a.ptnr_id) as notice_ptnr4_cnt
+			, a.statistics_order
+		from top_ptnr_bsc a
+		where 1=1			
+			AND a.ptnr_level = '1'
+			AND a.statistics_yn='1' 
+			AND a.del_state != 1 
+			order by a.statistics_order			
+	</select>
+
+	<!-- 관련업체 정보 불러오기 -->
+	<select id="getPtnrListSearch" parameterType="HashMap" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select 
+			a.ptnr_level
+			, a.ptnr_type
+			, a.ptnr_id
+			, a.ptnr_name
+			, a.ptnr_tel
+			, a.ptnr_img_small
+			, a.ptnr_homepage
+			, a.ptnr_url
+			, (select count(*) from top_insu_template where ptnr_id = a.ptnr_id) as template_cnt
+			, (select count(*) from brd_notice_ptnr1 where ptnr_id = a.ptnr_id) as notice_ptnr1_cnt
+			, (select count(*) from brd_notice_ptnr4 where ptnr_id = a.ptnr_id) as notice_ptnr4_cnt
+		from top_ptnr_bsc a
+		where 1=1
+			<if test="srchPtnrType != 0">
+				AND a.ptnr_type = #{srchPtnrType}	
+			</if>
+			<if test='srchPtnrTel != null and srchPtnrTel != ""'>
+				AND a.ptnr_tel LIKE CONCAT('%',#{srchPtnrTel},'%')
+			</if>
+			<if test='srchPtnrName != null and srchPtnrName != ""'>
+				AND a.ptnr_name LIKE CONCAT('%',#{srchPtnrName},'%')
+			</if>
+			and a.ptnr_level = '1' 
+			and a.del_state != 1 
+			order by a.ptnr_group_order DESC, a.ptnr_level , a.ptnr_order desc
+			LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<select id="getPtnrList" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select ptnr_level, ptnr_type, ptnr_id, ptnr_name, ptnr_tel, ptnr_img_small, ptnr_homepage, ptnr_url
+		from top_ptnr_bsc where ptnr_type = '1' and ptnr_level = '1' and del_state != 1 order by ptnr_group_order DESC, ptnr_level , ptnr_order desc;
+	</select>
+	
+	<select id="getPtnrList2" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select ptnr_level, ptnr_type, ptnr_id, ptnr_name, ptnr_tel, ptnr_img_small, ptnr_homepage, ptnr_url
+		from top_ptnr_bsc where ptnr_type = '2' and ptnr_level = '1' and del_state != 1 order by ptnr_group_order DESC, ptnr_level , ptnr_order desc;
+	</select>
+	
+	<select id="getPtnrList3" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select ptnr_level, ptnr_type, ptnr_id, ptnr_name, ptnr_tel, ptnr_img_small, ptnr_homepage, ptnr_url
+		from top_ptnr_bsc where ptnr_type = '3' and ptnr_level = '1' and del_state != 1 order by ptnr_group_order DESC, ptnr_level , ptnr_order desc;
+	</select>
+	
+	<select id="getPtnrList4" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select ptnr_level, ptnr_type, ptnr_id, ptnr_name, ptnr_tel, ptnr_img_small, ptnr_homepage, ptnr_url
+		from top_ptnr_bsc where ptnr_type = '4' and ptnr_level = '1' and del_state != 1 order by ptnr_group_order DESC, ptnr_level , ptnr_order desc;
+	</select>
+	
+	<select id="getPtnrList5" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select ptnr_level, ptnr_type, ptnr_id, ptnr_name, ptnr_tel, ptnr_img_small, ptnr_homepage, ptnr_url
+		from top_ptnr_bsc where ptnr_type = '5' and ptnr_level = '1' and del_state != 1 order by ptnr_group_order DESC, ptnr_level , ptnr_order desc;
+	</select>
+	
+	<select id="topPtnrListExcel" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO" parameterType="String">
+		SELECT 
+			  a.ptnr_mbr_no
+			, c.ptnr_nick
+			, b.ptnr_dept_nm
+			, a.ptnr_tm2_nm
+			, a.ptnr_mbr_position_nm
+			, a.ptnr_mbr_job_memo
+			, a.ptnr_mbr_work_type
+			, a.ptnr_mbr_nm
+			, a.ptnr_mbr_hp
+			, a.ptnr_mbr_office_tel
+			, a.ptnr_mbr_office_fax
+			, a.ptnr_mbr_office_email
+			, CONCAT(a.ptnr_mbr_office_addr1,a.ptnr_mbr_office_addr2) ptnr_mbr_office_addr1
+			, (SELECT count(*) FROM top_rpt_head WHERE ptnr_mbr_no = a.ptnr_mbr_no) ptnr_suim_cnt
+		  FROM top_ptnr_mbr_bsc a
+		 INNER JOIN top_ptnr_dept_bsc b
+		    ON a.ptnr_dept_id = b.ptnr_dept_id
+		 INNER JOIN top_ptnr_bsc c
+		    ON a.ptnr_id = c.ptnr_id
+		<choose>
+			<when test="_parameter == 'all'">
+				WHERE 1=1 
+				AND a.del_state = 0
+			</when>
+			<otherwise>
+				WHERE a.ptnr_id = #{_prameter}
+				AND a.del_state = 0
+			</otherwise>
+		</choose>		
+		 ORDER BY ptnr_mbr_no desc
+	</select>
+
+</mapper>

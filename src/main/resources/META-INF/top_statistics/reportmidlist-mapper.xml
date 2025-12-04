@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ReportMidListMapper">
+
+	<select id="getReportMidList" resultType="kr.co.toplac.topindividual.NoSiteMngCpstVO">
+		SELECT a.team_id_main team_id, z.team_name, a.user_no, a.user_name, b.miCnt
+				, e.siteCnt, b.miCnt - IFNULL(e.siteCnt,0) miSiteCnt
+				, h.interimCnt, b.miCnt - IFNULL(h.interimCnt,0) miInterimCnt, k.interim2Cnt
+		FROM top_mbr_bsc a
+				LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) miCnt
+								FROM top_rpt_head
+								WHERE suim_rpt_state = 0
+								GROUP BY user_no) b
+				ON a.user_no = b.user_no
+				LEFT JOIN (SELECT c.user_no, COUNT(DISTINCT d.suim_rpt_no) siteCnt
+								FROM top_rpt_head c, top_rpt_site_interim d
+								WHERE c.suim_rpt_state = 0
+								AND c.suim_rpt_no = d.suim_rpt_no
+								AND d.interim_flag = 0 AND d.site_date > 0
+								GROUP BY c.user_no) e
+				ON a.user_no = e.user_no
+				LEFT JOIN (SELECT f.user_no, COUNT(DISTINCT g.suim_rpt_no) interimCnt
+								FROM top_rpt_head f, top_rpt_site_interim g
+								WHERE f.suim_rpt_state = 0
+								AND f.suim_rpt_no = g.suim_rpt_no
+								AND g.interim_flag = 1 AND g.site_date > 0
+								GROUP BY f.user_no) h
+				ON a.user_no = h.user_no
+				LEFT JOIN (SELECT i.user_no, COUNT(DISTINCT j.suim_rpt_no) interim2Cnt
+								FROM top_rpt_head i, top_rpt_site_interim j
+								WHERE i.suim_rpt_state = 0
+								AND i.suim_rpt_no = j.suim_rpt_no
+								AND j.interim_flag = 1
+								AND (j.site_date > 0 AND j.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))
+								GROUP BY i.user_no) k
+				ON a.user_no = k.user_no
+			, top_tm_bsc z
+		WHERE a.user_state != 1
+		AND a.team_id_main = z.team_id AND z.team_type = 1 AND z.team_statistics1 = 0
+		ORDER BY z.team_group_order DESC, z.team_order DESC, a.work_type, a.work_level DESC, a.user_name ASC
+	</select>
+	
+	<select id="getReportMidListCnt" resultType="kr.co.toplac.topindividual.NoSiteMngCpstVO">
+		SELECT count(a.team_id_main)+1 team_type ,a.team_id_main team_id, getTopTmBscTeamName(a.team_id_main) team_name
+		FROM top_mbr_bsc a
+				LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) miCnt
+								FROM top_rpt_head
+								WHERE suim_rpt_state = 0
+								GROUP BY user_no) b
+				ON a.user_no = b.user_no
+				LEFT JOIN (SELECT c.user_no, COUNT(DISTINCT d.suim_rpt_no) siteCnt
+								FROM top_rpt_head c, top_rpt_site_interim d
+								WHERE c.suim_rpt_state = 0
+								AND c.suim_rpt_no = d.suim_rpt_no
+								AND d.interim_flag = 0 AND d.site_date > 0
+								GROUP BY c.user_no) e
+				ON a.user_no = e.user_no
+				LEFT JOIN (SELECT f.user_no, COUNT(DISTINCT g.suim_rpt_no) interimCnt
+								FROM top_rpt_head f, top_rpt_site_interim g
+								WHERE f.suim_rpt_state = 0
+								AND f.suim_rpt_no = g.suim_rpt_no
+								AND g.interim_flag = 1 AND g.site_date > 0
+								GROUP BY f.user_no) h
+				ON a.user_no = h.user_no
+				LEFT JOIN (SELECT i.user_no, COUNT(DISTINCT j.suim_rpt_no) interim2Cnt
+								FROM top_rpt_head i, top_rpt_site_interim j
+								WHERE i.suim_rpt_state = 0
+								AND i.suim_rpt_no = j.suim_rpt_no
+								AND j.interim_flag = 1
+								AND (j.site_date > 0 AND j.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))
+								GROUP BY i.user_no) k
+				ON a.user_no = k.user_no
+			, top_tm_bsc z
+		WHERE a.user_state != 1
+		AND a.team_id_main = z.team_id AND z.team_type = 1 AND z.team_statistics1 = 0
+		group by a.team_id_main
+		ORDER BY z.team_group_order DESC, z.team_order DESC, a.work_type, a.work_level DESC, a.user_name ASC
+	</select>
+	
+	
+
+</mapper>

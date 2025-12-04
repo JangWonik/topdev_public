@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrFamilyMapper">
+	
+	<insert id="insMemberFamily" parameterType="kr.co.toplac.topteam.TopMbrFamilyVO" >
+		INSERT INTO
+			top_mbr_family
+			(family_relationship,
+			family_name,
+			user_no)
+			
+		VALUES
+			(
+			 #{family_relationship},
+			 #{family_name},
+			 #{user_no}
+			)
+	</insert>
+	
+	<update id="udtMemberFamily" parameterType="kr.co.toplac.topteam.TopMbrFamilyVO" >
+		UPDATE
+			top_mbr_family
+		SET
+			family_relationship = #{family_relationship},
+			family_name = #{family_name}
+		WHERE
+			family_no = #{family_no}
+		
+	</update>
+	
+	<insert id="insertFile" parameterType="hashmap">
+        INSERT INTO top_mbr_career_file (USER_NO, STRE_FILE_PATH, STRE_FILE_NM, ORIGNL_FILE_NM, REG_USER_NO, REG_DATE)
+        VALUES (#{user_no},#{streFilePath},#{streFileNm},#{orignlFileNm},#{reg_user_no}, NOW())
+    </insert>
+    
+     <delete id="deleteFile" parameterType="hashmap">
+        DELETE FROM top_mbr_career_file WHERE  FILE_NO = #{file_no}
+    </delete>  
+ 
+    
+    <select id="selectFileList" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+			   ,A.USER_NO	
+			   ,A.STRE_FILE_PATH
+			   ,A.STRE_FILE_NM
+		   	   ,A.ORIGNL_FILE_NM
+			   ,A.REG_USER_NO
+			   ,A.REG_DATE
+          FROM  top_mbr_career_file A
+         WHERE  1=1
+           AND  A.USER_NO = #{user_no}
+    </select>
+
+	<select id="selectFile" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+			   ,A.USER_NO	
+			   ,A.STRE_FILE_PATH
+			   ,A.STRE_FILE_NM
+		   	   ,A.ORIGNL_FILE_NM
+			   ,A.REG_USER_NO
+			   ,A.REG_DATE
+          FROM  top_mbr_career_file A
+         WHERE  1=1
+           AND  A.FILE_NO = #{file_no}
+    </select>
+	
+	<select id="getMbrFamily" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrFamilyVO">
+		select
+			family_relationship,
+			family_name,
+			user_no,
+			family_no
+		from
+			top_mbr_family
+		where
+			user_no = #{user_no}
+		ORDER BY family_no ASC
+			
+	</select>
+	
+	<update id="delMemberFamily" parameterType="kr.co.toplac.topteam.TopMbrFamilyVO" >
+		DELETE
+		FROM
+			top_mbr_family
+		WHERE
+			family_no = #{family_no}
+		
+	</update>
+	
+	<insert id="memberAcademicInsert" parameterType="hashmap">
+		INSERT INTO top_mbr_academic(
+			 USER_NO
+			,ACADMIC_TYPE
+			,ACADMIC_SCHOOL
+			,ACADMIC_DEPARTMENT
+			,ACADMIC_GRADUATION
+			,GRADUATION_DATE
+			,ACADMIC_MEMO
+			,REG_USER_NO
+			,REG_DATE
+			,MODIFY_USER_NO
+			,MODIFY_DATE
+			) VALUES (
+			 #{user_no}
+			,#{school}
+			,#{schoolName}
+			,#{department}
+			,#{graduation}
+			,#{graduation_date}
+			,#{memo}
+			,#{reg_user_no}
+			,NOW()
+			,#{reg_user_no}
+			,NOW()
+			)
+	</insert>	
+	
+	<select id="memberAcademicList" parameterType="string" resultType="AsraMap">
+		SELECT A.ACADMIC_NO
+			  ,A.USER_NO	
+			  ,A.ACADMIC_TYPE
+			  ,A.ACADMIC_SCHOOL
+		   	  ,A.ACADMIC_DEPARTMENT
+			  ,A.ACADMIC_GRADUATION
+			  ,A.GRADUATION_DATE
+			  ,A.ACADMIC_MEMO
+	     FROM top_mbr_academic A
+	    WHERE 1=1
+	      AND A.USER_NO = #{user_no}
+	 ORDER BY A.ACADMIC_TYPE ASC
+	       	  
+	</select>	
+	
+	<update id="memberAcademicUpdate" parameterType="hashmap">	
+    	UPDATE top_mbr_academic
+    	   SET ACADMIC_TYPE = #{school}
+    	      ,ACADMIC_SCHOOL = #{schoolName}
+    	      ,ACADMIC_DEPARTMENT = #{department}
+    	      ,ACADMIC_GRADUATION = #{graduation}
+    	      ,GRADUATION_DATE = #{graduation_date}
+    	      ,ACADMIC_MEMO = #{memo}
+    	      ,MODIFY_USER_NO = #{modifyUserNo}
+    	      ,MODIFY_DATE = NOW()
+    	WHERE  ACADMIC_NO = #{acadmic_no}     
+    </update>
+    <delete id="memberAcademicDelete" parameterType="hashmap">
+    	DELETE FROM top_mbr_academic WHERE ACADMIC_NO = #{acadmic_no}
+    </delete>
+    
+    
+	<select id="memberCareerFileList" parameterType="string" resultType="AsraMap">
+		SELECT A.FILE_NO
+			  ,A.USER_NO	
+			  ,A.STRE_FILE_PATH
+			  ,A.STRE_FILE_NM
+		   	  ,A.ORIGNL_FILE_NM
+			  ,A.REG_USER_NO
+			  ,A.REG_DATE
+	     FROM top_mbr_career_file A
+	    WHERE 1=1
+	      AND A.USER_NO = #{user_no}
+	 ORDER BY A.FILE_NO ASC     	  
+	</select>    
+    
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrEvalMapper">
+	
+	<select id="insaEvalVO" parameterType="java.util.HashMap" resultType="kr.co.toplac.topteam.TopMbrEvalVO">
+		SELECT count(a.eval_year) cnt
+			, a.serial_no, a.eval_year
+			, a.suim_goal_cnt, a.suim_goal_amt, a.salary_desired
+			, a.career_year, a.promotion_date
+			, a.achievement, a.improvement, a.next_year_task
+			, a.tm_mngr_eval_sal, a.tm_mngr_eval_grd, a.tm_mngr_eval
+			, a.mng_director_eval
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date
+			, b.user_no, b.user_name, b.jumin_no1, b.work_level, b.work_type
+			, getCodeValue('top_mbr_bsc','work_type',b.work_type) work_type_nm
+			, getCodeValue('top_mbr_bsc','work_level',b.work_level) work_level_nm
+			, DATE_FORMAT(FROM_UNIXTIME(b.join_date), '%Y-%m-%d') join_date
+	 	FROM top_mbr_eval a, top_mbr_bsc b
+		WHERE a.user_no = #{user_no} AND a.eval_year = #{tmpYear} AND a.user_no = b.user_no;
+	</select>
+
+	<insert id="insertMemberEvaluation">
+		INSERT INTO top_mbr_eval
+			( user_no, eval_year, suim_goal_cnt, suim_goal_amt, salary_desired
+			, work_level, work_type, career_year, promotion_date
+			, achievement, improvement, next_year_task
+			, tm_mngr_eval_sal, tm_mngr_eval_grd, tm_mngr_eval
+			, mng_director_eval, reg_date)
+		VALUES
+			(#{user_no}, #{eval_year}, #{suim_goal_cnt}, #{suim_goal_amt}, #{salary_desired}
+			, #{work_level}, #{work_type}, #{career_year}, #{promotion_date}
+			, #{achievement}, #{improvement}, #{next_year_task}
+			, #{tm_mngr_eval_sal}, #{tm_mngr_eval_grd}, #{tm_mngr_eval}
+			, #{mng_director_eval}, unix_timestamp(now()))
+	</insert>
+
+	<update id="updateMemberEvaluation">
+		UPDATE top_mbr_eval 
+		SET suim_goal_cnt = #{suim_goal_cnt}, suim_goal_amt = #{suim_goal_amt}
+			, salary_desired = #{salary_desired}, career_year = #{career_year}, promotion_date = #{promotion_date}
+			, achievement = #{achievement}, improvement = #{improvement}, next_year_task = #{next_year_task}
+			, tm_mngr_eval_grd = #{tm_mngr_eval_grd}, tm_mngr_eval_sal = #{tm_mngr_eval_sal}, tm_mngr_eval = #{tm_mngr_eval}
+			, mng_director_eval = #{mng_director_eval}, reg_date = unix_timestamp(now())
+		WHERE serial_no = #{serial_no}
+	</update>
+
+</mapper>

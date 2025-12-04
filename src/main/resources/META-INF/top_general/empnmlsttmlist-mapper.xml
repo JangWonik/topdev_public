@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="EmpNmlstTmListMapper">
+	
+	<select id="partByList1" parameterType="String" resultType="HashMap">
+		SELECT
+			team_id
+			,team_name
+		FROM top_tm_bsc
+		WHERE team_type = 1
+		AND team_part = #{teamPart}		
+		ORDER BY team_group_order DESC, team_order DESC
+	</select>
+	
+	<select id="partByList4" parameterType="String" resultType="HashMap">
+		SELECT
+			team_id
+			,team_name
+		FROM top_tm_bsc
+		WHERE team_type = 4
+		AND team_part = #{teamPart}		
+		ORDER BY team_group_order DESC, team_order DESC
+	</select>
+
+	<!-- <select id="partByList4" parameterType="String" resultType="HashMap">
+		SELECT
+			team_id
+			,team_name
+		FROM 
+		(
+	
+			SELECT 
+				(SELECT COUNT(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt	
+				, a.*
+				FROM top_tm_bsc a
+				WHERE a.team_level > 0
+				AND a.team_type = 4
+				AND a.only_statistics = 0
+				AND a.team_part = #{team_part}			      
+			ORDER BY a.team_group_order DESC, a.team_order DESC
+		)GA
+		WHERE GA.cnt > 0
+	</select> -->
+
+	<!-- <select id="partByList1" parameterType="String" resultType="HashMap">
+		SELECT
+			team_id
+			,team_name
+		FROM 
+		(
+	
+			SELECT 
+				(SELECT COUNT(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt	
+				, a.*
+				FROM top_tm_bsc a
+				WHERE a.team_level > 0
+				AND a.team_type = 1
+				AND a.only_statistics = 0
+				AND a.team_part = #{team_part}			      
+			ORDER BY a.team_group_order DESC, a.team_order DESC
+		)GA
+		WHERE GA.cnt > 0
+	</select> -->
+	
+	<select id="sectorList"  parameterType="String" resultType="HashMap">
+		SELECT
+			team_id
+			,team_name as sector_name
+		FROM top_tm_bsc
+		WHERE team_type = #{teamType}
+		AND team_part = 4		
+		ORDER BY team_group_order DESC, team_order DESC
+	</select>
+	
+	<select id="centerList"  parameterType="String" resultType="HashMap">
+		SELECT
+			team_id
+			,team_name as center_name
+		FROM top_tm_bsc
+		WHERE team_type = #{teamType}
+		AND team_part = 3		
+		ORDER BY team_group_order DESC, team_order DESC
+	</select>
+	
+	<!-- <select id="sectorList"  parameterType="String" resultType="HashMap">
+		SELECT
+			GB.team_sector
+			,(SELECT col_val FROM sysadm_codedic WHERE col_cd = GB.team_sector AND tbl_nm = 'top_tm_bsc' AND col_nm = 'team_sector') AS sector_name
+		FROM
+		(
+		
+			SELECT
+				DISTINCT(GA.team_sector) AS team_sector
+			FROM 
+			(
+		
+				SELECT 
+					(SELECT COUNT(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt	
+					, a.*
+					FROM top_tm_bsc a
+					WHERE a.team_level > 0
+					AND a.team_type = #{teamType}
+					AND a.only_statistics = 0			      
+			)GA
+			WHERE GA.cnt > 0
+		)GB		
+		WHERE team_sector != 9
+		ORDER BY team_sector
+	</select> -->
+	
+	<!-- <select id="centerList"  parameterType="String" resultType="HashMap">
+		SELECT
+			GB.team_center
+			,(SELECT col_val FROM sysadm_codedic WHERE col_cd = GB.team_center AND tbl_nm = 'top_tm_bsc' AND col_nm = 'team_center') AS center_name
+		FROM
+		(
+		
+			SELECT
+				DISTINCT(GA.team_center) AS team_center
+			FROM 
+			(
+		
+				SELECT 
+					(SELECT COUNT(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt	
+					, a.*
+					FROM top_tm_bsc a
+					WHERE a.team_level > 0
+					AND a.team_type = #{teamType}
+					AND a.only_statistics = 0			      
+			)GA
+			WHERE GA.cnt > 0
+		)GB
+		WHERE team_center != 999		
+		ORDER BY team_center
+	</select> -->
+
+	<select id="countTeamCnt" parameterType="String" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM
+			top_member_cnt_daily
+		WHERE
+			base_date = #{base_date}
+	</select>
+
+	<insert id="insertTeamCnt" parameterType="HashMap">
+		INSERT INTO top_member_cnt_daily (
+			member_cnt
+			,team_id
+			,team_level
+			,team_group_order
+			,team_order
+			,team_name
+			,team_manager
+			,team_sector
+			,team_center
+			,base_date
+			,reg_date
+		) values (
+			#{member_cnt}
+			,#{team_id}
+			,#{team_level}
+			,#{team_group_order}
+			,#{team_order}
+			,#{team_name}
+			,#{team_manager}
+			,#{team_sector}
+			,#{team_center}
+			,#{base_date}
+			,now()
+		)	
+	</insert>
+
+	<select id="countWorkType" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+		select a.col_cd, a.col_val, ifnull(b.cnt, 0) cnt from
+		(select col_cd, col_val from sysadm_codedic
+		 where tbl_nm = 'top_mbr_bsc' and col_nm = 'work_type' and col_cd != 0) a left join
+		(select work_type, count(*) cnt from top_mbr_bsc where user_state != 1 group by work_type) b on a.col_cd = b.work_type
+		order by a.col_cd; 
+	</select>
+	
+	<select id="getAllTeam" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+	  SELECT d.cnt, d.sub_cnt, e.*
+      FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+            FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+                  FROM top_tm_bsc a) c
+                  GROUP BY c.team_group_order) d, top_tm_bsc e
+      WHERE e.team_level = 0 
+      AND e.team_type = 0
+      AND e.team_group_order = d.team_group_order
+      UNION ALL
+      SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+      FROM top_tm_bsc a
+      WHERE a.team_level > 0
+      AND a.team_type = 0
+      AND a.only_statistics = 0
+      ORDER BY team_group_order DESC, team_order DESC, team_level;
+	</select>
+	
+	<select id="getAllTeamExcel" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+		SELECT 
+			GB.*
+		FROM(
+		
+			SELECT d.cnt, d.sub_cnt, e.*
+				FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+					FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+						FROM top_tm_bsc a) c
+						GROUP BY c.team_group_order) d, top_tm_bsc e
+					WHERE e.team_level = 0 
+				AND e.team_type = 0
+			AND e.team_group_order = d.team_group_order
+	      
+			UNION ALL
+	      
+			SELECT	
+				GA.*
+			FROM(
+				SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+				FROM top_tm_bsc a
+				WHERE a.team_level > 0
+				AND a.team_type = 0
+				<!-- ORDER BY team_group_order DESC, team_order DESC, team_level -->
+			)GA
+			WHERE (GA.cnt > 0 OR GA.sub_cnt > 0)
+		)GB
+		ORDER BY GB.team_group_order DESC, GB.team_order DESC, GB.team_level
+	</select>
+	
+	<select id="getAllTeamExcel_20240603" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+	  SELECT d.cnt, d.sub_cnt, e.*
+      FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+            FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+                  FROM top_tm_bsc a) c
+                  GROUP BY c.team_group_order) d, top_tm_bsc e
+      WHERE e.team_level = 0 
+      AND e.team_type = 0
+      AND e.team_group_order = d.team_group_order
+      UNION ALL
+      SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+      FROM top_tm_bsc a
+      WHERE a.team_level > 0
+      AND a.team_type = 0
+      ORDER BY team_group_order DESC, team_order DESC, team_level;
+	</select>
+	
+	<select id="getSubCenterMemberCnt" parameterType="HashMap" resultType="Integer">
+		SELECT count(*) 
+		FROM top_mbr_bsc 
+		WHERE user_state IN (0,2,9) 
+		AND work_type = 10 
+		AND team_id_loc IN (SELECT team_id FROM top_tm_bsc WHERE team_group_order = #{team_group_order})				
+	</select>
+	
+	<select id="getSubTeamMemberCnt" parameterType="HashMap" resultType="Integer">
+		SELECT count(*) 
+		FROM top_mbr_bsc 
+		WHERE user_state IN (0,2,9) 
+		AND work_type = 10 
+		AND team_id_loc = #{team_id}				
+	</select>
+	
+	<select id="getExpenseTeam1" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+	  SELECT d.cnt, e.*
+      FROM (SELECT sum(c.cnt) cnt, c.team_group_order
+            FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id AND work_type != 10) cnt, a.team_group_order
+                  FROM top_tm_bsc a) c
+                  GROUP BY c.team_group_order) d, top_tm_bsc e
+      WHERE e.team_level = 0 
+      AND e.team_type = 1
+      AND e.team_group_order = d.team_group_order
+      UNION ALL
+      SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id AND work_type != 10) cnt, a.*
+      FROM top_tm_bsc a
+      WHERE a.team_level > 0
+      AND a.team_type = 1
+      AND a.only_statistics = 0
+      ORDER BY team_group_order DESC, team_order DESC, team_level;
+	</select>	
+	
+	<select id="getTeam1" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+	  SELECT d.cnt, d.sub_cnt, e.*
+      FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+            FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+                  FROM top_tm_bsc a) c
+                  GROUP BY c.team_group_order) d, top_tm_bsc e
+      WHERE e.team_level = 0 
+      AND e.team_type = 1
+      AND e.team_group_order = d.team_group_order
+      UNION ALL
+      SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+      FROM top_tm_bsc a
+      WHERE a.team_level > 0
+      AND a.team_type = 1
+      AND a.only_statistics = 0
+      ORDER BY team_group_order DESC, team_order DESC, team_level;
+	</select>
+	
+	<select id="getTeam1Excel" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+		SELECT 
+			GB.*
+			FROM(
+			
+			SELECT d.cnt, d.sub_cnt, e.*
+				FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+					FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+						FROM top_tm_bsc a) c
+							GROUP BY c.team_group_order) d, top_tm_bsc e
+						WHERE e.team_level = 0 
+					AND e.team_type = 1
+				AND e.team_group_order = d.team_group_order
+				
+			UNION ALL
+			
+			SELECT	
+				GA.*
+			FROM(      
+				SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+				FROM top_tm_bsc a
+				WHERE a.team_level > 0
+				AND a.team_type = 1
+				<!-- ORDER BY team_group_order DESC, team_order DESC, team_level -->
+			)GA
+			WHERE (GA.cnt > 0 OR GA.sub_cnt > 0)
+		)GB
+		
+		ORDER BY GB.team_group_order DESC, GB.team_order DESC, GB.team_level
+	</select>
+	
+	<select id="getTeam1Excel_20240603" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+		SELECT d.cnt, d.sub_cnt, e.*
+      FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+            FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+                  FROM top_tm_bsc a) c
+                  GROUP BY c.team_group_order) d, top_tm_bsc e
+      WHERE e.team_level = 0 
+      AND e.team_type = 1
+      AND e.team_group_order = d.team_group_order
+      UNION ALL
+      SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+      FROM top_tm_bsc a
+      WHERE a.team_level > 0
+      AND a.team_type = 1
+      ORDER BY team_group_order DESC, team_order DESC, team_level;
+	</select>
+	
+	<select id="getTeam4" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+	  SELECT d.cnt, d.sub_cnt, e.*
+      FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+            FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+                  FROM top_tm_bsc a) c
+                  GROUP BY c.team_group_order) d, top_tm_bsc e
+      WHERE e.team_level = 0 
+      AND e.team_type = 4
+      AND e.team_group_order = d.team_group_order
+      UNION ALL
+      SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+      FROM top_tm_bsc a
+      WHERE a.team_level > 0
+      AND a.team_type = 4
+      AND a.only_statistics = 0
+      ORDER BY team_group_order DESC, team_order DESC, team_level;
+	</select>
+	
+	<select id="getTeam4Excel" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+		SELECT 
+			GB.*
+		FROM(
+			SELECT d.cnt, d.sub_cnt, e.*
+				FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+					FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+						FROM top_tm_bsc a) c
+						GROUP BY c.team_group_order) d, top_tm_bsc e
+					WHERE e.team_level = 0 
+				AND e.team_type = 4
+			AND e.team_group_order = d.team_group_order
+	      
+			UNION ALL
+			
+			SELECT	
+				GA.*
+			FROM(			
+				SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+				FROM top_tm_bsc a
+				WHERE a.team_level > 0
+				AND a.team_type = 4
+				<!-- ORDER BY team_group_order DESC, team_order DESC, team_level -->
+			)GA
+			WHERE (GA.cnt > 0 OR GA.sub_cnt > 0)
+		)GB
+		ORDER BY GB.team_group_order DESC, GB.team_order DESC, GB.team_level			
+	</select>
+	
+	<select id="getTeam4Excel_20240603" resultType ="kr.co.toplac.topgeneral.EmpNmlstVO">
+	  SELECT d.cnt, d.sub_cnt, e.*
+      FROM (SELECT sum(c.cnt) cnt, sum(c.sub_cnt) sub_cnt, c.team_group_order
+            FROM (SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.team_group_order
+                  FROM top_tm_bsc a) c
+                  GROUP BY c.team_group_order) d, top_tm_bsc e
+      WHERE e.team_level = 0 
+      AND e.team_type = 4
+      AND e.team_group_order = d.team_group_order
+      UNION ALL
+      SELECT (SELECT count(*) FROM top_mbr_bsc WHERE user_state != 1 AND team_id_loc = a.team_id) + (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) cnt, (SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = a.team_id) sub_cnt, a.*
+      FROM top_tm_bsc a
+      WHERE a.team_level > 0
+      AND a.team_type = 4
+      ORDER BY team_group_order DESC, team_order DESC, team_level;
+	</select>
+	
+	
+	<select id="countAllWorkMember" parameterType="String" resultType="String">
+		SELECT 
+			count(*)
+		FROM
+			top_mbr_bsc
+		WHERE
+			<!-- user_state in (0,2,9) -->
+			user_state != 1
+	</select>
+
+	<select id="searchEmpList" parameterType="java.util.HashMap" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT a.user_no
+						, a.user_name
+						, a.user_id
+						, a.team_id_loc
+						, a.team_id_main
+						, getTopTmBscCenterName(b.team_id) center_name
+						, b.team_name
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state
+		      			, a.handphone
+		      			, a.office_tel
+						, a.office_fax
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id 
+					<if test="ustat != 10">
+						<choose>
+							<when test="ustat == 0">
+								and a.user_state != 1
+								<!-- and a.user_state in (0,9) -->
+							</when>
+							<otherwise>
+								and a.user_state = #{ustat}
+							</otherwise>
+						</choose>
+					</if>
+					<if test="tid != 0">
+						<choose>
+							<when test="gid == -1">
+								and a.team_id_main in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+														= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tid}))
+							</when>
+							<otherwise>
+								and a.team_id_main = #{tid}
+							</otherwise>
+						</choose>
+					</if>
+					<if test="searchStr != ''">
+						and (a.user_name like '%${searchStr}%'
+							 or a.handphone like '%${searchStr}%'
+							 or a.user_id like '%${searchStr}%'
+							 or a.office_tel like '%${searchStr}%'
+							 or a.office_fax like '%${searchStr}%')
+					</if>
+				ORDER BY
+					b.team_group_order , a.work_level DESC, a.join_date  
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			<!-- ORDER BY rownum DESC -->
+	</select>
+	
+	<select id="getAllMemberForExcel" resultType="kr.co.toplac.topgeneral.EmpNmlstExcelVO">
+		SELECT 
+			c.user_name
+			,c.work_level_cd
+			,c.work_type_cd
+			,c.office_tel
+			,c.handphone
+			,c.office_fax
+			,c.email
+			,c.team_id_loc
+			,c.team_id_main
+			,c.work_type
+			,c.work_level
+			,c.join_date
+			,c.is_sub		
+		FROM 
+			(
+				SELECT
+					 user_name 
+					,getCodeValue('top_mbr_bsc', 'work_level', work_level) work_level_cd 
+					,getCodeValue('top_mbr_bsc', 'work_type', work_type) work_type_cd
+					,office_tel
+					,handphone
+					,office_fax
+					,email
+					,team_id_loc
+					,team_id_main
+					,work_type
+					,work_level
+					,join_date
+					,'0' as is_sub
+				FROM 
+					top_mbr_bsc
+				WHERE 
+					<!-- user_state IN ('0','2','9') -->
+					user_state != 1
+		
+				UNION ALL
+				
+				SELECT
+					b.user_name
+					,getCodeValue('top_mbr_bsc', 'work_level', b.work_level) work_level_cd 
+					,getCodeValue('top_mbr_bsc', 'work_type', a.work_type) work_type_cd
+					,b.office_tel
+					,b.handphone
+					,b.office_fax
+					,b.email
+					,a.team_id_main as team_id_loc
+					,a.team_id_main
+					,b.work_type
+					,b.work_level
+					,b.join_date
+					,'1' as is_sub
+				FROM 
+					top_mbr_bsc_sub a, top_mbr_bsc b
+				WHERE 
+					a.user_no = b.user_no
+			)c
+		
+		ORDER BY 
+			c.work_type ASC, c.work_level DESC, c.join_date ASC
+	</select>
+	
+	<select id="getAllMemberForExcel_20190629" resultType="kr.co.toplac.topgeneral.EmpNmlstExcelVO">
+		SELECT 
+			 user_name 
+			,getCodeValue('top_mbr_bsc', 'work_level', work_level) work_level_cd 
+			,getCodeValue('top_mbr_bsc', 'work_type', work_type) work_type_cd
+			,office_tel
+			,handphone
+			,office_fax
+			,email
+			,team_id_loc
+			,team_id_main
+			
+  		 FROM 
+  		 	top_mbr_bsc
+ 		WHERE 
+ 			user_state in ('0','2','9')
+ 		ORDER BY
+ 			work_type asc, work_level desc, join_date asc
+	</select>
+	
+	<!-- 상위그룹 내 하위 팀의 숫자 계산시 팀원이 1명이상인 경우만 계산하는 방식으로 변경 -->
+	<select id="getGroupCount" resultType="kr.co.toplac.topgeneral.EmpNmlstVO" >
+		SELECT
+			TM.team_name
+			,TM.team_id
+			,TM.team_group_order
+			,COUNT(*) AS cnt
+		FROM
+		(				
+			SELECT 
+				team_name
+				,team_id
+				,team_group_order
+			FROM top_tm_bsc
+			WHERE team_level = 0
+		)TM
+		LEFT JOIN
+		(
+			SELECT 
+				a.team_name
+				,a.team_group_order	
+				,b.team_level
+				,b.team_name AS sub_team_name
+				,b.team_id				
+				,(( SELECT COUNT(*) FROM top_mbr_bsc WHERE team_id_loc = b.team_id AND user_state != 1 ) + ( SELECT COUNT(*) FROM top_mbr_bsc_sub WHERE team_id_main = b.team_id )) AS member_cnt
+			FROM top_tm_bsc a
+			LEFT JOIN top_tm_bsc b
+			ON a.team_group_order = b.team_group_order
+			WHERE a.team_level = 0	
+		)TA
+		ON TM.team_group_order = TA.team_group_order
+		WHERE TA.member_cnt > 0
+		GROUP BY TM.team_group_order
+    </select>
+	
+	<select id="getGroupCount_20240603" resultType="kr.co.toplac.topgeneral.EmpNmlstVO" >
+		SELECT a.team_name,a.team_id,a.team_group_order,b.cnt
+		  FROM top_tm_bsc a,
+		  		 (SELECT team_group_order, count(*)-1 cnt
+				    FROM top_tm_bsc
+		         GROUP BY team_group_order) b
+		 WHERE a.team_group_order = b.team_group_order
+		   AND team_level = 0
+     </select>
+	
+
+</mapper>

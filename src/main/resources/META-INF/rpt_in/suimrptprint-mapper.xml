@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimRptPrintMapper">
+	<!-- 단순 보고서 기본 정보 -->
+	<select id="get1001Print_1" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT
+			 rpt_print_no rptPrintNo
+			,insu_term_1 insuTerm1		<!-- 계약일자  -->
+			
+			,diagnosis_disease_3 diagnosisDisease3	<!-- 진단명 -->
+			,diagnosis_hospital_3 diagnosisHospital3	<!-- 진단 병원 -->
+			,insu_mortgage_1 insuMortgage1		<!-- 청구담보  -->
+			,insu_mortgage_dtl_1 insuMortgageDtl1		<!-- 가입금액  -->
+			,insu_mortgage_value_1 insuMortgageValue1		<!-- 추정손해액 -->
+			
+			,face_insured_job_6	faceInsuredJob6<!-- 직무확인사항 -->
+			,past_hospital_6 pastHospital6		<!-- 탐문내역 -->
+			
+			,inspect_point_4 inspectPoint4 <!-- 중점 조사사항 -->
+			,inspect_result_4 inspectResult4 <!-- 조사결과 -->
+			
+			,sagodoc_flag sagoDocFlag
+		  FROM
+		  	top_rpt_print_1
+		 WHERE
+		 	suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<!-- 조사내용 - 피보험자 병력사항 요약 경과표 -->
+	<select id="get1001Print_1_6_1" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,investigate_to_date investigateToDate 
+			,investigate_from_date investigateFromDate
+			,investigate_date_dtl investigateDateDtl
+			 
+			,investigate_outline investigateOutline
+			,investigate_dtl investigateDtl
+		  FROM
+		  	top_rpt_print_1_6_1
+		 WHERE
+		 	rpt_print_no = #{_parameter}
+		 ORDER BY
+		 	serial_no
+	</select>
+
+	<!-- 3. 타 보험사 계약 및 지급사항 -->
+	<select id="get1001Print_1_2" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,other_insu_com otherInsuCom
+			,other_insu_dtl otherInsuDtl
+			,other_insu_contract otherInsuContract
+		  FROM
+		  	top_rpt_print_1_2
+		 WHERE
+		 	rpt_print_no = #{_parameter}
+		 ORDER BY
+		 	serial_no
+	</select>
+	
+	<!-- 조사내용 - 타 보험사 처리내역 -->
+	<select id="get1001Print_1_8" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,attach_name attachName
+			,attach_copy attachCopy
+			,attach_etc_memo attachEtcMemo 
+		  FROM
+		  	top_rpt_print_1_8
+		 WHERE
+		 	rpt_print_no = #{_parameter}
+		 ORDER BY
+		 	serial_no
+	</select>
+	
+	<!-- 조사내용 - 타 보험사 처리내역 -->
+	<select id="get1001Print_1_assure" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,assure_dtl assureDtl
+			,join_amount joinAmount
+			,estimation_amount estimationAmount 
+		  FROM
+		  	top_rpt_print_1_assure
+		 WHERE
+		 	rpt_print_no = #{_parameter}
+		 ORDER BY
+		 	serial_no
+	</select>
+	
+	<!-- 사고처리과정표 - 처리과정 - top_print_1_ctrl SELECT -->
+	<select id="get1001Print_1_ctrl" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT  serial_no serialNo
+			   ,rpt_print_no rptPrintNo
+			   ,control_date controlDate
+			   ,control_subject controlSubject
+			   ,control_memo controlMemo
+			   ,control_end_date controlEndDate
+			   ,control_delay_agent controlDelayAgent
+			   ,control_date_cnt controlDateCnt
+			   ,control_delay_cnt controlDelayCnt
+		  FROM  
+		  	top_rpt_print_1_ctrl
+		 WHERE  
+		 	rpt_print_no = #{_parameter}
+		 ORDER BY 
+		 	serial_no
+	</select>
+	
+	<!-- 사고처리과정표 - 처리과정(롯데) - 지연일수 - top_print_1 SELECT -->
+	<select id="get1001Print_1_ctrl_delay_cnt" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT  printctrl_all_delay_cnt allDelayCnt
+			   ,printctrl_insu_delay_cnt insuDelayCnt
+			   ,printctrl_notinsu_delay_cnt notInsuDelayCnt
+		  FROM
+		  	top_rpt_print_1
+		 WHERE
+		 	rpt_print_no = #{_parameter}
+	</select>
+	
+	
+	
+	<!-- 단순보고서 - 상세확인사항등. insertChk -->
+	<select id="getDetailInsertChk" parameterType="java.util.HashMap" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT  serial_no serialNo
+			   ,rpt_print_no rptPrintNo
+			   ,detail_gubun detailGubun
+			   ,detail_title detailTitle
+			   ,detail_content detailContent 
+		  FROM  
+		  	top_rpt_print_1_detail_check
+		 WHERE  
+		 	rpt_print_no = #{rptPrintNo}
+		   AND detail_gubun = #{gubun}
+		 ORDER BY 
+		 	serial_no
+	</select>
+	
+	<!-- 단순보고서 - 상세확인사항등. insertChk -->
+	<select id="get1001Print_1_detail_check" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+	
+		SELECT  serial_no serialNo
+			   ,rpt_print_no rptPrintNo
+			   ,detail_gubun detailGubun
+			   ,detail_title detailTitle
+			   ,detail_content detailContent
+			   ,detail_content_sub detailContentSub
+			   ,use_flag useFlag 
+			   
+		  FROM  top_rpt_print_1_detail_check
+		  
+		 WHERE  rpt_print_no = #{rptPrintNo}
+		 
+		 ORDER BY serial_no ASC
+		 
+	</select>
+	
+	<!-- 최초 보고서 작성을 위한 Insert -->
+	<insert id="ins1001Print_1" parameterType="String" useGeneratedKeys="true" keyProperty="PrintNo">
+		INSERT INTO top_rpt_print_1
+			(suim_rpt_no)
+		VALUES
+			(#{suim_rpt_no})
+			
+		<selectKey keyProperty="rptPrintNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<!-- 1. 계약 확인 사항 - top_rpt_body Update -->
+	<update id="udt1001OneBody" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_body
+		   SET 
+		   	 insurance_nm = #{insuNm}
+		   	,policy_no = #{policyNo}
+		 WHERE
+		 	suim_rpt_no = #{suimRptNo} 
+	</update>
+	
+	<!-- 1. 계약 확인 사항 - top_print_1 Update -->
+	<update id="udt1001OnePrint1" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_print_1
+		   SET 
+		   	 insu_term_1 = #{insuTerm1} 
+		   	,face_insured_job_6 = #{faceInsuredJob6}
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+
+	<!-- 1. 계약 확인 사항 - top_print_1 Update -->
+	<update id="udt1001claim" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_print_1
+		   SET 
+		   	 diagnosis_disease_3 = #{diagnosisDisease3} 
+		   	,diagnosis_hospital_3 = #{diagnosisHospital3}
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+	<!-- 2. 청구사항 - 담보내역 및 추정손해액 - top_rpt_print_1_assure Delete -->
+	<insert id="ins1001Assure" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_assure
+		(
+			 rpt_print_no
+			,assure_dtl
+			,join_amount
+			,estimation_amount
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{assureDtl}
+			,#{joinAmount}
+			,#{estimationAmount}
+		)
+			
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+	<!-- 2. 청구사항 - 담보내역 및 추정손해액 - top_rpt_print_1_assure Delete -->
+	<delete id="del1001Assure" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_assure
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!-- 2. 청구사항 - 담보내역 및 추정손해액 - top_rpt_print_1_assure Update -->
+	<update id="udt1001Assure" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_print_1_assure
+		   SET 
+			 assure_dtl = #{assureDtl}
+			,join_amount = #{joinAmount}
+			,estimation_amount = #{estimationAmount}
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	
+	<!-- 3. 타 보험사 계약 및 지급사항 - top_print_1_2 Insert -->
+	<insert id="ins1001otherInsu" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_2
+		(
+			 rpt_print_no
+			,other_insu_com
+			,other_insu_contract
+			,other_insu_dtl
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{otherInsuCom}
+			,#{otherInsuContract}
+			,#{otherInsuDtl}
+		)
+			
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+	<!-- 3. 조사내용(요약) - 타보험사 처리내역 - top_print_1_2 Delete -->
+	<delete id="del1001otherInsu" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_2
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!-- 3. 조사내용(요약) - 타보험사 처리내역 - top_print_1_2 Update -->
+	<update id="udt1001otherInsu" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1_2
+		   SET 
+		   	 other_insu_com = #{otherInsuCom}
+			,other_insu_contract = #{otherInsuContract}
+			,other_insu_dtl = #{otherInsuDtl}
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	<!-- 4. 중점 조사사항 및 조사결과 - 중점 조사사항 - top_print_1 Update -->
+	<update id="udt1001inspectPoint" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1
+		   SET 
+			inspect_point_4 = #{inspectPoint4}
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+	<!-- 4. 중점 조사사항 및 조사결과 - 조사결과 - top_print_1 Update -->
+	<update id="udt1001inspectResult" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1
+		   SET 
+		   	 inspect_result_4 = #{inspectResult4}
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+	<!-- 5. 총괄 경과표 - top_print_1_6_1 Insert -->
+	<insert id="ins1001passTable" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_6_1
+		(
+			 rpt_print_no
+			,investigate_to_date
+			,investigate_from_date
+			,investigate_date_dtl
+			,investigate_outline
+			,investigate_dtl
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{investigateToDate}
+			,#{investigateFromDate}
+			,#{investigateDateDtl}
+			,#{investigateOutline}
+			,#{investigateDtl}
+		)
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>	
+	
+	<!-- 5. 총괄 경과표 - top_print_1_6_1 DELETE -->
+	<delete id="del1001passTable" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_6_1
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!-- 5. 총괄 경과표 - top_print_1_6_1 UPDATE -->
+	<update id="udt1001passTable" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1_6_1
+		   SET 
+		   	 investigate_to_date = #{investigateToDate}
+		   	,investigate_from_date = #{investigateFromDate}
+		   	,investigate_date_dtl = #{investigateDateDtl}
+			,investigate_outline = #{investigateOutline}
+			,investigate_dtl = #{investigateDtl}
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	
+	<!-- 5. 사고처리과정표 - 처리결과 - top_print_1_ctrl Insert -->
+	<insert id="ins1001printCtrl" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_ctrl
+		(
+			 rpt_print_no
+			,control_date
+			,control_subject
+			,control_memo
+			,control_end_date
+			,control_delay_agent
+			,control_date_cnt
+			,control_delay_cnt
+			,reg_date
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{controlDate}
+			,#{controlSubject}
+			,#{controlMemo}
+			,#{controlEndDate}
+			,#{controlDelayAgent}
+			,#{controlDateCnt}
+			,#{controlDelayCnt}
+			,unix_timestamp(now())
+		)
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>	
+	
+	<!-- 사고처리과정표 - 처리과정 -  top_rpt_print_1_ctrl DELETE -->
+	<delete id="del1001printCtrl" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_ctrl
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!-- 사고처리과정표 - 처리과정 -  top_rpt_print_1_ctrl UPDATE -->
+	<update id="udt1001printCtrl" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1_ctrl
+		   SET 
+		   	 control_date = #{controlDate}
+		   	,control_subject = #{controlSubject}
+		   	,control_memo = #{controlMemo}
+		   	,control_end_date = #{controlEndDate}
+		   	,control_delay_agent = #{controlDelayAgent}
+ 			,control_date_cnt = #{controlDateCnt}
+		   	,control_delay_cnt = #{controlDelayCnt}
+			,reg_date = unix_timestamp(now())
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	<!-- 사고처리과정표 - 처리과정(롯데) - 지연일수 top_rpt_print_1 UPDATE -->
+	<update id="udt1001printCtrlDelay" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_print_1
+		   SET 
+		   	 printctrl_all_delay_cnt = #{allDelayCnt} 
+		   	,printctrl_insu_delay_cnt = #{insuDelayCnt}
+		   	,printctrl_notinsu_delay_cnt = #{notInsuDelayCnt }
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+	<!-- 사고처리과정표 - 첨부서류  - top_print_1_8 Insert -->
+	<insert id="ins1001sagoDoc" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_8
+		(
+			 rpt_print_no
+			,attach_name
+			,attach_copy
+			,attach_etc_memo
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{attachName}
+			,#{attachCopy}
+			,#{attachEtcMemo}
+		)
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+	<!-- 사고처리과정표 - 첨부서류  - top_print_1_8 Delete -->
+	<delete id="del1001sagoDoc" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_8
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!--사고처리과정표 - 첨부서류  - top_print_1_8 UPDATE -->
+	<update id="udt1001sagoDoc" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1_8
+		   SET 
+ 			 attach_name = #{attachName}
+			,attach_copy = #{attachCopy}
+			,attach_etc_memo = #{attachEtcMemo}
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	<!-- 단순보고서 메뉴 출력 Flag 조정 -->
+	<update id="udt1001Flag" parameterType="java.util.HashMap">
+		UPDATE 
+			top_rpt_print_1
+		   SET 
+		<choose>
+			<when test="gubun == 'sagoDoc'">
+				sagodoc_flag = #{flag}
+			</when>
+		</choose>
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+	<!-- 6. 상세확인사항 - Flag - ins1001DtlChkFlag Insert -->
+	<insert id="ins1001DtlChkFlag" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_detail_check
+		(
+			 rpt_print_no
+			,detail_gubun
+			
+			,use_flag
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{gubun}
+			,'1'
+		)
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+		
+	<!-- 단순보고서 메뉴 출력 Flag 조정 -->
+	<update id="udt1001DtlChkFlag" parameterType="java.util.HashMap">
+		UPDATE 
+			top_rpt_print_1_detail_check
+		   SET
+		   	use_flag = #{flag}
+		 WHERE rpt_print_no = #{rptPrintNo}
+		   AND detail_gubun =#{gubun}
+	</update>
+	
+	<!-- 단순보고서 메뉴 출력 Flag 조정 -->
+	<update id="udt1001DtlChk" parameterType="java.util.HashMap">
+		UPDATE 
+			top_rpt_print_1_detail_check
+		   SET
+		   	 detail_title = #{detailTitle}
+		   	,detail_content = #{detailContent}
+		   	,detail_content_sub = #{detailContentSub}
+		 WHERE rpt_print_no = #{rptPrintNo}
+		   AND detail_gubun =#{detailGubun}
+	</update>
+	
+	<!-- 6. 상세확인사항 - 기타 추가메뉴 - INSERT -->
+	<insert id="ins1001etcDtlChk" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_detail_check
+		(
+			 rpt_print_no
+			,detail_gubun
+			,detail_title
+			,detail_content
+			,use_flag
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,99
+			,#{detailTitle}
+			,#{detailContent}
+			,'1'
+		)
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+	<!-- 6. 상세확인사항 - 기타 추가메뉴 - DELETE -->
+	<delete id="del1001etcDtlChk" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_detail_check
+		 WHERE serial_no = #{serialNo} 
+	</delete>
+	
+	<!-- 6. 상세확인사항 - 기타 추가메뉴 - UPDATE -->
+	<update id="udt1001etcDtlChk" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1_detail_check
+		   SET
+		   	 detail_title = #{detailTitle}
+		   	,detail_content = #{detailContent}
+		 WHERE serial_no = #{serialNo}
+	</update>
+	
+	
+	
+	<!-- 2. 조사결과(요약) - top_print_1 Update -->
+	<update id="udt1001TwoPrint1" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_print_1
+		   SET 
+		   	 diagnosis_disease_3 = #{diagnosisDisease3} 
+		   	,accident_dtl_3	= #{accidentDtl3}
+		   	
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+	<!-- 3. 조사내용(요약) - 피보험자 병력사항 요약 경과표 - top_print_1_6_1 Insert -->
+	<insert id="insPrint1001Three1" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_6_1
+		(
+			 rpt_print_no
+			,investigate_to_date
+			,investigate_from_date
+			,investigate_outline
+			,investigate_dtl
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{investigateToDate}
+			,#{investigateFromDate}
+			,#{investigateOutline}
+			,#{investigateDtl}
+		)
+			
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+	<!-- 3. 조사내용(요약) - 피보험자 병력사항 요약 경과표 - top_print_1_6_1 Delete -->
+	<delete id="delPrint1001Three1" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_6_1
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!-- 3. 조사내용(요약) - 피보험자 병력사항 요약 경과표 - top_print_1_6_1 Update -->
+	<update id="udtPrint1001Three1" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1_6_1
+		   SET 
+		   	 investigate_date = #{investigateDate}
+			,investigate_outline = #{investigateOutline}
+			,investigate_dtl = #{investigateDtl}
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	
+	<!-- 4. 탐문 내역 - top_print_1 Update -->
+	<update id="udt1001four" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_print_1
+		   SET 
+			past_hospital_6 = #{pastHospital6}
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+	<!-- codedic Select -->
+	<select id="getCodeList" parameterType="java.util.HashMap" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT col_cd, col_val
+		  FROM sysadm_codedic
+		 WHERE 
+			tbl_nm = #{tbl_nm}
+		   AND
+		   	col_nm = #{col_nm}
+	</select>
+	
+	
+	<!-- 사고처리과정표 - 첨부서류  - top_print_1_8 Insert -->
+	<insert id="insPrint1001SagoDoc" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_1_8
+		(
+			 rpt_print_no
+			,attach_name
+			,attach_copy
+			,attach_etc_memo
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{attachName}
+			,#{attachCopy}
+			,#{attachEtcMemo}
+		)
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>
+	
+	<!-- 사고처리과정표 - 첨부서류  - top_print_1_8 Delete -->
+	<delete id="delPrint1001SagoDoc" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_1_8
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!-- 3. 조사내용(요약) - 타보험사 처리내역 - top_print_1_2 Update -->
+	<update id="udtPrint1001SagoDoc" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_1_8
+		   SET 
+ 			 attach_name = #{attachName}
+			,attach_copy = #{attachCopy}
+			,attach_etc_memo = #{attachEtcMemo}
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	
+</mapper>

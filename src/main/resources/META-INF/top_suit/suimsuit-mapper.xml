@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="SuimSuitMapper">
+ 	
+ 	<select id="getReadYn" parameterType="java.util.HashMap" resultType="Integer">
+ 	
+ 		SELECT
+ 			getTopRptReadYN(#{suim_rpt_no},#{user_no})
+ 		FROM dual
+ 	
+ 	</select>
+ 	
+ 	<select  id="getTeamLevel" parameterType="String" resultType="Integer">
+ 	
+ 		SELECT
+ 			team_level
+ 		FROM
+ 			top_tm_bsc
+ 		WHERE
+ 			team_id = #{topTeamIdForSuit}
+ 	
+ 	</select>
+ 	
+ 	<select id="getAcceptForSuit17" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+			SUBSTR(suim_accept_no,8,4)+1
+ 		FROM
+ 			top_suitability_17
+ 		WHERE
+ 			suim_accept_no like CONCAT(#{todayAcceptFront},'%')
+ 		ORDER BY suim_accept_no DESC
+ 		LIMIT 1
+ 	
+ 	</select>
+ 	
+ 	
+ 	<select id="getAcceptForSuit18" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+			SUBSTR(suim_accept_no,8,4)+1
+ 		FROM
+ 			top_contract
+ 		WHERE
+ 			suim_accept_no like CONCAT(#{todayAcceptFront},'%')
+ 		ORDER BY suim_accept_no DESC
+ 		LIMIT 1
+ 	
+ 	</select>
+ 	
+ 	<select id="getAcceptForSuit12" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+			SUBSTR(suim_accept_no,8,4)+1
+ 		FROM
+ 			top_suitability_12
+ 		WHERE
+ 			suim_accept_no like CONCAT(#{todayAcceptFront},'%')
+ 		ORDER BY suim_accept_no DESC
+ 		LIMIT 1
+ 	
+ 	</select>
+ 	
+ 	<select id="getAcceptForSuit10" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+			SUBSTR(suim_accept_no,8,4)+1
+ 		FROM
+ 			top_suitability_10
+ 		WHERE
+ 			suim_accept_no like CONCAT(#{todayAcceptFront},'%')
+ 		ORDER BY suim_accept_no DESC
+ 		LIMIT 1
+ 	
+ 	</select>
+ 	
+ 	<insert id = "insNewSuit17" parameterType="kr.co.toplac.topsuit.SuimSuit_17VO" >
+ 	
+ 		INSERT INTO  top_suitability_17
+ 		( 	
+ 			info_a, info_b, info_c, info_d, info_e, info_f, info_g, info_h, info_i, info_j, info_k, bd_type, info_m, info_n, info_o, info_p, 
+ 			policyholder_tel1, policyholder_tel2, policyholder_hp, 
+ 			info_u, info_v, info_w, info_x, info_y, info_z, info_aa, info_ab, info_ac, info_ad, info_ae, info_af,
+ 			team_id, user_no,
+ 			policyholder_nm,
+ 			suim_accept_no,
+ 			reg_date,ptnr_id
+ 			   
+ 		)
+ 		
+ 		VALUES
+ 		( 
+ 			#{infoA},#{infoB},#{infoC},#{infoD},#{infoE},#{infoF},#{infoG},#{infoH},#{infoI},#{infoJ},#{infoK},#{bdType},#{infoM},#{infoN},#{infoO},#{infoP},
+ 			#{policyholderTel1},#{policyholderTel2},#{policyholderHp},
+ 			#{infoU},#{infoV},#{infoW},#{infoX},#{infoY},#{infoZ},#{infoAa},#{infoAb},#{infoAc},#{infoAd},#{infoAe},#{infoAf},
+ 			#{teamId},#{userNo},
+ 			#{policyholderNm},
+ 			#{suimAcceptNo},
+ 			unix_timestamp(now()),'17'
+ 		)
+ 	
+ 	</insert>
+ 	
+ 	
+ 	<insert id = "insNewSuit18" parameterType="kr.co.toplac.topsuit.SuimSuit_18VO" >
+ 	
+ 		INSERT INTO  top_contract
+ 		( 	
+ 			suim_accept_no, team_id, user_no, ptnr_id, policyholder_nm, policyholder_hp, reg_date,
+ 			medType, sendDate, IvstComName, plcyNo, entyDsgnNo, pkgName, agrmDate, contractorName, conHndPhoneNo, 
+ 			conHomeTelNo, 
+ 			bd1_a, bd1_b, bd1_c, bd1_d, bd1_e, bd1_f, bd1_g, bd1_h, 
+ 			bd2_a, bd2_b, bd2_c, bd2_d, bd2_e, bd2_f, bd2_g, bd2_h, 
+ 			bd3_a, bd3_b, bd3_c, bd3_d, bd3_e, bd3_f, bd3_g, bd3_h,   
+ 			bd_type, bd_item, memo_1, memo_2,
+ 			clerkName, clerkDeptName, clerkSectName, clerkOfcTelNo, clerkHndPhoneNo,
+ 			rq_name, rq_date
+ 		)
+ 		
+ 		VALUES
+ 		( 
+ 			#{suimAcceptNo}, #{teamId}, #{userNo}, 18, #{policyholderNm}, #{policyholderHp}, unix_timestamp(#{regDate}), 
+ 			#{medType}, unix_timestamp(#{regDate}), #{ivstComName}, #{plcyNo}, #{entyDsgnNo}, #{pkgName}, #{agrmDate}, #{contractorName}, #{conHndPhoneNo}, 
+ 			#{conHomeTelNo}, 
+ 			#{bd1A}, #{bd1B}, #{bd1C}, #{bd1D}, #{bd1E}, #{bd1F}, #{bd1G}, #{bd1H},
+ 			#{bd2A}, #{bd2B}, #{bd2C}, #{bd2D}, #{bd2E}, #{bd2F}, #{bd2G}, #{bd2H}, 
+ 			#{bd3A}, #{bd3B}, #{bd3C}, #{bd3D}, #{bd3E}, #{bd3F}, #{bd3G}, #{bd3H},
+ 			#{bdType}, #{bdItem}, #{memo1}, #{memo2}, 
+ 			#{clerkName}, #{clerkDeptName}, #{clerkSectName}, #{clerkOfcTelNo}, #{clerkHndPhoneNo}, 
+ 			#{rqName}, #{rqDate}  
+ 		)
+ 	
+ 	</insert>
+ 	
+ 	<insert id = "insNewSuit12" parameterType="kr.co.toplac.topsuit.SuimSuit_12VO"  useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+ 	
+ 		INSERT INTO  top_suitability_12
+ 		( 	
+ 			suim_accept_no, suim_rpt_state, team_id, user_no, ptnr_id, policyholder_nm, policyholder_hp,
+ 			reg_date, lock_flag,  
+ 			rqTrsOrgcd, rstRcvOrgcd, rqRqFlgcd, rqDlFlgcd, rqPptyRqdt, 
+ 			rqPlno, rqRequSeqno, rqPlyno, rqGdcd, rqGdnm, 
+ 			rqPprDhOrgcd, rqPprDhOrgnm, rqDhOrgcd, rqDhOrgnm, rqDhOrgTlno,
+ 			rqDhStfno, rqDhStfnm, rqDhStfTlno, rqUdChrOrgno, rqUdChrOrgnm, 
+ 			rqUdChrOrgTlno, rqUdChrOrgFxno, rqUdChrStfno, rqUdChrStfnm, rqCrtNm, 
+ 			rqCnrdt, rqCrtHomeTlno, rqCrtWpcTlno, rqCrtHndphTlno, rqBldCt, 
+ 			rqOjCt, prHndphTlno 
+ 			<!-- rstPptyNvCpltYn, rstUcNspRs, rstNvRst, rstNvRstCtn, rstRptgFileCt -->
+ 		)
+ 		VALUES
+ 		( 
+ 			#{suimAcceptNo}, 0, #{teamId}, #{userNo}, 12, #{rqCrtNm}, #{rqCrtHndphTlno}, 
+ 			unix_timestamp(now()), 0, 
+ 			#{rqTrsOrgcd}, #{rstRcvOrgcd}, #{rqRqFlgcd}, #{rqDlFlgcd}, #{rqPptyRqdt},
+ 			#{rqPlno}, #{rqRequSeqno}, #{rqPlyno}, #{rqGdcd}, #{rqGdnm}, 
+ 			#{rqPprDhOrgcd}, #{rqPprDhOrgnm}, #{rqDhOrgcd}, #{rqDhOrgnm}, #{rqDhOrgTlno}, 
+ 			#{rqDhStfno}, #{rqDhStfnm}, #{rqDhStfTlno}, #{rqUdChrOrgno}, #{rqUdChrOrgnm}, 
+ 			#{rqUdChrOrgTlno}, #{rqUdChrOrgFxno}, #{rqUdChrStfno}, #{rqUdChrStfnm}, #{rqCrtNm}, 
+ 			#{rqCnrdt}, #{rqCrtHomeTlno}, #{rqCrtWpcTlno}, #{rqCrtHndphTlno}, #{rqBldCt}, 
+ 			#{rqOjCt}, #{prHndphTlno} 
+ 			<!-- #{rstPptyNvCpltYn}, #{rstUcNspRs}, #{rstNvRst}, #{rstNvRstCtn}, #{rstRptgFileCt} -->  
+ 		)
+ 		<selectKey keyProperty="id" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+ 	
+ 	</insert>
+ 	
+ 	
+ 	<insert id = "insNewSuit10" parameterType="kr.co.toplac.topsuit.SuimSuit_10VO"  >
+ 	
+ 		INSERT INTO  top_suitability_10
+ 		( 	
+ 			suim_accept_no, juckbu_no, reg_date, sendDate, IvstComName, bd_type, plcyNo, entyDsgnNo, pkgName, agrmDate, 
+ 			contractorName, conHndPhoneNo, conHomeTelNo, conOfficeNo, hostName, hostHndPhoneNo, hostHomeTelNo, hostOfficeNo, 
+ 			hostContractor, buildingZipcode, buildingAddr, buildinginfo01,  buildinginfo02, buildinginfo03, buildingMemo, 
+ 			clerkName, clerkSectName, clerkDeptName, clerkName2, clerkHndPhoneNo, clerkOfcTelNo, policyholder_nm, policyholder_hp,
+ 			team_id, user_no, ptnr_id
+ 		)
+ 		VALUES
+ 		( 
+ 			#{suimAcceptNo}, #{juckbuNo}, unix_timestamp(#{regDate}), unix_timestamp(#{sendDate}), #{ivstComName}, #{bdType}, #{plcyNo}, #{entyDsgnNo}, #{pkgName}, #{agrmDate}, 
+ 			#{contractorName}, #{conHndPhoneNo}, #{conHomeTelNo}, #{conOfficeNo}, #{hostName}, #{hostHndPhoneNo}, #{hostHomeTelNo}, #{hostOfficeNo}, 
+ 			#{hostContractor}, #{buildingZipcode}, #{buildingAddr}, #{buildinginfo01}, #{buildinginfo02}, #{buildinginfo03}, #{buildingMemo}, 
+ 			#{clerkName}, #{clerkSectName}, #{clerkDeptName}, #{clerkName2}, #{clerkHndPhoneNo}, #{clerkOfcTelNo}, #{contractorName}, #{conHndPhoneNo},
+ 			#{teamId}, #{userNo}, 10   
+ 		)
+ 	
+ 	</insert>
+ 	
+ 	<insert id = "insNewSuit12Bld" parameterType="kr.co.toplac.topsuit.SuimSuit_12_bldVO"  >
+ 	
+ 		INSERT INTO  top_suitability_12_bld
+ 		( 	
+ 			suim_rpt_no, 
+ 			rqBld_Lctno, rqBld_OjSeqno, rqBld_BldSeqno, rqBld_RlOwrNm, rqBld_CtnAdr, 
+ 			rqBld_MngmBnnm, rqBld_BldRnkcd, rqBld_Plenm, rqBld_Rofnm, rqBld_Wllnm, 
+ 			rqBld_Grod, rqBld_Undg, rqBld_Ttare, rqBld_IsAre, rqBld_IsTp, 
+ 			rqBld_BldXpnm
+ 		)
+ 		VALUES
+ 		( 
+ 			#{suimRptNo},
+ 			#{rqBld_Lctno}, #{rqBld_OjSeqno}, #{rqBld_BldSeqno}, #{rqBld_RlOwrNm}, #{rqBld_CtnAdr},
+ 			#{rqBld_MngmBnnm}, #{rqBld_BldRnkcd}, #{rqBld_Plenm}, #{rqBld_Rofnm}, #{rqBld_Wllnm}, 
+ 			#{rqBld_Grod}, #{rqBld_Undg}, #{rqBld_Ttare}, #{rqBld_IsAre}, #{rqBld_IsTp}, 
+ 			#{rqBld_BldXpnm}
+ 		)
+ 	
+ 	</insert>
+ 	
+ 	<insert id = "insNewSuit12Oj" parameterType="kr.co.toplac.topsuit.SuimSuit_12_ojVO" >
+ 	
+ 		INSERT INTO  top_suitability_12_oj
+ 		( 	
+ 			suim_rpt_no, 
+ 			rqOj_OjSeqno, rqOj_BldSeqno, rqOj_OjSign, rqOj_OjTp, rqOj_Rnk, 
+ 			rqOj_Dt_Mtt, rqOj_Dt_AccptPlc, rqOj_AccptPlcFlgcd, rqOj_FldstObjFlgcd, rqOj_UndgAccptYn
+ 		)
+ 		VALUES
+ 		( 
+ 			#{suimRptNo},
+ 			#{rqOjOjSeqno}, #{rqOjBldSeqno}, #{rqOjOjSign}, #{rqOjOjTp}, #{rqOjRnk},
+ 			#{rqOjDtMtt}, #{rqOjDtAccptPlc}, #{rqOjAccptPlcFlgcd}, #{rqOjFldstObjFlgcd}, #{rqOjUndgAccptYn}
+ 		)
+ 	
+ 	</insert>
+ 	
+ 	<!-- 메리츠 일괄 등록 시 사원, 팀정보 추출 -->
+	<select id="getMbrDtl" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrBscVO">
+		
+		SELECT
+			a.team_id_main,
+			a.user_name,
+			IFNULL(a.user_no,'') user_no,
+			IFNULL(a.user_id,'') user_id,
+			b.team_name
+			
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+				a.team_id_main = b.team_id
+			and a.user_name = #{userName}
+		ORDER BY
+			user_no desc
+		LIMIT 1
+	</select>
+	
+	
+	
+	<!-- 메리츠 일괄 등록 보험사 직원, 팀정보 추출 -->
+	<select id="getPtnrMbrDtlForMeritzAll" parameterType="String" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		
+		SELECT
+			ptnr_tm_nm,
+			ptnr_mbr_no,
+			ptnr_mbr_nm,
+			ptnr_dept_id
+		FROM
+			top_ptnr_mbr_bsc
+		WHERE
+			ptnr_mbr_nm = #{ptnrMbrName}
+			and ptnr_id = '16'
+		ORDER BY
+			ptnr_mbr_no desc
+	</select>
+ 	
+ 	
+ 	<!--적부 보고서 보안 정보 추출 -->
+	<select id="getContractInfo" parameterType="java.util.HashMap" resultType="String">
+		
+		SELECT
+			${target}
+		FROM
+			<if test="ptnrId != ''">
+				<choose>
+					<when test="ptnrId == 10">
+						top_suitability_10
+					</when>
+					<when test="ptnrId == 12">
+						top_suitability_12
+					</when>
+					<when test="ptnrId == 17">
+						top_suitability_17
+					</when>
+					<when test="ptnrId == 18">
+						top_contract
+					</when>
+				</choose>
+			</if>
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			
+	</select>
+ 	
+ </mapper>

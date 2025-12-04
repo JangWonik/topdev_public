@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="empNmlstTmDtlMapper">
+
+	<select id="getTeamIF" resultType = "kr.co.toplac.topgeneral.EmpNmlstTmDtlVO">
+		SELECT team_name, team_interphone, team_telephone, team_fax, team_addr
+			  ,getTopTmBscCenterName(team_id) center_name
+		FROM top_tm_bsc 
+		WHERE team_id=#{team_id};
+	</select>
+	
+	<select id="getMemberAll" resultType = "kr.co.toplac.topgeneral.EmpNmlstTmDtlVO">
+		SELECT	
+			a.user_no, a.user_name, a.user_id, a.handphone, a.office_tel
+			, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+			, DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			, getTopTmBscTeamName(a.team_id_main) team_name
+			, getCodeValue('top_mbr_bsc','person_zone',a.person_zone) person_zone
+			
+			, CASE a.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15	
+				END AS new_work_order
+		FROM
+			(
+				SELECT
+					user_no
+				FROM top_mbr_bsc 
+				WHERE team_id_loc = #{team_id}
+				AND user_state != 1
+		
+				UNION ALL
+		
+				SELECT
+					user_no
+				FROM top_mbr_bsc_sub
+				WHERE team_id_main = #{team_id}
+			)GA LEFT JOIN top_mbr_bsc a ON GA.user_no =  a.user_no
+			ORDER BY new_work_order, a.work_type, a.work_level DESC, a.join_date
+	</select>
+
+	<select id="getMemberAll_20200624" resultType = "kr.co.toplac.topgeneral.EmpNmlstTmDtlVO">
+		SELECT	a.user_no, a.user_name, a.user_id, a.handphone, a.office_tel
+			, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+			, DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			, getTopTmBscTeamName(a.team_id_main) team_name
+			, CASE a.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15	
+				END AS new_work_order
+		FROM top_mbr_bsc a
+		WHERE a.user_state != 1
+		AND (a.team_id_loc = #{team_id} OR a.user_no = (SELECT user_no FROM top_mbr_bsc_sub WHERE team_id_main = #{team_id}) )
+		ORDER BY new_work_order, a.work_type, a.work_level DESC, a.join_date
+	</select>
+	
+	<select id="getMemberAll_20190412" resultType = "kr.co.toplac.topgeneral.EmpNmlstTmDtlVO">
+		SELECT	a.user_no, a.user_name, a.user_id, a.handphone, a.office_tel
+				, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+    			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+    			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+				, DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+				, b.team_name
+				, CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+		FROM top_mbr_bsc a, top_tm_bsc b
+		WHERE b.team_id = #{team_id}
+		AND b.team_id = a.team_id_loc
+		AND a.user_state != 1
+		ORDER BY new_work_order, a.work_type, a.work_level DESC, a.join_date
+	</select>
+
+</mapper>

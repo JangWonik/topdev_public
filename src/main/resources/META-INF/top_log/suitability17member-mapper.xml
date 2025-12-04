@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Suitability17MemberMapper">
+
+	<select id="Suit17_M" parameterType="java.util.List" resultType="kr.co.toplac.lslog.Suitability17MemberVO">
+		SELECT a.user_name name , a.user_no user_id
+		FROM top_mbr_bsc a
+		WHERE a.team_id_main=#{tmpTI}
+		AND ((a.user_state='1' AND a.out_date >= UNIX_TIMESTAMP(#{fromdate}))
+			OR (a.user_state!='1' AND a.join_date &lt; UNIX_TIMESTAMP(#{todate})))
+		ORDER BY a.work_type, a.work_level DESC, a.user_name ASC
+	</select>
+
+	<select id="Suit17_MList" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.Suitability17MemberVO">
+		select 
+		ifnull(reg_m, 0) reg_m, ifnull(reg_y, 0) reg_y, ifnull(endok_m, 0) endok_m, ifnull(endok_y, 0) endok_y, 
+		ifnull(endno_m, 0) endno_m, ifnull(endno_y, 0) endno_y, 
+		ifnull(endok_m + endno_m, 0) end_sum_m, ifnull(endok_y + endno_y, 0) end_sum_y, 
+		ifnull(rid_mi, 0) rid_mi, 
+		ifnull(price_g*40000, 0) price_g, ifnull(price_f*45000, 0) price_f, 
+		ifnull(price_g_b*90000, 0) price_g_b, ifnull(price_f_b*115000, 0) price_f_b, 
+		ifnull(price_g*40000 + price_f*45000 + price_g_b*90000 + price_f_b*115000, 0) price_sum
+		from
+		(select count(suim_rpt_no) reg_m 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and suim_rpt_state!='3' 
+		and reg_date >= unix_timestamp(#{fromdate}) and reg_date &lt; unix_timestamp(#{todate})
+		)a,
+		(select count(suim_rpt_no) reg_y 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and suim_rpt_state!='3' 
+		and reg_date >= unix_timestamp(#{fromYear}) and reg_date &lt; unix_timestamp(#{toYear})
+		)b,
+		(select count(suim_rpt_no) endok_m 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1='01' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate})
+		)c,
+		(select count(suim_rpt_no) endok_y 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1!='01' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate})
+		)d,
+		(select count(suim_rpt_no) endno_m 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1='01' 
+		and close_date >= unix_timestamp(#{fromYear}) and close_date &lt; unix_timestamp(#{toYear})
+		)e,
+		(select count(suim_rpt_no) endno_y 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1!='01' 
+		and close_date >= unix_timestamp(#{fromYear}) and close_date &lt; unix_timestamp(#{toYear})
+		)f,
+		(select count(suim_rpt_no) rid_mi 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and suim_rpt_state &lt; '2'
+		)g,
+		(select count(suim_rpt_no) price_g 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1='01' and bd_type='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and info_e='물적부(심사후)'
+		)h,
+		(select count(suim_rpt_no) price_f 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1='01' and bd_type!='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and info_e='물적부(심사후)'
+		)i,
+		(select count(suim_rpt_no) price_g_b 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1='01' and bd_type='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and info_e='물적부(심사전)'
+		)j,
+		(select count(suim_rpt_no) price_f_b 
+		from top_suitability_17 
+		where user_no = #{tmpUI} and report_1='01' and bd_type!='1' 
+		and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and info_e='물적부(심사전)'
+		)k;
+	</select>
+
+</mapper>

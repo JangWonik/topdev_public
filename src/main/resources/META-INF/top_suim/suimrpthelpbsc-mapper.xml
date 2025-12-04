@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="HelpBscMapper">
+
+	<select id="getHelpList" resultType="kr.co.toplac.topsuim.SuimRptHelpBscVO" parameterType="String">
+	
+		SELECT 
+			c.suim_rpt_no suimRptNo
+			, c.serial_no serialNo
+			, getTopTmBscTeamName(c.client_team) clientTm
+			, getTopTmBscTeamName(c.accept_team) acceptTm
+			, c.accept_team acceptTmId
+			, getTopMbrBscUserName(c.client_id) clientMbr
+			, getTopMbrBscUserName(c.accept_id) acceptMbr
+			, DATE_FORMAT(FROM_UNIXTIME(c.reg_date), '%Y-%m-%d') regDate
+			, DATE_FORMAT(FROM_UNIXTIME(c.end_date), '%Y-%m-%d') endDate  
+			, c.help_state helpState 
+			, c.help_memo helpMemo 
+			, c.help_result helpResult
+			, c.traffic_fee trafficFee 
+			, c.chart_fee chartFee 
+			, c.price_total priceTotal 
+			, c.help_file helpFile
+			
+		FROM
+			top_rpt_help c
+		WHERE
+			c.suim_rpt_no = #{suimRptNo}
+		
+	</select>
+	
+	
+	<select id="cntRpt" resultType="Integer" >
+		
+		SELECT count(suim_rpt_no)
+		FROM
+			top_rpt_help
+	</select>
+	
+	<select id="getHelpListForBookListCnt" resultType="int" parameterType="java.util.HashMap"> 
+		SELECT 
+			COUNT(*) AS nCnt
+		FROM
+			top_rpt_help c, top_rpt_head a
+		WHERE
+			a.suim_rpt_no = c.suim_rpt_no
+			<if test='srchSuimAcceptNo != NULL and srchSuimAcceptNo !=""'>
+				AND a.suim_accept_no like ('%${srchSuimAcceptNo}%')					
+			</if>
+	</select>
+	
+	<select id="getHelpListForBookList" resultType="kr.co.toplac.topsuim.SuimRptHelpBscVO" parameterType="java.util.HashMap">
+			SELECT 
+				c.suim_rpt_no suimRptNo
+				, c.serial_no serialNo
+				, getTopTmBscTeamName(c.client_team) clientTm
+				, getTopTmBscTeamName(c.accept_team) acceptTm
+				, c.accept_team acceptTmId
+				, getTopMbrBscUserName(c.client_id) clientMbr
+				, getTopMbrBscUserName(c.accept_id) acceptMbr
+				, DATE_FORMAT(FROM_UNIXTIME(c.reg_date), '%Y-%m-%d') regDate
+				, DATE_FORMAT(FROM_UNIXTIME(c.end_date), '%Y-%m-%d') endDate  
+				, c.help_state helpState 
+				, c.help_memo helpMemo 
+				, c.help_result helpResult
+				, c.traffic_fee trafficFee 
+				, c.chart_fee chartFee 
+				, c.price_total priceTotal 
+				, a.suim_accept_no acceptNo
+				, a.beneficiary_nm beneficiaryNm
+<!-- 				, getTopRptEditYN(c.client_team, #{user_no_session}) -->
+<!-- 					+ getTopRptEditYN(c.accept_team, #{user_no_session}) editYN -->
+			FROM
+				top_rpt_help c, top_rpt_head a
+			WHERE
+				a.suim_rpt_no = c.suim_rpt_no
+				<if test='srchSuimAcceptNo != NULL and srchSuimAcceptNo !=""'>
+					AND a.suim_accept_no like ('%${srchSuimAcceptNo}%')					
+				</if>
+			ORDER BY regDate desc, a.suim_rpt_no DESC
+			LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<insert id="rptHelpIns" parameterType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+		
+		INSERT INTO top_rpt_help
+		
+		(
+			suim_rpt_no, reg_date , help_memo , accept_team, client_id, client_team
+		)
+		
+		VALUES
+		
+		(
+			#{suimRptNo}, unix_timestamp(#{regDate}), #{helpMemo},#{acceptTm}, #{clientMbr} ,#{clientTm}
+		)
+		
+	</insert>
+	
+	<select id="topTeamList" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT
+			team_id, team_name, team_level
+		  FROM
+			top_tm_bsc
+		WHERE team_level != 2 
+		ORDER BY 
+			team_group_order desc, team_order desc
+	</select>
+	
+	<select id="getJustIns" parameterType="String" resultType="String">
+	
+		SELECT 
+			max(serial_no)
+		FROM
+			top_rpt_help
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			
+	</select>
+	
+	
+	<select id="getJustInsVo" resultType="kr.co.toplac.topsuim.SuimRptHelpBscVO" parameterType="String">
+	
+		SELECT 
+			c.suim_rpt_no suimRptNo
+			, c.serial_no serialNo
+			, getTopTmBscTeamName(c.client_team) clientTm
+			, getTopTmBscTeamName(c.accept_team) acceptTm
+			, c.accept_team acceptTmId
+			, getTopMbrBscUserName(c.client_id) clientMbr
+			, getTopMbrBscUserName(c.accept_id) acceptMbr
+			, DATE_FORMAT(FROM_UNIXTIME(c.reg_date), '%Y-%m-%d') regDate
+			, DATE_FORMAT(FROM_UNIXTIME(c.end_date), '%Y-%m-%d') endDate  
+			, c.help_state helpState 
+			, c.help_memo helpMemo 
+			, c.help_result helpResult
+			, c.traffic_fee trafficFee 
+			, c.chart_fee chartFee 
+			, c.price_total priceTotal 
+			
+		FROM
+			top_rpt_help c
+		WHERE
+			c.serial_no = #{justInsSerial}
+		
+	</select>
+	
+	<select id = "getAcceptMbrList" resultType="kr.co.toplac.topsuim.SuimRptHelpAcceptMbrVO" parameterType="String">
+ 	
+ 		SELECT
+			user_no, user_name
+		FROM
+			top_mbr_bsc
+		WHERE
+			team_id_main = #{acceptTm}
+			and user_state != 1
+ 	
+ 	</select>
+ 	
+ 	<select id="getAcceptMbr" parameterType="String" resultType="String">
+	
+		SELECT 
+			accept_id
+		FROM
+			top_rpt_help
+		WHERE
+			serial_no = #{serialNo}
+			
+	</select>
+	
+	
+	<update id="uptHelpOne" parameterType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+	
+		UPDATE
+			top_rpt_help
+		SET
+			 accept_id = #{acceptMbr}
+			,help_memo = #{helpMemo}
+			,help_result = #{helpResult}
+			,traffic_fee = #{trafficFee}
+			,chart_fee = #{chartFee}
+			,price_total = #{priceTotal}
+			,help_state = #{helpState}
+			
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<select id="getUdtedHelp" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+	
+		SELECT
+			  getTopMbrBscUserName(accept_id) acceptMbr
+			 ,traffic_fee trafficFee 
+			 ,chart_fee chartFee 
+			 ,price_total priceTotal 
+			 ,help_state helpState 
+		FROM
+			top_rpt_help
+		WHERE
+			serial_no = #{serialNo}
+	
+	</select>
+	
+	
+	<select id="getHelpOneForDtl" resultType="kr.co.toplac.topsuim.SuimRptHelpCompositeVO" parameterType="java.util.HashMap">
+		SELECT 
+			c.suim_rpt_no suimRptNo
+			, c.serial_no serialNo
+			, c.client_team clientTmId
+			, getTopTmBscTeamName(c.client_team) clientTm
+			, getTopTmBscTeamName(c.accept_team) acceptTm
+			, c.accept_team acceptTmId
+			, c.accept_id acceptMbrId
+			, c.client_id clientMbrId
+			, getTopMbrBscUserName(c.client_id) clientMbr
+			, getTopMbrBscUserName(c.accept_id) acceptMbr
+			, DATE_FORMAT(FROM_UNIXTIME(c.reg_date), '%Y-%m-%d') regDate
+			, DATE_FORMAT(FROM_UNIXTIME(c.end_date), '%Y-%m-%d') endDate  
+			, c.help_state helpState 
+			, c.help_memo helpMemo 
+			, c.help_result helpResult
+			, c.traffic_fee trafficFee 
+			, c.chart_fee chartFee 
+			, c.price_total priceTotal 
+			, c.help_file helpFile 
+			, a.suim_accept_no acceptNo
+			, a.beneficiary_nm beneficiaryNm
+			, getTopTmBscTeamName(a.team_id) rptTm
+			, getTopMbrBscUserName(a.user_no) rptMbr
+			, getTopPtnrBscPtnrName(a.ptnr_id) ptnrName
+			, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnrMbrNm
+			, a.policyholder_nm policyholderNm
+			, a.beneficiary_nm beneficiaryNm
+			, a.damaged_nm damagedNm
+			, b.policyholder_tel policyholderTel
+			, b.beneficiary_tel beneficiaryTel
+			, b.damaged_tel damagedTel
+			, getTopRptEditYN2(c.suim_rpt_no, c.accept_team, #{user_no_session}) editYN
+			<if test="acceptId != ''">
+				, d.handphone rptUserPhone 
+			</if>
+			
+		FROM
+			top_rpt_help c, top_rpt_head a, top_rpt_body b
+			
+			<if test="acceptId != ''">
+			, top_mbr_bsc d
+			</if>
+			
+		WHERE
+			a.suim_rpt_no = c.suim_rpt_no
+			and a.suim_rpt_no = b.suim_rpt_no 
+			and c.serial_no = #{serialNo}
+			
+			<if test="acceptId != ''">
+				and c.accept_id = d.user_no 
+			</if>
+			
+	</select>
+	
+	<select id="getClientPhone" parameterType="String" resultType="String">
+	
+		SELECT
+			handphone 
+		FROM
+			top_mbr_bsc
+		WHERE
+			user_no = #{clientMbrId}
+	
+	</select>
+	
+	<delete id="delHelpOneForDtl" parameterType="String" >
+	
+		DELETE FROM
+			top_rpt_help
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<select id="getAcceptMbrForDtl" parameterType="String" resultType="String">
+	
+		SELECT
+			accept_id 
+		FROM
+			top_rpt_help
+		WHERE
+			serial_no = #{serialNo}
+	
+	</select>
+	
+	<select id="getHelpListForRptEnd" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+	
+		SELECT
+			accept_id acceptId 
+		FROM
+			top_rpt_help
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<select id="getCollaboListForRptEnd" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptCollaboVO">
+	
+		SELECT
+			user_id userId
+		FROM
+			top_rpt_collabo
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			and del_state != 1
+	
+	</select>
+	
+	<select id="getHelpNotEndCountForRptEnd" parameterType="String" resultType="Integer">
+	
+		SELECT
+			count(serial_no) 
+		FROM
+			top_rpt_help
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			and help_state != 3
+	
+	</select>
+	
+	<select id="getHelpCountForRptEnd" parameterType="String" resultType="Integer">
+	
+		SELECT
+			count(serial_no) 
+		FROM
+			top_rpt_help
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<!-- 협조건 완료 -->
+	<update id="helpDone" parameterType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+	
+		UPDATE
+			top_rpt_help
+		SET
+			 help_state = 3
+			 ,end_date = unix_timestamp(now())
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- 협조건 완료 취소 -->
+	<update id="helpReturn" parameterType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+		UPDATE
+			top_rpt_help
+		SET
+			 help_state = 0
+		WHERE
+			serial_no = #{serialNo}
+	</update>
+	
+	<!-- 협조건 대기->완료 -->
+	<update id="helpConfirm" parameterType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+		UPDATE
+			top_rpt_help
+		SET
+			 help_state = 3
+			 ,endaft_date = unix_timestamp(now())
+		WHERE
+			serial_no = #{serialNo}
+	</update>
+	
+	
+	<!-- 협조건 완료 요청 -> 취소 -->
+	<update id="helpCancel" parameterType="kr.co.toplac.topsuim.SuimRptHelpBscVO">
+		UPDATE
+			top_rpt_help
+		SET
+			 help_state = 1
+			 ,endaft_date = unix_timestamp(now())
+		WHERE
+			serial_no = #{serialNo}
+	</update>
+	
+	<!-- 협조건 완료 -->
+	<update id="helpFileUp" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_rpt_help
+		SET
+			 file_path = #{filePath},
+			 help_file = #{fileName}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- 협조건 파일 다운로드용 파일패스 추출 -->
+	<select id="helpFilePathForDown" parameterType="String" resultType="String">
+	
+		SELECT
+			CONCAT(file_path, help_file) path 
+		FROM
+			top_rpt_help
+		WHERE
+			serial_no = #{key}
+	
+	</select>
+	
+	<!-- 협조건 파일 삭제 후 DB 업데이트 -->
+	<update id="delRptHelpFile" parameterType="String">
+	
+		UPDATE
+			top_rpt_help
+		SET
+			 help_file = ''
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+</mapper>

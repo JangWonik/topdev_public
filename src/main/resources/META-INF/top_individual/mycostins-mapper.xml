@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="MyCostIns">
+	
+	<select id="getMyInfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+	
+		SELECT
+			a.user_no,
+			a.user_name,
+			a.home_address,
+			a.team_id_insa,
+			b.team_name,
+			a.work_level work_level_cd,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+			a.user_no = #{user_no} and
+			a.team_id_insa = b.team_id
+			
+	</select>
+
+	<select id="getMyCostInsList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+		
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date
+		
+		from
+			top_cost_item
+		where
+			<choose>
+				<when test="cost_class_no == 0">
+					user_no = #{user_no} and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+				</when>
+				<otherwise>
+					user_no = #{user_no} and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+					and cost_class_no = #{cost_class_no}
+					
+				</otherwise>
+			</choose>
+	</select>
+	
+	<select id="getMyHelpRptList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT a.serial_no, a.suim_rpt_no, a.help_state
+		, a.traffic_fee, a.chart_fee, a.price_total
+		, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+		, a.end_date, DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date_fmt
+		, a.client_team, getTopTmBscTeamName(a.client_team) client_team_nm
+		, a.client_id, getTopMbrBscUserName(a.client_id) client_id_nm
+		, a.accept_team, getTopTmBscTeamName(a.accept_team) accept_team_nm
+		, a.accept_id, getTopMbrBscUserName(a.accept_id) accept_id_nm
+		, b.suim_accept_no, b.beneficiary_nm
+		FROM top_rpt_help a, top_rpt_head b
+		WHERE a.client_id=#{user_no} AND a.help_state='3'
+		AND a.end_date >= UNIX_TIMESTAMP(#{fromdate}) AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day))
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY end_date DESC
+;
+	</select>
+	
+	<select id="getMyHelpRptListAccept" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT a.serial_no, a.suim_rpt_no, a.help_state
+		, a.traffic_fee, a.chart_fee, a.price_total
+		, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+		, a.end_date, DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date_fmt
+		, a.client_team, getTopTmBscTeamName(a.client_team) client_team_nm
+		, a.client_id, getTopMbrBscUserName(a.client_id) client_id_nm
+		, a.accept_team, getTopTmBscTeamName(a.accept_team) accept_team_nm
+		, a.accept_id, getTopMbrBscUserName(a.accept_id) accept_id_nm
+		, b.suim_accept_no, b.beneficiary_nm
+		FROM top_rpt_help a, top_rpt_head b
+		WHERE a.accept_id=#{user_no} AND a.help_state='3'
+		AND a.end_date >= UNIX_TIMESTAMP(#{fromdate}) AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day))
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY end_date DESC
+;
+		
+	</select>
+	<select id="getMyHelpRptListSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT a.serial_no, a.suim_rpt_no, a.help_state
+		, a.traffic_fee, a.chart_fee, sum(a.price_total) price_total
+		, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+		, a.end_date, DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date_fmt
+		, a.client_team, getTopTmBscTeamName(a.client_team) client_team_nm
+		, a.client_id, getTopMbrBscUserName(a.client_id) client_id_nm
+		, a.accept_team, getTopTmBscTeamName(a.accept_team) accept_team_nm
+		, a.accept_id, getTopMbrBscUserName(a.accept_id) accept_id_nm
+		, b.suim_accept_no, b.beneficiary_nm
+		FROM top_rpt_help a, top_rpt_head b
+		WHERE a.client_id=#{user_no} AND a.help_state='3'
+		AND a.end_date >= UNIX_TIMESTAMP(#{fromdate}) AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day))
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY end_date DESC
+;
+	</select>
+	<select id="getMyHelpRptListAcceptSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT a.serial_no, a.suim_rpt_no, a.help_state
+		, a.traffic_fee, a.chart_fee, sum(a.price_total) price_total
+		, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+		, a.end_date, DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date_fmt
+		, a.client_team, getTopTmBscTeamName(a.client_team) client_team_nm
+		, a.client_id, getTopMbrBscUserName(a.client_id) client_id_nm
+		, a.accept_team, getTopTmBscTeamName(a.accept_team) accept_team_nm
+		, a.accept_id, getTopMbrBscUserName(a.accept_id) accept_id_nm
+		, b.suim_accept_no, b.beneficiary_nm
+		FROM top_rpt_help a, top_rpt_head b
+		WHERE a.accept_id=#{user_no} AND a.help_state='3'
+		AND a.end_date >= UNIX_TIMESTAMP(#{fromdate}) AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day))
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY end_date DESC
+;
+	</select>
+	
+	<select id="getMyCostDepositList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+		
+			cost_deposit_no,
+			team_id,
+			user_no,
+			cost_sum_mbr_ins,
+			DATE_FORMAT(FROM_UNIXTIME(date_mbr_ins), '%Y-%m-%d') date_mbr_ins,
+			amt_hq_aprv,
+			DATE_FORMAT(FROM_UNIXTIME(date_hq_aprv), '%Y-%m-%d') date_hq_aprv,
+			amt_finance_aprv,
+			DATE_FORMAT(FROM_UNIXTIME(date_finance_aprv), '%Y-%m-%d') date_finance_aprv,
+			amt_deposit,
+			DATE_FORMAT(FROM_UNIXTIME(date_deposit), '%Y-%m-%d') date_deposit,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date,
+			user_no_hq_aprv,
+			user_no_finance_aprv
+		
+		from
+			top_cost_deposit
+		where
+			user_no = #{user_no} and (date_mbr_ins>=UNIX_TIMESTAMP(#{fromdate}) and date_mbr_ins &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+	
+	<select id="getMyCostDepositInfo" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			cost_deposit_no,
+			team_id,
+			user_no,
+			cost_sum_mbr_ins,
+			DATE_FORMAT(FROM_UNIXTIME(date_mbr_ins), '%Y-%m-%d') date_mbr_ins,
+			amt_hq_aprv,
+			DATE_FORMAT(FROM_UNIXTIME(date_hq_aprv), '%Y-%m-%d') date_hq_aprv,
+			amt_finance_aprv,
+			DATE_FORMAT(FROM_UNIXTIME(date_finance_aprv), '%Y-%m-%d') date_finance_aprv,
+			amt_deposit,
+			DATE_FORMAT(FROM_UNIXTIME(date_deposit), '%Y-%m-%d') date_deposit,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date,
+			user_no_hq_aprv,
+			user_no_finance_aprv
+		
+		from
+			top_cost_deposit
+		where
+			user_no = #{user_no} and (date_mbr_ins>=UNIX_TIMESTAMP(#{fromdate}) and date_mbr_ins &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+	
+	<select id="getMyCostSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			
+			ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea,
+			ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		
+		from
+			top_cost_item
+		where
+			<choose>
+				<when test="cost_class_no == 0">
+					user_no = #{user_no} and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+				</when>
+				<otherwise>
+					user_no = #{user_no} and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+					and cost_class_no = #{cost_class_no}
+				</otherwise>
+			</choose>
+	</select>
+	
+	<insert id = "myCostInsAdd" parameterType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" >
+		INSERT INTO top_cost_item
+		(
+			cost_class_no,
+			team_id,
+			user_no,
+			cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			cost_reg_date,
+			cost_aprv_state
+		)
+		VALUES
+		(
+			#{cost_class_no}, 
+			#{team_id}, 
+			#{user_no},
+			unix_timestamp(#{cost_occur_date}), 
+			#{cost_pay_place}, 
+			#{cost_involved_com},
+			#{cost_involved_man},
+			#{cost_memo},
+			#{cost_pay_amt},
+			#{cost_pay_type},
+			#{cost_bill_ea},
+			unix_timestamp(now()),
+			0
+		)
+	</insert>
+	
+	<!-- 차기 영수증 파일 시리얼 No 가져오기 -->
+	<select id="nextMyCostBillFileSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_cost_file'
+	
+	</select>
+	
+	<insert id = "myCostDepositAdd" parameterType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" >
+		INSERT INTO top_cost_deposit
+		(
+			team_id,
+			user_no,
+			cost_sum_mbr_ins,
+			date_mbr_ins,
+			reg_date
+		)
+		VALUES
+		(
+			#{team_id}, 
+			#{user_no},
+			#{sum_cost},
+			unix_timestamp(now()),
+			unix_timestamp(now())
+		)
+	</insert>
+	
+	<!-- 영수증 원본 파일 -->
+	<select id="myCostBillFileList" parameterType="java.util.HashMap" resultType="kr.co.toplac.topindividual.TopMyCostBillFileVO">
+	
+		SELECT
+			serial_no serialNo,
+			cost_deposit_no,
+			file_path filePath,
+			file_name fileName,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+		FROM
+			top_cost_file
+		WHERE
+			cost_deposit_no = #{cost_deposit_no}
+	
+	</select>
+	
+	<select id="selCardList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date
+		from
+			top_cost_item
+		where
+			cost_pay_type = 1
+			and cost_class_no != '999'
+			and cost_gubun is null
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no ASC, cost_occur_date
+	</select>
+
+	<select id="selAddCardList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date
+		from
+			top_cost_item
+		where
+			cost_pay_type = 1
+			and cost_gubun = 3
+			and user_no = #{user_no}
+			and (cost_reg_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no ASC, cost_occur_date
+	</select>
+	
+	<select id="selCashList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date
+		from
+			top_cost_item
+		where
+			cost_pay_type = 0
+			and cost_class_no != '999'
+			and cost_gubun is null
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no ASC, cost_occur_date
+	</select>
+
+	<select id="selAddCashList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date
+		from
+			top_cost_item
+		where
+			cost_pay_type = 0
+			and cost_gubun = 3
+			and user_no = #{user_no}
+			and (cost_reg_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no ASC, cost_occur_date
+	</select>
+	
+	<select id="selAddMyCashList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date
+		from
+			top_cost_item
+		where
+			cost_pay_type = 0
+			and cost_gubun = 3
+			and user_no = #{user_no}
+			and (cost_reg_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no ASC, cost_occur_date
+	</select>
+	
+	<select id="selAddMyCardList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+		SELECT
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date
+		from
+			top_cost_item
+		where
+			cost_pay_type = 1
+			and cost_gubun = 3
+			and user_no = #{user_no}
+			and (cost_reg_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no ASC, cost_occur_date
+	</select>
+	
+	<select id="selClaimCardList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+		
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date,
+			cost_class_no_claim,
+			cost_distance,
+			cost_suim_accept_no
+		
+		from
+			top_cost_item
+		where
+			
+			cost_pay_type = 1
+			and cost_class_no = '999'
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no_claim ASC, cost_occur_date ASC
+	</select>
+	
+	<select id="selClaimCashList" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+		
+			cost_no,
+			cost_class_no,
+			team_id,
+			user_no,
+			DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date,
+			cost_pay_place,
+			cost_involved_com,
+			cost_involved_man,
+			cost_memo,
+			cost_pay_amt,
+			cost_pay_type,
+			cost_bill_ea,
+			DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date,
+			cost_aprv_state,
+			cost_aprv_user_no,
+			cost_deposit_amt,
+			DATE_FORMAT(FROM_UNIXTIME(cost_deposit_date), '%Y-%m-%d') cost_deposit_date,
+			cost_class_no_claim,
+			cost_distance,
+			cost_suim_accept_no
+		
+		from
+			top_cost_item
+		where
+			
+			cost_pay_type = 0
+			and cost_class_no = '999'
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+			ORDER BY cost_class_no_claim ASC, cost_occur_date ASC
+	</select>
+	
+	<select id="getMyCostCardSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			
+			ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea,
+			ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		
+		from
+			top_cost_item
+		where
+			cost_pay_type = 1
+			and cost_class_no != '999'
+			and cost_gubun is null
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+
+	<select id="getMyCostAddCardSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			
+			ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea,
+			ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		
+		from
+			top_cost_item
+		where
+			cost_pay_type = 1
+			and cost_gubun = 3
+			and user_no = #{user_no}
+			and (cost_reg_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+	
+	<select id="getMyCostCashSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			
+			ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea,
+			ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		
+		from
+			top_cost_item
+		where
+			cost_pay_type = 0
+			and cost_class_no != '999'
+			and cost_gubun is null
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+
+	<select id="getMyCostAddCashSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			
+			ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea,
+			ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		
+		from
+			top_cost_item
+		where
+			cost_pay_type = 0
+			and cost_gubun = 3
+			and user_no = #{user_no}
+			and (cost_reg_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+	
+	<select id="getMyCostClaimCardSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			
+			ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea,
+			ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		
+		from
+			top_cost_item
+		where
+			cost_pay_type = 1
+			and cost_class_no = '999'
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+	
+	<select id="getMyCostClaimCashSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			
+			ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea,
+			ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		
+		from
+			top_cost_item
+		where
+			cost_pay_type = 0
+			and cost_class_no = '999'
+			and user_no = #{user_no}
+			and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+	
+	<select id="MyCostSum" resultType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO" parameterType="java.util.HashMap">
+	
+		SELECT ifnull(sum(cost_bill_ea), 0) sum_cost_bill_ea
+		      ,ifnull(sum(cost_pay_amt), 0) sum_cost_pay_amt
+		  from top_cost_item
+		 where user_no = #{user_no}
+		   and (cost_occur_date>=UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{todate},INTERVAL 1 day)))
+	</select>
+
+</mapper>

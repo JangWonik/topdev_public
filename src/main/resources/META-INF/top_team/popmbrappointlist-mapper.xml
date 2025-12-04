@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrAppointMapper">
+	
+	<!-- 상벌사항추가 -->
+	<insert id="insMbrAward" parameterType="HashMap">
+		INSERT INTO top_mbr_award(
+			user_no
+			,team_id
+			,work_level
+			,award_flag
+			,award_content
+			,award_memo
+			,award_date
+			,reg_user_no
+			,reg_date
+			<if test="award_org_file != NULL">
+			,award_org_file
+			,award_enc_file
+			</if>
+		)VALUES(
+			#{user_no}
+			,#{team_id}
+			,#{work_level}
+			,#{award_flag}
+			,#{award_content}
+			,#{award_memo}
+			,#{award_date}
+			,#{reg_user_no}
+			,now()
+			<if test="award_org_file != NULL">
+			,#{award_org_file}
+			,#{award_enc_file}
+			</if>
+		)		
+	</insert>
+	
+	<!-- 발령사항 -->
+	<select id="getMbrAppoint" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrAppointVO">
+		select appoint_no 
+			  ,DATE_FORMAT(FROM_UNIXTIME(appoint_date), '%Y-%m-%d') appoint_date
+			  ,appoint_depart
+			  ,appoint_team_id
+			  ,appoint_work_level
+			  ,appoint_work_level_cd
+			  ,appoint_work_rank
+			  ,appoint_work_rank_cd
+			  ,appoint_work_type
+			  ,appoint_work_type_cd
+			  ,appoint_work_job
+			  ,appoint_work_job_cd
+			  ,appoint_work_job_tm_type
+			  ,appoint_place
+			  ,appoint_comment
+			  ,appoint_etc
+			  ,user_no
+		  from top_mbr_appoint
+		 where user_no = #{_parameter}
+		 ORDER BY appoint_date
+	</select>	
+	
+	<insert id="insMbrAppoint" parameterType="HashMap">
+		INSERT INTO top_mbr_appoint  
+		(
+			 appoint_date
+			,appoint_depart
+			,appoint_team_id
+			,appoint_work_level
+			,appoint_work_level_cd
+			,appoint_work_rank
+			,appoint_work_rank_cd
+			,appoint_work_type
+			,appoint_work_type_cd
+			,appoint_work_job
+			,appoint_work_job_cd
+			,appoint_work_job_tm_type
+			,appoint_place
+			,appoint_comment
+			,appoint_etc
+			,user_no
+		)
+		VALUES
+		(
+			 UNIX_TIMESTAMP(#{appointDate})
+			,#{appointDepart}
+			,#{appointDepartCd}
+			,#{appointWorkLevel}
+			,#{appointWorkLevelCd}
+			,#{appointWorkRank}
+			,#{appointWorkRankCd}
+			,#{appointWorkType}
+			,#{appointWorkTypeCd}
+			,#{appointWorkJob}
+			,#{appointWorkJobCd}
+			,#{appointWorkJobTmType}
+			,#{appointPlace}
+			,#{appointComment}
+			,#{appointEtc}
+			,#{userNo}
+		)
+	</insert>
+	
+	<!-- 상벌 파일정보 삭제 -->
+	<update id="udtMbrAwardFile" parameterType="HashMap">
+		UPDATE top_mbr_award SET
+			award_org_file = ''
+			,award_enc_file = ''
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now() 
+		WHERE akey = #{akey}
+	</update>
+	
+	<!-- 상벌사항 수정 -->
+	<update id="udtMbrAward" parameterType="HashMap">
+		UPDATE top_mbr_award SET
+			team_id = #{team_id}
+			,work_level = #{work_level}
+			,award_flag = #{award_flag} 
+			,award_content = #{award_content} 
+			,award_memo = #{award_memo} 
+			,award_date = #{award_date}
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now() 
+			<if test="award_org_file != NULL">
+			,award_org_file = #{award_org_file}
+			,award_enc_file = #{award_enc_file}
+			</if>
+		WHERE akey = #{akey}
+	</update>
+	
+	<update id="udtMbrAppoint" parameterType="HashMap">
+		UPDATE top_mbr_appoint
+		   SET appoint_date = UNIX_TIMESTAMP(#{appointDate})
+		   	  ,appoint_depart = #{appointDepart}
+		   	  ,appoint_team_id = #{appointTeamId}
+		   	  ,appoint_work_level = #{appointWorkLevel}
+		   	  ,appoint_work_level_cd = #{appointWorkLevelCd}
+		   	  ,appoint_work_rank = #{appointWorkRank}
+		   	  ,appoint_work_rank_cd = #{appointWorkRankCd}
+		   	  ,appoint_work_type = #{appointWorkType}
+		   	  ,appoint_work_type_cd = #{appointWorkTypeCd}
+		   	  ,appoint_work_job = #{appointWorkJob}
+		   	  ,appoint_work_job_cd = #{appointWorkJobCd}
+		   	  ,appoint_place = #{appointPlace}
+		   	  ,appoint_comment = #{appointComment}
+		   	  ,appoint_etc = #{appointEtc}
+		 WHERE appoint_no = #{appointNo}
+	</update>	
+	
+	<update id="udtMbrBscFromAppoint" parameterType="HashMap">
+		UPDATE top_mbr_bsc
+		   SET work_level = #{appointWorkLevelCd}
+		   	  ,work_type = #{appointWorkTypeCd}
+		   	  ,work_rank = #{appointWorkRankCd}
+		   	  ,work_job = #{appointWorkJobCd}
+		   	  ,team_id_loc = #{appointDepartCd}
+		   	  <if test="teamDiff != 1">
+		   	  	,team_id_main = #{appointDepartCd}
+		   	  </if>
+		WHERE user_no = #{userNo}
+	</update>
+	
+	<delete id="delMbrAward" parameterType="HashMap">
+		DELETE 
+		  FROM top_mbr_award
+		 WHERE akey = #{akey} 
+	</delete>	
+	
+	<delete id="delMbrAppoint" parameterType="HashMap">
+		DELETE 
+		  FROM top_mbr_appoint
+		 WHERE appoint_no = #{appointNo} 
+	</delete>
+	
+	<select id="getMbrTeamId" parameterType="HashMap" resultType="HashMap">
+		SELECT team_id_main teamIdMain
+			  ,team_id_loc teamIdLoc
+		  FROM top_mbr_bsc
+		 WHERE user_no = #{userNo}
+	</select>
+	
+	<select id="getMbrWorkCount" parameterType="String" resultType="integer">
+		SELECT
+			count(*) as Cnt
+		FROM top_mbr_work
+		WHERE user_no = #{userNo}		
+	</select>
+	
+	<select id="getMbrCareCount" parameterType="String" resultType="integer">
+		SELECT
+			count(*) as Cnt
+		FROM top_mbr_care
+		WHERE user_no = #{user_no}
+	</select>
+	
+	<select id="getMbrCare" parameterType="String" resultType="hashmap">
+		SELECT
+			care_no
+			,user_no
+			,care_team_id
+			,getTopTmBscTeamName(care_team_id) as care_team_id_val
+			,care_level
+			,getCodeValue('top_mbr_bsc','work_level',care_level) as care_level_val
+			,care_sdate			
+			,DATE_FORMAT(care_sdate, '%Y-%m-%d') as care_sdate_fmt
+			,care_edate
+			,DATE_FORMAT(care_edate, '%Y-%m-%d') as care_edate_fmt
+			,care_worktime
+			,care_comment
+			,care_etc
+			,reg_date
+			,reg_user_no
+		FROM top_mbr_care
+		WHERE user_no = #{user_no}
+		ORDER BY care_sdate
+	</select>
+	
+	<!-- 휴복직 사항 -->
+	<select id="getMbrWork" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrWorkVO">
+		SELECT
+			work_no
+			,user_no
+			,work_team_id
+			,getTopTmBscTeamName(work_team_id) as work_team_id_val
+			,work_level
+			,getCodeValue('top_mbr_bsc','work_level',work_level) as work_level_val		
+			,work_sdate
+			,DATE_FORMAT(work_sdate, '%Y-%m-%d') as work_sdate_fmt
+			,work_edate
+			,DATE_FORMAT(work_edate, '%Y-%m-%d') as work_edate_fmt			
+			,leave_type
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val			
+			,work_comment			
+			,work_etc
+			,reg_date
+			,reg_user_no
+		  FROM top_mbr_work
+		 WHERE user_no = #{user_no}
+		 ORDER BY work_sdate
+	</select>
+	
+	<select id="getMbrAwardFile" parameterType="String" resultType="HashMap">
+		SELECT
+			akey
+			,award_org_file
+			,award_enc_file
+		FROM top_mbr_award
+		WHERE akey = #{akey}
+	</select>
+	
+	<!-- 상벌 사항 -->
+	<select id="getMbrAward" parameterType="String" resultType="HashMap">
+		SELECT
+			akey
+			,user_no
+			,team_id
+			,getTopTmBscTeamName(team_id) as team_name
+			,work_level
+			,getCodeValue('top_mbr_bsc','work_level',work_level) as work_level_nm
+			,award_flag
+			,award_content
+			,award_memo
+			,award_date
+			,DATE_FORMAT(award_date, '%Y-%m-%d') award_date_fmt
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) reg_user_nm
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') reg_date_fmt
+			,award_org_file
+			,award_enc_file
+		FROM top_mbr_award
+		WHERE user_no = #{_parameter}
+		ORDER BY akey DESC	
+	</select>
+	
+	<!-- 진급 사항 -->
+	<select id="getMbrPosition" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrAppointVO">
+		SELECT DATE_FORMAT(FROM_UNIXTIME(position_date), '%Y-%m-%d') position_date
+			  ,position_depart
+			  ,position_team_id
+			  ,position_work_level
+			  ,position_work_level_cd
+			  ,position_work_rank
+			  ,position_work_rank_cd
+			  ,position_work_type
+			  ,position_work_type_cd
+			  ,position_place
+			  ,position_comment
+			  ,position_etc
+			  ,user_no
+			  ,position_no
+		  FROM top_mbr_position
+		 WHERE user_no = #{_parameter}
+		 ORDER BY position_date
+	</select>
+	
+	<insert id="insMbrCare" parameterType="HashMap">
+		INSERT INTO top_mbr_care
+		(
+			user_no
+			,care_team_id
+			,care_level
+			,care_sdate
+			,care_edate
+			,care_worktime
+			,care_comment
+			,care_etc
+			,reg_date
+			,reg_user_no
+		)
+		VALUES
+		(
+			#{userNo}
+			,#{careTeamId}
+			,#{careLevel}
+			,#{careSdate}
+			,#{careEdate}
+			,#{careWorktime}
+			,#{careComment}
+			,#{careEtc}
+			,now()
+			,#{reg_user_no}
+		)
+	</insert>
+	
+	<insert id="insMbrWork" parameterType="HashMap">
+		INSERT INTO top_mbr_work
+		(
+			user_no
+			,work_team_id
+			,work_level
+			,work_sdate
+			<if test="workEdate != NULL and workEdate != ''">
+			,work_edate
+			</if>
+			,leave_type			
+			,work_comment			
+			,work_etc
+			,reg_date
+			,reg_user_no	
+		)
+		VALUES
+		(
+			#{userNo}
+			,#{workTeamId}
+			,#{workLevel}
+			,#{workSdate}
+			<if test="workEdate != NULL and workEdate != ''">
+			,#{workEdate}
+			</if>
+			,#{leaveType}			
+			,#{workComment}			
+			,#{workEtc}
+			,now()
+			,#{reg_user_no}
+		)	
+	</insert>
+	
+	<insert id="insMbrPosition" parameterType="HashMap">
+		INSERT INTO top_mbr_position
+		(
+			 position_date
+			,position_depart
+			,position_team_id
+			,position_work_level
+			,position_work_level_cd
+			,position_work_rank
+			,position_work_rank_cd
+			,position_work_type
+			,position_work_type_cd
+			,position_place
+			,position_comment
+			,position_etc
+			,user_no
+		)
+		VALUES
+		(
+			 UNIX_TIMESTAMP(#{positionDate})
+			,#{positionDepart}
+			,#{positionDepartCd}
+			,#{positionWorkLevel}
+			,#{positionWorkLevelCd}
+			,#{positionWorkRank}
+			,#{positionWorkRankCd}
+			,#{positionWorkType}
+			,#{positionWorkTypeCd}
+			,#{positionPlace}
+			,#{positionComment}
+			,#{positionEtc}
+			,#{userNo}
+		)
+	</insert>
+	
+	<update id="udtMbrCare" parameterType="HashMap">
+		UPDATE top_mbr_care
+			SET care_sdate = #{careSdate}			
+				,care_edate = #{careEdate}						
+				,care_team_id = #{careTeamId}					  
+				,care_level = #{careLevel}
+				,care_worktime = #{careWorktime}				
+				,care_comment = #{careComment}				
+				,care_etc = #{careEtc}
+				,reg_date = now()
+				,reg_user_no = #{reg_user_no}
+		 WHERE care_no = #{careNo}
+	</update>
+	
+	<update id="udtMbrWork" parameterType="HashMap">
+		UPDATE top_mbr_work
+			SET work_sdate = #{workSdate}
+			<choose>
+				<when test="workEdate != NULL and workEdate != ''">
+					,work_edate = #{workEdate}
+				</when>
+				<otherwise>
+					,work_edate = NULL
+				</otherwise>
+			</choose>			
+				,work_team_id = #{workTeamId}					  
+				,work_level = #{workLevel}
+				,leave_type = #{leaveType}				
+				,work_comment = #{workComment}				
+				,work_etc = #{workEtc}
+				,reg_date = now()
+				,reg_user_no = #{reg_user_no}
+		 WHERE work_no = #{workNo}
+	</update>
+	
+	<update id="udtMbrPosition" parameterType="HashMap">
+		UPDATE top_mbr_position
+		   SET position_date = UNIX_TIMESTAMP(#{positionDate})
+		   	  ,position_depart = #{positionDepart}
+		   	  ,position_team_id = #{positionDepartCd}
+		   	  ,position_work_level = #{positionWorkLevel}
+		   	  ,position_work_level_cd = #{positionWorkLevelCd}
+		   	  ,position_work_rank = #{positionWorkRank}
+		   	  ,position_work_rank_cd = #{positionWorkRankCd}
+		   	  ,position_work_type = #{positionWorkType}
+		   	  ,position_work_type_cd = #{positionWorkTypeCd}
+		   	  ,position_place = #{positionPlace}
+		   	  ,position_comment = #{positionComment}
+		   	  ,position_etc = #{positionEtc}
+		 WHERE position_no = #{positionNo}
+	</update>
+	
+	<delete id="delMbrCare" parameterType="HashMap">
+		DELETE
+		 FROM top_mbr_care
+		WHERE care_no = #{careNo}
+	</delete>		
+	
+	<delete id="delMbrWork" parameterType="HashMap">
+		DELETE 
+		  FROM top_mbr_work
+		 WHERE work_no = #{workNo} 
+	</delete>
+	
+	<delete id="delMbrPosition" parameterType="HashMap">
+		DELETE 
+		  FROM top_mbr_position
+		 WHERE position_no = #{positionNo} 
+	</delete>
+	
+	<update id="udtMbrBscProbationDate" parameterType="HashMap">
+		UPDATE top_mbr_bsc
+	       SET work_level = #{positionWorkLevelCd}
+	       , work_rank = #{positionWorkRankCd}
+	       <if test='"1".equals(probationFlag)'>
+	       	  ,probation_date = UNIX_TIMESTAMP(#{positionDate})
+	       </if>
+	     WHERE user_no = #{userNo} 
+	</update>
+	
+
+</mapper>

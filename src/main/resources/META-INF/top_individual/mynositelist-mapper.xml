@@ -1,0 +1,1440 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MyNoSiteListMapper">
+
+	<select id="getMyNoSiteList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		<!-- , getDateDiff(a.reg_date)+1 past_date -->
+		, getDateDiff(a.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+		, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+		, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		, IFNULL(a.del_date,0) delDate
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.user_no = #{user_no} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 0 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+			, top_rpt_body b
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY a.suim_rpt_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getMyNoSiteListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.user_no = #{user_no} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 0 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+	</select>
+
+	<select id="getMyNoInterimList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		<!-- , getDateDiff(a.reg_date)+1 past_date -->
+		, getDateDiff(a.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+		, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+		, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		, IFNULL(a.del_date,0) delDate
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.user_no = #{user_no} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 1 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+			, top_rpt_body b
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY a.suim_rpt_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getMyNoInterimListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.user_no = #{user_no} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 1 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+	</select>
+
+	<select id="getMyNoInterimList2" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		<!-- , getDateDiff(a.reg_date)+1 past_date -->
+		, getDateDiff(a.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+		, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+		, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		, IFNULL(a.del_date,0) delDate
+		FROM top_rpt_head a, top_rpt_body b, top_rpt_site_interim c
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND a.suim_rpt_no = b.suim_rpt_no
+		AND a.suim_rpt_no = c.suim_rpt_no
+		AND c.interim_flag = 1
+		AND (c.site_date > 0 AND c.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))
+		ORDER BY a.suim_rpt_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getMyNoInterimList2Cnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_rpt_head a, top_rpt_site_interim c
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND a.suim_rpt_no = c.suim_rpt_no
+		AND c.interim_flag = 1
+		AND (c.site_date > 0 AND c.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))
+	</select>
+
+	<select id="getMyKind4MiList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		<!-- , getDateDiff(a.reg_date)+1 past_date -->
+		, getDateDiff(a.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+		, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+		, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		, IFNULL(a.del_date,0) delDate
+		, e.now_memo_length
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT d.suim_rpt_no, SUM(LENGTH(d.now_memo)) now_memo_length
+								FROM top_rpt_head c, top_rpt_now d
+								WHERE c.user_no = #{user_no}
+								AND c.suim_rpt_state = 0
+								AND (c.suim_rpt_type1 = 3 OR c.suim_rpt_type1 = 4)
+								AND c.suim_rpt_no = d.suim_rpt_no
+								GROUP BY d.suim_rpt_no) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+			, top_rpt_body b
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND (a.suim_rpt_type1 = 3 OR a.suim_rpt_type1 = 4)
+		AND a.reg_date &lt;	(SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							FROM(SELECT holiday_date
+								FROM sysadm_holiday
+								WHERE holiday_code IN (2,3,4,5,6)
+								AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+								ORDER BY holiday_date DESC
+								LIMIT 0,3) tmp)
+		AND (e.now_memo_length is null OR e.now_memo_length &lt; 100)
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY a.suim_rpt_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getMyKind4MiListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT d.suim_rpt_no, SUM(LENGTH(d.now_memo)) now_memo_length
+								FROM top_rpt_head c, top_rpt_now d
+								WHERE c.user_no = #{user_no}
+								AND c.suim_rpt_state = 0
+								AND (c.suim_rpt_type1 = 3 OR c.suim_rpt_type1 = 4)
+								AND c.suim_rpt_no = d.suim_rpt_no
+								GROUP BY d.suim_rpt_no) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND (a.suim_rpt_type1 = 3 OR a.suim_rpt_type1 = 4)
+		AND a.reg_date &lt;	(SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							FROM(SELECT holiday_date
+								FROM sysadm_holiday
+								WHERE holiday_code IN (2,3,4,5,6)
+								AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+								ORDER BY holiday_date DESC
+								LIMIT 0,3) tmp)
+		AND (e.now_memo_length is null OR e.now_memo_length &lt; 100)
+	</select>
+
+	<select id="getTmNoSiteList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		<!-- , getDateDiff(a.reg_date)+1 past_date -->
+		, getDateDiff(a.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+		, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+		, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		, IFNULL(a.del_date,0) delDate
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.team_id = #{team_id} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 0 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+			, top_rpt_body b
+		WHERE a.team_id = #{team_id}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY a.suim_rpt_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getTmNoSiteListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.team_id = #{team_id} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 0 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.team_id = #{team_id}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+	</select>
+
+	<select id="getTmNoInterimList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		<!-- , getDateDiff(a.reg_date)+1 past_date -->
+		, getDateDiff(a.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (SELECT count(memo_no) FROM top_rpt_memo WHERE fk_no = a.suim_rpt_no) memo_cnt
+		, (SELECT count(serial_no) FROM top_rpt_file WHERE suim_rpt_no = a.suim_rpt_no) file_cnt
+		, getRptNowTxt(a.suim_rpt_no) rpt_now_txt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = a.suim_rpt_no AND interim_flag = 1) interim_date_fmt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		, IFNULL(a.del_date,0) delDate
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.team_id = #{team_id} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 1 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+			, top_rpt_body b
+		WHERE a.team_id = #{team_id}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+		AND a.suim_rpt_no = b.suim_rpt_no
+		ORDER BY a.suim_rpt_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getTmNoInterimListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_rpt_head a
+				left join (select distinct c.suim_rpt_no from top_rpt_site_interim c, top_rpt_head d
+							WHERE d.team_id = #{team_id} AND d.suim_rpt_state = 0
+							AND c.interim_flag = 1 AND c.site_date > 0
+							AND c.suim_rpt_no = d.suim_rpt_no) e
+				on a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.team_id = #{team_id}
+		AND a.suim_rpt_state = 0
+		AND e.suim_rpt_no is null
+	</select>
+	
+	<!-- 겸직부서 결재요청 목록 -->
+	<select id="getMySubListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT
+			GA.suim_rpt_no, GA.suim_accept_no
+			  , GA.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',suim_rpt_type1) suim_rpt_type1_nm
+			  , GA.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',suim_rpt_state) suim_rpt_state_nm
+			  , GA.ptnr_id, getTopPtnrBscPtnrName(GA.ptnr_id) ptnr_name
+			  , GA.beneficiary_nm
+			  , GA.reg_date, DATE_FORMAT(FROM_UNIXTIME(GA.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , GA.user_no
+			  , getTopMbrBscUserName(GA.user_no) user_name
+		FROM
+		(
+			SELECT
+				suim_rpt_no
+				, suim_accept_no
+				, suim_rpt_type1
+				, getCodeValue('top_rpt_head','suim_rpt_type1',suim_rpt_type1) suim_rpt_type1_nm
+			  	, suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',suim_rpt_state) suim_rpt_state_nm
+			  	, ptnr_id
+			  	, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+			  	, beneficiary_nm
+			  	, reg_date
+			  	, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date_fmt
+			  	, user_no
+			  	, getTopMbrBscUserName(user_no) user_name
+			FROM top_rpt_head 
+			WHERE 1=1
+			AND suim_rpt_state = 1
+			AND team_id IN (${sub_team_id})
+			
+			UNION ALL
+			
+			SELECT 
+				 suim_rpt_no
+				, suim_accept_no
+				, suim_rpt_type1
+				, getCodeValue('top_rpt_head','suim_rpt_type1',suim_rpt_type1) suim_rpt_type1_nm
+			  	, suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',suim_rpt_state) suim_rpt_state_nm
+			  	, ptnr_id
+			  	, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+			  	, beneficiary_nm
+			  	, reg_date
+			  	, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date_fmt
+			  	, user_no
+			  	, getTopMbrBscUserName(user_no) user_name
+			FROM top_prim_biz_rpt_head 
+			WHERE 1=1
+			AND suim_rpt_state = 1
+			AND team_id IN (${sub_team_id})
+		)GA 
+		ORDER BY GA.reg_date desc	
+	</select>
+	
+	<!-- 기본 사용자 팀, 이름  -->
+	<select id="getPopUserInfoTitle" resultType="hashmap" parameterType="String">
+		SELECT
+			user_no
+			,user_name
+			,getTopTmBscTeamName(team_id_main) as team_name
+		FROM top_mbr_bsc
+		WHERE user_no = #{user_no}	
+	</select>
+	
+	<!-- 조회시점 시준 1년간 처리기일 계산, 현장보고서 조건과 동일하게 추가  -->
+	<select id="getMemberNoSiteListPopEndAverage" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.reg_date) ) + 1 past_date -->
+			  , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.reg_date) ) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.trans_date) ) + 1 past_trans_date -->
+			  , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.trans_date) ) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+			  , A.close_date, DATE_FORMAT(FROM_UNIXTIME(A.close_date), '%Y-%m-%d') close_date_fmt			  
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}			
+			AND A.suim_rpt_state = 2							
+			AND A.close_date  >= UNIX_TIMESTAMP(#{start_date})
+			AND A.close_date &lt; UNIX_TIMESTAMP(#{end_date})
+			AND A.suim_rpt_type1 IN (1,2,11,12,13)
+			AND A.pendncy_trget_at IN (1,4)			
+	</select>	
+	
+	<!-- 조회시점 시준 1년간 처리기일 계산 -->
+	<select id="getMemberNoSiteListPopEndAverage_close" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.reg_date) ) + 1 past_date -->
+			  , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.reg_date) ) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.trans_date) ) + 1 past_trans_date -->
+			  , DATEDIFF( FROM_UNIXTIME(A.close_date), FROM_UNIXTIME(A.trans_date) ) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+			  , A.close_date, DATE_FORMAT(FROM_UNIXTIME(A.close_date), '%Y-%m-%d') close_date_fmt			  
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}			
+			AND A.suim_rpt_state = 2							
+			AND 
+			(
+				CASE 
+					WHEN ( A.trans_date IS NULL )
+					THEN ( A.reg_date >= UNIX_TIMESTAMP(#{start_date}) AND A.reg_date &lt; UNIX_TIMESTAMP(#{end_date}) )
+					ELSE ( A.trans_date >= UNIX_TIMESTAMP(#{start_date}) AND A.trans_date &lt; UNIX_TIMESTAMP(#{end_date}) )
+				END
+			)
+	</select>
+	
+	<!-- 미결중 30일 초과 현장보고서 미제출 목록, 일반건 전환일조건 추가로 인한 수정 by top3009 -->
+	<select id="getMemberNoSiteListPopNot30Over" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , getDateDiff(A.trans_date) + 1 past_trans_date -->
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1)
+			AND A.site_rpt_state IN (0,1)				
+			AND 
+			(
+				CASE 
+					WHEN ( A.trans_date IS NULL )
+					THEN ( A.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+					ELSE ( A.trans_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+				END
+			)
+	</select>
+	
+	<!-- 3일초과 현장보고서 미제출 목록, 일반건 전환일조건 추가로 인한 수정 by top3009 -->
+	<select id="getMemberNoSiteListPopNot3Over" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(A.reg_date,'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , getDateDiff(A.trans_date) + 1 past_trans_date -->
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(A.reg_date,'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1,2)
+			AND A.site_rpt_state IN (0,1)			
+			AND 
+			(
+				CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN ( 
+						A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp )
+						AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					)
+					ELSE ( 
+						A.trans_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp )
+						AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					)
+				END
+			)
+	</select>
+	
+	<!-- 3일초과 현장보고서 미제출 목록, 일반건 전환일조건 추가로 인한 수정 by top3009 -->
+	<select id="getMemberNoSiteListPopNot3OverParam" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="HashMap">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt			  
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(A.reg_date,'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date			  
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(A.reg_date,'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1,2)
+			AND A.site_rpt_state IN (0,1)			
+			AND 
+			(
+				CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN ( 
+						<!-- A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp ) -->
+						A.reg_date &lt;= UNIX_TIMESTAMP(#{before_workday})
+						AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					)
+					ELSE ( 
+						<!-- A.trans_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp ) -->
+						A.trans_date &lt;= UNIX_TIMESTAMP(#{before_workday})
+						AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))						
+					)
+				END
+			)
+	</select>
+	
+	<!-- 3일이내 현장보고서 미제출 목록 , 일반건 전환일조건 추가로 인한 수정 by top3009-->
+	<select id="getMemberNoSiteListPopNot3InParam" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="HashMap">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1,2)
+			AND A.site_rpt_state IN (0,1)
+			AND
+			(
+				CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN (
+						<!-- A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp ) -->
+						A.reg_date > UNIX_TIMESTAMP(#{before_workday})												      
+						AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					)
+					ELSE (
+						<!-- A.trans_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp ) -->
+						A.trans_date > UNIX_TIMESTAMP(#{before_workday})
+						AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					)
+				END
+			)
+	</select>
+	
+	<!-- 3일이내 현장보고서 미제출 목록 , 일반건 전환일조건 추가로 인한 수정 by top3009-->
+	<select id="getMemberNoSiteListPopNot3In" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , getDateDiff(A.trans_date) + 1 past_trans_date -->
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1,2)
+			AND A.site_rpt_state IN (0,1)
+			AND
+			(
+				CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN (
+						A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp )
+						AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					)
+					ELSE (
+						A.trans_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp )
+						AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					)
+				END
+			)
+	</select>
+	
+	<!-- 3일초과 현장보고서 제출목록, 일반건 전환일조건 추가로 인한 수정 by top3009 -->
+	<select id="getMemberNoSiteListPopSub3Over" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , getDateDiff(A.trans_date) + 1 past_trans_date -->
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1,2)
+			AND A.site_rpt_state = 2
+			AND 
+			(
+				<!-- CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN ( getDateDiffDiv(A.reg_date,A.site_rpt_aprv_date) >= 3 AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+					ELSE ( getDateDiffDiv(A.trans_date,A.site_rpt_aprv_date) >= 3 AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+				END -->
+				
+				CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN ( ( getDateDiffDiv(A.reg_date,A.site_rpt_aprv_date) - (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (0,1,7)) ) >= 3 AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+					ELSE ( ( getDateDiffDiv(A.trans_date,A.site_rpt_aprv_date) - (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (0,1,7)) ) >= 3 AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+				END
+			)
+	</select>
+	
+	<!-- 3일이내 현장보고서 제출목록, 일반건 전환일조건 추가로 인한 수정 by top3009 -->
+	<select id="getMemberNoSiteListPopSub3In" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , getDateDiff(A.trans_date) + 1 past_trans_date -->
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_on}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1,2)
+			AND A.site_rpt_state = 2
+			AND
+			(
+				<!-- CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN ( getDateDiffDiv(A.reg_date,A.site_rpt_aprv_date) &lt; 3 AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+					ELSE ( getDateDiffDiv(A.trans_date,A.site_rpt_aprv_date) &lt; 3 AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+				END -->
+				
+				CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN ( ( getDateDiffDiv(A.reg_date,A.site_rpt_aprv_date) - (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (0,1,7)) ) &lt; 3 AND A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+					ELSE ( ( getDateDiffDiv(A.trans_date,A.site_rpt_aprv_date) - (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (0,1,7)) ) &lt; 3 AND A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+				END
+			)
+	</select>	
+	
+	<!-- 30일내 수임 목록, 일반건 전환일조건 추가로 인한 수정 by top3009 -->
+	<select id="getMemberNoSiteListPop30Suim" resultType="kr.co.toplac.topsuim.TopRptHeadVO" parameterType="String">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  <!-- , getDateDiff(A.trans_date) + 1 past_trans_date -->
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+			AND A.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND A.pendncy_trget_at IN (1,4)
+			AND A.suim_rpt_state IN (0,1,2)
+			AND 
+			(
+				CASE 
+					WHEN ( A.trans_date IS NULL )
+					THEN ( A.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+					ELSE ( A.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY)) )
+				END
+			)
+	</select>
+	
+	<!-- 현장미제출 -->
+	<select id="getMyNoSiteListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt			  
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+		   AND  A.DEL_DATE > -1
+		   AND  A.SUIM_RPT_STATE IN (0,1,11)
+		   AND  A.SUIM_RPT_TYPE1 != 14
+ 		   AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+ 		   AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+ 		   AND 
+ 		   (
+				CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN (
+						A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )	
+					)
+					ELSE (
+						A.trans_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+					)
+				END			 		   		
+ 		   )			
+		 ORDER BY A.reg_date DESC
+	</select>
+	
+	<select id="getMyNoSiteListPop_20221101" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+		   AND  A.DEL_DATE > -1
+		   AND  A.SUIM_RPT_STATE IN (0,1,11)
+		   AND  A.SUIM_RPT_TYPE1 != 14
+ 		   AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+ 		   AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+ 	   	   AND  A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+		 ORDER BY A.reg_date DESC
+	</select>	
+	
+	<!-- 현장 초과 -->
+	<select id="getMyNoSiteOverListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt			  
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+		   AND  A.DEL_DATE > -1
+		   AND  A.SUIM_RPT_STATE IN (0,1,11)
+		   AND  A.SUIM_RPT_TYPE1 != 14
+		   AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+ 		   AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+ 		   AND 
+ 		   (	
+ 		   		CASE
+					WHEN ( A.trans_date IS NULL )
+					THEN (
+						A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )	
+					)
+					ELSE (
+						A.trans_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+					)
+				END 		   		
+ 		   ) 		  
+		 ORDER BY A.reg_date DESC
+	</select>
+	
+	<select id="getMyNoSiteOverListPop_20221101" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  <!-- , getDateDiff(A.reg_date) + 1 past_date -->
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM top_rpt_head A
+		 WHERE A.user_no = #{user_no}
+		   AND  A.DEL_DATE > -1
+		   AND  A.SUIM_RPT_STATE IN (0,1,11)
+		   AND  A.SUIM_RPT_TYPE1 != 14
+		   AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+ 		   AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+ 	   	   AND  A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+		 ORDER BY A.reg_date DESC
+	</select>		
+	
+	<!-- 중간 미제출 -->
+	<select id="getMyNoInterimListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+				, A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+				, A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', A.suim_rpt_state) suim_rpt_state_nm
+				, A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+				, A.beneficiary_nm
+				, A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+				<!-- , DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + 1 past_date -->
+				, DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+				, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = A.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		  FROM top_rpt_head A
+		 WHERE  1=1
+		   AND A.USER_NO = #{user_no}
+		   AND A.DEL_DATE > -1
+		   AND  A.pendncy_trget_at = 1
+		   AND A.SUIM_RPT_STATE IN(0,1,11)
+		   AND  A.SUIM_RPT_TYPE1 != 14
+		   AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		   AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		 ORDER BY A.reg_date DESC
+	</select>	
+
+	<!-- 중간-5일 -->
+	<select id="getMyNoInterim5DayListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT    A.suim_rpt_no, A.suim_accept_no
+				, A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+				, A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', A.suim_rpt_state) suim_rpt_state_nm
+				, A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+				, A.beneficiary_nm
+				, A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+				<!-- , DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + 1 past_date -->
+				, DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+				, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = A.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		  FROM top_rpt_head A
+		 WHERE  1=1
+		   AND A.USER_NO = #{user_no}
+		   AND A.DEL_DATE > -1
+		   AND A.SUIM_RPT_STATE IN(0,1,11)
+		   AND A.SUIM_RPT_TYPE1 != 14
+		   AND A.pendncy_trget_at = 1
+		   AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+		   AND A.REG_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		   AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		 ORDER BY A.reg_date DESC
+	</select>
+	
+	<!-- 팀현장미제출 -->
+	<select id="getTmNoSiteListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , getTopMbrBscUserName(A.user_no) user_name		
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt			  
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.team_id = #{team_id}
+		   AND  A.DEL_DATE > -1
+		   AND  A.SUIM_RPT_STATE IN (0,1,11)
+		   AND  A.SUIM_RPT_TYPE1 != 14
+ 		   AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+ 		   AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+ 	   	   AND  
+ 	   	   (
+ 	   	   		CASE
+ 	   	   			WHEN ( A.trans_date IS NULL )
+ 	   	   			THEN (
+ 	   	   				A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+ 	   	   			)
+ 	   	   			ELSE (
+ 	   	   				A.trans_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+ 	   	   			)
+ 	   	   		END
+ 	   	   )
+		 ORDER BY A.reg_date DESC
+	</select>	
+	
+	<!-- 팀현장 초과 -->
+	<select id="getTmNoSiteOverListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			  , getTopMbrBscUserName(A.user_no) user_name		
+			  , A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			  , A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			  , A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			  , A.beneficiary_nm
+			  , A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			  , A.trans_date, DATE_FORMAT(FROM_UNIXTIME(A.trans_date), '%Y-%m-%d') trans_date_fmt			  
+			  , getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			  , getDateDiff(A.trans_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.trans_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_trans_date
+		  FROM top_rpt_head A
+		 WHERE A.team_id = #{team_id}
+		   AND  A.DEL_DATE > -1
+		   AND  A.SUIM_RPT_STATE IN (0,1,11)
+		   AND  A.SUIM_RPT_TYPE1 != 14
+		   AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+ 		   AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+ 	   	   AND  
+ 	   	   (
+ 	   	   		CASE
+ 	   	   			WHEN ( A.trans_date IS NULL )
+ 	   	   			THEN (
+ 	   	   				A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+ 	   	   			)
+ 	   	   			ELSE (
+ 	   	   				A.trans_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+					    		  FROM ( SELECT holiday_date
+							  			   FROM sysadm_holiday
+										  WHERE holiday_code IN (2,3,4,5,6)
+						 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+										  ORDER BY holiday_date DESC
+									      LIMIT 0,3) tmp )
+ 	   	   			)
+ 	   	   		END
+ 	   	   ) 	   	   
+		 ORDER BY A.reg_date DESC
+	</select>		
+	
+	<!-- 팀중간 미제출 -->
+	<select id="getTmNoInterimListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+				, getTopMbrBscUserName(A.user_no) user_name
+				, A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+				, A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', A.suim_rpt_state) suim_rpt_state_nm
+				, A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+				, A.beneficiary_nm
+				, A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+				<!-- , DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + 1 past_date -->
+				, DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+				, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = A.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		  FROM top_rpt_head A
+ 		 WHERE A.team_id = #{team_id}
+		   AND A.DEL_DATE > -1
+		   AND A.pendncy_trget_at = 1
+		   AND A.SUIM_RPT_STATE IN(0,1,11)
+		   AND A.SUIM_RPT_TYPE1 != 14
+		   AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		   AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		 ORDER BY A.reg_date DESC
+	</select>	
+
+	<!-- 팀중간-5일 -->
+	<select id="getTmNoInterim5DayListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT    A.suim_rpt_no, A.suim_accept_no
+				, getTopMbrBscUserName(A.user_no) user_name		
+				, A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+				, A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', A.suim_rpt_state) suim_rpt_state_nm
+				, A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+				, A.beneficiary_nm
+				, A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+				<!-- , DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + 1 past_date -->
+				, DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d')) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+				, (SELECT DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d') FROM top_rpt_site_interim WHERE suim_rpt_no = A.suim_rpt_no AND interim_flag = 0) site_date_fmt
+		  FROM top_rpt_head A
+ 		 WHERE A.team_id = #{team_id}
+		   AND A.DEL_DATE > -1
+		   AND A.SUIM_RPT_STATE IN(0,1,11)
+		   AND A.SUIM_RPT_TYPE1 != 14
+		   AND A.pendncy_trget_at = 1
+		   AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+		   AND A.REG_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		   AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		 ORDER BY A.reg_date DESC
+	</select>
+		
+	<!-- 진행경과 -->
+	<select id="getMyNoInterimList2Pop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			   ,A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			   ,A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			   ,A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			   ,A.beneficiary_nm
+			   ,A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			   ,B.SITE_DATE, DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE), '%Y-%m-%d') interim_date_fmt
+			   <!-- ,DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE), '%Y-%m-%d')) + 1 past_date -->
+			   ,DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE), '%Y-%m-%d')) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM  top_rpt_head A
+		        ,(
+		           SELECT  A.SUIM_RPT_NO
+		                  ,MAX(A.SITE_DATE) AS SITE_DATE
+		             FROM  top_rpt_site_interim A
+		            WHERE  1=1
+		              AND  A.SITE_DATE > -1
+		              AND  A.INTERIM_FLAG = 1
+		           GROUP BY A.SUIM_RPT_NO
+		        ) B
+		  WHERE 1=1
+		    AND A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		    AND A.user_no = #{user_no}
+		    AND A.pendncy_trget_at = 1
+		    AND A.SUIM_RPT_TYPE1 != 14
+		    AND B.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		    AND A.DEL_DATE > -1
+		    AND A.SUIM_RPT_STATE IN(0, 1, 11)
+		  ORDER BY B.SITE_DATE DESC
+	</select>
+
+	<!-- 진행경과 -5일 -->
+	<select id="getMyNoInterim5DayList2Pop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			   ,A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			   ,A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			   ,A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			   ,A.beneficiary_nm
+			   ,A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			   ,B.SITE_DATE, DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE), '%Y-%m-%d') interim_date_fmt
+			   <!-- ,DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE), '%Y-%m-%d')) + 1 past_date -->
+			   ,DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE), '%Y-%m-%d')) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(B.SITE_DATE),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM  top_rpt_head A
+		        ,(
+		           SELECT  A.SUIM_RPT_NO
+		                  ,MAX(A.SITE_DATE) AS SITE_DATE
+		             FROM  top_rpt_site_interim A
+		            WHERE  1=1
+		              AND  A.SITE_DATE > -1
+		              AND  A.INTERIM_FLAG = 1
+		           GROUP BY A.SUIM_RPT_NO
+		        ) B
+		  WHERE 1=1
+		    AND A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		    AND A.user_no = #{user_no}
+		    AND A.pendncy_trget_at = 1
+		    AND A.SUIM_RPT_TYPE1 != 14
+		    AND B.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+		   	AND B.SITE_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		    AND A.DEL_DATE > -1
+		    AND A.SUIM_RPT_STATE IN(0, 1, 11)
+		  ORDER BY B.SITE_DATE DESC
+	</select>	
+	
+	<!-- 사고처리 과정표 -->
+	<select id="getMyNoSagoListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">	
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			   ,A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			   ,A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			   ,A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			   ,A.beneficiary_nm
+			   ,A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			   <!-- ,getDateDiff(A.reg_date) + 1 past_date -->
+			   ,getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM top_rpt_head A
+		  LEFT OUTER JOIN (
+							SELECT  A.suim_rpt_no
+								   ,B.serial_no
+							  FROM top_rpt_head A
+						     INNER JOIN top_rpt_ctrl B
+						        ON A.suim_rpt_no = B.suim_rpt_no
+						     GROUP BY A.suim_rpt_no
+						    HAVING 1=1
+						<choose>
+					 		<when test="now_day gte 0100 and now_day lt 1110">
+					 			AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+					 		</when>
+					 		<when test="now_day gte 1110 and now_day lte 2610">
+					 			AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+							</when>
+							<when test="now_day gt 2610">
+								AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+							</when>
+					 	</choose>
+						        AND MAX(B.reg_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+						  ) B
+		   ON A.suim_rpt_no = B.suim_rpt_no
+		WHERE 1=1
+		  AND A.user_no = #{user_no}
+		  AND A.suim_rpt_state IN (0,1,11)
+		  AND A.SUIM_RPT_TYPE1 != 14
+		  AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+		  AND B.serial_no is null
+	 <choose>
+	 	<when test="now_day gte 0100 and now_day lt 1110">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+	 	</when>
+	 	<when test="now_day gte 1110 and now_day lte 1524">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+		</when>
+	 	<when test="now_day gte 1600 and now_day lt 2610">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+		</when>				
+		<when test="now_day gte 2610">
+			AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+		</when>
+	 </choose>	
+		ORDER BY A.reg_date DESC	
+	</select>
+
+
+	<!-- 미결사유 -->
+	<select id="getMyNoNowListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">	
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			   ,A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			   ,A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			   ,A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			   ,A.beneficiary_nm
+			   ,A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			   <!-- ,getDateDiff(A.reg_date) + 1 past_date -->
+			   ,getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM top_rpt_head A
+		  LEFT OUTER JOIN (
+							SELECT  A.suim_rpt_no
+								   ,B.serial_no
+							  FROM top_rpt_head A
+						     INNER JOIN top_rpt_now B
+						        ON A.suim_rpt_no = B.suim_rpt_no
+						     GROUP BY A.suim_rpt_no
+						    HAVING 1=1
+						 <choose>
+						 	<when test="now_day gte 0100 and now_day lt 1110">
+						 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+						 	</when>
+						 	<when test="now_day gte 1110 and now_day lte 2610">								 		
+						 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+							</when>
+							<when test="now_day gt 2610">
+								AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+							</when>
+						 </choose>
+						        AND MAX(B.reg_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+						  ) B
+		   ON A.suim_rpt_no = B.suim_rpt_no
+		WHERE 1=1
+		  AND A.user_no = #{user_no}
+		  AND A.suim_rpt_state IN (0,1,11)
+		  AND A.SUIM_RPT_TYPE1 != 14
+		  AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+		  AND B.serial_no is null
+		 <choose>
+		 	<when test="now_day gte 0100 and now_day lt 1110">
+		 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+		 	</when>
+		 	<when test="now_day gte 1110 and now_day lte 1524">
+		 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+			</when>
+		 	<when test="now_day gte 1600 and now_day lt 2610">
+		 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+			</when>				
+			<when test="now_day gte 2610">
+				AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+			</when>
+		 </choose>			
+		ORDER BY A.reg_date DESC	
+	</select>
+
+	<!-- 문제점 -->
+	<select id="getMyNoPrbListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">	
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			   ,A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			   ,A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			   ,A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			   ,A.beneficiary_nm
+			   ,A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			   <!-- ,getDateDiff(A.reg_date) + 1 past_date -->
+			   ,getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM top_rpt_head A
+		  LEFT OUTER JOIN (
+							SELECT  A.suim_rpt_no
+								   ,B.serial_no
+							  FROM top_rpt_head A
+						     INNER JOIN top_rpt_problem B
+						        ON A.suim_rpt_no = B.suim_rpt_no
+						     GROUP BY A.suim_rpt_no
+						    HAVING 1=1
+						 <choose>
+						 	<when test="now_day gte 0100 and now_day lt 1110">
+						 		AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+						 	</when>
+						 	<when test="now_day gte 1110 and now_day lte 2610">
+						 		AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+							</when>
+							<when test="now_day gt 2610">
+								AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+							</when>
+						 </choose>
+						        AND MAX(B.prb_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+						  ) B
+		   ON A.suim_rpt_no = B.suim_rpt_no
+		WHERE 1=1
+		  AND A.user_no = #{user_no}
+		  AND A.suim_rpt_state IN (0,1,11)
+		  AND A.SUIM_RPT_TYPE1 != 14
+		  AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+		  AND B.serial_no is null
+		  AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_problem)
+	 <choose>
+	 	<when test="now_day gte 0100 and now_day lt 1110">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+	 	</when>
+	 	<when test="now_day gte 1110 and now_day lte 1524">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+		</when>
+	 	<when test="now_day gte 1600 and now_day lt 2610">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+		</when>				
+		<when test="now_day gte 2610">
+			AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+		</when>
+	 </choose>				    
+		ORDER BY A.reg_date DESC	
+	</select>
+
+	<!-- 향후처리방안 -->
+	<select id="getMyNoPlnListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">	
+		SELECT  A.suim_rpt_no, A.suim_accept_no
+			   ,A.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',A.suim_rpt_type1) suim_rpt_type1_nm
+			   ,A.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state',A.suim_rpt_state) suim_rpt_state_nm
+			   ,A.ptnr_id, getTopPtnrBscPtnrName(A.ptnr_id) ptnr_name
+			   ,A.beneficiary_nm
+			   ,A.reg_date, DATE_FORMAT(FROM_UNIXTIME(A.reg_date), '%Y-%m-%d') reg_date_fmt
+			   <!-- ,getDateDiff(A.reg_date) + 1 past_date -->
+			   ,getDateDiff(A.reg_date) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(A.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		  FROM top_rpt_head A
+		  LEFT OUTER JOIN (
+							SELECT  A.suim_rpt_no
+								   ,B.serial_no
+							  FROM top_rpt_head A
+						     INNER JOIN top_rpt_plan B
+						        ON A.suim_rpt_no = B.suim_rpt_no
+						     GROUP BY A.suim_rpt_no
+						    HAVING 1=1
+						 <choose>
+						 	<when test="now_day gte 0100 and now_day lt 1110">
+						 		AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+						 	</when>
+						 	<when test="now_day gte 1110 and now_day lte 2610">
+						 		AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+							</when>
+							<when test="now_day gt 2610">
+								AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+							</when>
+						 </choose>
+					           AND MAX(B.pln_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+						  ) B
+		   ON A.suim_rpt_no = B.suim_rpt_no
+		WHERE 1=1
+		  AND A.user_no = #{user_no}
+		  AND A.suim_rpt_state IN (0,1,11)
+		  AND A.SUIM_RPT_TYPE1 != 14
+		  AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+		  AND B.serial_no is null
+		  AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_plan)
+	 <choose>
+	 	<when test="now_day gte 0100 and now_day lt 1110">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+	 	</when>
+	 	<when test="now_day gte 1110 and now_day lte 1524">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+		</when>
+	 	<when test="now_day gte 1600 and now_day lt 2610">
+	 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+		</when>				
+		<when test="now_day gte 2610">
+			AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+		</when>
+	 </choose>	
+		ORDER BY A.reg_date DESC	
+	</select>	
+
+	<select id="getMyKind4MiListPop" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.ptnr_id, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.beneficiary_nm
+		, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+		<!-- , getDateDiff(a.reg_date) + 1 past_date -->
+		<!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+		, DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, e.now_reg_date_fmt, e.now_memo_length
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT d.suim_rpt_no, SUM(LENGTH(d.now_memo)) now_memo_length
+									, MAX(d.reg_date) now_reg_date
+									, DATE_FORMAT(FROM_UNIXTIME(MAX(d.reg_date)), '%Y-%m-%d') now_reg_date_fmt
+								FROM top_rpt_head c, top_rpt_now d
+								WHERE c.user_no = #{user_no}
+								AND c.suim_rpt_state IN (0,1,11)
+								AND c.del_date > -1
+								AND c.reg_date &lt;	(SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+													FROM(SELECT holiday_date
+														FROM sysadm_holiday
+														WHERE holiday_code IN (2,3,4,5,6)
+														AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+														ORDER BY holiday_date DESC
+														LIMIT 0,3) tmp)
+								AND c.suim_rpt_no = d.suim_rpt_no
+								GROUP BY d.suim_rpt_no) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state IN (0,1,11)
+		AND a.del_date > -1
+		AND a.reg_date &lt;	(SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							FROM(SELECT holiday_date
+								FROM sysadm_holiday
+								WHERE holiday_code IN (2,3,4,5,6)
+								AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+								ORDER BY holiday_date DESC
+								LIMIT 0,3) tmp)
+		AND (e.now_memo_length is null OR e.now_memo_length &lt; 100)
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+</mapper>

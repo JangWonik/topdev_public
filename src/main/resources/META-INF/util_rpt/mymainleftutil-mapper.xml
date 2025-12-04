@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyMainLeftUtilMapper">
+	<!-- 강의실 신청건 -->
+	<select id="getLectureRoomState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT  COUNT(A.SERIAL_NO)  FROM  lecture_room A WHERE  A.STATE = 0
+	</select>
+	
+	<select id="suimTotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no}
+	</select>
+	<select id="suimState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 0
+	</select>
+	
+	<select id="siteCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_head a, top_rpt_site_interim b
+		WHERE a.user_no = #{user_no} AND a.suim_rpt_state = 0 AND IFNULL(a.del_date, 0) > -1
+		AND a.suim_rpt_no = b.suim_rpt_no
+		AND b.site_date > 0
+	</select>
+	
+	<select id="interimCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(a.suim_rpt_no)
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT distinct d.suim_rpt_no FROM top_rpt_head c, top_rpt_site_interim d
+							WHERE c.user_no = #{user_no} AND c.suim_rpt_state = 0 AND c.del_date > -1
+							AND c.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+							AND c.suim_rpt_no = d.suim_rpt_no
+							AND d.interim_flag = 1 AND d.site_date > 0) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND a.del_date > -1
+		AND a.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+		AND e.suim_rpt_no IS NULL
+	</select>
+	<select id="interimCnt2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(a.suim_rpt_no)
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT d.suim_rpt_no, max(site_date) maxSiteDate
+							FROM top_rpt_head c, top_rpt_site_interim d
+							WHERE c.user_no = #{user_no} AND c.suim_rpt_state = 0 AND c.del_date > -1
+							AND c.suim_rpt_no = d.suim_rpt_no
+							AND d.interim_flag = 1 AND d.site_date > 0
+							GROUP BY d.suim_rpt_no) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state = 0
+		AND a.del_date > -1
+		AND e.suim_rpt_no IS NOT NULL
+		AND e.maxSiteDate  &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+	</select>
+	<select id="suimState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 1
+	</select>
+	<select id="suimState11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 11
+	</select>
+	<select id="aIACnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND ptnr_mbr_sanction = 2
+	</select>
+	<select id="suimState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 2
+	</select>
+	<select id="suimState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 3
+	</select>
+	<select id="cHelpState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 0
+	</select>
+	<select id="cHelpState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 1
+	</select>
+	<select id="cHelpState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 2
+	</select>
+	<select id="cHelpState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 3
+	</select>
+	<select id="aHelpState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 0
+	</select>
+	<select id="aHelpState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 1
+	</select>
+	<select id="aHelpState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 2
+	</select>
+	<select id="aHelpState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 3
+	</select>
+	<select id="suit10TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no}
+	</select>
+	<select id="suit10State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 0
+	</select>
+	<select id="suit10State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 1
+	</select>
+	<select id="suit10State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 11
+	</select>
+	<select id="suit10State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 2
+	</select>
+	<select id="suit10State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 3
+	</select>
+	<select id="suit12TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no}
+	</select>
+	<select id="suit12State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 0
+	</select>
+	<select id="suit12State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 1
+	</select>
+	<select id="suit12State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 11
+	</select>
+	<select id="suit12State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 2
+	</select>
+	<select id="suit12State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 3
+	</select>
+	<select id="suit17TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no}
+	</select>
+	<select id="suit17State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 0
+	</select>
+	<select id="suit17State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 1
+	</select>
+	<select id="suit17State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 11
+	</select>
+	<select id="suit17State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 2
+	</select>
+	<select id="suit17State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 3
+	</select>
+	<select id="suit18TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no}
+	</select>
+	<select id="suit18State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 0
+	</select>
+	<select id="suit18State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 1
+	</select>
+	<select id="suit18State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 11
+	</select>
+	<select id="suit18State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 2
+	</select>
+	<select id="suit18State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 3
+	</select>
+	<select id="primTotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no}
+	</select>
+	<select id="primState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 0
+	</select>
+	<select id="primState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 1
+	</select>
+	<select id="primState11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 11
+	</select>
+	<select id="primState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 2
+	</select>
+	<select id="primState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 3
+	</select>
+	
+	<!-- 당직 결재 카운트 20170828 추가 -->
+	<select id="dutyCostAppCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(user_no) FROM top_duty WHERE duty_status = 10
+	</select>
+	<!-- 당직 입금 카운트 20170828 추가 -->
+	<select id="dutyCostDepCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(user_no) FROM top_duty WHERE duty_status = 20
+	</select>
+	
+	<!-- 보고서 이첩건 카운트 20171026 추가 -->
+	<select id="rptMbrChgOutCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(*) CNT
+		  FROM top_rpt_mbrchg
+		 WHERE 1=1
+		   AND FROM_USER_NO = #{user_no}
+		   AND MBRCHG_STATE = 0
+	</select>	
+
+	<!-- 보고서 내첩건 카운트 20171026 추가 -->
+	<select id="rptMbrChgInCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(*) CNT
+		  FROM top_rpt_mbrchg
+		 WHERE 1=1
+		   AND TO_USER_NO = #{user_no}
+		   AND MBRCHG_STATE = 0
+	</select>	
+	
+	<select id="mainLeftMySuimState_170207" resultType="kr.co.toplac.topmain.MainLeftSuimVO">
+		SELECT
+			(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no}) suimTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 0) suimState0Cnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.user_no = #{user_no} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 0 AND a.site_date > 0) siteCnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.user_no = #{user_no} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 1 AND a.site_date > 0) interimCnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_head a, top_rpt_site_interim b
+				WHERE a.user_no = #{user_no} AND a.suim_rpt_state = 0
+				AND a.suim_rpt_no = b.suim_rpt_no
+				AND b.interim_flag = 1
+				AND (b.site_date > 0 AND b.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))) interimCnt2
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 1) suimState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 11) suimState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND ptnr_mbr_sanction = 2) aIACnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 2) suimState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 3) suimState3Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 0) cHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 1) cHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 2) cHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_id = #{user_no} AND help_state = 3) cHelpState3Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 0) aHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 1) aHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 2) aHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_id = #{user_no} AND help_state = 3) aHelpState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no}) suit10TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit10State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit10State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit10State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit10State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit10State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no}) suit12TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit12State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit12State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit12State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit12State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit12State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no}) suit17TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit17State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit17State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit17State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit17State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit17State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no}) suit18TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 0) suit18State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 1) suit18State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 11) suit18State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 2) suit18State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE user_no = #{user_no} AND suim_rpt_state = 3) suit18State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no}) primTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 0) primState0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 1) primState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 11) primState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 2) primState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE user_no = #{user_no} AND suim_rpt_state = 3) primState3Cnt
+	</select>
+
+	<select id="selectLeftPersonStatistic" parameterType="String" resultType="AsraMap">
+		SELECT  GA.USER_NO
+		       ,SUM(GA.CNT01) AS CNT01 ,SUM(GA.CNT02) AS CNT02 ,SUM(GA.CNT03) AS CNT03 ,SUM(GA.CNT04) AS CNT04 ,SUM(GA.CNT05) AS CNT05
+		       ,SUM(GA.CNT06) AS CNT06 ,SUM(GA.CNT07) AS CNT07 ,SUM(GA.CNT08) AS CNT08 ,SUM(GA.CNT09) AS CNT09 ,SUM(GA.CNT10) AS CNT10
+		       ,SUM(GA.CNT11) AS CNT11 ,SUM(GA.CNT12) AS CNT12 ,SUM(GA.CNT13) AS CNT13 ,SUM(GA.CNT14) AS CNT14 ,SUM(GA.CNT15) AS CNT15
+		       ,SUM(GA.CNT16) AS CNT16 ,SUM(GA.CNT17) AS CNT17 ,SUM(GA.CNT18) AS CNT18 ,SUM(GA.CNT19) AS CNT19 ,SUM(GA.CNT20) AS CNT20
+		       ,SUM(GA.CNT21) AS CNT21 ,SUM(GA.CNT22) AS CNT22 ,SUM(GA.CNT23) AS CNT23 ,SUM(GA.CNT24) AS CNT24 ,SUM(GA.CNT25) AS CNT25
+		       ,SUM(GA.CNT26) AS CNT26 ,SUM(GA.CNT27) AS CNT27 ,SUM(GA.CNT28) AS CNT28 ,SUM(GA.CNT29) AS CNT29 ,SUM(GA.CNT30) AS CNT30
+		       ,SUM(GA.CNT31) AS CNT31 ,SUM(GA.CNT32) AS CNT32 ,SUM(GA.CNT33) AS CNT33 ,SUM(GA.CNT34) AS CNT34 ,SUM(GA.CNT35) AS CNT35
+		       ,SUM(GA.CNT36) AS CNT36 ,SUM(GA.CNT37) AS CNT37 ,SUM(GA.CNT38) AS CNT38 ,SUM(GA.CNT39) AS CNT39 ,SUM(GA.CNT40) AS CNT40
+		       ,SUM(GA.CNT41) AS CNT41 ,SUM(GA.CNT42) AS CNT42 ,SUM(GA.CNT43) AS CNT43 ,SUM(GA.CNT43) AS CNT44 ,SUM(GA.CNT43) AS CNT45
+		       ,SUM(GA.CNT46) AS CNT46 ,SUM(GA.CNT47) AS CNT47 ,SUM(GA.CNT48) AS CNT48 ,SUM(GA.CNT49) AS CNT49 ,SUM(GA.CNT50) AS CNT50
+		       ,SUM(GA.CNT51) AS CNT51 ,SUM(GA.CNT52) AS CNT52 ,SUM(GA.CNT53) AS CNT53
+		  FROM  (
+		          SELECT  A.USER_NO
+		                 ,1 AS CNT01
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT02 
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT03
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT04
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT05
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT06
+		                 ,CASE WHEN A.PTNR_MBR_SANCTION = 2 THEN 1 ELSE 0 END AS CNT07
+		                 , 0 AS CNT08, 0 AS CNT09, 0 AS CNT10, 0 AS CNT11, 0 AS CNT12
+		                 , 0 AS CNT13, 0 AS CNT14, 0 AS CNT15, 0 AS CNT16, 0 AS CNT17
+		                 , 0 AS CNT18, 0 AS CNT19, 0 AS CNT20, 0 AS CNT21, 0 AS CNT22
+		                 , 0 AS CNT23, 0 AS CNT24, 0 AS CNT25, 0 AS CNT26, 0 AS CNT27
+		                 , 0 AS CNT28, 0 AS CNT29, 0 AS CNT30, 0 AS CNT31, 0 AS CNT32
+		                 , 0 AS CNT33, 0 AS CNT34, 0 AS CNT35, 0 AS CNT36, 0 AS CNT37
+		                 , 0 AS CNT38, 0 AS CNT39, 0 AS CNT40, 0 AS CNT41, 0 AS CNT42
+		                 , 0 AS CNT43, 0 AS CNT44, 0 AS CNT45, 0 AS CNT46, 0 AS CNT47
+		                 , 0 AS CNT48, 0 AS CNT49, 0 AS CNT50, 0 AS CNT51, 0 AS CNT52
+		                 , 0 AS CNT53  
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.USER_NO = #{user_no}
+		          UNION ALL
+		          SELECT  A.CLIENT_ID, 0, 0, 0, 0, 0, 0, 0
+		                 ,CASE WHEN A.HELP_STATE = 0 THEN 1 ELSE 0 END AS CNT08
+		                 ,CASE WHEN A.HELP_STATE = 1 THEN 1 ELSE 0 END AS CNT09
+		                 ,CASE WHEN A.HELP_STATE = 2 THEN 1 ELSE 0 END AS CNT10
+		                 ,CASE WHEN A.HELP_STATE = 3 THEN 1 ELSE 0 END AS CNT11
+		                 , 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_help A
+		           WHERE  1=1
+		             AND  A.CLIENT_ID = #{user_no}
+		          UNION ALL
+		          SELECT  A.ACCEPT_ID, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0
+		                 ,CASE WHEN A.HELP_STATE = 0 THEN 1 ELSE 0 END AS CNT12
+		                 ,CASE WHEN A.HELP_STATE = 1 THEN 1 ELSE 0 END AS CNT13
+		                 ,CASE WHEN A.HELP_STATE = 2 THEN 1 ELSE 0 END AS CNT14
+		                 ,CASE WHEN A.HELP_STATE = 3 THEN 1 ELSE 0 END AS CNT15
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_help A
+		           WHERE  1=1
+		             AND  A.ACCEPT_ID = #{user_no}
+		          UNION ALL
+		          SELECT  A.USER_NO, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,1 AS CNT16
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT17
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT18
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT19
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT20
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT21
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_10 A
+		           WHERE  1=1
+		             AND  A.USER_NO = #{user_no}
+		          UNION ALL
+		          SELECT  A.USER_NO, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 ,1 AS CNT22
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT23
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT24
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT25
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT26
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT27
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_12 A
+		           WHERE  1=1
+		             AND  A.USER_NO = #{user_no}
+		          UNION ALL
+		          SELECT  A.USER_NO, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,1 AS CNT28
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT29
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT30
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT31
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT32
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT33
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_17 A
+		           WHERE  1=1
+		             AND  A.USER_NO = #{user_no}
+		          UNION ALL
+		          SELECT  A.USER_NO, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,1 AS CNT34
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT35
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT36
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT37
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT38
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT39
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		            FROM  top_contract A
+		           WHERE  1=1
+		             AND  A.USER_NO = #{user_no}
+		          UNION ALL
+		          SELECT  A.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,1 AS CNT40
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT41
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT42
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT43
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT44
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT45
+		                 , 0, 0, 0, 0, 0, 0, 0, 0
+		            FROM  top_prim_biz_rpt_head A
+		           WHERE  1=1
+		             AND  A.USER_NO = #{user_no}
+		          UNION ALL 
+		          SELECT  A.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0          
+		                 ,COUNT(DISTINCT A.SUIM_RPT_NO) AS CNT46
+		                 , 0, 0, 0, 0, 0, 0, 0
+		            FROM  top_rpt_head A
+		                 ,top_rpt_site_interim B
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		             AND  A.USER_NO = #{user_no}
+		             AND  A.SUIM_RPT_STATE = 0
+		             AND  B.SITE_DATE > 0
+		             AND  IFNULL(A.del_date, 0) > -1
+		          GROUP BY A.USER_NO
+		          UNION ALL
+		          SELECT  C.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0          
+		                 ,COUNT(C.SUIM_RPT_NO) AS CNT47
+		                 , 0, 0, 0, 0, 0, 0
+		            FROM  top_rpt_head C
+		            LEFT  JOIN (
+		                        SELECT  DISTINCT A.SUIM_RPT_NO 
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_site_interim B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.USER_NO = #{user_no}
+		                           AND  A.SUIM_RPT_STATE = 0
+		                           AND  A.DEL_DATE > -1
+		                           AND  A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+		                           AND  B.INTERIM_FLAG = 1
+		                           AND  B.SITE_DATE > 0    
+		                       ) D
+		              ON  C.SUIM_RPT_NO = D.SUIM_RPT_NO            
+		           WHERE  1=1 
+		             AND  C.USER_NO = #{user_no}
+		             AND  C.SUIM_RPT_STATE = 0
+		             AND  C.DEL_DATE > -1
+		             AND  C.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+		             AND  D.SUIM_RPT_NO IS NULL
+		          GROUP BY C.USER_NO
+		          UNION ALL
+		          SELECT  C.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0           
+		                 ,COUNT(C.SUIM_RPT_NO) AS CNT48
+		                 , 0, 0, 0, 0, 0
+		            FROM  top_rpt_head C
+		            LEFT  JOIN (
+		                        SELECT  A.SUIM_RPT_NO 
+		                               ,MAX(B.SITE_DATE) AS SITE_DATE
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_site_interim B        
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.USER_NO = #{user_no}
+		                           AND  A.SUIM_RPT_STATE = 0
+		                           AND  A.DEL_DATE > -1
+		                           AND  B.INTERIM_FLAG = 1
+		                           AND  B.SITE_DATE > 0
+		                        GROUP BY A.SUIM_RPT_NO               
+		                       ) D
+		              ON  C.SUIM_RPT_NO = D.SUIM_RPT_NO
+		           WHERE  1=1
+		             AND  C.USER_NO = #{user_no}
+		             AND  C.SUIM_RPT_STATE = 0
+		             AND  C.DEL_DATE > -1
+		             AND  D.SUIM_RPT_NO IS NOT NULL
+		             AND  D.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MONTH))         
+		          GROUP BY C.USER_NO 
+
+		          UNION ALL
+		          SELECT  C.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0           
+		                 ,COUNT(C.SUIM_RPT_NO) AS CNT49
+		                 , 0, 0, 0, 0
+		            FROM  top_rpt_head C
+		            LEFT  JOIN (
+										 SELECT DISTINCT(SUIM_RPT_NO)
+										   FROM top_rpt_alarm
+									     WHERE 1=1
+										    AND ALARM_DATE &lt;= unix_timestamp(now())
+										    AND END_DATE is null         
+		                       ) D
+		              ON  C.SUIM_RPT_NO = D.SUIM_RPT_NO
+		           WHERE  1=1
+		           	 AND  C.USER_NO = #{user_no}
+					 AND  ( C.SUIM_RPT_TYPE1 = 14 OR C.SUIM_RPT_TYPE1 = 18 ) 
+		             AND  C.DEL_DATE = 0
+		             AND  D.SUIM_RPT_NO IS NOT NULL
+
+		          GROUP BY C.USER_NO 		          
+		          UNION ALL
+		          -- 현장 3일 이내
+		          SELECT  A.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(A.SUIM_RPT_NO) AS CNT50, 0, 0, 0
+				    FROM  top_rpt_head A
+				   WHERE  1=1
+				     AND  A.USER_NO = #{user_no}
+				     AND  A.DEL_DATE > -1
+				     AND  A.SUIM_RPT_STATE IN (0,1,11)
+				     AND  A.SUIM_RPT_TYPE1 != 14
+		 		     AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+		 		     AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+		 		     AND
+		 		     (
+		 		     	CASE
+		 		     		WHEN ( A.trans_date IS NULL )
+		 		     		THEN (
+		 		     			A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							    		    FROM ( SELECT holiday_date
+									  			     FROM sysadm_holiday
+												    WHERE holiday_code IN (2,3,4,5,6)
+								 		  			  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+												    ORDER BY holiday_date DESC
+											        LIMIT 0,3) tmp )
+		 		     		)
+		 		     		ELSE (
+		 		     			A.trans_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							    		    FROM ( SELECT holiday_date
+									  			     FROM sysadm_holiday
+												    WHERE holiday_code IN (2,3,4,5,6)
+								 		  			  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+												    ORDER BY holiday_date DESC
+											        LIMIT 0,3) tmp )
+		 		     		)
+		 		     		
+		 		     	END
+		 		     )
+		 		     
+				  GROUP BY A.USER_NO		          		          
+		          UNION ALL
+		          -- 현장 3일 초과
+		          SELECT  A.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, COUNT(A.SUIM_RPT_NO) AS CNT51, 0, 0
+					FROM  top_rpt_head A
+				   WHERE  1=1
+				     AND  A.USER_NO = #{user_no}
+					 AND  A.DEL_DATE > -1
+					 AND  A.SUIM_RPT_STATE IN (0,1,11)
+					 AND  A.SUIM_RPT_TYPE1 != 14
+					 AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+			 		 AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+			 	   	 AND  
+			 	   	 (
+			 	   	 	CASE
+			 	   	 		WHEN ( A.trans_date IS NULL )
+			 	   	 		THEN (
+			 	   	 			A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp )
+			 	   	 		)
+			 	   	 		ELSE (
+			 	   	 			A.trans_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp )
+			 	   	 		)			 	   	 	
+			 	   	 	END
+			 	   	 )			 	   	 
+				   GROUP BY A.USER_NO		 
+				   UNION ALL
+		          -- 중간 5일전
+		          SELECT  A.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, COUNT(A.SUIM_RPT_NO) AS CNT52, 0
+				    FROM top_rpt_head A
+				   WHERE  1=1
+				     AND A.USER_NO = #{user_no}				   
+				     AND A.DEL_DATE > -1
+				     AND A.SUIM_RPT_STATE IN(0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND A.pendncy_trget_at = 1
+				     AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+				     AND A.REG_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+				     AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+				   GROUP BY A.USER_NO 
+				   UNION ALL
+		          -- 중간 5일 초과
+		          SELECT  A.USER_NO
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, COUNT(A.SUIM_RPT_NO) AS CNT53
+				    FROM top_rpt_head A
+				   WHERE  1=1
+				     AND A.USER_NO = #{user_no}				   
+				     AND A.DEL_DATE > -1
+				     AND A.pendncy_trget_at = 1
+				     AND A.SUIM_RPT_STATE IN(0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+				     AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+				   GROUP BY A.USER_NO                                          
+				        ) GA
+				 WHERE  1=1
+				 GROUP BY GA.USER_NO
+
+	</select>
+
+</mapper>

@@ -1,0 +1,106 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+
+	<script>
+		function popSuimDtlPrimBiz(suim_rpt_no, del_date){
+			if(del_date == -1){
+				alert("삭제된 보고서 입니다.");
+				return;
+			}
+			var cw=screen.availWidth;
+			var ch=screen.availHeight;
+			var sw=1010; //띄울 창의 넓이
+			var sh=740;  //띄울 창의 높이
+			var ml=(cw-sw)/2;   //가운데 띄우기위한 창의 x위치
+			var mt=(ch-sh)/2;   //가운데 띄우기위한 창의 y위치
+			window.open('primBizRptDtl?suim_rpt_no='+suim_rpt_no,'tst','width='+sw+',height='+sh+',top='+mt+',left='+ml+',resizable=no,scrollbars=yes');
+		}
+	</script>
+
+							<div class="tableStyle2">
+								<table cellpadding="0" cellspacing="0" summary="고객리스트 현황2">
+									<caption>고객리스트 현황2</caption>
+									<colgroup>
+										<col width="53">
+										<col width="142" />
+										<col width="94" />
+										<col width="165" />
+										<col width="91" />
+										<col width="123" />
+										<col width="79" />
+										<col width="79" />
+										<col width="111" />
+									</colgroup>
+									<thead>
+										<tr>
+											<th>구분</th>
+											<th>접수번호</th>
+											<th>보험사</th>
+											<th>보험담당</th>
+											<th>계약자</th>
+											<th>피보험자</th>
+											<th>상태</th>
+											<th>DAY</th>
+											<th>수임일자</th>
+										</tr>
+									</thead>
+									<tbody>
+										<c:forEach items="${mainIndexPrimbizList}" var="suimVO" varStatus="status" > <!-- begin="1" end="20" step="1" -->
+										<tr onMouseOver="this.style.backgroundColor='#FFECEC'" onMouseOut="this.style.backgroundColor=''"
+										style ="cursor:pointer;" onclick="popSuimDtlPrimBiz('${suimVO.suim_rpt_no}', '${suimVO.del_date}')">
+											<!-- 구분 -->
+											<td title="${suimVO.suim_rpt_type1_nm}" >${suimVO.suim_rpt_type1_nm}</td>
+											<!-- 접수번호 -->
+											<td>
+												${suimVO.suim_accept_no}
+											</td>
+											<!-- 보험사 -->
+											<td title="${suimVO.ptnr_name}" >${suimVO.ptnr_nick}</td>
+											<!-- 보험담당 -->
+											<td title="${suimVO.ptnr_mbr_nm}" >${suimVO.ptnr_mbr_nm}</td>
+											<!-- 계약자 -->
+											<td title="${suimVO.policyholder_nm}">
+												<c:choose>
+													<c:when test="${suimVO.policyholder_nm != ''}">
+														<c:choose>
+															<c:when test="${fn:length(suimVO.policyholder_nm) > 8}">
+																${fn:substring(suimVO.policyholder_nm,0,8)}...
+															</c:when>
+															<c:otherwise>${suimVO.policyholder_nm}</c:otherwise>
+														</c:choose>
+													</c:when>
+													<c:otherwise>-</c:otherwise>
+												</c:choose>
+											</td>
+											<!-- 피보험자 -->
+											<td title="${suimVO.beneficiary_nm}" >
+												<c:choose>
+													<c:when test="${suimVO.beneficiary_nm != ''}">
+														<c:choose>
+															<c:when test="${fn:length(suimVO.beneficiary_nm) > 8}">
+																${fn:substring(suimVO.beneficiary_nm,0,8)}...
+															</c:when>
+															<c:otherwise>${suimVO.beneficiary_nm}</c:otherwise>
+														</c:choose>
+													</c:when>
+													<c:otherwise>-</c:otherwise>
+												</c:choose>
+											</td>
+											<!-- 상태 -->
+											<td>미결</td>
+											<!-- DAY -->
+											<td>
+												<c:choose>
+													<c:when test="${suimVO.past_date > 15}"><font color="fuchsia">${suimVO.past_date}일</font></c:when>
+													<c:otherwise>${suimVO.past_date}일</c:otherwise>
+												</c:choose>
+											</td>
+											<!-- 수임일자 -->
+											<td title="${suimVO.reg_date_fmt}" >${suimVO.reg_date_fmt}</td>
+										</tr>
+										</c:forEach>
+									</tbody>
+								</table>
+							</div><!-- //tableStyle2 -->

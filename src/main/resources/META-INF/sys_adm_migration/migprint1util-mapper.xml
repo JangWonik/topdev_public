@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MigPrint1UtilMapper">
+
+	<delete id="print12DeleteAll">
+		DELETE FROM top_rpt_print_1_2
+	</delete>
+
+	<select id="report1Forprint12List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		SELECT a.no, replace(replace(b_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_1 a
+		WHERE a.b_1cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print12Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		INSERT INTO top_rpt_print_1_2 (rpt_print_no, other_insu_com, other_insu_dtl)
+		VALUES(#{rpt_print_no}, #{other_insu_com}, #{other_insu_dtl})
+	</insert>
+
+	<update id="print12UpdateSpaceData1">
+		UPDATE top_rpt_print_1_2 SET other_insu_com = ''
+		WHERE other_insu_com = '-'
+		OR other_insu_com = '--'
+	</update>
+
+	<update id="print12UpdateSpaceData2">
+		UPDATE top_rpt_print_1_2 SET other_insu_dtl = ''
+		WHERE other_insu_dtl = '-'
+		OR other_insu_dtl = '--'
+	</update>
+
+	<delete id="print12DeleteSpaceData">
+		DELETE FROM top_rpt_print_1_2
+		WHERE other_insu_com = ''
+		AND other_insu_dtl = ''
+	</delete>
+
+	<update id="print12UpdateSpaceData3">
+		UPDATE top_rpt_print_1_2 SET other_insu_com = LEFT(other_insu_com,CHAR_LENGTH(other_insu_com)-1)
+		WHERE RIGHT(other_insu_com,1) = '-'
+	</update>
+
+	<update id="print12UpdateSpaceData4">
+		UPDATE top_rpt_print_1_2 SET other_insu_dtl = RIGHT(other_insu_dtl,CHAR_LENGTH(other_insu_dtl)-1)
+		WHERE LEFT(other_insu_dtl,1) = '-'
+	</update>
+
+	<delete id="print15DeleteAll">
+		DELETE FROM top_rpt_print_1_5
+	</delete>
+
+	<select id="report1Forprint15List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		SELECT a.no, replace(replace(e_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_1 a
+		WHERE a.e_1cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print15Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		INSERT INTO top_rpt_print_1_5 (rpt_print_no, process_date_s, process_date_e, process_dtl, process_etc_memo)
+		VALUES(#{rpt_print_no}, #{process_date_s}, #{process_date_e}, #{process_dtl}, #{process_etc_memo})
+	</insert>
+
+	<update id="print15UpdateSpaceData1">
+		UPDATE top_rpt_print_1_5 SET process_date_s = ''
+		WHERE process_date_s = '-'
+		OR process_date_s = '--'
+	</update>
+
+	<update id="print15UpdateSpaceData2">
+		UPDATE top_rpt_print_1_5 SET process_date_e = ''
+		WHERE process_date_e = '-'
+		OR process_date_e = '--'
+	</update>
+
+	<update id="print15UpdateSpaceData3">
+		UPDATE top_rpt_print_1_5 SET process_dtl = ''
+		WHERE process_dtl = '-'
+		OR process_dtl = '--'
+	</update>
+
+	<update id="print15UpdateSpaceData4">
+		UPDATE top_rpt_print_1_5 SET process_etc_memo = ''
+		WHERE process_etc_memo = '-'
+		OR process_etc_memo = '--'
+	</update>
+
+	<delete id="print15DeleteSpaceData">
+		DELETE FROM top_rpt_print_1_5
+		WHERE process_date_s = ''
+		AND process_date_e = ''
+		AND process_dtl = ''
+		AND process_etc_memo = ''
+	</delete>
+
+	<update id="print15UpdateSpaceData11">
+		UPDATE top_rpt_print_1_5 SET process_date_s = LEFT(process_date_s,CHAR_LENGTH(process_date_s)-1)
+		WHERE RIGHT(process_date_s,1) = '-'
+	</update>
+
+	<update id="print15UpdateSpaceData12">
+		UPDATE top_rpt_print_1_5 SET process_date_s = trim(process_date_s)
+		WHERE CHAR_LENGTH(process_date_s) > 11
+	</update>
+
+	<update id="print15UpdateSpaceData13">
+		UPDATE top_rpt_print_1_5 SET process_date_e = RIGHT(process_date_e,CHAR_LENGTH(process_date_e)-1)
+		WHERE LEFT(process_date_e,1) = '-'
+	</update>
+
+	<update id="print15UpdateSpaceData14">
+		UPDATE top_rpt_print_1_5 SET process_date_e = trim(process_date_e)
+		WHERE CHAR_LENGTH(process_date_e) > 11
+	</update>
+
+	<update id="print15UpdateSpaceData15">
+		UPDATE top_rpt_print_1_5 SET process_dtl = LEFT(process_dtl,CHAR_LENGTH(process_dtl)-1)
+		WHERE RIGHT(process_dtl,1) = '-'
+	</update>
+
+	<update id="print15UpdateSpaceData16">
+		UPDATE top_rpt_print_1_5 SET process_dtl = RIGHT(process_dtl,CHAR_LENGTH(process_dtl)-1)
+		WHERE LEFT(process_dtl,1) = '-'
+	</update>
+
+	<update id="print15UpdateSpaceData17">
+		UPDATE top_rpt_print_1_5 SET process_etc_memo = LEFT(process_etc_memo,CHAR_LENGTH(process_etc_memo)-1)
+		WHERE RIGHT(process_etc_memo,1) = '-'
+	</update>
+
+	<update id="print15UpdateSpaceData18">
+		UPDATE top_rpt_print_1_5 SET process_etc_memo = RIGHT(process_etc_memo,CHAR_LENGTH(process_etc_memo)-1)
+		WHERE LEFT(process_etc_memo,1) = '-'
+	</update>
+
+	<delete id="print161DeleteAll">
+		DELETE FROM top_rpt_print_1_6_1
+	</delete>
+
+	<select id="report1Forprint161List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		SELECT a.no, replace(replace(f_6,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_1 a
+		WHERE a.f_6cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print161Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		INSERT INTO top_rpt_print_1_6_1 (rpt_print_no, investigate_outline, investigate_dtl)
+		VALUES(#{rpt_print_no}, #{investigate_outline}, #{investigate_dtl})
+	</insert>
+
+	<update id="print161UpdateSpaceData1">
+		UPDATE top_rpt_print_1_6_1 SET investigate_outline = ''
+		WHERE investigate_outline = '-'
+		OR investigate_outline = '--'
+	</update>
+
+	<update id="print161UpdateSpaceData2">
+		UPDATE top_rpt_print_1_6_1 SET investigate_dtl = ''
+		WHERE investigate_dtl = '-'
+		OR investigate_dtl = '--'
+	</update>
+
+	<delete id="print161DeleteSpaceData">
+		DELETE FROM top_rpt_print_1_6_1
+		WHERE investigate_outline = '' AND investigate_dtl = ''
+	</delete>
+
+	<update id="print161UpdateSpaceData3">
+		UPDATE top_rpt_print_1_6_1 SET investigate_outline = LEFT(investigate_outline,CHAR_LENGTH(investigate_outline)-1)
+		WHERE RIGHT(investigate_outline,1) = '-'
+	</update>
+
+	<update id="print161UpdateSpaceData4">
+		UPDATE top_rpt_print_1_6_1 SET investigate_dtl = RIGHT(investigate_dtl,CHAR_LENGTH(investigate_dtl)-1)
+		WHERE LEFT(investigate_dtl,1) = '-'
+	</update>
+
+	<delete id="print162DeleteAll">
+		DELETE FROM top_rpt_print_1_6_2
+	</delete>
+
+	<select id="report1Forprint162List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		SELECT a.no, replace(replace(f_10,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_1 a
+		WHERE a.f_10cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print162Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		INSERT INTO top_rpt_print_1_6_2 (rpt_print_no, confirm_outline, confirm_dtl)
+		VALUES(#{rpt_print_no}, #{confirm_outline}, #{confirm_dtl})
+	</insert>
+
+	<update id="print162UpdateSpaceData1">
+		UPDATE top_rpt_print_1_6_2 SET confirm_outline = ''
+		WHERE confirm_outline = '-'
+		OR confirm_outline = '--'
+	</update>
+
+	<update id="print162UpdateSpaceData2">
+		UPDATE top_rpt_print_1_6_2 SET confirm_dtl = ''
+		WHERE confirm_dtl = '-'
+		OR confirm_dtl = '--'
+	</update>
+
+	<delete id="print162DeleteSpaceData">
+		DELETE FROM top_rpt_print_1_6_2
+		WHERE confirm_outline = '' AND confirm_dtl = ''
+	</delete>
+
+	<update id="print162UpdateSpaceData3">
+		UPDATE top_rpt_print_1_6_2 SET confirm_outline = LEFT(confirm_outline,CHAR_LENGTH(confirm_outline)-1)
+		WHERE RIGHT(confirm_outline,1) = '-'
+	</update>
+
+	<update id="print162UpdateSpaceData4">
+		UPDATE top_rpt_print_1_6_2 SET confirm_dtl = RIGHT(confirm_dtl,CHAR_LENGTH(confirm_dtl)-1)
+		WHERE LEFT(confirm_dtl,1) = '-'
+	</update>
+
+	<delete id="print18DeleteAll">
+		DELETE FROM top_rpt_print_1_8
+	</delete>
+
+	<select id="report1Forprint18List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		SELECT a.no, replace(replace(h_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_1 a
+		WHERE a.h_1cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print18Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint1VO">
+		INSERT INTO top_rpt_print_1_8 (rpt_print_no, attach_name, attach_copy, attach_etc_memo)
+		VALUES(#{rpt_print_no}, #{attach_name}, #{attach_copy}, #{attach_etc_memo})
+	</insert>
+
+	<update id="print18UpdateSpaceData1">
+		UPDATE top_rpt_print_1_8 SET attach_name = ''
+		WHERE attach_name = '-'
+		OR attach_name = '--'
+	</update>
+
+	<update id="print18UpdateSpaceData2">
+		UPDATE top_rpt_print_1_8 SET attach_copy = ''
+		WHERE attach_copy = '-'
+		OR attach_copy = '--'
+	</update>
+
+	<update id="print18UpdateSpaceData3">
+		UPDATE top_rpt_print_1_8 SET attach_etc_memo = ''
+		WHERE attach_etc_memo = '-'
+		OR attach_etc_memo = '--'
+	</update>
+
+	<delete id="print18DeleteSpaceData">
+		DELETE FROM top_rpt_print_1_8
+		WHERE attach_name = ''
+		AND attach_copy = ''
+		AND attach_etc_memo = ''
+	</delete>
+
+	<update id="print18UpdateSpaceData4">
+		UPDATE top_rpt_print_1_8 SET attach_name = LEFT(attach_name,CHAR_LENGTH(attach_name)-1)
+		WHERE RIGHT(attach_name,1) = '-'
+	</update>
+
+	<update id="print18UpdateSpaceData5">
+		UPDATE top_rpt_print_1_8 SET attach_etc_memo = RIGHT(attach_etc_memo,CHAR_LENGTH(attach_etc_memo)-1)
+		WHERE LEFT(attach_etc_memo,1) = '-'
+	</update>
+
+	<update id="print18UpdateSpaceData6">
+		UPDATE top_rpt_print_1_8 SET attach_copy = LEFT(attach_copy,CHAR_LENGTH(attach_copy)-1)
+		WHERE RIGHT(attach_copy,1) = '-'
+	</update>
+
+	<update id="print18UpdateSpaceData7">
+		UPDATE top_rpt_print_1_8 SET attach_copy = RIGHT(attach_copy,CHAR_LENGTH(attach_copy)-1)
+		WHERE LEFT(attach_copy,1) = '-'
+	</update>
+
+</mapper>

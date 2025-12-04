@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrCareerMapper">
+	
+	<insert id="insMemberCareer" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		INSERT INTO top_mbr_career (
+			career_start_date,
+			career_end_date,
+			career_depart,
+			career_rank,
+			career_corporate_name,
+			career_year,
+			career_month,
+			career_work,
+			user_no
+		) VALUES (
+			 unix_timestamp(#{career_start_date}),
+			 unix_timestamp(#{career_end_date}),
+			 #{career_depart},
+			 #{career_rank},
+			 #{career_corporate_name},
+			 #{career_year},
+			 #{career_month},
+			 #{career_work},
+			 #{user_no}
+		)
+	</insert>
+	
+	
+	<select id="getMbrCareerSum" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrCareerVO">
+		SELECT sum(career_year)*12 career_year_amt
+			  ,sum(career_month) career_month_amt
+			  ,floor((sum(career_year)*12 + sum(career_month))/12) career_year_sum
+			  ,mod((sum(career_year)*12 + sum(career_month)),12) career_month_sum
+		  FROM top_mbr_career
+		 WHERE user_no = #{user_no}
+	</select>
+	
+	<update id="udtMemberCareer" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		UPDATE
+			top_mbr_career
+		SET
+			career_start_date = unix_timestamp(#{career_start_date}),
+			career_end_date = unix_timestamp(#{career_end_date}),
+			career_depart = #{career_depart},
+			career_rank = #{career_rank},
+			career_corporate_name = #{career_corporate_name},
+			career_year = #{career_year},
+			career_month = #{career_month},
+			career_work = #{career_work}
+			
+		WHERE
+			career_no = #{career_no}
+		
+	</update>
+	
+	<select id="getMbrCareer" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrCareerVO">
+		select
+			DATE_FORMAT(FROM_UNIXTIME(career_start_date), '%Y-%m-%d') career_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(career_end_date), '%Y-%m-%d') career_end_date,
+			career_depart,
+			career_rank,
+			career_corporate_name,
+			career_year,
+			career_month,
+			career_work,
+			user_no,
+			career_no
+		from
+			top_mbr_career
+		where
+			user_no = #{user_no}
+		ORDER BY career_start_date ASC
+			
+	</select>
+	
+	<update id="delMemberCareer" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		DELETE
+		FROM
+			top_mbr_career
+		WHERE
+			career_no = #{career_no}
+		
+	</update>
+	
+	<insert id="insMemberLicense" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		INSERT INTO
+			top_mbr_license
+			(license_no,
+			license_name,
+			license_acquire_date,
+			license_register_no,
+			license_publishing_office,
+			license_etc,
+			user_no)
+			
+		VALUES
+			(
+			 #{license_no},
+			 #{license_name},
+			 unix_timestamp(#{license_acquire_date}),
+			 #{license_register_no},
+			 #{license_publishing_office},
+			 #{license_etc},
+			 #{user_no}
+			)
+	</insert>
+	
+	<select id="getMbrLicense" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrCareerVO">
+		select
+			license_no,
+			license_name,
+			DATE_FORMAT(FROM_UNIXTIME(license_acquire_date), '%Y-%m-%d') license_acquire_date,
+			license_register_no,
+			license_publishing_office,
+			license_etc
+		from
+			top_mbr_license
+		where
+			user_no = #{user_no}
+		ORDER BY license_acquire_date ASC
+			
+	</select>
+	
+	<update id="udtMemberLicense" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		UPDATE
+			top_mbr_license
+		SET
+			license_name = #{license_name},
+			license_acquire_date = unix_timestamp(#{license_acquire_date}),
+			license_register_no = #{license_register_no},
+			license_publishing_office = #{license_publishing_office},
+			license_etc = #{license_etc}
+			
+		WHERE
+			license_no = #{license_no}
+		
+	</update>
+	
+	<update id="delMemberLicense" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		DELETE
+		FROM
+			top_mbr_license
+		WHERE
+			license_no = #{license_no}
+		
+	</update>
+	
+	<insert id="insMemberCareerConstruct" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		INSERT INTO
+			top_mbr_career_construct
+			(career_start_date,
+			career_end_date,
+			career_depart,
+			career_rank,
+			career_corporate_name,
+			career_year,
+			career_month,
+			career_work,
+			user_no)
+			
+		VALUES
+			(
+			 unix_timestamp(#{career_start_date}),
+			 unix_timestamp(#{career_end_date}),
+			 #{career_depart},
+			 #{career_rank},
+			 #{career_corporate_name},
+			 #{career_year},
+			 #{career_month},
+			 #{career_work},
+			 #{user_no}
+			)
+	</insert>
+	
+		<insert id="insMemberCareerGeneral" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		INSERT INTO
+			top_mbr_career_general
+			(career_start_date,
+			career_end_date,
+			career_depart,
+			career_rank,
+			career_corporate_name,
+			career_year,
+			career_month,
+			career_work,
+			user_no)
+			
+		VALUES
+			(
+			 unix_timestamp(#{career_start_date}),
+			 unix_timestamp(#{career_end_date}),
+			 #{career_depart},
+			 #{career_rank},
+			 #{career_corporate_name},
+			 #{career_year},
+			 #{career_month},
+			 #{career_work},
+			 #{user_no}
+			)
+	</insert>
+	
+	<select id="getMbrCareerConstructSum" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrCareerVO">
+		SELECT sum(career_year)*12 career_year_amt
+			  ,sum(career_month) career_month_amt
+			  ,floor((sum(career_year)*12 + sum(career_month))/12) career_year_sum
+			  ,mod((sum(career_year)*12 + sum(career_month)),12) career_month_sum
+		  FROM top_mbr_career_construct
+		 WHERE user_no = #{user_no}
+	</select>
+
+	<select id="getMbrCareerGeneralSum" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrCareerVO">
+		SELECT sum(career_year)*12 career_year_amt
+			  ,sum(career_month) career_month_amt
+			  ,floor((sum(career_year)*12 + sum(career_month))/12) career_year_sum
+			  ,mod((sum(career_year)*12 + sum(career_month)),12) career_month_sum
+		  FROM top_mbr_career_general
+		 WHERE user_no = #{user_no}
+	</select>
+	
+	<update id="udtMemberConstructCareer" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		UPDATE
+			top_mbr_career_construct
+		SET
+			career_start_date = unix_timestamp(#{career_start_date}),
+			career_end_date = unix_timestamp(#{career_end_date}),
+			career_depart = #{career_depart},
+			career_rank = #{career_rank},
+			career_corporate_name = #{career_corporate_name},
+			career_year = #{career_year},
+			career_month = #{career_month},
+			career_work = #{career_work}
+			
+		WHERE
+			career_no = #{career_no}
+	</update>
+	
+	<update id="udtMemberGeneralCareer" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		UPDATE
+			top_mbr_career_general
+		SET
+			career_start_date = unix_timestamp(#{career_start_date}),
+			career_end_date = unix_timestamp(#{career_end_date}),
+			career_depart = #{career_depart},
+			career_rank = #{career_rank},
+			career_corporate_name = #{career_corporate_name},
+			career_year = #{career_year},
+			career_month = #{career_month},
+			career_work = #{career_work}
+			
+		WHERE
+			career_no = #{career_no}
+	</update>
+	
+	<update id="delMemberConstructCareer" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		DELETE
+		FROM
+			top_mbr_career_construct
+		WHERE
+			career_no = #{career_no}
+	</update>
+	
+	<update id="delMemberGeneralCareer" parameterType="kr.co.toplac.topteam.TopMbrCareerVO" >
+		DELETE
+		FROM
+			top_mbr_career_general
+		WHERE
+			career_no = #{career_no}
+	</update>
+	
+	<select id="getMbrCareerConstruct" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrCareerVO">
+		select
+			DATE_FORMAT(FROM_UNIXTIME(career_start_date), '%Y-%m-%d') career_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(career_end_date), '%Y-%m-%d') career_end_date,
+			career_depart,
+			career_rank,
+			career_corporate_name,
+			career_year,
+			career_month,
+			career_work,
+			user_no,
+			career_no
+		from
+			top_mbr_career_construct
+		where
+			user_no = #{user_no}
+		ORDER BY career_start_date ASC
+	</select>	
+	
+	<select id="getMbrCareerGeneral" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrCareerVO">
+		select
+			DATE_FORMAT(FROM_UNIXTIME(career_start_date), '%Y-%m-%d') career_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(career_end_date), '%Y-%m-%d') career_end_date,
+			career_depart,
+			career_rank,
+			career_corporate_name,
+			career_year,
+			career_month,
+			career_work,
+			user_no,
+			career_no
+		from
+			top_mbr_career_general
+		where
+			user_no = #{user_no}
+		ORDER BY career_start_date ASC
+			
+	</select>	
+</mapper>

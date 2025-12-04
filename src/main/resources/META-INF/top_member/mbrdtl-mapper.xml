@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TopMbrDtlMapper">
+	
+	<!-- 퇴사자를 제외하고 가져온다  -->
+	<select id="selectCertiSubMemberListByCkey" resultType="HashMap" parameterType="String">
+		SELECT 
+			CM.mkey
+			,CM.ckey 
+			,TM.user_name
+			,TB.team_name
+		FROM top_mbr_certi_manager CM
+		LEFT JOIN top_mbr_bsc TM
+		ON CM.user_no = TM.user_no
+		LEFT JOIN top_tm_bsc TB
+		ON TM.team_id_main = TB.team_id
+		WHERE CM.ckey = #{ckey}
+		AND TM.user_state != 1
+		AND CM.del_flag = 0
+	</select>
+	
+	<select id="selectCertiInfoByCkey" resultType="HashMap" parameterType="String">
+		SELECT 
+			TC.ckey
+			,TC.user_no
+			,TC.certi_class
+			,TC.certi_type
+			,IFNULL((SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_mbr_certi' AND col_nm = 'certi_type' AND col_cd = TC.certi_type),'') AS certi_type_nm
+			,TC.certi_number
+			,TC.work_phone
+			,TM.user_name	
+		FROM top_mbr_certi TC
+		LEFT JOIN top_mbr_bsc TM
+		ON TC.user_no = TM.user_no
+		WHERE ckey = #{ckey}
+		AND TC.del_flag = 0
+	</select>
+	
+	<delete id="deleteCertiManageInfoRelation" parameterType="String">
+		DELETE FROM top_mbr_certi_manager
+		WHERE ckey = #{ckey}	
+	</delete>
+	
+	<update id="delUpdateCertiManageInfoRelation" parameterType="String">
+		UPDATE top_mbr_certi_manager SET
+			del_flag = 1
+			,del_date = now()
+		WHERE ckey = #{ckey}
+	</update>
+	
+	<!-- 인사테이블 손해사정서 분류값 초기화 -->
+	<update id="updateCertiStateClearByTopMbrBsc" parameterType="String">
+		UPDATE top_mbr_bsc SET
+			certi_state = 0
+		WHERE user_no = #{user_no}		
+	</update>
+	
+	<delete id="deleteCertiManageInfo" parameterType="String">
+		DELETE FROM top_mbr_certi
+		WHERE ckey = #{ckey}	
+	</delete>
+	
+	<update id="delUpdateCertiManageInfo" parameterType="String">
+		UPDATE top_mbr_certi SET
+			del_flag = 1
+			,del_date = now()
+		WHERE ckey = #{ckey}
+	</update>
+
+	<select id="countCertiManageMember" resultType="Integer" parameterType="String">
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_mbr_certi_manager
+		WHERE 1=1		
+		AND ckey = #{ckey}
+		AND del_flag = 0
+	</select>
+
+	<select id="dupCertiNumberChk" resultType="Integer" parameterType="HashMap">
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_mbr_certi
+		WHERE 1=1
+		AND del_flag = 0
+		AND certi_number = #{certi_number} 
+	</select>
+
+	<!-- 보조인 및 비대상을 제외한 직원 목록 >> 전체직원다 조회되도록 기능수정 20250625 -->
+	<select id="selectCertiManageUserNoList" resultType="HashMap" parameterType="HashMap">
+		SELECT
+		  GA.user_no
+		  ,GA.user_name
+		  ,GA.certi_state
+		FROM (
+		  SELECT
+		   a.user_no
+		   ,a.user_name
+		   ,a.work_level
+		   ,a.join_date
+		   ,a.user_state
+		   ,b.team_id
+		   ,b.team_name
+		   ,b.team_group_order
+		   ,b.team_order 
+		   ,b.team_type
+		   ,CASE a.work_type
+		    WHEN 1 THEN 1
+		    WHEN 2 THEN 2
+		    WHEN 6 THEN 3
+		    WHEN 14 THEN 4
+		    WHEN 15 THEN 5
+		    WHEN 3 THEN 6
+		    WHEN 7 THEN 7
+		    WHEN 4 THEN 8
+		    WHEN 8 THEN 9
+		    WHEN 5 THEN 10
+		    WHEN 9 THEN 11
+		    WHEN 10 THEN 12
+		    WHEN 12 THEN 13
+		    WHEN 11 THEN 14
+		    WHEN 13 THEN 15
+		   END AS new_work_order 
+		   ,a.work_job
+		   ,a.certi_state
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		  WHERE a.team_id_main = b.team_id  
+		  AND a.user_state != 1  
+		  <!-- AND a.certi_state NOT IN (1,3) 보조인, 비대상 제외 -->
+		 )GA
+		 ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order		
+	</select>
+
+	<select id="selectCertiManageListByCertiClass" resultType="HashMap" parameterType="HashMap">
+		SELECT 
+			TC.ckey
+			,TC.user_no
+			,TC.certi_class
+			,TC.certi_type
+			,IFNULL((SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_mbr_certi' AND col_nm = 'certi_type' AND col_cd = TC.certi_type),'') AS certi_type_nm
+			,TC.certi_number	
+			,TC.work_phone
+			,TM.user_name
+			,TM.team_id_main
+			,TB.team_name
+			,IFNULL(DATE_FORMAT(TC.certi_date, '%Y-%m-%d'),'') AS certi_date_fmt  
+		FROM top_mbr_certi TC
+		LEFT JOIN top_mbr_bsc TM
+		ON TC.user_no = TM.user_no
+		LEFT JOIN top_tm_bsc TB
+		ON TM.team_id_main = TB.team_id
+		WHERE 1=1
+		AND TC.del_flag != 1
+		<if test="srchCertiClass != ''">
+			AND TC.certi_class = #{srchCertiClass}	
+		</if>
+		ORDER BY TB.team_group_order DESC, TB.team_order DESC, TM.work_level DESC, TM.join_date						
+	</select>
+
+	<select id="selectCertiInfoTextByUserNo" resultType="HashMap"  parameterType="String">
+		SELECT			
+			IFNULL((SELECT CONCAT('[',(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_mbr_certi' AND col_nm = 'certi_type' AND col_cd = certi_type),'][',certi_number,']') FROM top_mbr_certi WHERE ckey = TC.ckey),'') AS certi_info_text
+			,certi_class 
+		FROM top_mbr_certi TC		
+		WHERE TC.user_no = #{user_no}
+		AND TC.del_flag = 0
+		ORDER BY TC.certi_class DESC, TC.ckey ASC
+	</select>
+
+	<select id="selectCertiManagerInfoByUserNo" resultType="HashMap"  parameterType="String">
+		SELECT
+			TM.ckey
+			,IFNULL((SELECT CONCAT('[',getTopMbrBscUserName(user_no),'][',(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_mbr_certi' AND col_nm = 'certi_type' AND col_cd = certi_type),'][',certi_number,']') FROM top_mbr_certi WHERE ckey = TM.ckey),'') AS manager_info_text
+		FROM top_mbr_certi_manager TM
+		LEFT JOIN top_mbr_certi TC
+		ON TM.ckey = TC.ckey
+		WHERE TM.user_no = #{user_no}
+		AND TM.del_flag = 0
+	</select>
+
+	<!-- 인사관리(자격현황) 직원별 목록 불러오기 -->
+	<select id="selectInsaCertiMemberListSearch" parameterType="HashMap" resultType="HashMap">
+		SELECT
+		  getTopTmBscCenterName(GA.team_id) as center_name
+		  ,GA.team_name
+		  ,GA.user_name
+		  ,GA.user_state
+		  ,GA.certi_state
+		  ,IFNULL(TC.certi_type,'') AS certi_type
+		  ,IFNULL((SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_mbr_certi' AND col_nm = 'certi_type' AND col_cd = TC.certi_type),'') AS certi_type_nm
+		  ,IFNULL(TC.certi_number,'') AS certi_number
+		  ,IFNULL(TM.ckey,'') AS ckey		  
+		  ,IFNULL((SELECT getTopMbrBscUserName(user_no) FROM top_mbr_certi WHERE ckey = TM.ckey AND del_flag = 0),'') AS manager_nm
+		  ,IFNULL((SELECT CONCAT('[',getTopMbrBscUserName(user_no),'][',(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_mbr_certi' AND col_nm = 'certi_type' AND col_cd = certi_type),'][',certi_number,']') FROM top_mbr_certi WHERE ckey = TM.ckey AND del_flag = 0),'') AS manager_info_text
+		  ,GA.user_no		  
+		  ,(SELECT COUNT(*) FROM top_mbr_certi WHERE user_no = GA.user_no AND del_flag = 0) AS certi_cnt
+		  ,(SELECT COUNT(*) FROM top_mbr_certi_manager WHERE user_no = GA.user_no  AND del_flag = 0) AS certi_manager_cnt
+		  ,IFNULL(DATE_FORMAT(TC.certi_date, '%Y-%m-%d'),'') AS certi_date_fmt
+		  ,MIN(TC.ckey) AS order_ckey
+		FROM (
+		  SELECT
+		   a.user_no
+		   ,a.user_name
+		   ,a.work_level
+		   ,a.join_date
+		   ,a.user_state
+		   ,a.certi_state
+		   ,b.team_id
+		   ,b.team_name
+		   ,b.team_group_order
+		   ,b.team_order 
+		   ,b.team_type
+		   ,CASE a.work_type
+		    WHEN 1 THEN 1
+		    WHEN 2 THEN 2
+		    WHEN 6 THEN 3
+		    WHEN 14 THEN 4
+		    WHEN 15 THEN 5
+		    WHEN 3 THEN 6
+		    WHEN 7 THEN 7
+		    WHEN 4 THEN 8
+		    WHEN 8 THEN 9
+		    WHEN 5 THEN 10
+		    WHEN 9 THEN 11
+		    WHEN 10 THEN 12
+		    WHEN 12 THEN 13
+		    WHEN 11 THEN 14
+		    WHEN 13 THEN 15
+		   END AS new_work_order 
+		   ,a.work_job   
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		  WHERE a.team_id_main = b.team_id
+		  <if test="srchTeamType == 1">
+		  	AND b.team_type IN(0,1)
+		  </if>
+		  <if test="srchTeamType == 4">
+		  	AND b.team_type = 4
+		  </if>
+		  <if test="srchTeamId != 0">
+		  	AND b.team_id = #{srchTeamId}
+		  </if>
+		  <if test="srchCertiClass != ''">
+		  	AND a.certi_state = #{srchCertiClass}
+		  </if>		  
+		  <if test="srchUserName != ''">
+		  	AND a.user_name LIKE CONCAT('%',#{srchUserName},'%')
+		  </if>
+		  <choose>
+		  	<when test="srchUserState == 0">
+		  		AND a.user_state != 1
+		  	</when>
+		  	<when test="srchUserState == 1">
+		  		AND a.user_state = 1
+		  	</when>		  	
+		  </choose>		  
+		 )GA 
+		 LEFT JOIN 
+		 (
+			SELECT
+				ckey
+				,user_no
+				,certi_class
+				,certi_type
+				,certi_number				
+				,reg_date
+				,work_phone
+				,certi_date
+			FROM top_mbr_certi
+			WHERE del_flag = 0
+			ORDER BY certi_class DESC, ckey ASC 
+		)TC
+		ON GA.user_no = TC.user_no 
+		 
+		LEFT JOIN top_mbr_certi_manager TM
+		ON GA.user_no = TM.user_no		 
+		GROUP BY GA.user_no 
+		ORDER BY GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	</select>
+
+	<!-- 손해사정사(보조인) 마이그래이션 정보 등록 -->
+	<insert id="insertMigCertiInfo" parameterType="HashMap">
+		INSERT INTO top_mbr_certi (
+			user_no
+			,certi_class
+			,certi_type
+			,certi_number
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{certi_class}
+			,#{certi_type}
+			,#{certi_number}
+			,now()
+		)
+	</insert>
+
+	<!-- 손해사정사(보조인) 등록번호 중복체크 -->
+	<select id="selectMigCertiNumberChk" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*)  AS nCnt
+		FROM top_mbr_certi
+		WHERE certi_number = #{certi_number}
+	</select>
+
+	<!-- 인사정보에 certi_state 갱신 -->
+	<update id="updateTopMbrBscCertiStateByUserNo" parameterType="HashMap">
+		UPDATE top_mbr_bsc SET 
+			certi_state = #{certi_state}
+		WHERE user_no = #{user_no}
+	</update>
+	
+	<!-- 담당 손해사정사 ckey 값 읽어오기 -->
+	<select id="selectMigCertiManagerCkeyByUserName" parameterType="String" resultType="String">
+		SELECT 
+			MC.ckey
+		FROM top_mbr_bsc MB
+		LEFT JOIN top_mbr_certi MC
+		ON MB.user_no = MC.user_no
+		WHERE MB.user_name = #{user_name}
+		AND MB.user_state != 1	
+		AND MC.del_flag = 0
+	</select>
+	
+	<!-- 잘못 들어간 종결보고서 손해사정사 정보 갱신 -->
+	<update id="updateMigPtnrByCertiInfo" parameterType="HashMap">
+		UPDATE top_rpt_certi_end SET 
+			certi_state_val = #{certi_state_val}
+			,work_phone = #{work_phone}
+		WHERE ekey = #{ekey}
+	</update>
+	
+	<!-- 잘못 들어간 종결보고서 손해사정사 정보 목록 불러오기 -->	
+	<select id="selectMigPtnrByCertiInfoList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			GA.ekey
+			,GA.suim_rpt_no
+			,GA.user_no
+			,GA.user_name
+			,GA.certi_state_val
+			,GA.work_phone 
+			,GA.certi_class
+			,GA.work_phone_new
+		FROM(
+			SELECT 
+				a.ekey
+				,a.suim_rpt_no
+				,a.user_no
+				,a.user_name
+				,a.certi_state_val
+				,a.work_phone 
+				,b.certi_class
+				,b.work_phone AS work_phone_new	
+			FROM top_rpt_certi_end a, top_mbr_certi b
+			WHERE a.user_no = b.user_no
+			AND b.certi_class = 2		
+		)GA
+		LEFT JOIN top_rpt_head TA
+		ON GA.suim_rpt_no = TA.suim_rpt_no
+		<!-- WHERE TA.ptnr_id = #{ptnr_id} -->
+		WHERE (TA.suim_rpt_type1 = 3 OR TA.suim_rpt_type1 = 4)		
+	</select>
+	
+	<!-- 담당 손해사정사 마이그래이션 데이터 불러오기-->
+	<select id="selectMigTempCertiManagerList" resultType="HashMap">
+		SELECT 
+			TM.mkey
+			,TM.user_name
+			,TM.manager_1
+			,TM.manager_2
+			,MB.user_no
+		FROM top_certi_temp_manager TM
+		LEFT JOIN top_mbr_bsc MB
+		ON TM.user_name = MB.user_name
+		WHERE MB.user_state != 1
+	</select>
+
+	<!-- 손해사정사 마이그래이션 데이터 불러오기 -->
+	<select id="selectMigTempCertiMemberList" resultType="HashMap">
+		SELECT
+			CT.ckey
+			,CT.user_name
+			,CT.certi_class
+			,CT.certi_type
+			,CT.certi_number
+			,TB.user_no
+		FROM top_certi_temp_username CT
+		LEFT JOIN top_mbr_bsc TB
+		ON CT.user_name = TB.user_name	
+		WHERE TB.user_state != 1	
+	</select>	
+
+	<insert id="insertNilinkRecord" parameterType="HashMap">
+		INSERT INTO nilink_record
+		(
+			rtype
+			,send_num
+			,receive_num
+			,folder_date
+			,record_time
+			,file_name
+			,full_path
+			,file_size
+			,sync_date
+		)VALUES(
+			#{rtype}
+			,#{receive_num}
+			,#{send_num}
+			,#{folder_date}
+			,#{record_time}
+			,#{file_name}
+			,#{full_path}
+			,#{file_size}			
+			,now()
+		)
+	</insert>
+
+	<select id="countNilinkRecordFileName" resultType="integer" parameterType="String">
+		SELECT
+			COUNT(*) as cnt
+		FROM nilink_record
+		WHERE file_name = #{file_name}
+	</select>
+
+	<select id="mbrinfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String" >
+		SELECT a.user_no
+			  ,a.user_name
+			  ,a.user_id
+			  ,a.jumin_no1
+			  ,a.jumin_no2
+			  ,a.team_id_main
+			  ,a.team_id_loc
+			  ,a.handphone
+			  ,a.job_memo
+			  ,a.home_tel
+			  ,a.home_address
+			  ,a.office_tel
+			  ,a.email
+			  ,a.comment
+			  ,a.memo
+			  ,a.picture
+		      ,a.mms_picture as mmsPicture
+			  ,a.office_fax
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.CTDay), '%Y-%m-%d') CTDay			<!-- 계약일추가, 20190708 by top3009 -->
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d') out_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.probation_date), '%Y-%m-%d') probation_date<!-- 면수습일자 추가, 170406 by lds -->
+			  ,a.memo
+			  ,a.insa_memo insa_memo_only
+			  ,getTopTmBscCenterName(b.team_id) center_name
+			  ,b.team_name
+			  ,b.team_type
+			  ,IF(b.team_type != 4, 1, 4) team_type2 <!-- 총괄 코드처리용 -->
+  			  ,c.yearcnt
+			  ,a.work_type work_type_cd
+			  ,a.work_level work_level_cd
+			  ,a.work_rank work_rank_cd
+			  ,a.work_job work_job_cd
+  			  ,getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state  		
+			  ,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			  ,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			  ,getCodeValue('top_mbr_bsc', 'work_rank',a.work_rank) work_rank
+			  ,getCode2Value('top_mbr_bsc','work_job',if(b.team_type!=4,1,4),a.work_job) work_job
+			  ,getCode2Value('top_mbr_bsc','work_job_code',if(b.team_type!=4,1,4),a.work_job) work_job_code
+			  ,a.certi_state  
+			  ,a.is_pass
+			  ,a.exp_agree
+			  ,a.bonus_career_state
+			  ,a.person_zone
+		FROM  top_mbr_bsc a 
+			 ,top_tm_bsc b
+			 ,(SELECT max(work_level)
+					 ,ceil((UNIX_TIMESTAMP(now()) - min(reg_date))/(60*60*24)/365) yearcnt
+				 FROM top_mbr_bsc_log 
+				WHERE user_no = #{user_no} ) c
+	   WHERE  a.user_no = #{user_no} 
+	     AND  a.team_id_main = b.team_id
+	</select>
+
+	<select id="workLevelList"  resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd  
+			  ,col_val 
+		  FROM sysadm_codedic
+		 WHERE tbl_nm = 'top_mbr_bsc' and col_nm = 'work_level' 
+		 ORDER BY col_cd
+	</select>
+	
+	<select id="workTypeList"  resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd  
+   			  ,col_val 
+		  FROM sysadm_codedic
+		 WHERE tbl_nm = 'top_mbr_bsc' and col_nm = 'work_type'
+		 ORDER BY col_cd 
+	</select>
+	
+	<select id="selectCkeyCertInfoByUserno" resultType="String"  parameterType="String">
+		SELECT 
+			IFNULL(ckey,'') AS ckey
+			,COUNT(*) AS cnt
+		FROM top_mbr_certi
+		WHERE user_no = #{user_no}		
+	</select>
+	
+	<select id="selectCertiManagerCkeysByUserNo" resultType="String"  parameterType="String">
+		SELECT
+			IFNULL(GROUP_CONCAT(CM.ckey),'') AS ckeys
+		FROM top_mbr_certi_manager CM
+		LEFT JOIN top_mbr_certi CT
+		ON CM.ckey = CT.ckey
+		WHERE CT.user_no != #{user_no}
+		AND CM.user_no = #{user_no}
+		AND CM.del_flag = 0
+	</select>
+	
+	<!-- 담당 손해사정사 목록 -->
+	<select id="selectCertiManagerList" resultType="HashMap"  parameterType="HashMap">
+		SELECT
+			TC.ckey
+			,TC.user_no
+			,TC.certi_type
+			,(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_mbr_certi' AND col_nm = 'certi_type' AND col_cd = TC.certi_type ) AS certi_type_nm
+			,TC.certi_number
+			,TB.user_name
+		FROM top_mbr_certi TC
+		LEFT JOIN top_mbr_bsc TB
+		ON TC.user_no = TB.user_no
+		WHERE TC.del_flag = 0
+		AND TC.certi_class = 2
+		AND TB.user_state != 1
+		AND TB.user_no != #{user_no}
+		ORDER BY TB.user_name		
+	</select>
+	
+	<select id="selectCertiSubInfoByUserno" resultType="HashMap"  parameterType="String">
+		SELECT
+			GA.ckey
+			,GA.user_no
+			,GA.certi_class
+			,GA.certi_type
+			,GA.certi_number
+			,GA.del_flag
+			,GA.del_date
+			,GA.del_date_fmt
+			,GA.reg_date
+			,GA.reg_date_fmt
+			,CD.col_val AS certi_type_nm
+		FROM
+		(
+			SELECT 
+				TC.ckey
+				,TC.user_no
+				,TC.certi_class
+				,TC.certi_type			
+				,TC.certi_number
+				,TC.del_flag
+				,TC.del_date
+				,DATE_FORMAT(TC.del_date, '%Y-%m-%d') AS del_date_fmt
+				,TC.reg_date
+				,DATE_FORMAT(TC.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			FROM top_mbr_certi TC
+			WHERE TC.del_flag = 0
+			AND TC.certi_class = 1		
+			AND TC.user_no = #{user_no}	
+		)GA
+		LEFT JOIN sysadm_codedic CD
+		ON  CD.col_cd = GA.certi_type
+		AND CD.tbl_nm = 'top_mbr_certi'
+		AND CD.col_nm = 'certi_type'
+		ORDER BY GA.ckey DESC
+	</select>
+	
+	<select id="selectCertiInfoByUserno" resultType="HashMap"  parameterType="String">
+		SELECT
+			GA.ckey
+			,GA.user_no
+			,GA.certi_class
+			,GA.certi_type
+			,GA.certi_number
+			,GA.del_flag
+			,GA.del_date
+			,GA.del_date_fmt
+			,GA.reg_date
+			,GA.reg_date_fmt
+			,CD.col_val AS certi_type_nm
+		FROM
+		(
+			SELECT 
+				TC.ckey
+				,TC.user_no
+				,TC.certi_class
+				,TC.certi_type			
+				,TC.certi_number
+				,TC.del_flag
+				,TC.del_date
+				,DATE_FORMAT(TC.del_date, '%Y-%m-%d') AS del_date_fmt
+				,TC.reg_date
+				,DATE_FORMAT(TC.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			FROM top_mbr_certi TC
+			WHERE TC.del_flag = 0
+			AND TC.certi_class = 2	
+			AND TC.user_no = #{user_no}	
+		)GA
+		LEFT JOIN sysadm_codedic CD
+		ON  CD.col_cd = GA.certi_type
+		AND CD.tbl_nm = 'top_mbr_certi'
+		AND CD.col_nm = 'certi_type'
+		ORDER BY GA.ckey DESC
+	</select>
+	
+	<select id="selectMainCertiTypeList" resultType="HashMap">
+		SELECT 
+			col_cd AS certi_type
+			,col_val AS certi_type_nm
+		FROM sysadm_codedic 
+		WHERE tbl_nm = 'top_mbr_certi'
+		AND col_nm = 'certi_type' 
+		AND col_cd > 10
+		ORDER BY col_cd	
+	</select>
+	
+	<select id="selectSubCertiTypeList" resultType="HashMap">
+		SELECT 
+			col_cd AS certi_type
+			,col_val AS certi_type_nm
+		FROM sysadm_codedic 
+		WHERE tbl_nm = 'top_mbr_certi'
+		AND col_nm = 'certi_type' 
+		AND col_cd &lt; 10
+		ORDER BY col_cd	
+	</select>
+	
+	<select id="selectSubjobList" parameterType="HashMap" resultType="AsraMap">
+		SELECT team_id_main
+			, work_type
+		 FROM top_mbr_bsc_sub		 
+		 WHERE user_no = #{user_no}
+	</select>
+	
+	<update id="delMemIng" parameterType="String">
+		UPDATE top_mbr_bsc
+		   SET picture =""
+		 WHERE user_no = #{user_no}
+	</update>
+	
+	
+	<insert id="insertMbrMgmtLog" parameterType="HashMap">
+		INSERT INTO top_mbr_mgmt_log
+		(
+			 user_no
+			,gubun
+			,action
+			,log_user_no
+			,reg_date
+		)VALUES(
+			 #{user_no}
+			,#{gubun}
+			,#{action}
+			,#{log_user_no}
+			,now()
+		)
+	</insert>
+	
+</mapper>

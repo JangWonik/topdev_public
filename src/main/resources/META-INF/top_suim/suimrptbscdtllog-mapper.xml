@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SuimRptBscDtlLogMapper">
+
+	<select id="suimRptBscDtlReadLogList" resultType="kr.co.toplac.topsuim.TopRptLogReadVO">
+		SELECT a.suim_rpt_no, a.rpt_kind, a.user_ip
+				, a.user_no, getTopMbrBscUserName(a.user_no) user_nm
+				, a.reg_date
+				, IF(a.reg_date = NULL || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+				, IF(a.reg_date = NULL || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i')) reg_date_fmt_detail
+		FROM top_rpt_log_read a
+		WHERE a.rpt_kind = '101'
+		AND a.suim_rpt_no = #{suim_rpt_no}
+		ORDER BY serial_no DESC
+	</select>
+
+	<select id="suimRptBscDtlFileLogList" resultType="kr.co.toplac.topsuim.TopRptLogFileVO">
+		SELECT a.suim_rpt_no, a.rpt_kind, a.file_name, a.user_ip
+				, a.user_no, getTopMbrBscUserName(a.user_no) user_nm
+				, a.reg_date
+				, IF(a.reg_date = NULL || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+				, IF(a.reg_date = NULL || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i')) reg_date_fmt_detail
+		FROM top_rpt_log_file a
+		WHERE a.rpt_kind = '101'
+		AND a.suim_rpt_no = #{suim_rpt_no}
+		ORDER BY serial_no DESC
+	</select>
+	
+	<!-- 파일 다운로드 로그 조뢰 by top3009 -->
+	<select id="selectFileDownLogList" parameterType="hashmap" resultType="hashmap" >
+		SELECT
+			serial_no
+			,rpt_kind
+			,suim_rpt_no
+			,file_name
+			,user_no
+			,getTopMbrBscUserName(user_no) user_nm
+			,user_ip
+			,reg_date
+			, IF(reg_date = NULL || reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d')) reg_date_fmt
+			,file_key
+			,down_comment
+		FROM top_rpt_log_file
+		WHERE suim_rpt_no = #{suimRptNo}
+		AND file_key = #{key}
+		ORDER BY reg_date DESC
+	</select>
+
+	<select id="suimRptBscDtlLogList" resultType="kr.co.toplac.topsuim.TopRptHeadLogVO">
+		SELECT a.suim_rpt_no
+				, a.suim_rpt_type1, getCodeValue('top_rpt_head', 'suim_rpt_type1', a.suim_rpt_type1) suim_rpt_type1_nm
+				, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', a.suim_rpt_state) suim_rpt_state_nm
+				, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', a.suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+				, a.suim_rpt_type1_close34, getCodeValue('top_rpt_head', 'suim_rpt_type1_close34', a.suim_rpt_type1_close34) suim_rpt_type1_close34_nm
+				, a.reg_date
+				, IF(a.reg_date = NULL || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+				, a.suim_cancel_date
+				, IF(a.suim_cancel_date = NULL || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+				, a.suim_rpt_aprv_date
+				, IF(a.suim_rpt_aprv_date = NULL || a.suim_rpt_aprv_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_rpt_aprv_date), '%Y-%m-%d')) suim_rpt_aprv_date_fmt
+				, a.close_date
+				, IF(a.close_date = NULL || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+				, a.del_date
+				, IF(a.del_date = NULL || a.del_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d')) del_date_fmt
+				, a.lock_flag, getCodeValue('top_rpt_head', 'lock_flag', a.lock_flag) lock_flag_nm
+				, a.moral_flag, getCodeValue('top_rpt_body', 'moral_flag', a.moral_flag) moral_flag_nm
+				, a.minwon_flag, getCodeValue('top_rpt_body', 'minwon_flag', a.minwon_flag) minwon_flag_nm
+				, a.log_date
+				, IF(a.log_date = NULL || a.log_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.log_date), '%Y-%m-%d')) log_date_fmt
+				, IF(a.log_date = NULL || a.log_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.log_date), '%Y-%m-%d %H:%i')) log_date_fmt_detail
+				, a.log_ip
+				, a.log_user_no, getTopMbrBscUserName(a.log_user_no) log_user_nm
+				, a.user_no, getTopMbrBscUserName(a.user_no) user_nm
+				, a.team_id, getTopTmBscTeamName(a.team_id) team_nm
+		FROM top_rpt_head_log a
+		WHERE a.suim_rpt_no = #{suim_rpt_no}
+		ORDER BY serial_no DESC
+	</select>
+
+	<insert id="insTopRptLogRead" parameterType="kr.co.toplac.topsuim.TopRptLogReadVO">
+		INSERT INTO top_rpt_log_read
+			(rpt_kind,suim_rpt_no,user_no,user_ip,reg_date)
+		VALUES ('101',#{suim_rpt_no},#{user_no},#{user_ip},UNIX_TIMESTAMP(NOW()))
+	</insert>
+
+	<insert id="insTopRptLogFile" parameterType="kr.co.toplac.topsuim.TopRptLogFileVO">
+		INSERT INTO top_rpt_log_file
+			(rpt_kind,suim_rpt_no,file_name,user_no,user_ip,reg_date)
+		VALUES ('101',#{suim_rpt_no},#{file_name},#{user_no},#{user_ip},UNIX_TIMESTAMP(NOW()))
+	</insert>
+	
+	<!-- 다운로드 시 사유와 파일키를 추가로 남긴다. by top3009 -->
+	<insert id="insTopRptLogFileNew" parameterType="kr.co.toplac.topsuim.TopRptLogFileVO">
+		INSERT INTO top_rpt_log_file
+			(rpt_kind,suim_rpt_no,file_name,user_no,user_ip,reg_date,file_key,down_comment)
+		VALUES ('101',#{suim_rpt_no},#{file_name},#{user_no},#{user_ip},UNIX_TIMESTAMP(NOW()),#{key},#{down_comment})
+	</insert>
+
+</mapper>

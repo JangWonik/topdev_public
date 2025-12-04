@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+
+    <!--인증된 유저의 LoginVO, 권한, 인증 여부를 확인 할 수있는 서비스 클래스-->
+    <bean id="userSessionHelper" class="kr.co.toplac.cmm.util.SessionUtil">
+        <property name="userSessionService">
+            <!-- 원하는 bean id를 아래에 ref 태그에 적용한다 -->
+            <ref bean="userSessionService" />
+        </property>
+    </bean>
+
+    <bean id="userSessionService" class="kr.co.toplac.cmm.service.impl.UserSessionServiceImpl"/>
+
+</beans>

@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="ConstructionReportMapper">
+
+<!--     <select id="selectCodeList" parameterType="hashmap" resultType="AsraMap"> -->
+<!--         SELECT  A.COL_CD -->
+<!--                ,A.COL_VAL -->
+<!--           FROM  sysadm_codedic A -->
+<!--          WHERE  1=1 -->
+<!--            AND  A.TBL_NM = #{tbl_nm} -->
+<!--            AND  A.COL_NM = #{col_nm} -->
+<!--     </select> -->
+
+    <insert id="insertReportPrint30ForExist" parameterType="hashmap">
+        INSERT INTO top_rpt_print_30(SUIM_RPT_NO) VALUES (#{suim_rpt_no})
+    </insert>
+    
+	<insert id="insertReportOtherWorker" parameterType="hashmap">
+        INSERT INTO top_rpt_print_30_deduction (RPT_PRINT_NO, WORKER_NAME, SSN, COUNTRY, DAMAGE_AMOUNT, EXCHANGE_RATE, DEDUCTION_AMOUNT, DEDUCTION_REMARKS, WORKER_TYPE, COUNTRY_UNIT,PAYMENT_AMOUNT)
+        VALUES(#{rptPrintNo}, #{worker_name}, #{ssn}, #{country},#{damage_amount},#{exchange_rate},#{deduction_amount},#{deduction_remarks},#{worker_type},#{unit},#{deduction_amount})
+    </insert>
+    
+	<select id="selectOtherWorkerList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+			       ,A.RPT_PRINT_NO
+			       ,A.WORKER_NAME
+			       ,A.SSN
+			       ,A.COUNTRY
+			       ,A.DAMAGE_AMOUNT
+			       ,A.EXCHANGE_RATE
+			       ,A.DEDUCTION_AMOUNT
+			       ,A.DEDUCTION_REMARKS
+				   ,A.WORKER_TYPE
+				   ,A.PAYMENT_PLACE
+				   ,A.BANK
+				   ,A.ACCOUNT_NUMBER
+				   ,A.PAYMENT_REMARKS
+				   ,A.ACCIDENT_DATE
+				   ,A.IMMUNITY_REASON
+				   ,A.SUPPLEMENT_REASON
+				   ,A.COUNTRY_UNIT
+				   ,A.PAYMENT_AMOUNT
+				   ,A.PART_SUPPLEMENT_AMOUNT
+				   ,A.JUDGEMENT_REASON
+				   ,A.EDITED_DEDUCTION_AMOUNT
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1=1
+		    AND  A.RPT_PRINT_NO = #{rptPrintNo}
+         ORDER BY A.WORKER_NAME ASC
+ 	</select>
+	
+	<select id="selectWorkerList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+			       ,A.RPT_PRINT_NO
+			       ,A.WORKER_NAME
+			       ,A.SSN
+			       ,A.COUNTRY
+			       ,A.DAMAGE_AMOUNT
+			       ,A.EXCHANGE_RATE
+			       ,A.DEDUCTION_AMOUNT
+			       ,A.DEDUCTION_REMARKS
+				   ,A.WORKER_TYPE
+				   ,A.PAYMENT_PLACE
+				   ,A.BANK
+				   ,A.ACCOUNT_NUMBER
+				   ,A.PAYMENT_REMARKS
+				   ,A.ACCIDENT_DATE
+				   ,A.IMMUNITY_REASON
+				   ,A.SUPPLEMENT_REASON
+				   ,A.COUNTRY_UNIT
+				   ,A.PAYMENT_AMOUNT
+				   ,A.PART_SUPPLEMENT_AMOUNT
+				   ,A.JUDGEMENT_REASON
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1=1
+		    AND  A.RPT_PRINT_NO = #{rptPrintNo}
+         ORDER BY A.WORKER_NAME ASC
+ 	</select>
+	
+	<select id="selectCountType1" parameterType="hashmap" resultType="Integer">
+		SELECT  COUNT(A.SERIAL_NO) cnt
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1=1
+		 	AND 	A.WORKER_TYPE=1
+		 	AND  A.RPT_PRINT_NO = #{rptPrintNo}
+	</select>
+	
+	<select id="selectCountType2" parameterType="hashmap" resultType="Integer">
+		SELECT  COUNT(A.SERIAL_NO) cnt
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1=1
+		 	AND  A.RPT_PRINT_NO = #{rptPrintNo}
+		 	AND WORKER_TYPE = 2
+	</select>
+		
+	<select id="selectCountType3" parameterType="hashmap" resultType="Integer">
+		SELECT  COUNT(A.SERIAL_NO) cnt
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1=1
+		 	AND  A.RPT_PRINT_NO = #{rptPrintNo}
+		 	AND WORKER_TYPE = 3
+	</select>
+	
+	<select id="selectReportPrint30" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.RPT_PRINT_NO
+        		   ,A.SUIM_RPT_NO
+                   ,A.DISEASE
+                   ,A.ISCHECK
+                   ,A.REWARDED_DAMAGE_TYPE
+                   ,A.UNREWARDED_DAMAGE_TYPE
+                   ,A.STANDARD_DISEASE
+                   ,A.ADDRESS
+	               ,A.DEDUCTION_START_DATE
+	               ,A.DEDUCTION_END_DATE
+	               ,A.DEDUCTION_REMARKS
+	               ,A.STOCK_REMARKS
+	               ,A.CONTRACTOR_REMARKS
+	               ,A.WORKER_REMARKS
+	               ,A.ADDRESS_REMARKS
+	               ,A.DEDUCTION_PERIOD_REMARKS
+	               ,A.COMPENSATION_LIMIT_REMARKS
+	               ,A.DEDUCTION_AMOUNT_REMARKS
+	               ,A.TERMS_REMARKS
+	               ,A.SAGODOC_FLAG
+	               ,A.EXCHANGE_RATE_DATE
+          FROM  top_rpt_print_30 A
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+    </select>
+    
+    <delete id="deleteOtherWorker" parameterType="hashmap">
+    	DELETE 
+    	  FROM top_rpt_print_30_deduction 
+    	WHERE serial_no = #{serialNo}
+    </delete>
+       
+     <update id="updateOtherWorker"  parameterType="hashmap">
+	     UPDATE  top_rpt_print_30_deduction 
+			   SET  WORKER_NAME = #{worker_name}
+			    	 ,SSN = #{ssn}
+			    	 ,COUNTRY = #{country}
+			    	 ,DAMAGE_AMOUNT = #{damage_amount}
+			    	 ,EXCHANGE_RATE = #{exchange_rate}
+			    	 ,DEDUCTION_AMOUNT = #{deduction_amount}
+			    	 ,DEDUCTION_REMARKS = #{deduction_remarks}
+			    	 ,WORKER_TYPE = #{worker_type}
+			    	 ,COUNTRY_UNIT = #{unit}
+		  WHERE  SERIAL_NO = #{serial_no}
+     </update>
+     
+     <!-- 지급공제금 지급처 입력 -->
+     <update id="updateReportOtherWorkerPayment" parameterType="hashmap">
+     	UPDATE  top_rpt_print_30_deduction 
+     		  SET  PAYMENT_PLACE = #{payment_place} 
+     		  		,BANK = #{bank} 
+     		  		,ACCOUNT_NUMBER = #{account_number}
+     		  		,PAYMENT_AMOUNT = #{payment_amount}
+     		  		,PAYMENT_REMARKS = #{payment_remarks}
+         WHERE  SERIAL_NO = #{serial_no}
+     </update>
+     
+     <update id="updateContractDetail" parameterType="hashmap">
+		 UPDATE  top_rpt_print_30
+			   SET  ADDRESS = #{address}
+			    	 ,DEDUCTION_START_DATE = #{deduction_start_date}
+			    	 ,DEDUCTION_END_DATE = #{deduction_end_date}
+			    	 ,DEDUCTION_REMARKS = #{deduction_remarks}
+			    	 ,STOCK_REMARKS = #{stock_remarks}
+			    	 ,CONTRACTOR_REMARKS = #{contractor_remarks}
+			    	 ,WORKER_REMARKS = #{worker_remarks}
+			    	 ,ADDRESS_REMARKS = #{address_remarks}
+			    	 ,DEDUCTION_PERIOD_REMARKS = #{deduction_period_remarks}
+			    	 ,COMPENSATION_LIMIT_REMARKS = #{compensation_limit_remarks}
+			    	 ,DEDUCTION_AMOUNT_REMARKS = #{deduction_amount_remarks}
+			    	 ,TERMS_REMARKS = #{terms_remarks}
+		  WHERE  RPT_PRINT_NO = #{rptPrintNo}
+     </update>
+
+	<update id="updateJudgementReason" parameterType="hashmap">
+	<!-- 
+		   UPDATE  top_rpt_print_30
+			     SET  REWARDED_DAMAGE_TYPE = #{rewarded_dmg_type}
+			     	   ,UNREWARDED_DAMAGE_TYPE = #{unrewarded_dmg_type}
+			     	   ,DISEASE = #{disease}
+			     	   ,STANDARD_DISEASE = #{standard_disease}
+		    WHERE  RPT_PRINT_NO = #{rptPrintNo}
+	 -->
+	 	   UPDATE  top_rpt_print_30_deduction
+			     SET  JUDGEMENT_REASON = #{judgement_reason}
+		    WHERE  SERIAL_NO = #{serial_no}
+	</update>
+	
+	<update id="updateDisease" parameterType="hashmap">
+		UPDATE  top_rpt_print_30
+		      SET  DISEASE = #{disease}
+		 WHERE  RPT_PRINT_NO = #{rptPrintNo}
+	</update>
+	
+	<update id="updateImmunity" parameterType="hashmap">
+		  UPDATE  top_rpt_print_30_deduction
+			    SET  ACCIDENT_DATE = #{accident_date}
+			    	  ,IMMUNITY_REASON = #{immunity_reason}
+			    	  ,EDITED_DEDUCTION_AMOUNT = #{edited_deduction_amount}
+		   WHERE  SERIAL_NO = #{serial_no}
+	</update>	
+	
+	<update id="updateSupplement" parameterType="hashmap">
+		  UPDATE  top_rpt_print_30_deduction
+			    SET  ACCIDENT_DATE = #{accident_supplement_date}
+			    	  ,SUPPLEMENT_REASON = #{supplement_reason}
+			    	  ,PART_SUPPLEMENT_AMOUNT = #{part_supplement_amount}
+		   WHERE  SERIAL_NO = #{serial_no}
+	</update>
+	
+	<!-- 첨부 서류 시작 -->
+	<select id="selectAttachDocList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SERIAL_NO
+               ,A.ATTACH_NAME
+               ,A.ATTACH_COPY
+               ,A.ATTACH_ETC_MEMO
+          FROM  top_rpt_print_30_file A
+         WHERE  1=1
+           AND  A.RPT_PRINT_NO = #{rptPrintNo}
+        ORDER BY A.SERIAL_NO ASC
+    </select>
+    
+	<update id="updateAttachDocUseFlag" parameterType="hashmap">
+        UPDATE  top_rpt_print_30
+           SET  SAGODOC_FLAG     = #{use_flag}
+        WHERE  RPT_PRINT_NO = #{rptPrintNo}
+    </update>	
+    
+    <insert id="insertAttachDoc" parameterType="hashmap">
+        INSERT INTO top_rpt_print_30_file
+                    (RPT_PRINT_NO
+                    ,ATTACH_NAME
+                    ,ATTACH_COPY
+                    ,ATTACH_ETC_MEMO) VALUES (
+                     #{rptPrintNo}
+                    ,#{attach_name}
+                    ,#{attach_copy}
+                    ,#{attach_etc_memo}
+                    )
+    </insert>
+    
+     <update id="updateAttachDoc" parameterType="hashmap">
+        UPDATE  top_rpt_print_30_file
+           SET  ATTACH_NAME      = #{attach_name}
+               ,ATTACH_COPY     	= #{attach_copy}
+               ,ATTACH_ETC_MEMO = #{attach_etc_memo}
+         WHERE  SERIAL_NO = #{serial_no}
+    </update>
+    
+    <delete id="deleteAttachDoc" parameterType="hashmap">
+      DELETE FROM top_rpt_print_30_file WHERE SERIAL_NO = #{serial_no}
+    </delete>
+    <!-- 첨부 서류 끝 -->
+    
+    <update id="updateExchangeRateDate" parameterType="hashmap">
+		 UPDATE  top_rpt_print_30
+			   SET  EXCHANGE_RATE_DATE = #{exchage_rate_date}
+		  WHERE  SUIM_RPT_NO = #{suim_rpt_no}    
+    </update>
+    
+    <select id="selectDeductionSum" parameterType="hashmap" resultType="Int">
+		SELECT  IFNULL(SUM(A.DEDUCTION_AMOUNT),0) 
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1 =1
+			AND	A.RPT_PRINT_NO = #{rptPrintNo}
+    </select>
+    
+    <select id="selectPaymentSum" parameterType="hashmap" resultType="Int">
+		SELECT IFNULL(SUM(A.PAYMENT_AMOUNT),0)
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1 =1
+			AND	A.RPT_PRINT_NO = #{rptPrintNo}
+			AND  WORKER_TYPE NOT IN (2,3)
+    </select>
+    
+    <select id="selectWorkerType1" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+			       ,A.RPT_PRINT_NO
+			       ,A.WORKER_NAME
+			       ,A.SSN
+			       ,A.COUNTRY
+			       ,A.DAMAGE_AMOUNT
+			       ,A.EXCHANGE_RATE
+			       ,A.DEDUCTION_AMOUNT
+			       ,A.DEDUCTION_REMARKS
+				   ,A.WORKER_TYPE
+				   ,A.PAYMENT_PLACE
+				   ,A.BANK
+				   ,A.ACCOUNT_NUMBER
+				   ,A.PAYMENT_REMARKS
+				   ,A.ACCIDENT_DATE
+				   ,A.IMMUNITY_REASON
+				   ,A.SUPPLEMENT_REASON
+				   ,A.COUNTRY_UNIT
+				   ,A.PAYMENT_AMOUNT
+				   ,A.PART_SUPPLEMENT_AMOUNT
+				   ,A.JUDGEMENT_REASON
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1=1
+		    AND  A.RPT_PRINT_NO = #{rptPrintNo}
+		    AND  A.WORKER_TYPE = 1
+         ORDER BY A.SERIAL_NO ASC
+    </select>
+     
+    <select id="selectWorkerType2" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+			       ,A.RPT_PRINT_NO
+			       ,A.WORKER_NAME
+			       ,A.SSN
+			       ,A.COUNTRY
+			       ,A.DAMAGE_AMOUNT
+			       ,A.EXCHANGE_RATE
+			       ,A.DEDUCTION_AMOUNT
+			       ,A.DEDUCTION_REMARKS
+				   ,A.WORKER_TYPE
+				   ,A.PAYMENT_PLACE
+				   ,A.BANK
+				   ,A.ACCOUNT_NUMBER
+				   ,A.PAYMENT_REMARKS
+				   ,A.ACCIDENT_DATE
+				   ,A.IMMUNITY_REASON
+				   ,A.SUPPLEMENT_REASON
+				   ,A.COUNTRY_UNIT
+				   ,A.PAYMENT_AMOUNT
+				   ,A.PART_SUPPLEMENT_AMOUNT
+				   ,A.JUDGEMENT_REASON
+		  FROM  top_rpt_print_30_deduction A
+		WHERE  1=1
+		    AND  A.RPT_PRINT_NO = #{rptPrintNo}
+		    AND  A.WORKER_TYPE = 2
+         ORDER BY A.SERIAL_NO ASC
+    </select>
+</mapper>

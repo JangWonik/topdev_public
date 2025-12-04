@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BoardNoticeTopMapper">
+	
+	<select id="getBoardFileListSupport" parameterType="String" resultType="hashmap">
+		SELECT 
+			a.title
+			,b.board_file_no
+			,b.file_name	
+		FROM brd_support a, brd_support_file b
+		WHERE a.board_no = b.board_no
+		AND a.board_no = #{board_no}
+		ORDER BY b.board_file_no
+	</select>
+	
+	<select id="getBoardFileList" parameterType="String" resultType="hashmap">
+		SELECT 
+			a.title
+			,b.board_file_no
+			,b.file_name	
+		FROM brd_notice_top a, brd_notice_top_file b
+		WHERE a.board_no = b.board_no
+		AND a.board_no = #{board_no}
+		ORDER BY b.board_file_no
+	</select>
+	
+	<select id="boardListSupportBest" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT 
+			a.board_no
+			, a.user_no
+			, b.user_name user_nm
+			, category_id
+			, getCodeValue('brd_support', 'category_id', a.category_id) category_id_nm
+			, a.title
+			, a.contents
+			, a.reg_ip
+			, a.reg_date
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, a.view_cnt
+			, (SELECT COUNT(board_file_no) FROM brd_support_file WHERE board_no = a.board_no) file_cnt
+			, (SELECT COUNT(memo_no) FROM brd_support_memo WHERE fk_no = a.board_no) memo_cnt
+			, (SELECT MAX(board_file_no) FROM brd_support_file WHERE board_no = a.board_no) board_file_no
+			, FLOOR((UNIX_TIMESTAMP(NOW()) - a.reg_date) / 24 / 60 / 60) day_cnt
+			, best_flag
+		FROM brd_support a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND best_flag = 1
+		ORDER BY a.board_no DESC
+		LIMIT 0,5
+	</select>
+	
+	<select id="boardListSupport" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT 
+			a.board_no
+			, a.user_no
+			, b.user_name user_nm
+			, category_id
+			, getCodeValue('brd_support', 'category_id', a.category_id) category_id_nm
+			, a.title
+			, a.contents
+			, a.reg_ip
+			, a.reg_date
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, a.view_cnt
+			, (select count(board_file_no) from brd_support_file where board_no = a.board_no) file_cnt
+			, (select count(memo_no) from brd_support_memo where fk_no = a.board_no) memo_cnt
+			, (select MAX(board_file_no) from brd_support_file where board_no = a.board_no) board_file_no
+			, FLOOR((UNIX_TIMESTAMP(NOW()) - a.reg_date) / 24 / 60 / 60) day_cnt
+			, best_flag
+		FROM brd_support a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="cateSearch != null and cateSearch != 0">
+			AND a.category_id = #{cateSearch}
+		</if>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 10
+	</select>
+
+	<select id="boardList" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT 
+			a.board_no
+			, a.user_no
+			, b.user_name user_nm
+			, title_classify
+			, getCodeValue('brd_notice_top', 'title_classify', a.title_classify) title_classify_nm
+			, a.title
+			, a.contents
+			, a.reg_ip
+			, a.reg_date
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, a.view_cnt
+			, (select count(board_file_no) from brd_notice_top_file where board_no = a.board_no) file_cnt
+			, (select count(memo_no) from brd_notice_top_memo where fk_no = a.board_no) memo_cnt
+			, (select MAX(board_file_no) from brd_notice_top_file where board_no = a.board_no) board_file_no
+			, FLOOR((UNIX_TIMESTAMP(NOW()) - a.reg_date) / 24 / 60 / 60) day_cnt
+		FROM brd_notice_top a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="titleSearch != null and titleSearch != 0">
+			AND a.title_classify = #{titleSearch}
+		</if>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 15
+	</select>
+	
+	<select id="boardListSupportCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_support a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="cateSearch != null and cateSearch != 0">
+			AND a.category_id = #{cateSearch}
+		</if>
+	</select>
+
+	<select id="boardListCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_notice_top a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="titleSearch != null and titleSearch != 0">
+			AND a.title_classify = #{titleSearch}
+		</if>
+	</select>
+
+	<insert id="boardWrite" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		INSERT INTO brd_notice_top (user_no, title_classify, title, contents, reg_ip, reg_date, view_cnt)
+		VALUES(#{user_no}, #{title_classify}, #{title}, #{contents}, #{reg_ip}, unix_timestamp(now()), 0)
+	</insert>
+	
+	<insert id="boardWriteSupport" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		INSERT INTO brd_support (
+			user_no
+			,category_id
+			,title
+			,contents
+			,reg_ip
+			,reg_date
+			,view_cnt
+			,best_flag
+		)VALUES(
+			#{user_no}
+			,#{category_id}
+			,#{title}
+			,#{contents}
+			,#{reg_ip}
+			,unix_timestamp(now())
+			,0
+			,#{best_flag}
+		)
+	</insert>
+
+	<select id="getBoardNo" parameterType="kr.co.toplac.brd.common.BoardVO" resultType = "String">
+		SELECT max(board_no)
+		FROM brd_notice_top
+		WHERE user_no = #{user_no}
+	</select>
+	
+	<select id="getBoardNoSupport" parameterType="kr.co.toplac.brd.common.BoardVO" resultType = "String">
+		SELECT max(board_no)
+		FROM brd_support
+		WHERE user_no = #{user_no}
+	</select>
+	
+	<insert id="boardFileWriteSupport" parameterType="kr.co.toplac.brd.common.BoardFileVO" >
+		INSERT INTO brd_support_file (board_no,file_path,file_name,reg_date)
+		VALUES(#{board_no}, #{file_path}, #{file_name}, unix_timestamp(now()))
+	</insert>
+
+	<insert id="boardFileWrite" parameterType="kr.co.toplac.brd.common.BoardFileVO" >
+		INSERT INTO brd_notice_top_file (board_no,file_path,file_name,reg_date)
+		VALUES(#{board_no}, #{file_path}, #{file_name}, unix_timestamp(now()))
+	</insert>
+	
+	<select id="boardDetailSupport" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT board_no, user_no, getTopMbrBscUserName(user_no) user_nm
+			, category_id, getCodeValue('brd_support', 'category_id', category_id) category_id_nm
+			, title, contents, reg_ip
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, view_cnt
+			, best_flag
+		FROM brd_support
+		WHERE board_no = #{board_no}
+		ORDER BY board_no DESC
+	</select>
+
+	<select id="boardDetail" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT board_no, user_no, getTopMbrBscUserName(user_no) user_nm
+			, title_classify, getCodeValue('brd_notice_top', 'title_classify', title_classify) title_classify_nm
+			, title, contents, reg_ip
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, view_cnt
+		FROM brd_notice_top
+		WHERE board_no = #{board_no}
+		ORDER BY board_no DESC
+	</select>
+	
+	<select id="boardFileListSupport" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardFileVO">
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_support_file
+		WHERE board_no = #{board_no}
+		ORDER BY board_file_no
+	</select>
+
+	<select id="boardFileList" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardFileVO">
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_notice_top_file
+		WHERE board_no = #{board_no}
+		ORDER BY board_file_no
+	</select>
+	
+	<update id="boardAddCntSupport" parameterType="String" >
+		UPDATE brd_support SET view_cnt = view_cnt + 1
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="boardAddCnt" parameterType="String" >
+		UPDATE brd_notice_top SET view_cnt = view_cnt + 1
+		WHERE board_no = #{board_no}
+	</update>
+	
+	<delete id="boardDeleteSupport" parameterType="String" >
+		DELETE FROM brd_support
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardDelete" parameterType="String" >
+		DELETE FROM brd_notice_top
+		WHERE board_no = #{board_no}
+	</delete>
+	
+	<delete id="boardFilesDeleteSupport" parameterType="String" >
+		DELETE FROM brd_support_file
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFilesDelete" parameterType="String" >
+		DELETE FROM brd_notice_top_file
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFileDelete" parameterType="String" >
+		DELETE FROM brd_notice_top_file
+		WHERE board_file_no = #{fileNo}
+	</delete>
+	
+	<delete id="boardFileDeleteSupport" parameterType="String" >
+		DELETE FROM brd_support_file
+		WHERE board_file_no = #{fileNo}
+	</delete>
+	
+	<update id="boardUpdateSupport" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_support SET 
+			category_id = #{category_id}
+			, title = #{title}
+			, contents = #{contents}
+			, best_flag = #{best_flag}
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="boardUpdate" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_notice_top SET title_classify = #{title_classify}, title = #{title}, contents = #{contents}
+		WHERE board_no = #{board_no}
+	</update>
+	
+	<update id="updateCKPathSupport" parameterType="java.util.HashMap" >
+		UPDATE brd_support SET contents = REPLACE(contents,#{oldStr},#{newStr})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<update id="updateCKPath" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_top SET contents = REPLACE(contents,#{oldStr},#{newStr})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<insert id="boardWrite2" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		INSERT INTO brd_notice_top (user_no, title_classify, title, contents, reg_ip, reg_date, view_cnt)
+		VALUES(#{user_no}, #{title_classify}, #{title}, #{contents}, #{reg_ip}, #{reg_date}, #{view_cnt})
+	</insert>
+
+	<update id="updateCKPath2" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_top SET contents = REPLACE(contents,#{ckFileDir},#{ckFileDir2})
+		WHERE board_no = #{newBoardNo}
+	</update>
+
+	<update id="updateBoardFiles" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_top_file
+		SET board_no = #{newBoardNo}, file_path = REPLACE(file_path,#{attachFileDir},#{attachFileDir2})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<update id="updateBoardMemos" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_top_memo SET fk_no = #{newBoardNo}
+		WHERE fk_no = #{boardNo}
+	</update>
+	
+	<select id="supportTopFileOneSelect" parameterType="String" resultType="kr.co.toplac.brd.common.BoardFileVO" >
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_support_file
+		WHERE board_file_no = #{fileNo}
+	</select>
+
+	<select id="noticeTopFileOneSelect" parameterType="String" resultType="kr.co.toplac.brd.common.BoardFileVO" >
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_notice_top_file
+		WHERE board_file_no = #{fileNo}
+	</select>
+
+</mapper>

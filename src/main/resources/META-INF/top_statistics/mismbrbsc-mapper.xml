@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisMbrBscMapper">
+
+	<select id="logMemberBasic1" parameterType="kr.co.toplac.lslog.LogMemberViewVO" resultType="kr.co.toplac.lslog.LogMemberVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,3),0) proc_m, ifnull(round((end_y/reg_y)*100,3),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100,3),0) nend_30r
+			, ea_sum
+			, ea_sum + ifnull(ea_pl1,0) - ifnull(ea_mi,0) report_ea
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time
+			, ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0) p_price_a
+			, ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0) p_price_b
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0)) sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0))
+				+ ifnull(price_traffic,0) + ifnull(price_question,0) + ifnull(price_receipt,0) sum_hap
+			, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT rptHead.team_id, rptHead.user_no, mbrBsc.user_name
+			FROM top_rpt_head rptHead, top_mbr_bsc mbrBsc
+			WHERE team_id = #{team_id}
+			AND rptHead.reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+			AND rptHead.reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+			AND rptHead.user_no = mbrBsc.user_no
+			GROUP BY rptHead.user_no
+			ORDER BY work_type, work_level DESC, user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_m FROM top_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromDate}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) a ON tmMbr.user_no = a.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_y FROM top_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromYear}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) b ON tmMbr.user_no = b.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_m FROM top_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) c ON tmMbr.user_no = c.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_y FROM top_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromYear}) and close_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) d ON tmMbr.user_no = d.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_p FROM top_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) e ON tmMbr.user_no = e.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_30 FROM top_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(CURRENT_TIMESTAMP())-2592000
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) f ON tmMbr.user_no = f.user_no
+			LEFT JOIN (SELECT user_no, ifnull(sum(suim_rpt_ea),0) ea_sum FROM top_rpt_head WHERE team_id=#{team_id}
+						and close_date >= UNIX_TIMESTAMP(#{viewFromDate}) and close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) g1 ON tmMbr.user_no = g1.user_no
+			LEFT JOIN (select g2x.user_id, ifnull(sum(g2x.collabo_pp * 0.01 * g2y.suim_rpt_ea),0) ea_pl1
+						from top_rpt_collabo g2x, top_rpt_head g2y
+						where g2y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g2y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g2y.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and g2x.suim_rpt_no = g2y.suim_rpt_no
+						group by g2x.user_id) g2 ON tmMbr.user_no = g2.user_id
+			LEFT JOIN (select g5x.user_no, ifnull(sum(g5y.collabo_pp * 0.01 * g5x.suim_rpt_ea),0) ea_mi
+						from top_rpt_head g5x, top_rpt_collabo g5y
+						where g5x.team_id = #{team_id}
+						and g5x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g5x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g5x.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and g5x.suim_rpt_no = g5y.suim_rpt_no
+						group by g5x.user_no) g5 ON tmMbr.user_no = g5.user_no
+			LEFT JOIN (select h1.user_no, ifnull(sum(h2.amt_basic),0) price_assess, ifnull(sum(h2.amt_daily),0) price_time, ifnull(sum(h2.amt_traffic),0) price_traffic
+						, ifnull(sum(h2.amt_counsel),0) price_question, ifnull(sum(h2.amt_etc),0) price_receipt
+						from top_rpt_head h1, top_rpt_invoice h2
+						where h1.team_id = #{team_id}
+						and h1.close_date >= unix_timestamp(#{viewFromDate}) and h1.close_date &lt; unix_timestamp(#{viewToDate})
+						and h1.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and h1.suim_rpt_no = h2.suim_rpt_no
+						group by h1.user_no) h ON tmMbr.user_no = h.user_no
+			LEFT JOIN (select j12x.user_id, ifnull(sum(j12z.amt_basic * j12x.collabo_pp * 0.01),0) p_price_pl1_a
+								from top_rpt_collabo j12x, top_rpt_head j12y, top_rpt_invoice j12z
+								where j12y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j12y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+								and j12y.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+								and j12x.suim_rpt_no = j12y.suim_rpt_no
+								and j12x.suim_rpt_no = j12z.suim_rpt_no
+						group by j12x.user_id) j1 ON tmMbr.user_no = j1.user_id
+			LEFT JOIN (select j42y.user_no, ifnull(sum(j42z.amt_basic * j42x.collabo_pp * 0.01),0) p_price_mi_a
+								from top_rpt_collabo j42x, top_rpt_head j42y, top_rpt_invoice j42z
+								where j42y.team_id = #{team_id}
+								and j42y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j42y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+								and j42y.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+								and j42y.suim_rpt_no = j42x.suim_rpt_no
+								and j42x.suim_rpt_no = j42z.suim_rpt_no
+						group by j42y.user_no) j4 ON tmMbr.user_no = j4.user_no
+			LEFT JOIN (select K1x.user_id, ifnull(sum(K1z.amt_daily * K1x.collabo_pp * 0.01),0) p_price_pl1_b
+						from top_rpt_collabo K1x, top_rpt_head K1y, top_rpt_invoice K1z
+						where K1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and K1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and K1y.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and K1x.suim_rpt_no = K1y.suim_rpt_no
+						and K1x.suim_rpt_no = K1z.suim_rpt_no
+						group by K1x.user_id) k1 ON tmMbr.user_no = k1.user_id
+			LEFT JOIN (select K4y.user_no, ifnull(sum(K4z.amt_daily * K4x.collabo_pp * 0.01),0) p_price_mi_b
+						from top_rpt_collabo K4x, top_rpt_head K4y, top_rpt_invoice K4z
+						where K4y.team_id = #{team_id}
+						and K4y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and K4y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and K4y.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and K4y.suim_rpt_no = K4x.suim_rpt_no
+						and K4x.suim_rpt_no = K4z.suim_rpt_no
+						group by K4y.user_no) K4 ON tmMbr.user_no = K4.user_no
+			LEFT JOIN (select m1.user_no, sum(m2.amt_total) no_settle
+						from top_rpt_head m1, top_rpt_invoice m2
+						where m1.team_id = #{team_id} and m1.close_date &gt; 0
+						and m1.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and m1.suim_rpt_no = m2.suim_rpt_no and m2.deposit_date  &lt; 1
+						group by m1.user_no) m ON tmMbr.user_no = m.user_no
+			LEFT JOIN (select user_no, sum(suim_rpt_ea) endea_m
+						FROM top_rpt_head
+						where team_id = #{team_id}
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						group by user_no) p ON tmMbr.user_no = p.user_no
+	</select>
+
+	<select id="logMemberBasic4" parameterType="kr.co.toplac.lslog.LogMemberViewVO" resultType="kr.co.toplac.lslog.LogMemberVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,3),0) proc_m, ifnull(round((end_y/reg_y)*100,3),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100,3),0) nend_30r
+			, ea_sum
+			, ea_sum + ifnull(ea_pl1,0) - ifnull(ea_mi,0) report_ea
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time
+			, ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0) p_price_a
+			, ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0) p_price_b
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0)) sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0))
+				+ ifnull(price_traffic,0) + ifnull(price_question,0) + ifnull(price_receipt,0) sum_hap
+			, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT rptHead.team_id, rptHead.user_no, mbrBsc.user_name
+			FROM top_rpt_head rptHead, top_mbr_bsc mbrBsc
+			WHERE team_id = #{team_id}
+			AND rptHead.reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+			AND rptHead.reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+			AND rptHead.user_no = mbrBsc.user_no
+			GROUP BY rptHead.user_no
+			ORDER BY work_type, work_level DESC, user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_m FROM top_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromDate}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 in (3,4)
+						group by user_no) a ON tmMbr.user_no = a.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_y FROM top_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromYear}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 in (3,4)
+						group by user_no) b ON tmMbr.user_no = b.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_m FROM top_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 in (3,4)
+						group by user_no) c ON tmMbr.user_no = c.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_y FROM top_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromYear}) and close_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 in (3,4)
+						group by user_no) d ON tmMbr.user_no = d.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_p FROM top_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and suim_rpt_type1 in (3,4)
+						group by user_no) e ON tmMbr.user_no = e.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_30 FROM top_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(CURRENT_TIMESTAMP())-2592000
+						and suim_rpt_type1 in (3,4)
+						group by user_no) f ON tmMbr.user_no = f.user_no
+			LEFT JOIN (SELECT user_no, ifnull(sum(suim_rpt_ea),0) ea_sum FROM top_rpt_head WHERE team_id=#{team_id}
+						and close_date >= UNIX_TIMESTAMP(#{viewFromDate}) and close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 in (3,4)
+						group by user_no) g1 ON tmMbr.user_no = g1.user_no
+			LEFT JOIN (select g2x.user_id, ifnull(sum(g2x.collabo_pp * 0.01 * g2y.suim_rpt_ea),0) ea_pl1
+						from top_rpt_collabo g2x, top_rpt_head g2y
+						where g2y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g2y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g2y.suim_rpt_type1 in (3,4)
+						and g2x.suim_rpt_no = g2y.suim_rpt_no
+						group by g2x.user_id) g2 ON tmMbr.user_no = g2.user_id
+			LEFT JOIN (select g5x.user_no, ifnull(sum(g5y.collabo_pp * 0.01 * g5x.suim_rpt_ea),0) ea_mi
+						from top_rpt_head g5x, top_rpt_collabo g5y
+						where g5x.team_id = #{team_id}
+						and g5x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g5x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g5x.suim_rpt_type1 in (3,4)
+						and g5x.suim_rpt_no = g5y.suim_rpt_no
+						group by g5x.user_no) g5 ON tmMbr.user_no = g5.user_no
+			LEFT JOIN (select h1.user_no, ifnull(sum(h2.amt_basic),0) price_assess, ifnull(sum(h2.amt_daily),0) price_time, ifnull(sum(h2.amt_traffic),0) price_traffic
+						, ifnull(sum(h2.amt_counsel),0) price_question, ifnull(sum(h2.amt_etc),0) price_receipt
+						from top_rpt_head h1, top_rpt_invoice h2
+						where h1.team_id = #{team_id}
+						and h1.close_date >= unix_timestamp(#{viewFromDate}) and h1.close_date &lt; unix_timestamp(#{viewToDate})
+						and h1.suim_rpt_type1 in (3,4)
+						and h1.suim_rpt_no = h2.suim_rpt_no
+						group by h1.user_no) h ON tmMbr.user_no = h.user_no
+			LEFT JOIN (select j11x.user_id, ifnull(sum(j11x.collabo_pp),0) p_price_pl1_a
+								from top_rpt_collabo j11x, top_rpt_head j11y
+								where j11y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j11y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+								and j11y.suim_rpt_type1 in (3,4)
+								and j11x.suim_rpt_no = j11y.suim_rpt_no
+						group by j11x.user_id) j1 ON tmMbr.user_no = j1.user_id
+			LEFT JOIN (select j41y.user_no, ifnull(sum(j41x.collabo_pp),0) p_price_mi_a
+								from top_rpt_collabo j41x, top_rpt_head j41y
+								where j41y.team_id = #{team_id}
+								and j41y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j41y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+								and j41y.suim_rpt_type1 in (3,4)
+								and j41y.suim_rpt_no = j41x.suim_rpt_no
+						group by j41y.user_no) j4 ON tmMbr.user_no = j4.user_no
+			LEFT JOIN (select K1x.user_id, ifnull(sum(K1z.amt_daily * K1x.collabo_pp * 0.01),0) p_price_pl1_b
+						from top_rpt_collabo K1x, top_rpt_head K1y, top_rpt_invoice K1z
+						where K1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and K1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and K1y.suim_rpt_type1 in (3,4)
+						and K1x.suim_rpt_no = K1y.suim_rpt_no
+						and K1x.suim_rpt_no = K1z.suim_rpt_no
+						group by K1x.user_id) k1 ON tmMbr.user_no = k1.user_id
+			LEFT JOIN (select K4y.user_no, ifnull(sum(K4z.amt_daily * K4x.collabo_pp * 0.01),0) p_price_mi_b
+						from top_rpt_collabo K4x, top_rpt_head K4y, top_rpt_invoice K4z
+						where K4y.team_id = #{team_id}
+						and K4y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and K4y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and K4y.suim_rpt_type1 in (3,4)
+						and K4y.suim_rpt_no = K4x.suim_rpt_no
+						and K4x.suim_rpt_no = K4z.suim_rpt_no
+						group by K4y.user_no) K4 ON tmMbr.user_no = K4.user_no
+			LEFT JOIN (select m1.user_no, sum(m2.amt_total) no_settle
+						from top_rpt_head m1, top_rpt_invoice m2
+						where m1.team_id = #{team_id} and m1.close_date &gt; 0
+						and m1.suim_rpt_type1 in (3,4)
+						and m1.suim_rpt_no = m2.suim_rpt_no and m2.deposit_date  &lt; 1
+						group by m1.user_no) m ON tmMbr.user_no = m.user_no
+			LEFT JOIN (select user_no, sum(suim_rpt_ea) endea_m
+						FROM top_rpt_head
+						where team_id = #{team_id}
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						and suim_rpt_type1 in (3,4)
+						group by user_no) p ON tmMbr.user_no = p.user_no
+	</select>
+
+	<select id="logMemberPrim" parameterType="kr.co.toplac.lslog.LogMemberViewVO" resultType="kr.co.toplac.lslog.LogMemberVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,3),0) proc_m, ifnull(round((end_y/reg_y)*100,3),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100,3),0) nend_30r
+			, ea_sum
+			, ea_sum + - ifnull(ea_mi,0) report_ea
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time
+			, ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0) p_price_a
+			, ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0) p_price_b
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0)) sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0))
+				+ ifnull(price_traffic,0) + ifnull(price_question,0) + ifnull(price_receipt,0) sum_hap
+			, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT rptHead.team_id, rptHead.user_no, mbrBsc.user_name
+			FROM top_prim_biz_rpt_head rptHead, top_mbr_bsc mbrBsc
+			WHERE team_id = #{team_id}
+			AND rptHead.reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+			AND rptHead.reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+			AND rptHead.user_no = mbrBsc.user_no
+			GROUP BY rptHead.user_no
+			ORDER BY work_type, work_level DESC, user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_m FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromDate}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 = 5
+						group by user_no) a ON tmMbr.user_no = a.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_y FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromYear}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 = 5
+						group by user_no) b ON tmMbr.user_no = b.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_m FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 = 5
+						group by user_no) c ON tmMbr.user_no = c.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_y FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromYear}) and close_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 = 5
+						group by user_no) d ON tmMbr.user_no = d.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_p FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and suim_rpt_type1 = 5
+						group by user_no) e ON tmMbr.user_no = e.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_30 FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(CURRENT_TIMESTAMP())-2592000
+						and suim_rpt_type1 = 5
+						group by user_no) f ON tmMbr.user_no = f.user_no
+			LEFT JOIN (select g1y.user_no, ifnull(sum(g1x.share_ea * 0.01),0) ea_sum
+						from top_prim_biz_inv_share g1x, top_prim_biz_rpt_head g1y
+						where g1y.team_id=#{team_id}
+						and g1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g1y.suim_rpt_type1 = 5
+						and g1x.suim_rpt_no = g1y.suim_rpt_no
+						and g1y.user_no = g1x.share_user_no
+						group by g1y.user_no) g1 ON tmMbr.user_no = g1.user_no
+			LEFT JOIN (select g5x.user_no, ifnull(sum(g5y.share_ea * 0.01),0) ea_mi
+						from top_prim_biz_rpt_head g5x, top_prim_biz_inv_share g5y
+						where g5x.team_id=#{team_id}
+						and g5x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g5x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g5x.suim_rpt_type1 = 5
+						and g5x.suim_rpt_no = g5y.suim_rpt_no
+						and g5x.user_no != g5y.share_user_no
+						group by g5x.user_no) g5 ON tmMbr.user_no = g5.user_no
+			LEFT JOIN (select h1.user_no, ifnull(sum(h2.amt_basic),0) price_assess, ifnull(sum(h2.amt_daily),0) price_time, ifnull(sum(h2.amt_traffic),0) price_traffic
+						, ifnull(sum(h2.amt_counsel),0) price_question, ifnull(sum(h2.amt_etc),0) price_receipt
+						from top_prim_biz_rpt_head h1, top_prim_biz_inv h2
+						where h1.team_id = #{team_id}
+						and h1.close_date >= unix_timestamp(#{viewFromDate}) and h1.close_date &lt; unix_timestamp(#{viewToDate})
+						and h1.suim_rpt_no = h2.suim_rpt_no
+						group by h1.user_no) h ON tmMbr.user_no = h.user_no
+			LEFT JOIN (select j1x.share_user_no user_no, ifnull(sum(j1x.share_amt_basic * j1x.share_ea * 0.01),0) p_price_pl1_a
+						from top_prim_biz_inv_share j1x, top_prim_biz_rpt_head j1y
+						where j1y.team_id != #{team_id}
+						and j1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and j1y.suim_rpt_type1 = 5
+						and j1x.suim_rpt_no = j1y.suim_rpt_no
+						group by j1x.share_user_no) j1 ON tmMbr.user_no = j1.user_no
+			LEFT JOIN (select j4x.user_no, ifnull(sum(j4y.share_amt_basic * j4y.share_ea * 0.01),0) p_price_mi_a
+						from top_prim_biz_rpt_head j4x, top_prim_biz_inv_share j4y
+						where j4x.team_id=#{team_id}
+						and j4x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j4x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and j4x.suim_rpt_type1 = 5
+						and j4x.suim_rpt_no = j4y.suim_rpt_no
+						and j4x.user_no != j4y.share_user_no
+						group by j4x.user_no) j4 ON tmMbr.user_no = j4.user_no
+			LEFT JOIN (select k1x.share_user_no user_no, ifnull(sum(k1x.share_amt_daily * k1x.share_ea * 0.01),0) p_price_pl1_b
+						from top_prim_biz_inv_share k1x, top_prim_biz_rpt_head k1y
+						where k1y.team_id != #{team_id}
+						and k1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and k1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and k1y.suim_rpt_type1 = 5
+						and k1x.suim_rpt_no = k1y.suim_rpt_no
+						group by k1x.share_user_no) k1 ON tmMbr.user_no = k1.user_no
+			LEFT JOIN (select k4x.user_no, ifnull(sum(k4y.share_amt_daily * k4y.share_ea * 0.01),0) p_price_mi_b
+						from top_prim_biz_rpt_head k4x, top_prim_biz_inv_share k4y
+						where k4x.team_id=#{team_id}
+						and k4x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and k4x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and k4x.suim_rpt_type1 = 5
+						and k4x.suim_rpt_no = k4y.suim_rpt_no
+						and k4x.user_no != k4y.share_user_no
+						group by k4x.user_no) k4 ON tmMbr.user_no = k4.user_no
+			LEFT JOIN (select m1.user_no, sum(m2.amt_total) no_settle
+						FROM top_prim_biz_rpt_head m1, top_prim_biz_inv m2
+						where m1.team_id = #{team_id} and m1.close_date &gt; 0
+						and m1.suim_rpt_no = m2.suim_rpt_no and m2.deposit_date  &lt; 1
+						group by m1.user_no) m ON tmMbr.user_no = m.user_no
+			LEFT JOIN (select user_no, sum(suim_rpt_ea) endea_m
+						FROM top_prim_biz_rpt_head
+						where team_id = #{team_id}
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						group by user_no) p ON tmMbr.user_no = p.user_no
+	</select>
+
+	<select id="logMemberPrimContract" parameterType="kr.co.toplac.lslog.LogMemberViewVO" resultType="kr.co.toplac.lslog.LogMemberVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,3),0) proc_m, ifnull(round((end_y/reg_y)*100,3),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100,3),0) nend_30r
+			, ea_sum
+			, ea_sum + - ifnull(ea_mi,0) report_ea
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time
+			, ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0) p_price_a
+			, ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0) p_price_b
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0)) sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess,0) + ifnull(price_time,0) + (ifnull(p_price_pl1_a,0)-ifnull(p_price_mi_a,0))
+				+ (ifnull(p_price_pl1_b,0)-ifnull(p_price_mi_b,0))
+				+ ifnull(price_traffic,0) + ifnull(price_question,0) + ifnull(price_receipt,0) sum_hap
+			, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT rptHead.team_id, rptHead.user_no, mbrBsc.user_name
+			FROM top_prim_biz_rpt_head rptHead, top_mbr_bsc mbrBsc
+			WHERE team_id = #{team_id}
+			AND rptHead.reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+			AND rptHead.reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+			AND rptHead.user_no = mbrBsc.user_no
+			GROUP BY rptHead.user_no
+			ORDER BY work_type, work_level DESC, user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_m FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromDate}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 != 5
+						group by user_no) a ON tmMbr.user_no = a.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_y FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromYear}) and reg_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 != 5
+						group by user_no) b ON tmMbr.user_no = b.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_m FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and suim_rpt_type1 != 5
+						group by user_no) c ON tmMbr.user_no = c.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_y FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and close_date>=UNIX_TIMESTAMP(#{viewFromYear}) and close_date &lt; UNIX_TIMESTAMP(#{viewToYear})
+						and suim_rpt_type1 != 5
+						group by user_no) d ON tmMbr.user_no = d.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_p FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and suim_rpt_type1 != 5
+						group by user_no) e ON tmMbr.user_no = e.user_no
+			LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) nend_30 FROM top_prim_biz_rpt_head WHERE team_id=#{team_id}
+						and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(CURRENT_TIMESTAMP())-2592000
+						and suim_rpt_type1 != 5
+						group by user_no) f ON tmMbr.user_no = f.user_no
+			LEFT JOIN (select g1y.user_no, ifnull(sum(g1x.share_ea * 0.01),0) ea_sum
+						from top_prim_biz_inv_share g1x, top_prim_biz_rpt_head g1y
+						where g1y.team_id=#{team_id}
+						and g1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g1y.suim_rpt_type1 != 5
+						and g1x.suim_rpt_no = g1y.suim_rpt_no
+						and g1y.user_no = g1x.share_user_no
+						group by g1y.user_no) g1 ON tmMbr.user_no = g1.user_no
+			LEFT JOIN (select g5x.user_no, ifnull(sum(g5y.share_ea * 0.01),0) ea_mi
+						from top_prim_biz_rpt_head g5x, top_prim_biz_inv_share g5y
+						where g5x.team_id=#{team_id}
+						and g5x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and g5x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and g5x.suim_rpt_type1 != 5
+						and g5x.suim_rpt_no = g5y.suim_rpt_no
+						and g5x.user_no != g5y.share_user_no
+						group by g5x.user_no) g5 ON tmMbr.user_no = g5.user_no
+			LEFT JOIN (select h1.user_no, ifnull(sum(h2.amt_basic),0) price_assess, ifnull(sum(h2.amt_daily),0) price_time, ifnull(sum(h2.amt_traffic),0) price_traffic
+						, ifnull(sum(h2.amt_counsel),0) price_question, ifnull(sum(h2.amt_etc),0) price_receipt
+						from top_prim_biz_rpt_head h1, top_prim_biz_inv h2
+						where h1.team_id = #{team_id}
+						and h1.suim_rpt_type1 != 5
+						and h1.close_date >= unix_timestamp(#{viewFromDate}) and h1.close_date &lt; unix_timestamp(#{viewToDate})
+						and h1.suim_rpt_no = h2.suim_rpt_no
+						group by h1.user_no) h ON tmMbr.user_no = h.user_no
+			LEFT JOIN (select j1x.share_user_no user_no, ifnull(sum(j1x.share_amt_basic * j1x.share_ea * 0.01),0) p_price_pl1_a
+						from top_prim_biz_inv_share j1x, top_prim_biz_rpt_head j1y
+						where j1y.team_id != #{team_id}
+						and j1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and j1y.suim_rpt_type1 != 5
+						and j1x.suim_rpt_no = j1y.suim_rpt_no
+						group by j1x.share_user_no) j1 ON tmMbr.user_no = j1.user_no
+			LEFT JOIN (select j4x.user_no, ifnull(sum(j4y.share_amt_basic * j4y.share_ea * 0.01),0) p_price_mi_a
+						from top_prim_biz_rpt_head j4x, top_prim_biz_inv_share j4y
+						where j4x.team_id=#{team_id}
+						and j4x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and j4x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and j4x.suim_rpt_type1 != 5
+						and j4x.suim_rpt_no = j4y.suim_rpt_no
+						and j4x.user_no != j4y.share_user_no
+						group by j4x.user_no) j4 ON tmMbr.user_no = j4.user_no
+			LEFT JOIN (select k1x.share_user_no user_no, ifnull(sum(k1x.share_amt_daily * k1x.share_ea * 0.01),0) p_price_pl1_b
+						from top_prim_biz_inv_share k1x, top_prim_biz_rpt_head k1y
+						where k1y.team_id != #{team_id}
+						and k1y.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and k1y.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and k1y.suim_rpt_type1 != 5
+						and k1x.suim_rpt_no = k1y.suim_rpt_no
+						group by k1x.share_user_no) k1 ON tmMbr.user_no = k1.user_no
+			LEFT JOIN (select k4x.user_no, ifnull(sum(k4y.share_amt_daily * k4y.share_ea * 0.01),0) p_price_mi_b
+						from top_prim_biz_rpt_head k4x, top_prim_biz_inv_share k4y
+						where k4x.team_id=#{team_id}
+						and k4x.close_date>=UNIX_TIMESTAMP(#{viewFromDate}) and k4x.close_date &lt; UNIX_TIMESTAMP(#{viewToDate})
+						and k4x.suim_rpt_type1 != 5
+						and k4x.suim_rpt_no = k4y.suim_rpt_no
+						and k4x.user_no != k4y.share_user_no
+						group by k4x.user_no) k4 ON tmMbr.user_no = k4.user_no
+			LEFT JOIN (select m1.user_no, sum(m2.amt_total) no_settle
+						FROM top_prim_biz_rpt_head m1, top_prim_biz_inv m2
+						where m1.team_id = #{team_id} and m1.close_date &gt; 0
+						and m1.suim_rpt_type1 != 5
+						and m1.suim_rpt_no = m2.suim_rpt_no and m2.deposit_date  &lt; 1
+						group by m1.user_no) m ON tmMbr.user_no = m.user_no
+			LEFT JOIN (select user_no, sum(suim_rpt_ea) endea_m
+						FROM top_prim_biz_rpt_head
+						where team_id = #{team_id}
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						and suim_rpt_type1 != 5
+						group by user_no) p ON tmMbr.user_no = p.user_no
+	</select>
+
+</mapper>

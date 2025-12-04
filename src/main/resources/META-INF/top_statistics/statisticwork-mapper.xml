@@ -1,0 +1,1260 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="StatisticWork">
+	
+	<select id="selectWorkTeamList1" parameterType="hashmap" resultType="AsraMap">
+		SELECT  GA.TEAM_ID 
+		       ,GA.TEAM_NAME 
+		       ,IFNULL(GB.USER_CNT,0) AS USER_CNT 
+		       ,IFNULL(GB.RECEIVE_CNT,0) AS RECEIVE_CNT
+		       ,IFNULL(GB.CLOSE_CNT,0) AS CLOSE_CNT
+		       ,IFNULL(GB.DAY10_PREV_CNT,0) AS DAY10_PREV_CNT
+		       ,IFNULL(ROUND(GB.DAY10_PREV_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_PREV_PS
+		       ,IFNULL(GB.DAY10_NEXT_CNT,0) AS DAY10_NEXT_CNT
+		       ,IFNULL(ROUND(GB.DAY10_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_NEXT_PS
+		       ,IFNULL(GB.DAY20_NEXT_CNT,0) AS DAY20_NEXT_CNT
+		       ,IFNULL(ROUND(GB.DAY20_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY20_NEXT_PS
+		       ,IFNULL(GB.DAY30_NEXT_CNT,0) AS DAY30_NEXT_CNT
+		       ,IFNULL(ROUND(GB.DAY30_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY30_NEXT_PS
+		       ,IFNULL(GB.DAY60_NEXT_CNT,0) AS DAY60_NEXT_CNT
+		       ,IFNULL(ROUND(GB.DAY60_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY60_NEXT_PS
+		       ,IFNULL(GB.DAY90_NEXT_CNT,0) AS DAY90_NEXT_CNT
+		       ,IFNULL(ROUND(GB.DAY90_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY90_NEXT_PS
+		       ,IFNULL(GB.DAY120_NEXT_CNT,0) AS DAY120_NEXT_CNT
+		       ,IFNULL(ROUND(GB.DAY120_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY120_NEXT_PS
+		       ,IFNULL(GB.TOTAL_CNT,0) AS TOTAL_CNT
+		       ,IFNULL(ROUND(GB.TOTAL_CNT / TOTAL_CNT * 100, 1),0) AS TOTAL_PS
+		       ,IFNULL(GB.REG_DATE_TIME,0) AS REG_DATE_TIME
+		       ,IFNULL(ROUND(((GB.TOTAL_CNT * UNIX_TIMESTAMP(#{endDe}) - GB.REG_DATE_TIME) / 86400) / GB.TOTAL_CNT, 1),0) AS DAY_AVR_TIME
+		       ,IFNULL(GB.ANTICIPATION_CNT,0) AS ANTICIPATION_CNT
+		       ,IFNULL(GB.OCCUR_CNT,0) AS OCCUR_CNT
+		  FROM  top_tm_bsc GA
+		  LEFT  JOIN (
+		              SELECT  GA.TEAM_ID
+		                     ,SUM(GA.USER_CNT) AS USER_CNT
+		                     ,SUM(GA.RECEIVE_CNT) AS RECEIVE_CNT
+		                     ,SUM(GA.CLOSE_CNT) AS CLOSE_CNT
+		                     ,SUM(GA.DAY10_PREV_CNT) AS DAY10_PREV_CNT
+		                     ,SUM(GA.DAY10_NEXT_CNT) AS DAY10_NEXT_CNT
+		                     ,SUM(GA.DAY20_NEXT_CNT) AS DAY20_NEXT_CNT
+		                     ,SUM(GA.DAY30_NEXT_CNT) AS DAY30_NEXT_CNT
+		                     ,SUM(GA.DAY60_NEXT_CNT) AS DAY60_NEXT_CNT
+		                     ,SUM(GA.DAY90_NEXT_CNT) AS DAY90_NEXT_CNT
+		                     ,SUM(GA.DAY120_NEXT_CNT) AS DAY120_NEXT_CNT
+		                     ,SUM(GA.DAY10_PREV_CNT + GA.DAY10_NEXT_CNT + GA.DAY20_NEXT_CNT + GA.DAY30_NEXT_CNT + GA.DAY60_NEXT_CNT + GA.DAY90_NEXT_CNT + GA.DAY120_NEXT_CNT) AS TOTAL_CNT
+		                     ,SUM(GA.REG_DATE) AS REG_DATE_TIME
+		                     ,SUM(GA.ANTICIPATION_CNT) AS ANTICIPATION_CNT
+		                     ,SUM(GA.OCCUR_CNT) AS OCCUR_CNT
+		                FROM  (
+		                        SELECT  A.TEAM_ID_MAIN AS TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,1 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,0 AS REG_DATE
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT
+		                          FROM  top_mbr_bsc A
+		                         WHERE  1=1
+		                           AND  A.USER_STATE != 1
+		                        UNION ALL   
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,1 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,0 AS REG_DATE
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                               
+		                          FROM  top_rpt_head A
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 3
+		                           AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                        UNION ALL   
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,1 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,0 AS REG_DATE
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                               
+		                          FROM  top_rpt_head A
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE = 2
+		                           AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND  A.REG_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+		                        UNION ALL
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,1 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,A.REG_DATE
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                                  
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_body B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 2
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND  A.REG_DATE >= UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+		                        UNION ALL   
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,1 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,A.REG_DATE 
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                                  
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_body B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 2
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+		                           AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+		                        UNION ALL   
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,1 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,A.REG_DATE  
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                                  
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_body B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 2
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+		                           AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+		                        UNION ALL   
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,1 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,A.REG_DATE
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                                  
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_body B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 2
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+		                           AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+		                        UNION ALL   
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,1 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,A.REG_DATE
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                                  
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_body B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 2
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+		                           AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+		                        UNION ALL   
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,1 AS DAY90_NEXT_CNT
+		                               ,0 AS DAY120_NEXT_CNT
+		                               ,A.REG_DATE
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                                  
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_body B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 2
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+		                           AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+		                        UNION ALL            
+		                        SELECT  A.TEAM_ID 
+		                               ,A.USER_NO 
+		                               ,0 AS USER_CNT
+		                               ,0 AS RECEIVE_CNT
+		                               ,0 AS CLOSE_CNT
+		                               ,0 AS DAY10_PREV_CNT
+		                               ,0 AS DAY10_NEXT_CNT
+		                               ,0 AS DAY20_NEXT_CNT
+		                               ,0 AS DAY30_NEXT_CNT
+		                               ,0 AS DAY60_NEXT_CNT
+		                               ,0 AS DAY90_NEXT_CNT
+		                               ,1 AS DAY120_NEXT_CNT
+		                               ,A.REG_DATE 
+		                               ,0 AS ANTICIPATION_CNT
+		                               ,0 AS OCCUR_CNT                                  
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_body B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND  A.SUIM_RPT_STATE &lt; 2
+		                           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+		                      ) GA
+		                WHERE  1=1
+		              GROUP BY GA.TEAM_ID    
+		             ) GB
+		    ON  GA.TEAM_ID = GB.TEAM_ID 
+		 WHERE  1=1
+		   AND  GA.TEAM_STATISTICS1 = 0
+		   <!-- AND  GA.TEAM_TYPE = 1 -->
+		   AND  GA.TEAM_TYPE IN (0,1)
+		ORDER BY GA.TEAM_GROUP_ORDER DESC, GA.TEAM_ORDER DESC, GA.TEAM_ID DESC          	
+	</select>
+	
+    <select id="selectWorkTeamList4" parameterType="hashmap" resultType="AsraMap">
+        SELECT  GA.TEAM_ID 
+               ,GA.TEAM_NAME 
+               ,IFNULL(GB.USER_CNT,0) AS USER_CNT 
+               ,IFNULL(GB.RECEIVE_CNT,0) AS RECEIVE_CNT
+               ,IFNULL(GB.CLOSE_CNT,0) AS CLOSE_CNT
+               ,IFNULL(GB.DAY10_PREV_CNT,0) AS DAY10_PREV_CNT
+               ,IFNULL(ROUND(GB.DAY10_PREV_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_PREV_PS
+               ,IFNULL(GB.DAY10_NEXT_CNT,0) AS DAY10_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY10_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_NEXT_PS
+               ,IFNULL(GB.DAY20_NEXT_CNT,0) AS DAY20_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY20_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY20_NEXT_PS
+               ,IFNULL(GB.DAY30_NEXT_CNT,0) AS DAY30_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY30_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY30_NEXT_PS
+               ,IFNULL(GB.DAY60_NEXT_CNT,0) AS DAY60_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY60_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY60_NEXT_PS
+               ,IFNULL(GB.DAY90_NEXT_CNT,0) AS DAY90_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY90_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY90_NEXT_PS
+               ,IFNULL(GB.DAY120_NEXT_CNT,0) AS DAY120_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY120_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY120_NEXT_PS
+               ,IFNULL(GB.TOTAL_CNT,0) AS TOTAL_CNT
+               ,IFNULL(ROUND(GB.TOTAL_CNT / TOTAL_CNT * 100, 1),0) AS TOTAL_PS
+               ,IFNULL(GB.REG_DATE_TIME,0) AS REG_DATE_TIME
+               ,IFNULL(ROUND(((GB.TOTAL_CNT * UNIX_TIMESTAMP(#{endDe}) - GB.REG_DATE_TIME) / 86400) / GB.TOTAL_CNT, 1),0) AS DAY_AVR_TIME
+               ,IFNULL(GB.ANTICIPATION_CNT,0) AS ANTICIPATION_CNT
+               ,IFNULL(GB.OCCUR_CNT,0) AS OCCUR_CNT
+          FROM  top_tm_bsc GA
+          LEFT  JOIN (
+                      SELECT  GA.TEAM_ID
+                             ,SUM(GA.USER_CNT) AS USER_CNT
+                             ,SUM(GA.RECEIVE_CNT) AS RECEIVE_CNT
+                             ,SUM(GA.CLOSE_CNT) AS CLOSE_CNT
+                             ,SUM(GA.DAY10_PREV_CNT) AS DAY10_PREV_CNT
+                             ,SUM(GA.DAY10_NEXT_CNT) AS DAY10_NEXT_CNT
+                             ,SUM(GA.DAY20_NEXT_CNT) AS DAY20_NEXT_CNT
+                             ,SUM(GA.DAY30_NEXT_CNT) AS DAY30_NEXT_CNT
+                             ,SUM(GA.DAY60_NEXT_CNT) AS DAY60_NEXT_CNT
+                             ,SUM(GA.DAY90_NEXT_CNT) AS DAY90_NEXT_CNT
+                             ,SUM(GA.DAY120_NEXT_CNT) AS DAY120_NEXT_CNT
+                             ,SUM(GA.DAY10_PREV_CNT + GA.DAY10_NEXT_CNT + GA.DAY20_NEXT_CNT + GA.DAY30_NEXT_CNT + GA.DAY60_NEXT_CNT + GA.DAY90_NEXT_CNT + GA.DAY120_NEXT_CNT) AS TOTAL_CNT
+                             ,SUM(GA.REG_DATE) AS REG_DATE_TIME
+                             ,SUM(GA.ANTICIPATION_CNT) AS ANTICIPATION_CNT
+                             ,SUM(GA.OCCUR_CNT) AS OCCUR_CNT
+                        FROM  (
+                                SELECT  A.TEAM_ID_MAIN AS TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,1 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,0 AS REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT
+                                  FROM  top_mbr_bsc A
+                                 WHERE  1=1
+                                   AND  A.USER_STATE != 1
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,1 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,0 AS REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                               
+                                  FROM  top_rpt_head A
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 3
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,1 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,0 AS REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                               
+                                  FROM  top_rpt_head A
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE = 2
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+                                   AND  A.REG_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+                                UNION ALL
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,1 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,1 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE 
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,1 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE  
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,1 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,1 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,1 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+                                UNION ALL            
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,1 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE 
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+                              ) GA
+                        WHERE  1=1
+                      GROUP BY GA.TEAM_ID    
+                     ) GB
+            ON  GA.TEAM_ID = GB.TEAM_ID 
+         WHERE  1=1
+           AND  GA.TEAM_STATISTICS4 = 0
+           AND  GA.TEAM_TYPE = 4
+        ORDER BY GA.TEAM_GROUP_ORDER DESC, GA.TEAM_ORDER DESC, GA.TEAM_ID DESC              
+    </select>	
+    <select id="selectWorkMemberList1" parameterType="hashmap" resultType="AsraMap">
+        SELECT  GA.TEAM_ID_MAIN AS TEAM_ID 
+               ,GA.USER_NO
+               ,GA.USER_NAME 
+               ,IFNULL(GB.USER_CNT,0) AS USER_CNT 
+               ,IFNULL(GB.RECEIVE_CNT,0) AS RECEIVE_CNT
+               ,IFNULL(GB.CLOSE_CNT,0) AS CLOSE_CNT
+               ,IFNULL(GB.DAY10_PREV_CNT,0) AS DAY10_PREV_CNT
+               ,IFNULL(ROUND(GB.DAY10_PREV_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_PREV_PS
+               ,IFNULL(GB.DAY10_NEXT_CNT,0) AS DAY10_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY10_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_NEXT_PS
+               ,IFNULL(GB.DAY20_NEXT_CNT,0) AS DAY20_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY20_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY20_NEXT_PS
+               ,IFNULL(GB.DAY30_NEXT_CNT,0) AS DAY30_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY30_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY30_NEXT_PS
+               ,IFNULL(GB.DAY60_NEXT_CNT,0) AS DAY60_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY60_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY60_NEXT_PS
+               ,IFNULL(GB.DAY90_NEXT_CNT,0) AS DAY90_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY90_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY90_NEXT_PS
+               ,IFNULL(GB.DAY120_NEXT_CNT,0) AS DAY120_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY120_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY120_NEXT_PS
+               ,IFNULL(GB.TOTAL_CNT,0) AS TOTAL_CNT
+               ,IFNULL(ROUND(GB.TOTAL_CNT / TOTAL_CNT * 100, 1),0) AS TOTAL_PS
+               ,IFNULL(GB.REG_DATE_TIME,0) AS REG_DATE_TIME
+               ,IFNULL(ROUND(((GB.TOTAL_CNT * UNIX_TIMESTAMP(#{endDe}) - GB.REG_DATE_TIME) / 86400) / GB.TOTAL_CNT, 1),0) AS DAY_AVR_TIME
+               ,IFNULL(GB.ANTICIPATION_CNT,0) AS ANTICIPATION_CNT
+               ,IFNULL(GB.OCCUR_CNT,0) AS OCCUR_CNT
+               ,CASE GA.WORK_TYPE
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS NEW_WORK_ORDER
+          FROM  top_mbr_bsc GA
+          LEFT  JOIN (
+                      SELECT  GA.TEAM_ID
+                             ,GA.USER_NO
+                             ,SUM(GA.USER_CNT) AS USER_CNT
+                             ,SUM(GA.RECEIVE_CNT) AS RECEIVE_CNT
+                             ,SUM(GA.CLOSE_CNT) AS CLOSE_CNT
+                             ,SUM(GA.DAY10_PREV_CNT) AS DAY10_PREV_CNT
+                             ,SUM(GA.DAY10_NEXT_CNT) AS DAY10_NEXT_CNT
+                             ,SUM(GA.DAY20_NEXT_CNT) AS DAY20_NEXT_CNT
+                             ,SUM(GA.DAY30_NEXT_CNT) AS DAY30_NEXT_CNT
+                             ,SUM(GA.DAY60_NEXT_CNT) AS DAY60_NEXT_CNT
+                             ,SUM(GA.DAY90_NEXT_CNT) AS DAY90_NEXT_CNT
+                             ,SUM(GA.DAY120_NEXT_CNT) AS DAY120_NEXT_CNT
+                             ,SUM(GA.DAY10_PREV_CNT + GA.DAY10_NEXT_CNT + GA.DAY20_NEXT_CNT + GA.DAY30_NEXT_CNT + GA.DAY60_NEXT_CNT + GA.DAY90_NEXT_CNT + GA.DAY120_NEXT_CNT) AS TOTAL_CNT
+                             ,SUM(GA.REG_DATE) AS REG_DATE_TIME
+                             ,SUM(GA.ANTICIPATION_CNT) AS ANTICIPATION_CNT
+                             ,SUM(GA.OCCUR_CNT) AS OCCUR_CNT
+                        FROM  (
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,1 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,0 AS REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                               
+                                  FROM  top_rpt_head A
+                                 WHERE  1=1
+                                   AND  A.TEAM_ID = #{team_id}
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 3
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,1 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,0 AS REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                               
+                                  FROM  top_rpt_head A
+                                 WHERE  1=1
+                                   AND  A.TEAM_ID = #{team_id}
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE = 2
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+                                   AND  A.REG_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+                                UNION ALL
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,1 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,1 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE 
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,1 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE  
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,1 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,1 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+                                   AND  A.TEAM_ID = #{team_id}
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,1 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+                                UNION ALL            
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,1 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE 
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+                              ) GA
+                        WHERE  1=1
+                      GROUP BY GA.TEAM_ID, GA.USER_NO    
+                     ) GB
+            ON  GA.USER_NO = GB.USER_NO 
+         WHERE  1=1
+           AND  GA.TEAM_ID_MAIN = #{team_id}
+           AND  GA.USER_STATE != 1
+        ORDER BY NEW_WORK_ORDER, GA.WORK_LEVEL DESC, GA.USER_NAME ASC              
+    </select>
+    
+    <select id="selectWorkMemberList4" parameterType="hashmap" resultType="AsraMap">
+        SELECT  GA.TEAM_ID_MAIN AS TEAM_ID
+               ,GA.USER_NO
+               ,GA.USER_NAME
+               ,IFNULL(GB.RECEIVE_CNT,0) AS RECEIVE_CNT
+               ,IFNULL(GB.CLOSE_CNT,0) AS CLOSE_CNT
+               ,IFNULL(GB.DAY10_PREV_CNT,0) AS DAY10_PREV_CNT
+               ,IFNULL(ROUND(GB.DAY10_PREV_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_PREV_PS
+               ,IFNULL(GB.DAY10_NEXT_CNT,0) AS DAY10_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY10_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY10_NEXT_PS
+               ,IFNULL(GB.DAY20_NEXT_CNT,0) AS DAY20_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY20_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY20_NEXT_PS
+               ,IFNULL(GB.DAY30_NEXT_CNT,0) AS DAY30_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY30_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY30_NEXT_PS
+               ,IFNULL(GB.DAY60_NEXT_CNT,0) AS DAY60_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY60_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY60_NEXT_PS
+               ,IFNULL(GB.DAY90_NEXT_CNT,0) AS DAY90_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY90_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY90_NEXT_PS
+               ,IFNULL(GB.DAY120_NEXT_CNT,0) AS DAY120_NEXT_CNT
+               ,IFNULL(ROUND(GB.DAY120_NEXT_CNT / TOTAL_CNT * 100, 1),0) AS DAY120_NEXT_PS
+               ,IFNULL(GB.TOTAL_CNT,0) AS TOTAL_CNT
+               ,IFNULL(ROUND(GB.TOTAL_CNT / TOTAL_CNT * 100, 1),0) AS TOTAL_PS
+               ,IFNULL(GB.REG_DATE_TIME,0) AS REG_DATE_TIME
+               ,IFNULL(ROUND(((GB.TOTAL_CNT * UNIX_TIMESTAMP(#{endDe}) - GB.REG_DATE_TIME) / 86400) / GB.TOTAL_CNT, 1),0) AS DAY_AVR_TIME
+               ,IFNULL(GB.ANTICIPATION_CNT,0) AS ANTICIPATION_CNT
+               ,IFNULL(GB.OCCUR_CNT,0) AS OCCUR_CNT
+          FROM  top_mbr_bsc GA
+          LEFT  JOIN (
+                      SELECT  GA.TEAM_ID
+                             ,GA.USER_NO
+                             ,SUM(GA.RECEIVE_CNT) AS RECEIVE_CNT
+                             ,SUM(GA.CLOSE_CNT) AS CLOSE_CNT
+                             ,SUM(GA.DAY10_PREV_CNT) AS DAY10_PREV_CNT
+                             ,SUM(GA.DAY10_NEXT_CNT) AS DAY10_NEXT_CNT
+                             ,SUM(GA.DAY20_NEXT_CNT) AS DAY20_NEXT_CNT
+                             ,SUM(GA.DAY30_NEXT_CNT) AS DAY30_NEXT_CNT
+                             ,SUM(GA.DAY60_NEXT_CNT) AS DAY60_NEXT_CNT
+                             ,SUM(GA.DAY90_NEXT_CNT) AS DAY90_NEXT_CNT
+                             ,SUM(GA.DAY120_NEXT_CNT) AS DAY120_NEXT_CNT
+                             ,SUM(GA.DAY10_PREV_CNT + GA.DAY10_NEXT_CNT + GA.DAY20_NEXT_CNT + GA.DAY30_NEXT_CNT + GA.DAY60_NEXT_CNT + GA.DAY90_NEXT_CNT + GA.DAY120_NEXT_CNT) AS TOTAL_CNT
+                             ,SUM(GA.REG_DATE) AS REG_DATE_TIME
+                             ,SUM(GA.ANTICIPATION_CNT) AS ANTICIPATION_CNT
+                             ,SUM(GA.OCCUR_CNT) AS OCCUR_CNT
+                        FROM  (
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,1 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,0 AS REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                               
+                                  FROM  top_rpt_head A
+                                 WHERE  1=1
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 3
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,1 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,0 AS REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                               
+                                  FROM  top_rpt_head A
+                                 WHERE  1=1
+                                   AND  A.TEAM_ID = #{team_id} 
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE = 2
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+                                   AND  A.REG_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+                                UNION ALL
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,1 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id}  
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+                                   AND  A.REG_DATE >= UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,1 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE 
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id}  
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 10 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,1 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE  
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id}  
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 20 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,1 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id}  
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 30 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,1 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id}  
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 60 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+                                UNION ALL   
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,1 AS DAY90_NEXT_CNT
+                                       ,0 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id}  
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 90 DAY))
+                                   AND  A.REG_DATE >=  UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+                                UNION ALL            
+                                SELECT  A.TEAM_ID 
+                                       ,A.USER_NO 
+                                       ,0 AS USER_CNT
+                                       ,0 AS RECEIVE_CNT
+                                       ,0 AS CLOSE_CNT
+                                       ,0 AS DAY10_PREV_CNT
+                                       ,0 AS DAY10_NEXT_CNT
+                                       ,0 AS DAY20_NEXT_CNT
+                                       ,0 AS DAY30_NEXT_CNT
+                                       ,0 AS DAY60_NEXT_CNT
+                                       ,0 AS DAY90_NEXT_CNT
+                                       ,1 AS DAY120_NEXT_CNT
+                                       ,A.REG_DATE 
+                                       ,0 AS ANTICIPATION_CNT
+                                       ,0 AS OCCUR_CNT                                  
+                                  FROM  top_rpt_head A
+                                       ,top_rpt_body B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+                                   AND  A.TEAM_ID = #{team_id}  
+                                   AND  A.SUIM_RPT_TYPE1 IN(3, 4)
+                                   AND  A.SUIM_RPT_STATE &lt; 2
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(#{endDe}, INTERVAL 120 DAY))
+                              ) GA
+                        WHERE  1=1
+                      GROUP BY GA.TEAM_ID, GA.USER_NO    
+                     ) GB
+            ON  GA.USER_NO = GB.USER_NO 
+         WHERE  1=1
+           AND  GA.TEAM_ID_MAIN = #{team_id}
+           AND  GA.USER_STATE != 1
+        ORDER BY GA.WORK_TYPE, GA.WORK_LEVEL DESC, GA.USER_NAME ASC              
+    </select>
+    <!-- 청구내역 팀별 통계 -->
+    <select id="selectResultTeamList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  GA.TEAM_ID
+		       ,GA.TEAM_NAME
+		       ,IFNULL(GB.RPT_CNT1,0) AS RPT_CNT1 
+		       ,IFNULL(GB.RPT_CNT2,0) AS RPT_CNT2 
+		       ,IFNULL(GB.RPT_CNT3,0) AS RPT_CNT3 
+		       ,IFNULL(GB.RPT_CNT4,0) AS RPT_CNT4 
+		       ,IFNULL(GB.RPT_CNT5,0) AS RPT_CNT5 
+		       ,IFNULL(GB.RPT_CNT6,0) AS RPT_CNT6 
+		       ,IFNULL(GB.RPT_CNT7,0) AS RPT_CNT7 
+		       ,IFNULL(GB.RPT_CNT8,0) AS RPT_CNT8 
+		       ,IFNULL(GB.RPT_CNT9,0) AS RPT_CNT9 
+		       ,IFNULL(GB.RPT_CNT_SUM,0) AS RPT_CNT_SUM 
+		  FROM  top_tm_bsc GA 
+		  LEFT  JOIN (
+		              SELECT  A.TEAM_ID
+		                     -- ,A.USER_NO  
+		                     ,SUM(A.RPT_CNT1) AS RPT_CNT1
+		                     ,SUM(A.RPT_CNT2) AS RPT_CNT2
+		                     ,SUM(A.RPT_CNT3) AS RPT_CNT3
+		                     ,SUM(A.RPT_CNT4) AS RPT_CNT4
+		                     ,SUM(A.RPT_CNT5) AS RPT_CNT5
+		                     ,SUM(A.RPT_CNT6) AS RPT_CNT6
+		                     ,SUM(A.RPT_CNT7) AS RPT_CNT7
+		                     ,SUM(A.RPT_CNT8) AS RPT_CNT8
+		                     ,SUM(A.RPT_CNT9) AS RPT_CNT9
+		                     ,(SUM(A.RPT_CNT1) + SUM(A.RPT_CNT2) + SUM(A.RPT_CNT3) + SUM(A.RPT_CNT4) + SUM(A.RPT_CNT5) + SUM(A.RPT_CNT6) + SUM(A.RPT_CNT7) + SUM(A.RPT_CNT8) + SUM(A.RPT_CNT9)) AS RPT_CNT_SUM
+		                FROM  (
+		                        SELECT  A.TEAM_ID
+		                               ,A.USER_NO  
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 1 THEN 1 ELSE 0 END RPT_CNT1
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 2 THEN 1 ELSE 0 END RPT_CNT2
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 3 THEN 1 ELSE 0 END RPT_CNT3
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 4 THEN 1 ELSE 0 END RPT_CNT4
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 5 THEN 1 ELSE 0 END RPT_CNT5
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 6 THEN 1 ELSE 0 END RPT_CNT6
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 7 THEN 1 ELSE 0 END RPT_CNT7
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 8 THEN 1 ELSE 0 END RPT_CNT8
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 9 THEN 1 ELSE 0 END RPT_CNT9
+		                          FROM  top_rpt_head A 
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_TYPE1 IN(3,4)
+		                           AND  A.SUIM_RPT_TYPE1_CLOSE34 IN(1,2,3,4,5,6,7,8,9)
+		                           AND  A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND  A.CLOSE_DATE &lt;  UNIX_TIMESTAMP(#{endDe})        
+		                      ) A
+		               WHERE  1=1
+		              GROUP BY A.TEAM_ID    
+		             ) GB
+		    ON  GA.TEAM_ID = GB.TEAM_ID
+		 WHERE  1=1
+		   AND  GA.TEAM_STATISTICS4 = 0
+		   AND  GA.TEAM_TYPE = 4
+		ORDER BY GA.TEAM_GROUP_ORDER DESC, GA.TEAM_ORDER DESC, GA.TEAM_ID DESC              
+             
+    </select>
+
+    <!-- 청구내역 개인별 통계 -->          
+    <select id="selectResultMemberList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  GA.USER_NO
+		       ,GA.USER_NAME
+		       ,GA.USER_STATE
+		       ,GA.TEAM_ID_MAIN AS TEAM_ID
+		       ,IFNULL(GB.RPT_CNT1,0) AS RPT_CNT1
+		       ,IFNULL(GB.RPT_CNT2,0) AS RPT_CNT2
+		       ,IFNULL(GB.RPT_CNT3,0) AS RPT_CNT3
+		       ,IFNULL(GB.RPT_CNT4,0) AS RPT_CNT4
+		       ,IFNULL(GB.RPT_CNT5,0) AS RPT_CNT5
+		       ,IFNULL(GB.RPT_CNT6,0) AS RPT_CNT6
+		       ,IFNULL(GB.RPT_CNT7,0) AS RPT_CNT7
+		       ,IFNULL(GB.RPT_CNT8,0) AS RPT_CNT8
+		       ,IFNULL(GB.RPT_CNT9,0) AS RPT_CNT9
+		       ,IFNULL(GB.RPT_CNT_SUM,0) AS RPT_CNT_SUM
+		  FROM  top_mbr_bsc GA
+		  LEFT  JOIN (
+		              SELECT  A.USER_NO
+		                     ,SUM(A.RPT_CNT1) AS RPT_CNT1
+		                     ,SUM(A.RPT_CNT2) AS RPT_CNT2
+		                     ,SUM(A.RPT_CNT3) AS RPT_CNT3
+		                     ,SUM(A.RPT_CNT4) AS RPT_CNT4
+		                     ,SUM(A.RPT_CNT5) AS RPT_CNT5
+		                     ,SUM(A.RPT_CNT6) AS RPT_CNT6
+		                     ,SUM(A.RPT_CNT7) AS RPT_CNT7
+		                     ,SUM(A.RPT_CNT8) AS RPT_CNT8
+		                     ,SUM(A.RPT_CNT9) AS RPT_CNT9
+		                     ,(SUM(A.RPT_CNT1) + SUM(A.RPT_CNT2) + SUM(A.RPT_CNT3) + SUM(A.RPT_CNT4) + SUM(A.RPT_CNT5) + SUM(A.RPT_CNT6) + SUM(A.RPT_CNT7) + SUM(A.RPT_CNT8) + SUM(A.RPT_CNT9)) AS RPT_CNT_SUM
+		                FROM  (
+		                        SELECT  A.TEAM_ID
+		                               ,A.USER_NO
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 1 THEN 1 ELSE 0 END RPT_CNT1
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 2 THEN 1 ELSE 0 END RPT_CNT2
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 3 THEN 1 ELSE 0 END RPT_CNT3
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 4 THEN 1 ELSE 0 END RPT_CNT4
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 5 THEN 1 ELSE 0 END RPT_CNT5
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 6 THEN 1 ELSE 0 END RPT_CNT6
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 7 THEN 1 ELSE 0 END RPT_CNT7
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 8 THEN 1 ELSE 0 END RPT_CNT8
+		                               ,CASE WHEN A.SUIM_RPT_TYPE1_CLOSE34 = 9 THEN 1 ELSE 0 END RPT_CNT9
+		                          FROM  top_rpt_head A
+		                         WHERE  1=1
+		                           AND  A.TEAM_ID = #{team_id}
+		                           AND  A.SUIM_RPT_TYPE1 IN(3,4)
+		                           AND  A.SUIM_RPT_TYPE1_CLOSE34 IN(1,2,3,4,5,6,7,8,9)
+		                           AND  A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND  A.CLOSE_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+		                      ) A
+		               WHERE  1=1
+		              GROUP BY A.USER_NO
+		             ) GB
+		    ON  GA.USER_NO = GB.USER_NO
+		 WHERE  1=1
+		   AND  GA.TEAM_ID_MAIN = #{team_id}
+		   AND  GA.USER_STATE != 1
+		   -- AND  (GA.USER_STATE != 1 OR GB.RPT_CNT_SUM > 0)
+		ORDER BY GA.WORK_TYPE, GA.WORK_LEVEL DESC, GA.USER_NAME ASC
+    </select>
+
+</mapper>

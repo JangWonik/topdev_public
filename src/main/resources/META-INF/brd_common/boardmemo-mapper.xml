@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BoardMemoMapper">
+
+	<select id="boardMemoList" parameterType="kr.co.toplac.brd.common.BoardMemoViewVO" resultType = "kr.co.toplac.brd.common.BoardMemoVO">
+		SELECT memo_no, fk_no, user_no, getTopMbrBscUserName(user_no) user_nm, memo
+		, reg_ip, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date
+		FROM
+		<choose>
+			<when test="targetStr == 'free'">
+				brd_free_memo
+			</when>
+			<when test="targetStr == 'referenceTop'">
+				brd_reference_top_memo
+			</when>
+			<when test="targetStr == 'noticeTop'">
+				brd_notice_top_memo
+			</when>
+			<when test="targetStr == 'noticePtnr1'">
+				brd_notice_ptnr1_memo
+			</when>
+			<when test="targetStr == 'noticePtnr4'">
+				brd_notice_ptnr4_memo
+			</when>
+			<when test="targetStr == 'referencePtnr'">
+				brd_reference_ptnr_memo
+			</when>
+			<when test="targetStr == 'helpDesk'">
+				brd_help_desk_memo
+			</when>
+			<when test="targetStr == 'supportTop'">
+				brd_support_memo
+			</when>
+			<when test="targetStr == 'lectureQna'">
+				brd_lecture_memo
+			</when>
+			<otherwise>
+				brd_free_memo
+			</otherwise>
+		</choose>
+		WHERE fk_no = #{linkNo}
+		ORDER BY memo_no
+	</select>
+
+	<insert id="boardMemoWrite" parameterType="kr.co.toplac.brd.common.BoardMemoViewVO" >
+		INSERT INTO
+		<choose>
+			<when test="targetStr == 'free'">
+				brd_free_memo
+			</when>
+			<when test="targetStr == 'referenceTop'">
+				brd_reference_top_memo
+			</when>
+			<when test="targetStr == 'noticeTop'">
+				brd_notice_top_memo
+			</when>
+			<when test="targetStr == 'noticePtnr1'">
+				brd_notice_ptnr1_memo
+			</when>
+			<when test="targetStr == 'noticePtnr4'">
+				brd_notice_ptnr4_memo
+			</when>
+			<when test="targetStr == 'referencePtnr'">
+				brd_reference_ptnr_memo
+			</when>
+			<when test="targetStr == 'helpDesk'">
+				brd_help_desk_memo
+			</when>
+			<when test="targetStr == 'supportTop'">
+				brd_support_memo
+			</when>
+			<when test="targetStr == 'lectureQna'">
+				brd_lecture_memo
+			</when>
+			<otherwise>
+				brd_free_memo
+			</otherwise>
+		</choose>
+		(fk_no, user_no, memo, reg_ip, reg_date)
+		VALUES(#{linkNo}, #{userNo}, #{mContents}, #{regIp}, unix_timestamp(now()))
+	</insert>
+
+	<select id="oneBoardMemo" parameterType="kr.co.toplac.brd.common.BoardMemoViewVO" resultType = "kr.co.toplac.brd.common.BoardMemoVO">
+		SELECT memo_no, fk_no, user_no, getTopMbrBscUserName(user_no) user_nm, memo
+		, reg_ip, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date
+		FROM
+		<choose>
+			<when test="targetStr == 'free'">
+				brd_free_memo
+			</when>
+			<when test="targetStr == 'referenceTop'">
+				brd_reference_top_memo
+			</when>
+			<when test="targetStr == 'noticeTop'">
+				brd_notice_top_memo
+			</when>
+			<when test="targetStr == 'noticePtnr1'">
+				brd_notice_ptnr1_memo
+			</when>
+			<when test="targetStr == 'noticePtnr4'">
+				brd_notice_ptnr4_memo
+			</when>
+			<when test="targetStr == 'referencePtnr'">
+				brd_reference_ptnr_memo
+			</when>
+			<when test="targetStr == 'helpDesk'">
+				brd_help_desk_memo
+			</when>
+			<when test="targetStr == 'supportTop'">
+				brd_support_memo
+			</when>
+			<when test="targetStr == 'lectureQna'">
+				brd_lecture_memo
+			</when>
+			<otherwise>
+				brd_free_memo
+			</otherwise>
+		</choose>
+		WHERE fk_no = #{linkNo}
+		ORDER BY memo_no DESC
+		LIMIT 0, 1
+	</select>
+
+	<delete id = "boardMemoDelete" parameterType="kr.co.toplac.brd.common.BoardMemoViewVO">
+		DELETE FROM
+		<choose>
+			<when test="targetStr == 'free'">
+				brd_free_memo
+			</when>
+			<when test="targetStr == 'referenceTop'">
+				brd_reference_top_memo
+			</when>
+			<when test="targetStr == 'noticeTop'">
+				brd_notice_top_memo
+			</when>
+			<when test="targetStr == 'noticePtnr1'">
+				brd_notice_ptnr1_memo
+			</when>
+			<when test="targetStr == 'noticePtnr4'">
+				brd_notice_ptnr4_memo
+			</when>
+			<when test="targetStr == 'referencePtnr'">
+				brd_reference_ptnr_memo
+			</when>
+			<when test="targetStr == 'helpDesk'">
+				brd_help_desk_memo
+			</when>
+			<when test="targetStr == 'supportTop'">
+				brd_support_memo
+			</when>
+			<when test="targetStr == 'lectureQna'">
+				brd_lecture_memo
+			</when>
+			<otherwise>
+				brd_free_memo
+			</otherwise>
+		</choose>
+		WHERE memo_no = #{memoNo}
+	</delete>
+
+	<delete id = "boardMemoDeleteByFK" parameterType="kr.co.toplac.brd.common.BoardMemoViewVO">
+		DELETE FROM
+		<choose>
+			<when test="targetStr == 'free'">
+				brd_free_memo
+			</when>
+			<when test="targetStr == 'referenceTop'">
+				brd_reference_top_memo
+			</when>
+			<when test="targetStr == 'noticeTop'">
+				brd_notice_top_memo
+			</when>
+			<when test="targetStr == 'noticePtnr1'">
+				brd_notice_ptnr1_memo
+			</when>
+			<when test="targetStr == 'noticePtnr4'">
+				brd_notice_ptnr4_memo
+			</when>
+			<when test="targetStr == 'referencePtnr'">
+				brd_reference_ptnr_memo
+			</when>
+			<when test="targetStr == 'helpDesk'">
+				brd_help_desk_memo
+			</when>
+			<when test="targetStr == 'supportTop'">
+				brd_help_desk_memo
+			</when>
+			<when test="targetStr == 'lectureQna'">
+				brd_lecture_memo
+			</when>
+			<otherwise>
+				brd_free_memo
+			</otherwise>
+		</choose>
+		WHERE fk_no = #{linkNo}
+	</delete>
+
+	<update id = "boardMemoUpdate" parameterType="kr.co.toplac.brd.common.BoardMemoViewVO">
+		UPDATE
+		<choose>
+			<when test="targetStr == 'free'">
+				brd_free_memo
+			</when>
+			<when test="targetStr == 'referenceTop'">
+				brd_reference_top_memo
+			</when>
+			<when test="targetStr == 'noticeTop'">
+				brd_notice_top_memo
+			</when>
+			<when test="targetStr == 'noticePtnr1'">
+				brd_notice_ptnr1_memo
+			</when>
+			<when test="targetStr == 'noticePtnr4'">
+				brd_notice_ptnr4_memo
+			</when>
+			<when test="targetStr == 'referencePtnr'">
+				brd_reference_ptnr_memo
+			</when>
+			<when test="targetStr == 'helpDesk'">
+				brd_help_desk_memo
+			</when>
+			<when test="targetStr == 'supportTop'">
+				brd_support_memo
+			</when>
+			<when test="targetStr == 'lectureQna'">
+				brd_lecture_memo
+			</when>
+			<otherwise>
+				brd_free_memo
+			</otherwise>
+		</choose>
+		SET memo = #{mContents}
+		WHERE memo_no = #{memoNo}
+	</update>
+
+</mapper>

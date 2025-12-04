@@ -1,0 +1,716 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PopMbrAuth2DtlMapper">
+
+	<select id="getLsAdminCnt" parameterType="String" resultType="int">
+		SELECT COUNT(admin_no) FROM ls_admin
+		WHERE user_id = #{user_no}
+	</select>
+	
+	<select id="getLsApprovalSite" parameterType="String" resultType="String">
+		SELECT IFNULL(ls_approval_site,'') FROM ls_admin 
+		WHERE user_id = #{user_no}
+	</select>
+	
+	<select id="getTodayVacationByTeams" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			a.user_no
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,DATE_FORMAT(a.sdate,'%Y-%m-%d') AS sdate
+			,DATE_FORMAT(a.edate,'%Y-%m-%d') AS edate
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,a.user_team_id
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+		FROM top_vacation_info a, top_tm_bsc b, top_mbr_bsc c
+		WHERE a.user_team_id = b.team_id
+		AND a.user_no = c.user_no
+		AND a.approval_state = 31
+		AND #{today} >= a.sdate		
+		AND #{today} &lt;= a.edate
+		AND a.user_team_id IN (${todayVacationTeams})
+		ORDER BY b.team_group_order DESC, team_order DESC, c.work_level DESC, c.join_date		
+	</select>
+	
+	<select id="getLsTodayVacation" parameterType="String" resultType="String">
+		SELECT
+			CASE
+				WHEN ls_today_vacation = '|'
+				THEN ''
+				WHEN ls_today_vacation IS NULL
+				THEN ''
+				ELSE ls_today_vacation
+			END AS ls_today_vacation
+		FROM ls_admin		
+		WHERE user_id = #{user_no}
+	</select>
+
+	<insert id="insMbrAuth2DtlLog" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin_log (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2,ls_admin_nosend,ls_approval_site,ls_today_vacation,rpt_cancel_approval,log_date,log_user)
+		SELECT user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2,ls_admin_nosend,ls_approval_site,ls_today_vacation,rpt_cancel_approval
+		, unix_timestamp(now()), #{edit_user_no}
+		FROM ls_admin
+		WHERE user_id = #{user_no}
+	</insert>
+
+	<select id="authTeamlist0" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin2, if(LENGTH(adm.ls_admin2) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin2 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin2 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist1" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin2, if(LENGTH(adm.ls_admin2) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin2 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin2 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin2, if(LENGTH(adm.ls_admin2) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin2 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin2 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2Dtl" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin2 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2Dtl" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'',#{tmpTxt},'','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+
+	<select id="authTeamlist0LsAdmin7" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin7, if(LENGTH(adm.ls_admin7) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin7 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin7 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist1LsAdmin7" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin7, if(LENGTH(adm.ls_admin7) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin7 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin7 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdmin7" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin7, if(LENGTH(adm.ls_admin7) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin7 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin7 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2DtlLsAdmin7" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin7 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2DtlLsAdmin7" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','',#{tmpTxt},'','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+
+	<select id="authTeamlist0LsAdmin9" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin9, if(LENGTH(adm.ls_admin9) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin9 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin9 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist1LsAdmin9" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin9, if(LENGTH(adm.ls_admin9) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin9 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin9 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdmin9" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin9, if(LENGTH(adm.ls_admin9) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin9 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin9 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2DtlLsAdmin9" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin9 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2DtlLsAdmin9" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','',#{tmpTxt},'','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+
+	<select id="authTeamlist0LsAdmin10" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin10, if(LENGTH(adm.ls_admin10) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin10 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin10 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist1LsAdmin10" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin10, if(LENGTH(adm.ls_admin10) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin10 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin10 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdmin10" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin10, if(LENGTH(adm.ls_admin10) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin10 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin10 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2DtlLsAdmin10" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin10 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2DtlLsAdmin10" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','',#{tmpTxt},'','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+
+	<select id="authTeamlist0LsAdmin11" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin11, if(LENGTH(adm.ls_admin11) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin11 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin11 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist1LsAdmin11" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin11, if(LENGTH(adm.ls_admin11) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin11 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin11 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdmin11" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin11, if(LENGTH(adm.ls_admin11) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin11 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin11 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2DtlLsAdmin11" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin11 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2DtlLsAdmin11" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','','',#{tmpTxt},'','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+	
+	<!-- 종결 후 수정 -->
+	<select id="authTeamlist0LsAdmin22" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin22, if(LENGTH(adm.ls_admin22) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin22 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin22 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist1LsAdmin22" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin22, if(LENGTH(adm.ls_admin22) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin22 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin22 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdmin22" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin22, if(LENGTH(adm.ls_admin22) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin22 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin22 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2DtlLsAdmin22" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin22 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2DtlLsAdmin22" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','#{tmpTxt}','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+	
+	
+	<!-- 담당 관리 부서(센터장 등..) 170601, lds -->
+	<select id="authTeamlist0LsAdmin23" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin23, if(LENGTH(adm.ls_admin23) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin23 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin23 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamlist1LsAdmin23" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin23, if(LENGTH(adm.ls_admin23) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin23 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin23 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdmin23" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin23, if(LENGTH(adm.ls_admin23) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin23 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin23 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2DtlLsAdmin23" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin23 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2DtlLsAdmin23" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','#{tmpTxt}','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+	
+	<update id="udtMbrAuthDtlLsAdminQuick" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin_quick = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>	
+	
+	<insert id="insMbrAuthDtlLsAdminQuick" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','',#{tmpTxt},'','')
+	</insert>
+	
+	<update id="udtMbrAuthDtlLsAdminVacation1" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin_vacation1 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+	
+	<update id="udtMbrAuthDtlLsAdminNoSend" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin_nosend = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+	
+	<insert id="insMbrAuthDtlLsAdminVacation1" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','',#{tmpTxt},'')
+	</insert>
+	
+	<insert id="insMbrAuthDtlLsAdminNoSend" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2,ls_admin_nosend)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','',#{tmpTxt})
+	</insert>
+	
+	<update id="udtMbrAuthDtlLsAdminVacation2" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin_vacation2 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+	
+	<insert id="insMbrAuthDtlLsAdminVacation2" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','',#{tmpTxt})
+	</insert>
+	
+	<!-- 빠른결재 구분 편집 -->
+	<select id="authTeamlist0LsAdminQuick" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_quick, if(LENGTH(adm.ls_admin_quick) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_quick FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_quick LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamlist1LsAdminQuick" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_quick, if(LENGTH(adm.ls_admin_quick) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_quick FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_quick LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdminQuick" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_quick, if(LENGTH(adm.ls_admin_quick) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_quick FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_quick LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<!-- 손해사정서 미교부 팀 팝업조회권한 -->
+	<select id="authTeamlist0LsAdminNoSend" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_nosend, if(LENGTH(adm.ls_admin_nosend) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_nosend FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_nosend LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamlist1LsAdminNoSend" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_nosend, if(LENGTH(adm.ls_admin_nosend) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_nosend FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_nosend LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamlist4LsAdminNoSend" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_nosend, if(LENGTH(adm.ls_admin_nosend) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_nosend FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_nosend LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<!-- 휴가 1차 결재 권한 -->
+	<select id="authTeamlist0LsAdminVacation1" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_vacation1, if(LENGTH(adm.ls_admin_vacation1) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_vacation1 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_vacation1 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamlist1LsAdminVacation1" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_vacation1, if(LENGTH(adm.ls_admin_vacation1) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_vacation1 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_vacation1 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdminVacation1" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_vacation1, if(LENGTH(adm.ls_admin_vacation1) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_vacation1 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_vacation1 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<!-- 휴가 2차 결재 권한 -->
+	<select id="authTeamlist0LsAdminVacation2" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_vacation2, if(LENGTH(adm.ls_admin_vacation2) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_vacation2 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_vacation2 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamlist1LsAdminVacation2" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_vacation2, if(LENGTH(adm.ls_admin_vacation2) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_vacation2 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_vacation2 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdminVacation2" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin_vacation2, if(LENGTH(adm.ls_admin_vacation2) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin_vacation2 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin_vacation2 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<!-- 보고서 대상 구분 편집 -->
+	<select id="authTeamlist0LsAdmin24" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin24, if(LENGTH(adm.ls_admin24) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin24 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin24 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist1LsAdmin24" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin24, if(LENGTH(adm.ls_admin24) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin24 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin24 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<select id="authTeamlist4LsAdmin24" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_admin24, if(LENGTH(adm.ls_admin24) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_admin24 FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_admin24 LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+
+	<update id="udtMbrAuth2DtlLsAdmin24" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_admin24 = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+
+	<insert id="insMbrAuth2DtlLsAdmin24" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','#{tmpTxt}','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','')
+	</insert>
+	
+	<!-- 보고서 위임취소 결재권한 시작 -->
+	<select id="authTeamList0RptCancelApproval" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.rpt_cancel_approval, if(LENGTH(adm.rpt_cancel_approval) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT rpt_cancel_approval FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.rpt_cancel_approval LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamList1RptCancelApproval" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.rpt_cancel_approval, if(LENGTH(adm.rpt_cancel_approval) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT rpt_cancel_approval FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.rpt_cancel_approval LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamList4RptCancelApproval" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.rpt_cancel_approval, if(LENGTH(adm.rpt_cancel_approval) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT rpt_cancel_approval FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.rpt_cancel_approval LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	<!-- 보고서 위임취소 결재권한 끝 -->
+	
+	<!-- 오늘 휴가자 조회 권한 설정 시작 -->
+	<select id="authTeamList0LsTodayVacation" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_today_vacation, if(LENGTH(adm.ls_today_vacation) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_today_vacation FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_today_vacation LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamList1LsTodayVacation" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_today_vacation, if(LENGTH(adm.ls_today_vacation) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_today_vacation FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_today_vacation LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamList4LsTodayVacation" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_today_vacation, if(LENGTH(adm.ls_today_vacation) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_today_vacation FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_today_vacation LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>	
+	
+	<!-- 현장보고서 겸직자 결재팀 설정 시작 -->
+	<select id="authTeamlist0LsApprovalSite" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_approval_site, if(LENGTH(adm.ls_approval_site) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_approval_site FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_approval_site LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 0 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<select id="authTeamlist1LsApprovalSite" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_approval_site, if(LENGTH(adm.ls_approval_site) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_approval_site FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_approval_site LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 1 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>	
+	
+	<select id="authTeamlist4LsApprovalSite" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT tm.team_id, tm.team_name, tm.team_level
+			, tm.team_group_order, tm.team_order, tm.team_type
+			, adm.ls_approval_site, if(LENGTH(adm.ls_approval_site) > 0, 1, 0) cnt
+		FROM top_tm_bsc tm
+			LEFT JOIN (SELECT ls_approval_site FROM ls_admin WHERE user_id = #{user_no}) adm
+			ON adm.ls_approval_site LIKE CONCAT('%|',tm.team_id,'|%')
+		WHERE tm.team_type = 4 AND tm.team_level > 0
+		ORDER BY tm.team_group_order DESC, tm.team_order DESC, tm.team_level
+	</select>
+	
+	<update id="udtMbrAuth2DtlLsTodayVacation" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_today_vacation = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>
+	
+	<update id="udtMbrAuth2DtlLsRptCancelApproval" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET rpt_cancel_approval = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>		
+	
+	<update id="udtMbrAuth2DtlLsApprovalSite" parameterType="java.util.HashMap" >
+		UPDATE ls_admin SET ls_approval_site = #{tmpTxt}
+		WHERE user_id = #{user_no}
+	</update>	
+	
+	<insert id="insMbrAuth2DtlLsTodayVacation" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2,ls_approval_site,ls_today_vacation)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','','','#{tmpTxt}')
+	</insert>
+	
+	<insert id="insMbrAuth2DtlLsRptCancelApproval" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2,ls_approval_site,ls_today_vacation,rpt_cancel_approval)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','','','','#{tmpTxt}')
+	</insert>
+	
+	<insert id="insMbrAuth2DtlLsApprovalSite" parameterType="java.util.HashMap" >
+		INSERT INTO ls_admin (user_id,ls_admin1,ls_admin2,ls_admin3,ls_admin4,ls_admin5,ls_admin6,ls_admin7,ls_admin8,ls_admin9,ls_admin10,ls_admin11,ls_admin12,ls_admin13,ls_admin14,ls_admin15,ls_admin16,ls_admin17,ls_admin18,ls_admin19,ls_admin20,ls_admin21,ls_admin22,ls_admin23,ls_admin24,ls_admin25,ls_admin26,ls_admin27,ls_admin28,ls_admin29,ls_admin30,ls_admin31,ls_admin32,ls_admin33,ls_admin34,ls_admin35,ls_admin36,ls_admin37,ls_admin38,ls_admin39,ls_admin40,ls_admin_voc,ls_admin_voc1,ls_admin_quick,ls_admin_vacation1,ls_admin_vacation2,ls_approval_site)
+		VALUES (#{user_no},'','','','','','','','','','','','','','','','','','','','','','','','','','',0,0,'',0,0,'',0,'','',0,0,'','',0,'','','','','','#{tmpTxt}')
+	</insert>
+	<!-- 현장보고서 겸직자 결재팀 설정 끝 -->	
+
+</mapper>

@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="dutyCostMapper">
+
+	<select id="selectList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  DATE_FORMAT(STR_TO_DATE(GA.CA_DE,'%Y%m%d'),'%Y-%m-%d') AS CA_DE
+		       ,GROUP_CONCAT(GA.DUTY_ID, '-', GA.TEAM_ID, '-', GA.USER_NO, '-', GA.PTNR_ID, '-', GA.DUTY_TYPE, '-', GA.USER_NAME, '-', GA.TEAM_NAME, '-', GA.DUTY_STATUS ORDER BY GA.DUTY_TYPE ASC) AS USER_INFO
+		  FROM  (
+					SELECT  A.CA_DE
+							 ,B.DUTY_ID
+							 ,B.TEAM_ID
+							 ,B.DUTY_STATUS
+							 ,B.USER_NO
+							 ,B.PTNR_ID
+							 ,B.DUTY_TYPE
+							 ,(SELECT USER_NAME FROM top_mbr_bsc WHERE USER_NO = B.USER_NO) AS USER_NAME
+							 ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_ID = B.TEAM_ID) AS TEAM_NAME	
+					  FROM  TC_CALENDAR A LEFT JOIN top_duty B ON A.CA_DE = B.DUTY_DE
+					 WHERE  A.CA_YEARMON = #{yearMonth}    
+		  			) GA
+		 WHERE  1=1
+		 GROUP BY GA.CA_DE
+		 ORDER BY GA.CA_DE ASC
+	</select>
+		
+	<select id="selectCostList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.CA_DE
+			   ,B.DUTY_ID
+			   ,B.TEAM_ID
+			   ,B.USER_NO
+			   ,B.PTNR_ID
+			   ,(SELECT PTNR_NICK FROM top_ptnr_bsc WHERE PTNR_ID = B.PTNR_ID) AS PTNR_NICK			   
+			   ,B.DUTY_TYPE
+			   ,B.DUTY_COST
+			   ,B.PROCESS_CNT
+			   ,B.DUTY_STATUS
+			   ,B.DUTY_DE
+			   ,(SELECT USER_NAME FROM top_mbr_bsc WHERE USER_NO = B.USER_NO) AS USER_NAME
+			   ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_ID = B.TEAM_ID) AS TEAM_NAME
+			   ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_GROUP_ORDER IN(SELECT TEAM_GROUP_ORDER FROM top_tm_bsc WHERE TEAM_ID = B.TEAM_ID) AND TEAM_LEVEL = 0) AS PARENT_TEAM_NAME
+		  FROM  TC_CALENDAR A LEFT JOIN top_duty B ON A.CA_DE = B.DUTY_DE
+		 WHERE  A.CA_YEARMON = #{yearMonth}
+		   AND  B.DUTY_STATUS >= 0 		    
+ 		   <if test="sessionMbrPms22 != 1 and sessionMbrPms23 != 1">
+		   AND  B.USER_NO = #{userNo}
+		   </if> 
+
+	   ORDER BY B.DUTY_ID ASC
+	   LIMIT #{limitPage}, #{sizePerPage}       
+	</select>
+	
+	<select id="selectAppList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.CA_DE
+			   ,B.DUTY_ID
+			   ,B.TEAM_ID
+			   ,B.USER_NO
+			   ,B.PTNR_ID
+			   ,(SELECT PTNR_NICK FROM top_ptnr_bsc WHERE PTNR_ID = B.PTNR_ID) AS PTNR_NICK			   
+			   ,B.DUTY_TYPE
+			   ,B.DUTY_COST
+			   ,B.PROCESS_CNT
+			   ,B.DUTY_STATUS
+			   ,B.DUTY_DE
+			   ,(SELECT USER_NAME FROM top_mbr_bsc WHERE USER_NO = B.USER_NO) AS USER_NAME
+			   ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_ID = B.TEAM_ID) AS TEAM_NAME
+			   ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_GROUP_ORDER IN(SELECT TEAM_GROUP_ORDER FROM top_tm_bsc WHERE TEAM_ID = B.TEAM_ID) AND TEAM_LEVEL = 0) AS PARENT_TEAM_NAME
+		  FROM  TC_CALENDAR A INNER JOIN top_duty B ON A.CA_DE = B.DUTY_DE
+		 WHERE  B.DUTY_STATUS = 10
+	   ORDER BY B.DUTY_ID ASC
+	   LIMIT #{limitPage}, #{sizePerPage}       
+	</select>
+
+	<select id="selectAppCnt" parameterType="hashmap"  resultType="Long">
+		SELECT  COUNT(*)
+		  FROM  top_duty A
+		 WHERE  A.DUTY_STATUS = 10        		
+    </select>		
+	
+	
+	<select id="selectDepList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.CA_DE
+			   ,B.DUTY_ID
+			   ,B.TEAM_ID
+			   ,B.USER_NO
+			   ,B.PTNR_ID
+			   ,(SELECT PTNR_NICK FROM top_ptnr_bsc WHERE PTNR_ID = B.PTNR_ID) AS PTNR_NICK			   
+			   ,B.DUTY_TYPE
+			   ,B.DUTY_COST
+			   ,B.PROCESS_CNT
+			   ,B.DUTY_STATUS
+			   ,B.DUTY_DE
+			   ,(SELECT USER_NAME FROM top_mbr_bsc WHERE USER_NO = B.USER_NO) AS USER_NAME
+			   ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_ID = B.TEAM_ID) AS TEAM_NAME
+			   ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_GROUP_ORDER IN(SELECT TEAM_GROUP_ORDER FROM top_tm_bsc WHERE TEAM_ID = B.TEAM_ID) AND TEAM_LEVEL = 0) AS PARENT_TEAM_NAME
+		  FROM  TC_CALENDAR A INNER JOIN top_duty B ON A.CA_DE = B.DUTY_DE
+		 WHERE 1=1
+		 <choose>
+		 	<when test="type == 'wait'">AND B.DUTY_STATUS = 20</when>
+		 	<when test="type == 'complete'">AND B.DUTY_STATUS = 30</when>
+		 	<otherwise> AND B.DUTY_STATUS IN (20,30)</otherwise>
+		 </choose>
+	   ORDER BY B.DUTY_ID ASC
+	   LIMIT #{limitPage}, #{sizePerPage}       
+	</select>		
+
+	<select id="selectDepCnt" parameterType="hashmap"  resultType="Long">
+		SELECT  COUNT(*)
+		  FROM  top_duty A
+		 WHERE 1=1
+		 <choose>
+		 	<when test="type == 'wait'">AND A.DUTY_STATUS = 20</when>
+		 	<when test="type == 'complete'">AND A.DUTY_STATUS = 30</when>
+		 	<otherwise> AND A.DUTY_STATUS IN (20,30)</otherwise>
+		 </choose>
+    </select>	
+    
+	<select id="selectListCnt" parameterType="hashmap"  resultType="Long">
+		SELECT  COUNT(*)
+		  FROM  TC_CALENDAR A LEFT JOIN top_duty B ON A.CA_DE = B.DUTY_DE
+		 WHERE  A.CA_YEARMON = #{yearMonth}
+		   AND  B.DUTY_STATUS >= 0   
+ 		   <if test="sessionMbrPms22 != 1 and sessionMbrPms23 != 1">
+		   AND  B.USER_NO = #{userNo}
+		   </if>        		
+    </select>	
+		
+
+	<insert id="dutyInsert" parameterType="kr.co.toplac.topdutycost.TopDutyCostVO">
+		INSERT INTO top_duty(
+			 DUTY_ID
+			,DUTY_DE
+			,TEAM_ID
+			,USER_NO
+			,PTNR_ID
+			,DUTY_TYPE
+			,FRST_REGIST_PNTTM
+			,FRST_REGISTER_NO
+			,LAST_UPDT_PNTTM
+			,LAST_UPDTUSR_NO) VALUES(
+				 CONCAT('D', (SELECT A.TEMP_ID FROM (SELECT IF ( MAX(SUBSTR(DUTY_ID, 2, 8)) IS NULL, CONCAT(SUBSTR(#{dutyDe},3), '01'),  MAX(SUBSTR(DUTY_ID, 2, 8)) + 1) AS TEMP_ID FROM top_duty WHERE DUTY_DE = #{dutyDe}) A))
+				,#{dutyDe}
+				,#{teamId}
+				,#{userNo}
+				,#{ptnrId}
+				,#{dutyType}
+				,now()
+				,#{frstRegisterNo}
+				,now()
+				,#{lastUpdtusrNo}
+			  )			
+	</insert>
+	
+	<select id="select" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.DUTY_ID
+		       ,DATE_FORMAT(STR_TO_DATE(A.DUTY_DE,'%Y%m%d'),'%Y-%m-%d') AS DUTY_DE
+			   ,A.TEAM_ID
+			   ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_ID = A.TEAM_ID) AS TEAM_NAME	
+			   ,A.USER_NO
+			   ,(SELECT USER_NAME FROM top_mbr_bsc WHERE USER_NO = A.USER_NO) AS USER_NAME 
+			   ,A.PTNR_ID
+			   ,(SELECT PTNR_NICK FROM top_ptnr_bsc WHERE PTNR_ID = A.PTNR_ID) AS PTNR_NICK
+			   ,A.DUTY_TYPE
+			   ,A.GUT_CN 
+			   ,A.PROCESS_CNT
+			   ,A.DUTY_COST
+			   ,A.DUTY_STATUS
+			   ,A.FRST_REGIST_PNTTM
+			   ,A.FRST_REGISTER_NO
+			   ,A.LAST_UPDTUSR_NO
+			   ,A.LAST_UPDT_PNTTM
+		  FROM  top_duty A 
+		 WHERE  1=1
+		   AND  A.DUTY_ID = #{dutyId}		
+	</select>
+			
+	<update id="updateCost" parameterType="kr.co.toplac.topdutycost.TopDutyCostVO">
+		UPDATE  top_duty 
+		   SET  DUTY_TYPE = #{dutyType}
+			   ,PROCESS_CNT = #{processCnt}
+			   ,PTNR_ID = #{ptnrId}
+			   ,DUTY_STATUS = #{dutyStatus}
+			   ,GUT_CN = #{gutCn}
+			   ,DUTY_COST = #{dutyCost}
+			   ,LAST_UPDTUSR_NO = #{lastUpdtusrNo}
+			   ,LAST_UPDT_PNTTM = NOW()
+		 WHERE  DUTY_ID = #{dutyId}			
+	</update>
+	
+	<update id="updateDuty" parameterType="kr.co.toplac.topdutycost.TopDutyCostVO">
+		UPDATE  top_duty
+			SET  DUTY_ID = #{dutyId}
+				,TEAM_ID = ${teamId}
+			    ,DUTY_DE = #{dutyDe}
+				,USER_NO = #{userNo}
+				,PTNR_ID = #{ptnrId}
+				,DUTY_TYPE = #{dutyType}
+				,LAST_UPDTUSR_NO = #{lastUpdtusrNo}
+				,LAST_UPDT_PNTTM = NOW()
+	    WHERE  DUTY_ID = #{dutyId}		
+	
+	</update>
+	<update id="updateCostStatusAprov" parameterType="hashmap">
+		UPDATE  top_duty 
+		   SET  DUTY_STATUS = #{dutyStatus}
+		       <if test="dutyStatus == '20'">
+		       ,SANCTN_USER_NO = #{userNo}
+		       </if>
+		       <if test="dutyStatus == '30'">
+		       ,RCPMNY_USER_NO = #{userNo}
+		       </if>
+			   ,LAST_UPDTUSR_NO = #{userNo}
+			   ,LAST_UPDT_PNTTM = NOW()
+		 WHERE  DUTY_ID = #{dutyId}			
+	</update>	
+	
+	<update id="updateCostStatusCancel" parameterType="hashmap">
+		UPDATE  top_duty 
+		   SET  DUTY_STATUS = #{dutyStatus}
+		       <if test='dutyStatus == "0"'>
+		       ,PROCESS_CNT = null
+		       ,DUTY_COST = null
+		       ,GUT_CN = null
+		       ,SANCTN_USER_NO = null
+		       ,RCPMNY_USER_NO = null
+		       </if>		   
+		       <if test="dutyStatus == '10'">
+		       ,SANCTN_USER_NO = #{userNo}
+		       </if>
+		       <if test="dutyStatus == '20'">
+		       ,RCPMNY_USER_NO = #{userNo}
+		       </if>		   
+			   ,LAST_UPDTUSR_NO = #{userNo}
+			   ,LAST_UPDT_PNTTM = NOW()
+		 WHERE  DUTY_ID = #{dutyId}			
+	</update>
+	
+	<update id="updateCostStatusAprovAll" parameterType="hashmap">
+		UPDATE  top_duty
+		SET  DUTY_STATUS = 30
+			,RCPMNY_USER_NO = #{userNo}
+		,LAST_UPDTUSR_NO = #{userNo}
+		,LAST_UPDT_PNTTM = NOW()
+		WHERE  1=1
+          AND  DUTY_ID IN
+        <foreach collection="dutyIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+	</update>
+	
+	<update id="updateCostStatusCancelAll" parameterType="hashmap">
+		UPDATE  top_duty
+		   SET  DUTY_STATUS = 20
+    		   ,LAST_UPDTUSR_NO = #{userNo}
+		       ,LAST_UPDT_PNTTM = NOW()
+		WHERE  1=1
+		  AND  DUTY_ID IN
+        <foreach collection="dutyIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+	</update>
+	
+	
+	
+	
+	
+	<delete id="delete" parameterType="String">
+		DELETE FROM top_duty 
+		WHERE DUTY_ID = #{dutyId}
+	</delete>	
+	
+    <insert id="insertFile" parameterType="hashmap">
+        INSERT INTO top_duty_file (DUTY_ID, STRE_FILE_PATH, STRE_FILE_NM, ORIGNL_FILE_NM)
+        VALUES (#{dutyId},#{streFilePath},#{streFileNm},#{orignlFileNm})
+    </insert>
+
+    <select id="selectFile" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+               ,A.STRE_FILE_PATH
+               ,A.STRE_FILE_NM
+               ,A.ORIGNL_FILE_NM
+          FROM  top_duty_file A
+         WHERE  1=1
+           AND  A.FILE_NO = #{file_no}
+    </select>
+
+    <select id="selectFileList" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+               ,A.STRE_FILE_PATH
+               ,A.STRE_FILE_NM
+               ,A.ORIGNL_FILE_NM
+          FROM  top_duty_file A
+         WHERE  1=1
+           AND  A.DUTY_ID = #{dutyId}
+    </select>
+
+    <delete id="deleteFile" parameterType="hashmap">
+        DELETE FROM top_duty_file WHERE FILE_NO = #{file_no}
+    </delete>
+    <delete id="deleteFiles" parameterType="hashmap">
+        DELETE FROM top_duty_file WHERE DUTY_ID = #{dutyId}
+    </delete>	
+
+</mapper>

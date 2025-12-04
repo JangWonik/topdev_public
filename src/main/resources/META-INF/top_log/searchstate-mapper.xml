@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SearchStateMapper">
+
+	
+	<!-- <select id="selig1" parameterType="java.util.List" resultType="kr.co.toplac.lslog.RegIgVO">
+		select ig_id, ig_nick 
+		from ls_ig 
+		where 
+		ig_level='1' and on_off='1' 
+		order by ig_rank desc, ig_id asc
+	</select> -->
+	
+	<select id="rpt_List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.SearchStateVO">
+		select ifnull(rpt_reg,0) rpt_reg, ifnull(rpt_sub,0) rpt_sub, 
+	ifnull(rpt_end,0) rpt_end, ifnull(rpt_cancel_return,0) rpt_cancel_return, 
+	ifnull(rpt_law,0) rpt_law, ifnull(rpt_notend,0) rpt_notend
+	
+	from 
+	      (select count(suim_rpt_no) rpt_reg from top_rpt_head
+	where suim_rpt_state='0'
+	<if test="fromdate != '' and todate != ''">
+	and reg_date >= unix_timestamp(#{fromdate})
+	and reg_date &lt; unix_timestamp(#{todate})
+	</if>
+	)a,
+	(select count(suim_rpt_no) rpt_sub from top_rpt_head
+	where suim_rpt_state='1'
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	)b,
+	(select count(suim_rpt_no) rpt_end from top_rpt_head
+	where suim_rpt_state='2'
+	<if test="fromdate != '' and todate != ''">
+	and close_date >= unix_timestamp(#{fromdate})
+	and close_date &lt; unix_timestamp(#{todate})
+	</if>
+	)c,
+	(select count(suim_rpt_no) rpt_cancel_return from top_rpt_head
+	where suim_rpt_state='3'
+	<if test="fromdate != '' and todate != ''">
+	and suim_cancel_date >= unix_timestamp(#{fromdate})
+	and suim_cancel_date &lt; unix_timestamp(#{todate})
+	</if>
+	)d,
+	(select count(suim_rpt_no) rpt_law from top_rpt_head
+	where suim_rpt_state='4'
+	<if test="fromdate != '' and todate != ''">
+	and lawsuit_date >= unix_timestamp(#{fromdate})
+	and lawsuit_date &lt; unix_timestamp(#{todate})
+	</if>
+	)e,
+	(select count(suim_rpt_no) rpt_notend from top_rpt_head
+	where (suim_rpt_state!='2' and suim_rpt_state!='3')
+	<if test="fromdate != '' and todate != ''">
+	and lawsuit_date >= unix_timestamp(#{fromdate})
+	and lawsuit_date &lt; unix_timestamp(#{todate})
+	</if>
+	)f
+			
+	</select>
+	
+	
+	
+	
+	<select id="selPtnrRptList" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.SearchStateVO">
+		select * from	
+		(select a.ptnr_name, a.ptnr_group_order,a.ptnr_id, a.ptnr_nick,b.cnt, b.ptnr_name highest_ptnr_name , c.top_accnt_bank bank_title
+			from 
+				top_ptnr_bsc a,
+				 (SELECT aa.ptnr_name,aa.ptnr_id,aa.ptnr_group_order,bb.cnt
+				    FROM top_ptnr_bsc aa,
+			  		     (SELECT ptnr_group_order, count(*) cnt 
+							FROM top_ptnr_bsc
+						   WHERE ptnr_level = 1
+					       GROUP BY ptnr_group_order) bb
+		  	  	   WHERE aa.ptnr_group_order = bb.ptnr_group_order
+					 AND ptnr_level = 0)b,
+				top_accnt_bsc c
+			where a.ptnr_group_order = b.ptnr_group_order
+			  and a.top_accnt_id = c.top_accnt_id
+			  and a.ptnr_level = 1
+			  and a.del_state != 1
+			order by 
+				ptnr_group_order DESC) a
+	Left Join		
+	(select ptnr_id, count(suim_rpt_no) rpt_reg from top_rpt_head
+	where suim_rpt_state='0' and team_id = #{tid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by ptnr_id) b on a.ptnr_id = b.ptnr_id
+	
+	Left Join
+	(select ptnr_id, count(suim_rpt_no) rpt_sub from top_rpt_head
+	where suim_rpt_state='1' and team_id = #{tid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by ptnr_id) c on a.ptnr_id = c.ptnr_id
+	
+	Left Join
+	(select ptnr_id, count(suim_rpt_no) rpt_end from top_rpt_head
+	where suim_rpt_state='2' and team_id = #{tid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by ptnr_id) d on a.ptnr_id = d.ptnr_id
+	
+	Left Join
+	(select ptnr_id, count(suim_rpt_no) rpt_cancel_return from top_rpt_head
+	where suim_rpt_state='3' and team_id = #{tid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by ptnr_id) e on a.ptnr_id = e.ptnr_id
+	
+	Left Join
+	(select ptnr_id, count(suim_rpt_no) rpt_law from top_rpt_head
+	where suim_rpt_state='4' and team_id = #{tid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by ptnr_id) f on a.ptnr_id = f.ptnr_id
+	
+	Left Join
+	(select ptnr_id, count(suim_rpt_no) rpt_notend from top_rpt_head
+	where (suim_rpt_state!='2' and suim_rpt_state!='3') and team_id = #{tid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by ptnr_id) g on a.ptnr_id = g.ptnr_id
+	
+	</select>
+	
+	<select id="selTeamPtnrRptList" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.SearchStateVO">
+	select ifnull(rpt_reg,0) rpt_reg, ifnull(rpt_sub,0) rpt_sub, 
+	ifnull(rpt_end,0) rpt_end, ifnull(rpt_cancel_return,0) rpt_cancel_return, 
+	ifnull(rpt_law,0) rpt_law, ifnull(rpt_notend,0) rpt_notend, team_name, ptnr_nick
+	
+	from 
+	      (select count(suim_rpt_no) rpt_reg from top_rpt_head
+	where suim_rpt_state='0' and team_id = #{tid} and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and reg_date >= unix_timestamp(#{fromdate})
+	and reg_date &lt; unix_timestamp(#{todate})
+	</if>
+	)a,
+	(select count(suim_rpt_no) rpt_sub from top_rpt_head
+	where suim_rpt_state='1' and team_id = #{tid} and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	)b,
+	(select count(suim_rpt_no) rpt_end from top_rpt_head
+	where suim_rpt_state='2' and team_id = #{tid} and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and close_date >= unix_timestamp(#{fromdate})
+	and close_date &lt; unix_timestamp(#{todate})
+	</if>
+	)c,
+	(select count(suim_rpt_no) rpt_cancel_return from top_rpt_head
+	where suim_rpt_state='3' and team_id = #{tid} and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_cancel_date >= unix_timestamp(#{fromdate})
+	and suim_cancel_date &lt; unix_timestamp(#{todate})
+	</if>
+	)d,
+	(select count(suim_rpt_no) rpt_law from top_rpt_head
+	where suim_rpt_state='4' and team_id = #{tid} and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and lawsuit_date >= unix_timestamp(#{fromdate})
+	and lawsuit_date &lt; unix_timestamp(#{todate})
+	</if>
+	)e,
+	(select count(suim_rpt_no) rpt_notend from top_rpt_head
+	where (suim_rpt_state!='2' and suim_rpt_state!='3') and team_id = #{tid} and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and lawsuit_date >= unix_timestamp(#{fromdate})
+	and lawsuit_date &lt; unix_timestamp(#{todate})
+	</if>
+	)f,
+	(select getTopTmBscTeamName(#{tid}) team_name, 
+	getTopPtnrBscPtnrNick(#{pid}) ptnr_nick 
+	)g
+			
+	</select>
+	
+	
+	<select id="selTeamRptList" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.SearchStateVO">
+	select * from	
+	  	 (select a.team_name, a.team_group_order, a.team_id, b.cnt, b.team_name highest_team_name
+			from 
+				top_tm_bsc a,
+				 (SELECT aa.team_name,aa.team_id,aa.team_group_order,bb.cnt
+				    FROM top_tm_bsc aa,
+			  		     (SELECT team_group_order, count(*) cnt 
+							FROM top_tm_bsc
+						   WHERE team_level = 1
+					       GROUP BY team_group_order) bb
+		  	  	   WHERE aa.team_group_order = bb.team_group_order
+					 AND team_level = 0)b	
+			where
+				a.team_group_order = b.team_group_order
+			  and team_level = 1
+			order by 
+				team_group_order DESC) a
+	Left Join		
+	(select team_id, count(suim_rpt_no) rpt_reg from top_rpt_head
+	where suim_rpt_state='0' and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by team_id) b on a.team_id = b.team_id
+	
+	Left Join
+	(select team_id, count(suim_rpt_no) rpt_sub from top_rpt_head
+	where suim_rpt_state='1' and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by team_id) c on a.team_id = c.team_id
+	
+	Left Join
+	(select team_id, count(suim_rpt_no) rpt_end from top_rpt_head
+	where suim_rpt_state='2' and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by team_id) d on a.team_id = d.team_id
+	
+	Left Join
+	(select team_id, count(suim_rpt_no) rpt_cancel_return from top_rpt_head
+	where suim_rpt_state='3' and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by team_id) e on a.team_id = e.team_id
+	
+	Left Join
+	(select team_id, count(suim_rpt_no) rpt_law from top_rpt_head
+	where suim_rpt_state='4' and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by team_id) f on a.team_id = f.team_id
+	
+	Left Join
+	(select team_id, count(suim_rpt_no) rpt_notend from top_rpt_head
+	where (suim_rpt_state!='2' and suim_rpt_state!='3') and ptnr_id = #{pid}
+	<if test="fromdate != '' and todate != ''">
+	and suim_rpt_aprv_date >= unix_timestamp(#{fromdate})
+	and suim_rpt_aprv_date &lt; unix_timestamp(#{todate})
+	</if>
+	 group by team_id) g on a.team_id = g.team_id
+	</select>
+	
+	<select id="getHighestTmName" resultType="kr.co.toplac.lslog.SearchStateVO">
+		SELECT
+			team_name, team_group_order
+	  	  FROM 
+	  	  	top_tm_bsc
+		 WHERE team_level = 0
+	</select>
+	
+
+
+</mapper>

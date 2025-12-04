@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MemberSalAprvMapper">
+
+	<select id="getDetail" resultType="kr.co.toplac.topindividual.BoardMemSalVO" parameterType="String">
+		SELECT 
+			 a.user_name
+			,a.user_no
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,a.jumin_no1
+			,a.home_address
+			,a.handphone
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,DATE_FORMAT(FROM_UNIXTIME(a.probation_date), '%Y-%m-%d') probation_date
+			,c.sal_amt
+		FROM top_mbr_bsc a
+		LEFT OUTER JOIN (select user_no,sal_amt from top_mbr_sal) c
+			ON a.user_no = c.user_no
+		WHERE
+			a.user_no = #{user_no}
+	</select>
+	
+	<select id="getMyVacationTemp" resultType="kr.co.toplac.topindividual.MyVacationInfoTemp" parameterType="String">
+		SELECT 
+			user_no
+			,user_name
+			,team_type
+			,col_1
+			,col_2
+			,col_3
+			,col_4
+			,col_5
+			,col_6
+			,col_7
+			,col_8
+			,col_9
+			,col_10			
+		FROM tmp_vacation_info			
+		WHERE
+			user_no = #{user_no}
+	</select>
+	
+	<select id="getTeamManagerCnt" parameterType="String" resultType="Integer">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_tm_bsc			
+		WHERE
+			team_manager = #{user_no}
+	</select>
+	
+	<select id ="getUserSign" parameterType="String" resultType="String">
+		SELECT 
+			user_sign
+		  FROM
+		  	top_mbr_sgn
+		 WHERE
+		 	del_state = 0
+		   AND
+		    user_no = #{user_no} 
+	</select>
+	
+	<update id="udtAprvSalary" parameterType="String">
+		UPDATE 
+			top_mbr_sal
+		   SET
+		 	sal_state = 2,
+		 	agree_user_no = #{user_no}
+		 WHERE
+		 	user_no = #{user_no}
+	</update>
+	
+	<select id ="getUserAgree" parameterType="String" resultType="String">
+		SELECT 
+			sal_state
+		  FROM
+		  	top_mbr_sal
+		 WHERE
+		    user_no = #{user_no} 
+	</select>
+	
+	<select id ="getInternAgree" parameterType="String" resultType="String">
+		SELECT 
+			sal_state
+		  FROM
+		  	top_mbr_intern_sal
+		 WHERE
+		    user_no = #{user_no} 
+	</select>
+	
+	<select id ="getUpperSurvey" parameterType="String" resultType="String">
+		SELECT 
+			upper_survey
+		  FROM
+		  	top_mbr_bsc
+		 WHERE
+		    user_no = #{user_no} 
+	</select>
+	
+	<select id="selectUserSalaryCnt" parameterType="String"  resultType="Long">
+		SELECT  COUNT(*) AS CNT
+		  FROM  TN_SALARY_EXIST A
+		 WHERE  1=1
+		   AND  A.USER_NO = #{user_no}
+		   AND  A.SALARY_TYPE = 'R'
+	</select>
+	
+	<select id="selectUserInternCnt" parameterType="String"  resultType="Long">
+		SELECT  COUNT(*) AS CNT
+		  FROM  TN_SALARY_EXIST A
+		 WHERE  1=1
+		   AND  A.USER_NO = #{user_no}
+		   AND  A.SALARY_TYPE = 'I'
+	</select>
+	
+	
+	<select id ="getMemberDtl" parameterType="String" resultType="kr.co.toplac.topindividual.BoardMemSalVO">
+		SELECT
+			 a.user_no 
+			,a.user_name
+			,b.team_name
+			,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,a.handphone
+			,a.office_tel
+			,a.email
+			,a.picture
+			,c.sal_amt
+			,c.sal_year
+			,c.sal_state
+			,a.home_address
+		  FROM 
+		  	top_mbr_bsc a
+		  LEFT OUTER JOIN (SELECT user_no, sal_amt, sal_year, sal_state from top_mbr_sal) c
+		    ON a.user_no = c.user_no , top_tm_bsc b
+		 WHERE
+			a.team_id_loc = b.team_id
+		   AND
+			a.user_no=#{user_no}
+		 ORDER BY
+		 	b.team_group_order DESC, b.team_order DESC, a.work_level DESC, a.user_no
+	</select>
+	
+	<select id="getBef3YearSal" parameterType="String" resultType="kr.co.toplac.topindividual.BoardMemSalVO">
+		SELECT year,salary,target_sales,real_sales
+		  FROM top_mbr_sal_info
+	 	 WHERE user_no = #{user_no}
+	 	 ORDER BY year ASC
+	 	 LIMIT 3
+	</select>
+	
+	
+	
+	<select id="getInternDetail" resultType="kr.co.toplac.topindividual.BoardMemSalVO" parameterType="String">
+		SELECT 
+			 a.user_name
+			,a.user_no
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,a.home_address
+			,a.handphone
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,c.sal_state
+			,c.reg_date
+		FROM top_mbr_bsc a
+		LEFT OUTER JOIN (select user_no,sal_state,reg_date from top_mbr_intern_sal) c
+			ON a.user_no = c.user_no
+		WHERE
+			a.user_no = #{user_no}
+	</select>
+
+	<update id="udtAprvIntern" parameterType="String">
+		UPDATE 
+			top_mbr_intern_sal
+		   SET
+		 	sal_state = 2,
+		 	agree_user_no = #{_parameter}
+		 WHERE
+		 	user_no = #{_parameter}
+	</update>
+    
+    <select id="selectSalaryExist" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.USER_NO
+               ,A.SALARY_TYPE
+               ,A.SALARY_URL
+               ,A.SALARY_AUTH
+          FROM  TN_SALARY_EXIST A
+         WHERE  1=1
+           AND  A.USER_NO = #{user_no}
+    </select>
+	
+	
+</mapper>

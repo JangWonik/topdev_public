@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimSuit12ListMapper">
+
+	<select id="getSuimSuit12List" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="java.util.HashMap">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT 
+				a.suim_rpt_no suimRptNo
+				, a.suim_accept_no suimAcceptNo
+				, a.suim_close_no suimCloseNo
+				, a.suim_rpt_state suimRptState
+				, a.team_id teamId
+				, getTopTmBscTeamName(a.team_id) teamName
+				, getTopTmBscTeamMark(a.team_id) teamMark
+				, a.user_no userNo
+				, getTopMbrBscUserName(a.user_no) userName
+				, a.ptnr_id ptnrId
+				, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick
+				, getTopPtnrBscPtnrName(a.ptnr_id) ptnrName
+				, a.policyholder_nm policyholderNm
+				, a.policyholder_hp policyholderHp
+				, a.reg_date regDate
+				, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDateFmt
+				, a.close_date closeDate
+				, DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDateFmt
+				<!-- , getDateDiff(a.reg_date)+1 pastDate -->
+				, a.del_date delDate
+				, a.lock_flag lockFlag
+				, a.bd_type bdType
+				, b.rqBld_CtnAdr
+				, b.rqBld_MngmBnnm
+			FROM top_suitability_12 a
+			LEFT JOIN top_suitability_12_bld b
+			ON a.suim_rpt_no = b.suim_rpt_no
+			
+			WHERE 1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and a.close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and a.close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+			GROUP BY a.suim_rpt_no
+			ORDER BY a.suim_rpt_no
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+	
+	<select id="getSuimSuit12ListExcel" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="java.util.HashMap">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT 
+				a.suim_rpt_no suimRptNo
+				, a.suim_accept_no suimAcceptNo
+				, a.suim_close_no suimCloseNo
+				, a.suim_rpt_state suimRptState
+				, a.team_id teamId
+				, getTopTmBscTeamName(a.team_id) teamName
+				, getTopTmBscTeamMark(a.team_id) teamMark
+				, a.user_no userNo
+				, getTopMbrBscUserName(a.user_no) userName
+				, a.ptnr_id ptnrId
+				, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick
+				, getTopPtnrBscPtnrName(a.ptnr_id) ptnrName
+				, a.policyholder_nm policyholderNm
+				, a.policyholder_hp policyholderHp
+				, a.reg_date regDate
+				, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDateFmt
+				, a.close_date closeDate
+				, DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDateFmt
+				<!-- , getDateDiff(a.reg_date)+1 pastDate -->
+				, a.del_date delDate
+				, a.lock_flag lockFlag
+				, a.bd_type bdType
+				, a.rqPlyno rqPlyNo
+				, a.rqPlno rqPlNo
+				, b.rqBld_CtnAdr
+				, b.rqBld_MngmBnnm
+			
+			FROM top_suitability_12 a
+			LEFT JOIN top_suitability_12_bld b
+			ON a.suim_rpt_no = b.suim_rpt_no
+			
+			WHERE 1=1
+				and suim_rpt_state = '2'
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and a.close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and a.close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+			GROUP BY a.suim_rpt_no
+			ORDER BY a.suim_rpt_no
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum DESC
+	</select>
+
+	<select id="getSuimSuit12ListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(suim_rpt_no) cnt
+		FROM top_suitability_12
+		WHERE 1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+	</select>
+	
+	<update id="udtSuimSuit12Lock" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			lock_flag = 1          <!-- 운영은 종결 취소 시 이전 종결일을 남겨두고 있음 Tobe 에서는 0으로 업덷이트 -->
+			
+		WHERE
+			1=1
+				and suim_rpt_state = '2'
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+		
+	</update>
+	
+	<select id="getSuimSuit12" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="java.util.HashMap">
+	
+	SELECT 
+			a.suim_rpt_no suimRptNo
+			, a.suim_accept_no suimAcceptNo
+			, a.suim_close_no suimCloseNo
+			, a.suim_rpt_state suimRptState
+			, a.team_id teamId
+			, getTopTmBscTeamName(a.team_id) teamName, getTopTmBscTeamMark(a.team_id) teamMark
+			, a.user_no userNo
+			, getTopMbrBscUserName(a.user_no) userName
+			, a.ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick, getTopPtnrBscPtnrName(a.ptnr_id) ptnrName
+			, a.policyholder_nm policyholderNm
+			, a.policyholder_hp policyholderHp
+			, a.reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDateFmt
+			, a.close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDateFmt
+			, getDateDiff(a.reg_date)+1 pastDate
+			, a.del_date delDate
+			, a.lock_flag lockFlag
+			, a.bd_type bdType
+			, a.rqTrsOrgcd rqTrsOrgCd
+			, a.rstRcvOrgcd rstRcvOrgCd
+			, a.rqRqFlgcd rqRqFlgCd
+			, a.rqDlFlgcd rqDlFlgCd
+			, a.rqPptyRqdt rqPptyRqDt
+			, a.rqPlno rqPlNo
+			, a.rqRequSeqno rqRequSeqNo
+			, a.rqPlyno rqPlyNo
+			, a.rqGdcd rqGdCd
+			, a.rqGdnm rqGdNm
+			, a.rqPprDhOrgcd rqPprDhOrgCd
+			, a.rqPprDhOrgnm rqPprDhOrgNm
+			, a.rqDhOrgcd rqDhOrgCd
+			, a.rqDhOrgnm rqDhOrgNm
+			, a.rqDhOrgTlno rqDhOrgTlNo
+			, a.rqDhStfno rqDhStfNo
+			, a.rqDhStfnm rqDhStfNm
+			, a.rqDhStfTlno rqDhStfTlNo
+			, a.rqUdChrOrgno rqUdChrOrgNo
+			, a.rqUdChrOrgnm rqUdChrOrgNm
+			, a.rqUdChrOrgTlno rqUdChrOrgTlNo
+			, a.rqUdChrOrgFxno rqUdChrOrgFxNo
+			, a.rqUdChrStfno rqUdChrStfNo
+			, a.rqUdChrStfnm rqUdChrStfNm
+			, a.rqCrtNm rqCrtNm
+			, a.rqCnrdt rqCnrDt
+			, a.rqCrtHomeTlno rqCrtHomeTlNo
+			, a.rqCrtWpcTlno rqCrtWpcTlNo
+			, a.rqCrtHndphTlno rqCrtHndphTlNo
+			, a.rqBldCt rqBldCt
+			, a.rqOjCt rqOjCt
+			, a.rstPptyNvCpltYn rstPptyNvCpltYn
+			, a.rstUcNspRs rstUcNspRs
+			, a.rstNvRst rstNvRst
+			, a.rstNvRstCtn rstNvRstCtn
+			, a.rstRptgFileCt rstRptgFileCt
+			
+			, b.rqBld_Lctno rqBld_LctNo
+			, b.rqBld_OjSeqno rqBld_OjSeqNo
+			, b.rqBld_BldSeqno rqBld_BldSeqNo
+			, b.rqBld_BldRnkcd rqBld_BldRnkCd
+			, b.rqBld_RlOwrNm rqBld_RlOwrNm
+			, b.rqBld_CtnAdr rqBld_CtnAdr
+			, b.rqBld_MngmBnnm rqBld_MngmBnNm
+			, b.rqBld_MngmBnnm rqBld_MngmBnNm
+			, b.rqBld_Plenm rqBld_PleNm
+			, b.rqBld_Rofnm rqBld_RofNm
+			, b.rqBld_Wllnm rqBld_WllNm
+			, b.rqBld_Grod rqBld_Grod
+			, b.rqBld_Undg rqBld_Undg
+			, b.rqBld_Ttare rqBld_Ttare
+			, b.rqBld_IsAre rqBld_IsAre
+			, b.rqBld_IsTp rqBld_IsTp
+			, b.rqBld_BldXpnm rqBld_BldXpNm
+			, b.rstBld_Rcndt rstBld_RcnDt
+			, b.rstBld_InvpsNm rstBld_InvpsNm
+			, b.rstBld_CrRelpcRel rstBld_CrRelpcRel
+			, b.rstBld_InvpsCntad rstBld_InvpsCntAd
+			, ifnull(b.rstBld_RlOwrNm, 0) rstBld_RlOwrNm
+			, ifnull(b.rstBld_CtnAdr, 0) rstBld_CtnAdr
+			, ifnull(b.rstBld_MngmBnnm, 0) rstBld_MngmBnNm
+			, ifnull(b.rstBld_BldRnkcd, 0) rstBld_BldRnkCd
+			, ifnull(b.rstBld_GrodEqalYn, 0) rstBld_GrodEqalYn
+			, ifnull(b.rstBld_UndgEqalYn, 0) rstBld_UndgEqalYn
+			, ifnull(b.rstBld_TtareEqalYn, 0) rstBld_TtareEqalYn
+			, ifnull(b.rstBld_IsAreEqalYn, 0) rstBld_IsAreEqalYn
+			, ifnull(b.rstBld_IsTpEqalYn, 0) rstBld_IsTpEqalYn
+			, b.rstBld_RlOwrNmEtMtt rstBld_RlOwrNmEtMtt
+			, b.rstBld_CtnAdrEtMtt rstBld_CtnAdrEtMtt
+			, b.rstBld_MngmBnnmEtMtt rstBld_MngmBnnmEtMtt
+			, b.rstBld_BldRnkcdEtMtt rstBld_BldRnkcdEtMtt
+			, b.rstBld_GrodEtMtt rstBld_GrodEtMtt
+			, b.rstBld_UndgEtMtt rstBld_UndgEtMtt
+			, b.rstBld_TtareEtMtt rstBld_TtareEtMtt
+			, b.rstBld_IsAreEtMtt rstBld_IsAreEtMtt
+			, b.rstBld_IsTpEtMtt rstBld_IsTpEtMtt
+			, ifnull(b.rstBld_Plenm, 0) rstBld_PleNm
+			, ifnull(b.rstBld_Rofnm, 0) rstBld_RofNm
+			, ifnull(b.rstBld_Wllnm, 0) rstBld_WllNm
+			, ifnull(b.rstBld_PanlYn, 0) rstBld_PanlYn
+			, b.rstBld_PanlPst rstBld_PanlPst
+			, ifnull(b.rstBld_TntYn, 0) rstBld_TntYn
+			, b.rstBld_TntPst rstBld_TntPst
+			, ifnull(b.rstBld_FlrFirZoneYn, 0) rstBld_FlrFirZoneYn
+			, b.rstBld_EtMtt1 rstBld_EtMtt1
+			, b.rstBld_FlrBtpUndg rstBld_FlrBtpUndg
+			, b.rstBld_FlrBtpFloor1 rstBld_FlrBtpFloor1
+			, b.rstBld_FlrBtpFloor2 rstBld_FlrBtpFloor2
+			, b.rstBld_FlrBtpFloor3 rstBld_FlrBtpFloor3
+			, b.rstBld_SlEqmtDcYn rstBld_SlEqmtDcYn
+			, ifnull(b.rstBld_MrkYn, 0) rstBld_MrkYn
+			, ifnull(b.rstBld_EtMtt2, 0) rstBld_EtMtt2
+			
+			, c.rqOj_OjSeqno rqOj_OjSeqNo
+			, c.rqOj_BldSeqno rqOj_BldSeqNo
+			, c.rqOj_OjSign rqOj_OjSign
+			, c.rqOj_OjTp rqOj_OjTp
+			, c.rqOj_Rnk rqOj_Rnk
+			, c.rqOj_Dt_Mtt rqOj_Dt_Mtt
+			, c.rqOj_Dt_AccptPlc rqOj_Dt_AccptPlc
+			, c.rqOj_AccptPlcFlgcd rqOj_AccptPlcFlgCd
+			, c.rqOj_FldstObjFlgcd rqOj_FldstObjFlgCd
+			, c.rqOj_UndgAccptYn rqOj_UndgAccptYn
+			, ifnull(c.rstOj_OjTpEqalYn, 0) rstOj_OjTpEqalYn
+			, ifnull(c.rstOj_RnkEqalYn, 0) rstOj_RnkEqalYn
+			, ifnull(c.rstOj_Dt_MttEqalYn, 0) rstOj_Dt_MttEqalYn
+			, ifnull(c.rstOj_Dt_AccptPlcEqalYn, 0) rstOj_Dt_AccptPlcEqalYn
+			, ifnull(c.rstOj_AccptPlcFlgcdEqalYn, 0) rstOj_AccptPlcFlgcdEqalYn
+			, ifnull(c.rstOj_FldstObjFlgcdEqalYn, 0) rstOj_FldstObjFlgcdEqalYn
+			, ifnull(c.rstOj_UndgAccptYnEqalYn, 0) rstOj_UndgAccptYnEqalYn
+			, c.rstOj_EtMtt rstOj_EtMtt
+
+			from
+			top_suitability_12 a,
+			top_suitability_12_bld b,
+			top_suitability_12_oj c
+			
+			where a.suim_rpt_no = b.suim_rpt_no
+			and b.suim_rpt_no = c.suim_rpt_no
+			and a.suim_rpt_no
+			and b.suim_rpt_no
+			and c.suim_rpt_no
+			and 1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+	
+	
+	</select>
+	
+	<select id="getSuimSuit12Bsc" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="java.util.HashMap">
+		SELECT 
+			suim_rpt_no suimRptNo
+			, suim_accept_no suimAcceptNo
+			, suim_close_no suimCloseNo
+			, suim_rpt_state suimRptState
+			, team_id teamId
+			, getTopTmBscTeamName(team_id) teamName, getTopTmBscTeamMark(team_id) teamMark
+			, user_no userNo
+			, getTopMbrBscUserName(user_no) userName
+			, ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(ptnr_id) ptnrNick, getTopPtnrBscPtnrName(ptnr_id) ptnrName
+			, policyholder_nm policyholderNm
+			, policyholder_hp policyholderHp
+			, reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDateFmt
+			, close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') closeDateFmt
+			, getDateDiff(reg_date)+1 pastDate
+			, del_date delDate
+			, lock_flag lockFlag
+			, bd_type bdType
+			, rqTrsOrgcd rqTrsOrgCd
+			, rstRcvOrgcd rstRcvOrgCd
+			, rqRqFlgcd rqRqFlgCd
+			, rqDlFlgcd rqDlFlgCd
+			, rqPptyRqdt rqPptyRqDt
+			, rqPlno rqPlNo
+			, rqRequSeqno rqRequSeqNo
+			, rqPlyno rqPlyNo
+			, rqGdcd rqGdCd
+			, rqGdnm rqGdNm
+			, rqPprDhOrgcd rqPprDhOrgCd
+			, rqPprDhOrgnm rqPprDhOrgNm
+			, rqDhOrgcd rqDhOrgCd
+			, rqDhOrgnm rqDhOrgNm
+			, rqDhOrgTlno rqDhOrgTlNo
+			, rqDhStfno rqDhStfNo
+			, rqDhStfnm rqDhStfNm
+			, rqDhStfTlno rqDhStfTlNo
+			, rqUdChrOrgno rqUdChrOrgNo
+			, rqUdChrOrgnm rqUdChrOrgNm
+			, rqUdChrOrgTlno rqUdChrOrgTlNo
+			, rqUdChrOrgFxno rqUdChrOrgFxNo
+			, rqUdChrStfno rqUdChrStfNo
+			, rqUdChrStfnm rqUdChrStfNm
+			, rqCrtNm rqCrtNm
+			, rqCnrdt rqCnrDt
+			, rqCrtHomeTlno rqCrtHomeTlNo
+			, rqCrtWpcTlno rqCrtWpcTlNo
+			, rqCrtHndphTlno rqCrtHndphTlNo
+			, rqBldCt rqBldCt
+			, rqOjCt rqOjCt
+			, rstPptyNvCpltYn rstPptyNvCpltYn
+			, rstUcNspRs rstUcNspRs
+			, rstNvRst rstNvRst
+			, rstNvRstCtn rstNvRstCtn
+			, rstRptgFileCt rstRptgFileCt
+			, rstCcldt rstCclDt
+			, prHndphTlno
+			
+			FROM top_suitability_12
+			where
+			1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+	</select>
+	
+	<select id="getSuimSuit12Bld" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="java.util.HashMap">
+		SELECT 
+			a.suim_rpt_no suimRptNo
+			, a.serial_no serialNo
+			, a.rqBld_Lctno rqBld_LctNo
+			, a.rqBld_OjSeqno rqBld_OjSeqNo
+			, a.rqBld_BldSeqno rqBld_BldSeqNo
+			, a.rqBld_BldRnkcd rqBld_BldRnkCd
+			, a.rqBld_RlOwrNm rqBld_RlOwrNm
+			, a.rqBld_CtnAdr rqBld_CtnAdr
+			, a.rqBld_MngmBnnm rqBld_MngmBnNm
+			, a.rqBld_MngmBnnm rqBld_MngmBnNm
+			, a.rqBld_Plenm rqBld_PleNm
+			, a.rqBld_Rofnm rqBld_RofNm
+			, a.rqBld_Wllnm rqBld_WllNm
+			, a.rqBld_Grod rqBld_Grod
+			, a.rqBld_Undg rqBld_Undg
+			, a.rqBld_Ttare rqBld_Ttare
+			, a.rqBld_IsAre rqBld_IsAre
+			, a.rqBld_IsTp rqBld_IsTp
+			, a.rqBld_BldXpnm rqBld_BldXpNm
+			, a.rstBld_Rcndt rstBld_RcnDt
+			, a.rstBld_InvpsNm rstBld_InvpsNm
+			, a.rstBld_CrRelpcRel rstBld_CrRelpcRel
+			, a.rstBld_InvpsCntad rstBld_InvpsCntAd
+			, ifnull(a.rstBld_RlOwrNm, 0) rstBld_RlOwrNm
+			, ifnull(a.rstBld_CtnAdr, 0) rstBld_CtnAdr
+			, ifnull(a.rstBld_MngmBnnm, 0) rstBld_MngmBnNm
+			, ifnull(a.rstBld_BldRnkcd, 0) rstBld_BldRnkCd
+			, ifnull(a.rstBld_GrodEqalYn, 0) rstBld_GrodEqalYn
+			, ifnull(a.rstBld_UndgEqalYn, 0) rstBld_UndgEqalYn
+			, ifnull(a.rstBld_TtareEqalYn, 0) rstBld_TtareEqalYn
+			, ifnull(a.rstBld_IsAreEqalYn, 0) rstBld_IsAreEqalYn
+			, ifnull(a.rstBld_IsTpEqalYn, 0) rstBld_IsTpEqalYn
+			, a.rstBld_RlOwrNmEtMtt rstBld_RlOwrNmEtMtt
+			, a.rstBld_CtnAdrEtMtt rstBld_CtnAdrEtMtt
+			, a.rstBld_MngmBnnmEtMtt rstBld_MngmBnnmEtMtt
+			, a.rstBld_BldRnkcdEtMtt rstBld_BldRnkcdEtMtt
+			, a.rstBld_GrodEtMtt rstBld_GrodEtMtt
+			, a.rstBld_UndgEtMtt rstBld_UndgEtMtt
+			, a.rstBld_TtareEtMtt rstBld_TtareEtMtt
+			, a.rstBld_IsAreEtMtt rstBld_IsAreEtMtt
+			, a.rstBld_IsTpEtMtt rstBld_IsTpEtMtt
+			, ifnull(a.rstBld_Plenm, 0) rstBld_PleNm
+			, ifnull(a.rstBld_Rofnm, 0) rstBld_RofNm
+			, ifnull(a.rstBld_Wllnm, 0) rstBld_WllNm
+			, ifnull(a.rstBld_PanlYn, 0) rstBld_PanlYn
+			, a.rstBld_PanlPst rstBld_PanlPst
+			, ifnull(a.rstBld_TntYn, 0) rstBld_TntYn
+			, a.rstBld_TntPst rstBld_TntPst
+			, ifnull(a.rstBld_FlrFirZoneYn, 0) rstBld_FlrFirZoneYn
+			, a.rstBld_EtMtt1 rstBld_EtMtt1
+			, a.rstBld_FlrBtpUndg rstBld_FlrBtpUndg
+			, a.rstBld_FlrBtpFloor1 rstBld_FlrBtpFloor1
+			, a.rstBld_FlrBtpFloor2 rstBld_FlrBtpFloor2
+			, a.rstBld_FlrBtpFloor3 rstBld_FlrBtpFloor3
+			, a.rstBld_SlEqmtDcYn rstBld_SlEqmtDcYn
+			, ifnull(a.rstBld_MrkYn, 0) rstBld_MrkYn
+			, ifnull(a.rstBld_EtMtt2, 0) rstBld_EtMtt2
+			, b.close_date closeDate
+			, b.user_no userNo
+			, getTopMbrBscUserName(b.user_no) userName
+			
+			FROM top_suitability_12_bld a, top_suitability_12 b 
+			where
+			a.suim_rpt_no = b.suim_rpt_no and
+			1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+	</select>
+	
+	<select id="getSuimSuit12Oj" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="java.util.HashMap">
+		SELECT 
+			a.suim_rpt_no suimRptNo
+			, a.serial_no serialNo
+			, a.rqOj_OjSeqno rqOj_OjSeqNo
+			, a.rqOj_BldSeqno rqOj_BldSeqNo
+			, a.rqOj_OjSign rqOj_OjSign
+			, a.rqOj_OjTp rqOj_OjTp
+			, a.rqOj_Rnk rqOj_Rnk
+			, a.rqOj_Dt_Mtt rqOj_Dt_Mtt
+			, a.rqOj_Dt_AccptPlc rqOj_Dt_AccptPlc
+			, a.rqOj_AccptPlcFlgcd rqOj_AccptPlcFlgCd
+			, a.rqOj_FldstObjFlgcd rqOj_FldstObjFlgCd
+			, a.rqOj_UndgAccptYn rqOj_UndgAccptYn
+			, ifnull(a.rstOj_OjTpEqalYn, 0) rstOj_OjTpEqalYn
+			, ifnull(a.rstOj_RnkEqalYn, 0) rstOj_RnkEqalYn
+			, ifnull(a.rstOj_Dt_MttEqalYn, 0) rstOj_Dt_MttEqalYn
+			, ifnull(a.rstOj_Dt_AccptPlcEqalYn, 0) rstOj_Dt_AccptPlcEqalYn
+			, ifnull(a.rstOj_AccptPlcFlgcdEqalYn, 0) rstOj_AccptPlcFlgcdEqalYn
+			, ifnull(a.rstOj_FldstObjFlgcdEqalYn, 0) rstOj_FldstObjFlgcdEqalYn
+			, ifnull(a.rstOj_UndgAccptYnEqalYn, 0) rstOj_UndgAccptYnEqalYn
+			, a.rstOj_EtMtt rstOj_EtMtt
+			
+			FROM top_suitability_12_oj a, top_suitability_12 b 
+			where
+			a.suim_rpt_no = b.suim_rpt_no and
+			1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+	</select>
+	
+	<update id="suit12lockAfterRsPrint" parameterType="java.util.HashMap" >
+	
+		UPDATE top_suitability_12
+		SET
+			lock_flag = 1
+		WHERE
+			suim_rpt_state = 2 
+			and del_date >=0
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+	
+	</update>
+
+</mapper>

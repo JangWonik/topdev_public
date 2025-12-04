@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrEvalListMapper">
+
+	<select id="selEvalList" parameterType="java.lang.String" resultType="kr.co.toplac.topteam.TopMbrEvalVO">
+		SELECT a.serial_no, a.user_no, a.eval_year
+			, a.suim_goal_cnt, a.suim_goal_amt, a.salary_desired
+			, a.career_year, a.promotion_date
+			, a.achievement, a.improvement, a.next_year_task
+			, a.tm_mngr_eval_sal, a.tm_mngr_eval_grd, a.tm_mngr_eval
+			, a.mng_director_eval
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date
+			, a.work_level, a.work_type
+			, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type_nm
+			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level_nm
+			, b.user_name, b.jumin_no1
+			, DATE_FORMAT(FROM_UNIXTIME(b.join_date), '%Y-%m-%d') join_date
+	 	FROM top_mbr_eval a, top_mbr_bsc b
+		WHERE a.user_no = #{user_no} AND a.user_no = b.user_no ORDER BY eval_year DESC;
+	</select>
+
+</mapper>

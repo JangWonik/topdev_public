@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SimpleSMSMapper">
+
+	<select id="getLogInUserHpNo" parameterType="kr.co.toplac.topteam.TopMbrBscVO" resultType="java.lang.String">
+		SELECT handphone
+		FROM top_mbr_bsc
+		WHERE user_no = #{user_no}
+	</select>
+
+	<insert id="insertMmsContentsInfo" parameterType="hashmap">
+        INSERT INTO MMS_CONTENTS_INFO (FILE_CNT, MMS_BODY, MMS_SUBJECT, FILE_TYPE1, FILE_NAME1, SERVICE_DEP1)
+        VALUES(#{file_cnt}, #{mms_body}, #{mms_subject}, #{file_type1}, #{file_name1}, #{service_dep1})
+        <selectKey resultType="int" keyProperty="cont_seq" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+	<insert id="insertMsgData" parameterType="hashmap">
+        INSERT INTO MSG_DATA (CUR_STATE, CALL_TO, CALL_FROM, SMS_TXT, MSG_TYPE, CONT_SEQ)
+        VALUES(#{cur_state}, #{call_to}, #{call_from} , #{sms_txt}, #{msg_type}, #{cont_seq})
+        <selectKey resultType="int" keyProperty="msg_seq" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+	<insert id="insertTopRptMms" parameterType="hashmap">
+        INSERT INTO top_rpt_mms (SUIM_RPT_NO, SNDNG_TYPE, RECPTN_MBTLNUM, SNDNG_MBTLNUM, SNDNG_MSG, USER_NO, REG_DATE, MSG_SEQ)
+        VALUES(#{suim_rpt_no}, #{type}, #{call_to} , #{call_from}, #{mms_body}, #{user_no}, NOW(), #{msg_seq})
+    </insert>
+
+    <select id="selectTopRptMmsList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SEQ
+               ,A.SUIM_RPT_NO
+               ,A.SNDNG_TYPE
+               ,A.RECPTN_MBTLNUM
+               ,A.SNDNG_MBTLNUM
+               ,A.SNDNG_MSG
+               ,A.USER_NO
+               ,DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+               ,DATE_FORMAT(A.REG_DATE, '%H : %i : %s') AS REG_TIME
+          FROM  top_rpt_mms A
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+        ORDER BY A.SEQ DESC
+    </select>
+
+
+</mapper>

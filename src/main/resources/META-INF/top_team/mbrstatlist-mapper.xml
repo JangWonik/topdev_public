@@ -1,0 +1,1804 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MbrStatListMapper">
+
+	<update id="myimageup" parameterType="java.util.HashMap">
+		UPDATE 
+			top_mbr_bsc
+		SET
+			picture = #{filename}
+		WHERE
+			user_no = #{user_no}
+	</update>
+
+	<insert id="mysignup" parameterType="java.util.HashMap">
+		INSERT INTO top_mbr_sgn
+			(
+				user_no, user_sign, reg_date
+			)
+		VALUES
+			(
+				#{user_no}, #{filename}, unix_timestamp(now())
+			)
+	</insert>
+
+	<select id="membersign" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrSgnVO">
+		SELECT 
+			serial_no,
+			user_no,
+			user_sign,
+			del_state
+		FROM 
+			top_mbr_sgn a
+		WHERE 
+			user_no = #{user_no} and del_state = 0
+		ORDER BY 
+			serial_no
+	</select>
+
+	<select id="memberSignOne" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrSgnVO">
+		SELECT 
+			serial_no,
+			user_no,
+			user_sign
+		FROM 
+			top_mbr_sgn
+		WHERE 
+			user_sign = #{filename} and user_no = #{user_no}
+	</select>
+
+	<select id="getMemberSignForDelete" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrSgnVO">
+		SELECT 
+			serial_no,
+			user_no,
+			user_sign
+		FROM 
+			top_mbr_sgn
+		WHERE 
+			serial_no = #{serial_no}
+	</select>
+
+	<update id = "delOneofMysign" parameterType="String">
+		UPDATE
+			top_mbr_sgn
+		SET
+			del_state = 1, del_date = unix_timestamp(now())
+		WHERE	
+			serial_no = #{serial_no}
+	</update>
+
+	<select id="mypicture" parameterType="String" resultType="String">
+		SELECT
+			picture
+		FROM
+			top_mbr_bsc
+		WHERE
+			user_no = #{no}
+	</select>
+
+	<!-- 사원(근무/대기/퇴사 ) 전체 출력 -->
+	<select id="getWorkMemberAll" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT a.user_no
+				, a.user_name
+				, a.user_id
+				, a.team_id_main
+				, b.team_name
+				, getTopTmBscCenterName(b.team_id) center_name				
+      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank      			
+				, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+				<!-- , DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date -->
+				,CASE
+					WHEN (a.join_date = 0)
+					THEN ''
+					ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+				END join_date
+			    , DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d') out_date
+			    , CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order	
+				,(SELECT IFNULL(MAX(ckey),0) FROM top_card WHERE user_no = a.user_no AND is_del = 0) AS card_key
+				,IFNULL(a.office_tel,'-') AS office_tel			
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		 WHERE 
+			a.team_id_loc = b.team_id  
+			and a.user_state != 1
+		 ORDER BY
+			<choose>
+				<when test="(orderFlag2 == null or orderFlag2 == '')
+						 and (orderFlag3 == null or orderFlag3 == '')
+						 and (orderFlag4 == null or orderFlag4 == '')
+						 and (orderFlag5 == null or orderFlag5 == '')
+						 and (orderFlag6 == null or orderFlag6 == '')">
+					b.team_group_order desc, b.team_order desc, new_work_order, a.work_level desc, a.join_date
+				</when>
+				<otherwise>
+					<choose>
+						<when test="orderFlag2 == 1">b.team_name DESC</when>
+						<when test="orderFlag2 == 2">b.team_name</when>
+					</choose>
+					<choose>
+						<when test="orderFlag3 == 1">a.work_level DESC</when>
+						<when test="orderFlag3 == 2">a.work_level</when>
+					</choose>
+					<choose>
+						<when test="orderFlag4 == 1">new_work_order DESC</when>
+						<when test="orderFlag4 == 2">new_work_order</when>
+					</choose>
+					<choose>
+						<when test="orderFlag5 == 1">a.user_name DESC</when>
+						<when test="orderFlag5 == 2">a.user_name</when>
+					</choose>
+					<choose>
+						<when test="orderFlag6 == 1">a.join_date DESC</when>
+						<when test="orderFlag6 == 2">a.join_date</when>
+					</choose>
+				</otherwise>
+			</choose>
+	</select>
+
+	<select id="getWorkMemberAllCnt" resultType = "int">
+				SELECT count(user_no) cnt
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id 
+					<!-- and a.user_state in (0,9) -->
+					and a.user_state != 1
+	</select>
+
+	<select id="getPendingMemberAll" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT a.user_no
+						, a.user_name
+						, a.user_id
+						, b.team_name
+						, getTopTmBscCenterName(b.team_id) center_name						
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank		      			
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						<!-- , DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date -->
+						,CASE
+							WHEN (a.join_date = 0)
+							THEN ''
+							ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+						END join_date
+					    , DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d') out_date
+					    , IFNULL(a.office_tel,'-') AS office_tel	   
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id 
+					and a.user_state = 2
+				ORDER BY
+					b.team_group_order, b.team_order , a.work_level, a.join_date desc    
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	</select>
+	
+	<select id="getRetireMemberAll" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT    a.user_no
+				, a.user_name
+				, a.user_id
+				, a.team_id_main
+				, b.team_name
+				, getTopTmBscCenterName(b.team_id) center_name				
+      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank      			
+				, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+				<!-- , DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date -->
+				,CASE
+					WHEN (a.join_date = 0)
+					THEN ''
+					ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+				END join_date
+			    , DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d') out_date
+			    , (SELECT IFNULL(MAX(ckey),0) FROM top_card WHERE user_no = a.user_no AND is_del = 0) AS card_key
+			    , IFNULL(a.office_tel,'-') AS office_tel
+		FROM top_mbr_bsc a, top_tm_bsc b
+		WHERE 
+			a.team_id_loc = b.team_id 
+			and a.user_state = 1
+		ORDER BY
+			<choose>
+				<when test="orderFlag == 1">a.join_date DESC</when>
+				<when test="orderFlag == 2">a.join_date</when>
+				<when test="orderFlag == 3">a.out_date DESC</when>
+				<when test="orderFlag == 4">a.out_date</when>
+			</choose>  
+	</select>
+
+	<select id="getRetireMemberAllCnt" resultType = "int">
+				SELECT count(user_no) cnt
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id  
+					and a.user_state = 1
+	</select>
+	
+	<!-- 보험사 명 불러오기 -->
+	<select id="selectPtnrIdNick" resultType="String" parameterType="String">
+		SELECT 
+			ptnr_nick as ptnr_id_val
+		FROM top_ptnr_bsc 
+		WHERE ptnr_id = #{team_ptnr_id}
+	</select>
+	
+	<!-- 지역명 불러오기 -->
+	<select id="selectTeamZoneName" resultType="String" parameterType="String">
+		SELECT
+		 	col_val as team_zone_val 
+		 FROM sysadm_codedic
+		 WHERE tbl_nm = 'top_tm_bsc' 
+		 AND col_nm = 'team_zone'
+		 AND col_cd = #{team_zone}
+	</select>
+	
+	<!-- 지역목록 불러오기 -->
+	<select id="selectTeamZoneStatList" resultType="HashMap">
+		 SELECT 
+		 	col_cd as team_zone
+		 	,col_val as team_zone_val 
+		 FROM sysadm_codedic 
+		 WHERE tbl_nm = 'top_tm_bsc' 
+		 AND col_nm = 'team_zone'
+	</select>
+	
+	<!-- 지역별 조사자 숫자를 카운트한다. -->
+	<select id="selectResearchStatCntListByTeamzone" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			#{team_zone} as team_zone
+			,#{team_zone_val} as team_zone_val						
+			,SUM(GA.work_job_cnt_1_1) AS work_job_cnt_1_1			
+			,SUM(GA.work_job_cnt_4_1) AS work_job_cnt_4_1			
+			,( SUM(GA.work_job_cnt_1_1) + SUM(GA.work_job_cnt_4_1) ) AS total_research_cnt			
+		FROM(
+		
+			SELECT 
+				COUNT(*) AS work_job_cnt_1_1				
+				,0 AS work_job_cnt_4_1				
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (10, 13, 15, 20, 25, 30)
+			AND b.team_zone = #{team_zone}			
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1				
+				,COUNT(*) AS work_job_cnt_4_1
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (25, 30, 35, 40)
+			AND b.team_zone = #{team_zone}				
+		)GA
+	</select>
+	
+	
+	<!-- 팀지역, 보험사 설정 에 따른 1,4종 인원통계 조사, 심사(일반), 심사(간편), 심사(정보입력) -->
+	<select id="selectWorkJobStatCntListByTeamzone" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			#{team_zone} as team_zone
+			,#{team_zone_val} as team_zone_val
+			,#{team_ptnr_id} as team_ptnr_id			
+			,#{team_ptnr_id_val} as team_ptnr_id_val
+			,SUM(GA.work_job_cnt_1_2) AS work_job_cnt_1_2			
+			,SUM(GA.work_job_cnt_4_2) AS work_job_cnt_4_2
+			,SUM(GA.work_job_cnt_4_3) AS work_job_cnt_4_3
+			,SUM(GA.work_job_cnt_4_4) AS work_job_cnt_4_4			
+			,SUM(GA.work_job_cnt_4_5) AS work_job_cnt_4_5
+			,( SUM(GA.work_job_cnt_1_2) + SUM(GA.work_job_cnt_4_2) + SUM(GA.work_job_cnt_4_3) + SUM(GA.work_job_cnt_4_4) ) AS total_written_cnt
+		FROM(
+			
+			SELECT
+				COUNT(*) AS work_job_cnt_1_2				
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (34, 35, 36, 37, 38, 39, 65)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}
+			
+			UNION ALL
+			
+			SELECT 			
+				0 AS work_job_cnt_1_2						
+				,COUNT(*) AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (15, 47, 50, 55)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_2						
+				,0 AS work_job_cnt_4_2
+				,COUNT(*) AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (51, 56)	
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}
+			
+			UNION ALL
+			
+			SELECT
+				0 AS work_job_cnt_1_2						
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,COUNT(*) AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (52, 57)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}
+			
+			UNION ALL
+			
+			SELECT
+				0 AS work_job_cnt_1_2						
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,COUNT(*) AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (40, 60, 61, 62)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}
+				
+		)GA
+	
+	</select>
+	
+	<!-- 1종 지역별 보험사 심사자 인원통계 -->
+	<select id="selectMemberStatZoneByPtnr1" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			#{team_ptnr_id} as team_ptnr_id
+			,#{team_ptnr_id_val} as team_ptnr_id_val
+			,#{team_zone} as team_zone
+			,COUNT(*) AS member_cnt
+		FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (34, 35, 36, 37, 38, 39, 65)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id= #{team_ptnr_id}
+	</select>
+	
+	<!-- 4종 지역별 보험사 심사자 인원통계 -->
+	<select id="selectMemberStatZoneByPtnr4" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			#{team_ptnr_id} as team_ptnr_id
+			,#{team_ptnr_id_val} as team_ptnr_id_val
+			,#{team_zone} as team_zone
+			,SUM(GA.work_job_cnt_4_2) AS member_2_cnt
+			,SUM(GA.work_job_cnt_4_3) AS member_3_cnt
+			,SUM(GA.work_job_cnt_4_4) AS member_4_cnt
+			,SUM(GA.work_job_cnt_4_5) AS member_5_cnt
+			,( SUM(GA.work_job_cnt_4_2) + SUM(GA.work_job_cnt_4_3) + SUM(GA.work_job_cnt_4_4) ) AS total_member_cnt
+		FROM(
+			
+			SELECT 
+				COUNT(*) AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (15, 47, 50, 55)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}				
+			
+			UNION ALL
+			
+			SELECT
+				0 AS work_job_cnt_4_2
+				,COUNT(*) AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (51, 56)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+			
+			UNION ALL
+			
+			SELECT
+				0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,COUNT(*) AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (52, 57)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}
+			
+			UNION ALL
+			
+			SELECT
+				0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,COUNT(*) AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (40, 60, 61, 62)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+		)GA			
+	</select>
+	
+	<!-- 보험사에 따른 1,4종 통계인원 -->
+	<select id="selectMemberStatByTeamPtnrid" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			#{team_ptnr_id} as team_ptnr_id
+			,#{team_ptnr_id_val} as team_ptnr_id_val
+			,SUM(GA.work_job_cnt_1_1) AS work_job_cnt_1_1
+			,SUM(GA.work_job_cnt_1_2) AS work_job_cnt_1_2
+			,SUM(GA.work_job_cnt_4_1) AS work_job_cnt_4_1
+			,SUM(GA.work_job_cnt_4_2) AS work_job_cnt_4_2
+			,SUM(GA.work_job_cnt_4_3) AS work_job_cnt_4_3
+			,SUM(GA.work_job_cnt_4_4) AS work_job_cnt_4_4
+			,SUM(GA.work_job_cnt_4_5) AS work_job_cnt_4_5
+		FROM(
+		
+			SELECT 
+				COUNT(*) AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_4_1
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (10, 13, 15, 20, 25, 30)
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,COUNT(*) AS work_job_cnt_1_2
+				,0 AS work_job_cnt_4_1
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (34, 35, 36, 37, 38, 39, 65)
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,COUNT(*) AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (25, 30, 35)
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_4_1		
+				,COUNT(*) AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (15, 47, 50, 55)
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,COUNT(*) AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (51, 56)
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,COUNT(*) AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (52, 57)
+			AND b.team_ptnr_id = #{team_ptnr_id}
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,COUNT(*) AS work_job_cnt_4_5
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (40, 60, 61, 62)
+			AND b.team_ptnr_id = #{team_ptnr_id}	
+		)GA	
+	</select>
+	
+	<!-- 보험사별 지역 1,4종 심사자 인원통계 -->
+	<select id="selectPtnrStatByTeamzone" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			#{team_zone} as team_zone
+			,#{team_zone_val} as team_zone_val
+			,#{ptnr_id} as team_ptnr_id			
+			,SUM(GA.work_job_cnt_1_2) AS ptnr_member_cnt_1_2			
+			,SUM(GA.work_job_cnt_4_2) AS ptnr_member_cnt_4_2
+			,SUM(GA.work_job_cnt_4_3) AS ptnr_member_cnt_4_3
+			,SUM(GA.work_job_cnt_4_4) AS ptnr_member_cnt_4_4
+			,( SUM(GA.work_job_cnt_1_2) + SUM(GA.work_job_cnt_4_2) + SUM(GA.work_job_cnt_4_3) + SUM(GA.work_job_cnt_4_4) ) AS ptnr_member_total_cnt
+		FROM(
+			
+			SELECT
+				COUNT(*) AS work_job_cnt_1_2				
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (34, 35, 36, 37, 38, 39, 65)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_2						
+				,COUNT(*) AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (15, 47, 50, 55)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_2						
+				,0 AS work_job_cnt_4_2
+				,COUNT(*) AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (51, 56, 61)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_2						
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,COUNT(*) AS work_job_cnt_4_4
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (52, 57, 62)
+			AND b.team_zone = #{team_zone}
+			AND b.team_ptnr_id = #{ptnr_id}	
+		)GA
+	</select>
+	
+	<!-- 지역에 따른 1,4종 통계인원 -->
+	<select id="selectMemberStatByTeamzone" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			GB.team_zone
+			,GB.team_zone_val
+			,GB.work_job_cnt_1_1
+			,GB.work_job_cnt_1_2
+			,GB.work_job_cnt_4_1
+			,GB.work_job_cnt_4_2
+			,GB.work_job_cnt_4_3
+			,GB.work_job_cnt_4_4
+			,GB.work_job_cnt_4_5
+			,(GB.work_job_cnt_1_1 + GB.work_job_cnt_1_2) AS work_job_cnt_1_sum
+			,(GB.work_job_cnt_4_1 + GB.work_job_cnt_4_2 + GB.work_job_cnt_4_3 + GB.work_job_cnt_4_4) AS work_job_cnt_4_sum
+			,(GB.work_job_cnt_1_1 + GB.work_job_cnt_1_2 + GB.work_job_cnt_4_1 + GB.work_job_cnt_4_2 + GB.work_job_cnt_4_3 + GB.work_job_cnt_4_4) AS work_job_cnt_sum_total
+		FROM
+		(
+			SELECT
+				#{team_zone} as team_zone
+				,#{team_zone_val} as team_zone_val
+				,SUM(GA.work_job_cnt_1_1) AS work_job_cnt_1_1
+				,SUM(GA.work_job_cnt_1_2) AS work_job_cnt_1_2
+				,SUM(GA.work_job_cnt_4_1) AS work_job_cnt_4_1
+				,SUM(GA.work_job_cnt_4_2) AS work_job_cnt_4_2
+				,SUM(GA.work_job_cnt_4_3) AS work_job_cnt_4_3
+				,SUM(GA.work_job_cnt_4_4) AS work_job_cnt_4_4
+				,SUM(GA.work_job_cnt_4_5) AS work_job_cnt_4_5
+			FROM(
+			
+				SELECT 
+					COUNT(*) AS work_job_cnt_1_1
+					,0 AS work_job_cnt_1_2
+					,0 AS work_job_cnt_4_1
+					,0 AS work_job_cnt_4_2
+					,0 AS work_job_cnt_4_3
+					,0 AS work_job_cnt_4_4
+					,0 AS work_job_cnt_4_5
+				FROM top_mbr_bsc a 
+				LEFT JOIN top_tm_bsc b
+				ON a.team_id_loc = b.team_id
+				WHERE a.user_state != 1
+				AND b.team_type IN (1,0)
+				AND a.work_job IN (10, 13, 15, 20, 25, 30)
+				AND b.team_zone = #{team_zone}
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS work_job_cnt_1_1
+					,COUNT(*) AS work_job_cnt_1_2
+					,0 AS work_job_cnt_4_1
+					,0 AS work_job_cnt_4_2
+					,0 AS work_job_cnt_4_3
+					,0 AS work_job_cnt_4_4
+					,0 AS work_job_cnt_4_5
+				FROM top_mbr_bsc a 
+				LEFT JOIN top_tm_bsc b
+				ON a.team_id_loc = b.team_id
+				WHERE a.user_state != 1
+				AND b.team_type IN (1,0)
+				AND a.work_job IN (34, 35, 36, 37, 38, 39, 65)
+				AND b.team_zone = #{team_zone}
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS work_job_cnt_1_1
+					,0 AS work_job_cnt_1_2
+					,COUNT(*) AS work_job_cnt_4_1		
+					,0 AS work_job_cnt_4_2
+					,0 AS work_job_cnt_4_3
+					,0 AS work_job_cnt_4_4
+					,0 AS work_job_cnt_4_5
+				FROM top_mbr_bsc a 
+				LEFT JOIN top_tm_bsc b
+				ON a.team_id_loc = b.team_id
+				WHERE a.user_state != 1
+				AND b.team_type = 4
+				AND a.work_job IN (25, 30, 35)
+				AND b.team_zone = #{team_zone}
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS work_job_cnt_1_1
+					,0 AS work_job_cnt_1_2
+					,0 AS work_job_cnt_4_1		
+					,COUNT(*) AS work_job_cnt_4_2
+					,0 AS work_job_cnt_4_3
+					,0 AS work_job_cnt_4_4
+					,0 AS work_job_cnt_4_5
+				FROM top_mbr_bsc a 
+				LEFT JOIN top_tm_bsc b
+				ON a.team_id_loc = b.team_id
+				WHERE a.user_state != 1
+				AND b.team_type = 4
+				AND a.work_job IN (15, 47, 50, 55)
+				AND b.team_zone = #{team_zone}
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS work_job_cnt_1_1
+					,0 AS work_job_cnt_1_2
+					,0 AS work_job_cnt_4_1		
+					,0 AS work_job_cnt_4_2
+					,COUNT(*) AS work_job_cnt_4_3
+					,0 AS work_job_cnt_4_4
+					,0 AS work_job_cnt_4_5
+				FROM top_mbr_bsc a 
+				LEFT JOIN top_tm_bsc b
+				ON a.team_id_loc = b.team_id
+				WHERE a.user_state != 1
+				AND b.team_type = 4
+				AND a.work_job IN (51, 56)
+				AND b.team_zone = #{team_zone}
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS work_job_cnt_1_1
+					,0 AS work_job_cnt_1_2
+					,0 AS work_job_cnt_4_1		
+					,0 AS work_job_cnt_4_2
+					,0 AS work_job_cnt_4_3
+					,COUNT(*) AS work_job_cnt_4_4
+					,0 AS work_job_cnt_4_5
+				FROM top_mbr_bsc a 
+				LEFT JOIN top_tm_bsc b
+				ON a.team_id_loc = b.team_id
+				WHERE a.user_state != 1
+				AND b.team_type = 4
+				AND a.work_job IN (52, 57)
+				AND b.team_zone = #{team_zone}
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS work_job_cnt_1_1
+					,0 AS work_job_cnt_1_2
+					,0 AS work_job_cnt_4_1		
+					,0 AS work_job_cnt_4_2
+					,0 AS work_job_cnt_4_3
+					,0 AS work_job_cnt_4_4
+					,COUNT(*) AS work_job_cnt_4_5
+				FROM top_mbr_bsc a 
+				LEFT JOIN top_tm_bsc b
+				ON a.team_id_loc = b.team_id
+				WHERE a.user_state != 1
+				AND b.team_type = 4
+				AND a.work_job IN (40, 60, 61, 62)
+				AND b.team_zone = #{team_zone}	
+			)GA
+		)GB
+	</select>
+	
+	<!-- 직무별 인원 정보 불러오기 -->
+	<select id="selectWorkJobStatByType" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			getTopTmBscCenterName(GA.team_id) AS center_name 
+			,GA.team_name AS team_name
+			,GA.user_name AS user_name
+			,getCode2Value('top_mbr_bsc','work_job',IF(GA.team_type!=4,1,4),GA.work_job) AS work_job_val
+		FROM (
+			SELECT
+				a.user_no
+				,a.user_name
+				,a.work_level
+				,a.join_date
+				,a.user_state
+				,b.team_id
+				,b.team_name
+				,b.team_group_order
+				,b.team_order 
+				,b.team_type
+				,CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15
+					END AS new_work_order 
+				,a.work_job
+			FROM top_mbr_bsc a, top_tm_bsc b
+			WHERE a.team_id_main = b.team_id  
+			AND a.user_state != 1  
+		   <if test="teamType == 1">
+				AND b.team_type IN (0,1)
+				<if test="workJob == 1">
+		   		AND a.work_job IN (10, 13, 15, 20, 25, 30)
+			   </if>
+			   <if test="workJob == 2">
+			   	AND a.work_job IN (34, 35, 36, 37, 38, 39, 65)
+			   </if>
+			   <if test="workJob == 5">
+			   	AND a.work_job IN (40, 45, 50, 55, 60, 65, 70, 75)
+			   </if>
+			   <if test="workJob == 6">
+			   	AND a.work_job = 5
+			   </if>
+		   </if>
+		   <if test="teamType == 4">
+		   		AND b.team_type = 4
+		   		<if test="workJob == 1">
+		   			AND a.work_job IN (25, 30, 35)
+		   		</if>
+		   		<if test="workJob == 2">
+		   			AND a.work_job IN (15, 47, 50, 55)
+		   		</if>
+		   		<if test="workJob == 3">
+		   			AND a.work_job IN (51, 56)	
+		   		</if>
+		   		<if test="workJob == 4">
+		   			AND a.work_job IN (52, 57)	
+		   		</if>
+		   		<if test="workJob == 5">
+		   			AND a.work_job IN (40, 60, 61, 62)	
+		   		</if>
+		   		<if test="workJob == 6">
+				   	AND a.work_job = 5
+				</if>
+		   </if>
+		   <if test="teamZone != null and teamZone != ''">
+		   		AND b.team_zone = #{teamZone} 
+		   </if>
+		   <if test="teamPtnrId != null and teamPtnrId != ''">
+		   		AND b.team_ptnr_id = #{teamPtnrId} 
+		   </if>
+		   
+		  )GA
+		  ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	
+	</select>
+	
+	
+	<!-- 직무에 따른 1,4종 인원통계 조사, 심사(일반), 심사(간편), 심사(정보입력) -->
+	<select id="selectWorkJobStatCntList" resultType="HashMap">
+		SELECT
+			SUM(GA.work_job_cnt_1_1) AS work_job_cnt_1_1
+			,SUM(GA.work_job_cnt_1_2) AS work_job_cnt_1_2
+			,SUM(GA.work_job_cnt_1_5) AS work_job_cnt_1_5
+			,SUM(GA.work_job_cnt_1_6) AS work_job_cnt_1_6
+			,SUM(GA.work_job_cnt_4_1) AS work_job_cnt_4_1
+			,SUM(GA.work_job_cnt_4_2) AS work_job_cnt_4_2
+			,SUM(GA.work_job_cnt_4_3) AS work_job_cnt_4_3
+			,SUM(GA.work_job_cnt_4_4) AS work_job_cnt_4_4
+			,SUM(GA.work_job_cnt_4_5) AS work_job_cnt_4_5
+			,SUM(GA.work_job_cnt_4_6) AS work_job_cnt_4_6
+		FROM(
+		
+			SELECT 
+				COUNT(*) AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (10, 13, 15, 20, 25, 30)
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,COUNT(*) AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (34, 35, 36, 37, 38, 39, 65)
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,COUNT(*) AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job IN (40, 45, 50, 55, 60, 65, 70, 75)
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,COUNT(*) AS work_job_cnt_1_6				
+				,0 AS work_job_cnt_4_1
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type IN (1,0)
+			AND a.work_job = 5
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,COUNT(*) AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (25, 30, 35)
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1		
+				,COUNT(*) AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (15, 47, 50, 55)
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,COUNT(*) AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (51, 56)	
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,COUNT(*) AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (52, 57)
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,COUNT(*) AS work_job_cnt_4_5
+				,0 AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job IN (40, 60, 61, 62)
+			
+			UNION ALL
+			
+			SELECT 
+				0 AS work_job_cnt_1_1
+				,0 AS work_job_cnt_1_2
+				,0 AS work_job_cnt_1_5
+				,0 AS work_job_cnt_1_6
+				,0 AS work_job_cnt_4_1		
+				,0 AS work_job_cnt_4_2
+				,0 AS work_job_cnt_4_3
+				,0 AS work_job_cnt_4_4
+				,0 AS work_job_cnt_4_5
+				,COUNT(*) AS work_job_cnt_4_6
+			FROM top_mbr_bsc a 
+			LEFT JOIN top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+			WHERE a.user_state != 1
+			AND b.team_type = 4
+			AND a.work_job = 5		
+		)GA	
+	</select>
+
+	<!-- 사원(근무/대기/퇴사 ) 한개 팀 출력 -->
+	<select id="getWorkMemberOne" resultType = "kr.co.toplac.topteam.TopMbrBscVO" parameterType="java.util.HashMap">
+	
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT a.user_no
+						, a.user_name
+						, a.user_id
+						, a.team_id_main
+						, b.team_name
+						, getTopTmBscCenterName(b.team_id) center_name
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank		      			
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						<!-- , DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date -->
+						,CASE
+							WHEN (a.join_date = 0)
+							THEN ''
+							ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+						END join_date
+					    , CASE a.work_type
+							WHEN 1 THEN 1
+							WHEN 2 THEN 2
+							WHEN 6 THEN 3
+							WHEN 14 THEN 4
+							WHEN 15 THEN 5
+							WHEN 3 THEN 6
+							WHEN 7 THEN 7
+							WHEN 4 THEN 8
+							WHEN 8 THEN 9
+							WHEN 5 THEN 10
+							WHEN 9 THEN 11
+							WHEN 10 THEN 12
+							WHEN 12 THEN 13
+							WHEN 11 THEN 14
+							WHEN 13 THEN 15	
+						END AS new_work_order
+						, (SELECT IFNULL(MAX(ckey),0) FROM top_card WHERE user_no = a.user_no AND is_del = 0) AS card_key						
+						,IFNULL(a.office_tel,'-') AS office_tel
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id  
+					<!-- and a.user_state in (0,9) -->
+					and a.user_state != 1
+					and b.team_id = #{team_id}
+				ORDER BY
+					<choose>
+						<when test="(orderFlag2 == null or orderFlag2 == '')
+								 and (orderFlag3 == null or orderFlag3 == '')
+								 and (orderFlag4 == null or orderFlag4 == '')
+								 and (orderFlag5 == null or orderFlag5 == '')
+								 and (orderFlag6 == null or orderFlag6 == '')">
+							b.team_group_order, b.team_order, new_work_order, a.work_level DESC, a.join_date
+						</when>
+						<otherwise>
+							<choose>
+								<when test="orderFlag2 == 1">b.team_name DESC</when>
+								<when test="orderFlag2 == 2">b.team_name</when>
+							</choose>
+							<choose>
+								<when test="orderFlag3 == 1">a.work_level DESC</when>
+								<when test="orderFlag3 == 2">a.work_level</when>
+							</choose>
+							<choose>
+								<when test="orderFlag4 == 1">new_work_order DESC</when>
+								<when test="orderFlag4 == 2">new_work_order</when>
+							</choose>
+							<choose>
+								<when test="orderFlag5 == 1">a.user_name DESC</when>
+								<when test="orderFlag5 == 2">a.user_name</when>
+							</choose>
+							<choose>
+								<when test="orderFlag6 == 1">a.join_date DESC</when>
+								<when test="orderFlag6 == 2">a.join_date</when>
+							</choose>
+						</otherwise>
+					</choose> 
+					
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum
+			
+	</select>
+	
+	<select id="getPendingMemberOne" resultType = "kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT    a.user_no
+						, a.user_name
+						, a.user_id
+						, b.team_name
+						, getTopTmBscCenterName(b.team_id) center_name						
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank		      			
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						<!-- , DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date -->
+						,CASE
+							WHEN (a.join_date = 0)
+							THEN ''
+							ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+						END join_date
+						, IFNULL(a.office_tel,'-') AS office_tel					    	   
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id 
+					and a.user_state = 2
+					and b.team_id = #{team_id}
+				ORDER BY
+					b.team_group_order , a.work_level  
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	</select>
+	
+	<select id="getRetireMemberOne" resultType = "kr.co.toplac.topteam.TopMbrBscVO" parameterType="java.util.HashMap">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT    a.user_no
+						, a.user_name
+						, a.user_id
+						, a.team_id_main
+						, b.team_name
+						, getTopTmBscCenterName(b.team_id) center_name						
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank		      			
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						<!-- , DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date -->
+						,CASE
+							WHEN (a.join_date = 0)
+							THEN ''
+							ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+						END join_date
+					    , DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d') out_date
+					    , (SELECT IFNULL(MAX(ckey),0) FROM top_card WHERE user_no = a.user_no AND is_del = 0) AS card_key
+					    , IFNULL(a.office_tel,'-') AS office_tel	   
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id 			
+					and a.user_state = 1
+					and b.team_id = #{team_id}
+				ORDER BY
+					<choose>
+						<when test="orderFlag == 1">a.join_date DESC</when>
+						<when test="orderFlag == 2">a.join_date</when>
+						<when test="orderFlag == 3">a.out_date DESC</when>
+						<when test="orderFlag == 4">a.out_date</when>
+					</choose>  
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	</select>
+	
+	<select id="searchMemberListByCidNewExcel" parameterType="java.util.HashMap" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT a.user_no
+						, a.user_name
+						, a.user_id
+						, getTopTmBscCenterName(b.team_id) center_name						
+						, b.team_name
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						, IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d'),"") join_date
+					    , IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d'),"") out_date
+					    , IFNULL(a.office_tel,'-') AS office_tel
+					    , CASE a.work_type
+							WHEN 1 THEN 1
+							WHEN 2 THEN 2
+							WHEN 6 THEN 3
+							WHEN 14 THEN 4
+							WHEN 15 THEN 5
+							WHEN 3 THEN 6
+							WHEN 7 THEN 7
+							WHEN 4 THEN 8
+							WHEN 8 THEN 9
+							WHEN 5 THEN 10
+							WHEN 9 THEN 11
+							WHEN 10 THEN 12
+							WHEN 12 THEN 13
+							WHEN 11 THEN 14
+							WHEN 13 THEN 15	
+						END AS new_work_order
+						, a.email
+						, a.handphone
+						, a.office_fax
+						, (SELECT IFNULL(MAX(ckey),0) FROM top_card WHERE user_no = a.user_no AND is_del = 0) AS card_key
+						, b.team_type
+						, a.home_address
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id  
+					<if test="ustat != 10">
+						<choose>
+							<when test="ustat == 0">
+								<!-- and a.user_state in (0,9) -->
+								and a.user_state != 1
+							</when>
+							<otherwise>
+								and a.user_state = #{ustat}
+							</otherwise>
+						</choose>
+					</if>
+					<if test="tid != 0">
+						<choose>
+							<when test="gid == -1">
+								and a.team_id_main in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+														= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tid}))
+							</when>
+							<otherwise>
+								and a.team_id_main = #{tid}
+							</otherwise>
+						</choose>
+					</if>					
+					<if test="cid != 0">
+						and b.team_center = #{cid}
+					</if>
+					<if test="searchStr != ''">
+						and (a.user_name like '%${searchStr}%'
+							 or a.handphone like '%${searchStr}%'
+							 or a.user_id like '%${searchStr}%'
+							 or a.office_tel like '%${searchStr}%'
+							 or a.office_fax like '%${searchStr}%')
+					</if>					
+				ORDER BY
+					<choose>						
+						<when test='tabMenu == "work"'>
+							a.join_date ASC, b.team_group_order, b.team_order
+						</when>												
+						<when test='tabMenu == "retire"'>
+							a.out_date ASC, b.team_group_order, b.team_order
+						</when>						
+						<otherwise>
+							b.team_group_order, b.team_order, a.work_level, a.join_date DESC, new_work_order							 
+						</otherwise>
+					</choose>
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	</select>
+	
+	<select id="searchMemberListByCidNew" parameterType="java.util.HashMap" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT a.user_no
+						, a.user_name
+						, a.user_id
+						, getTopTmBscCenterName(b.team_id) center_name						
+						, b.team_name
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						, IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d'),"") join_date
+					    , IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d'),"") out_date
+					    , IFNULL(a.office_tel,'-') AS office_tel
+					    , CASE a.work_type
+							WHEN 1 THEN 1
+							WHEN 2 THEN 2
+							WHEN 6 THEN 3
+							WHEN 14 THEN 4
+							WHEN 15 THEN 5
+							WHEN 3 THEN 6
+							WHEN 7 THEN 7
+							WHEN 4 THEN 8
+							WHEN 8 THEN 9
+							WHEN 5 THEN 10
+							WHEN 9 THEN 11
+							WHEN 10 THEN 12
+							WHEN 12 THEN 13
+							WHEN 11 THEN 14
+							WHEN 13 THEN 15	
+						END AS new_work_order
+						, a.email
+						, a.handphone
+						, a.office_fax
+						, (SELECT IFNULL(MAX(ckey),0) FROM top_card WHERE user_no = a.user_no AND is_del = 0) AS card_key
+						, b.team_type
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id  
+					<if test="ustat != 10">
+						<choose>
+							<when test="ustat == 0">
+								<!-- and a.user_state in (0,9) -->
+								and a.user_state != 1
+							</when>
+							<otherwise>
+								and a.user_state = #{ustat}
+							</otherwise>
+						</choose>
+					</if>
+					<if test="tid != 0">
+						<choose>
+							<when test="gid == -1">
+								and a.team_id_main in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+														= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tid}))
+							</when>
+							<otherwise>
+								and a.team_id_main = #{tid}
+							</otherwise>
+						</choose>
+					</if>					
+					<if test="cid != 0">
+						and b.team_center = #{cid}
+					</if>
+					<if test="searchStr != ''">
+						and (a.user_name like '%${searchStr}%'
+							 or a.handphone like '%${searchStr}%'
+							 or a.user_id like '%${searchStr}%'
+							 or a.office_tel like '%${searchStr}%'
+							 or a.office_fax like '%${searchStr}%')
+					</if>					
+				ORDER BY
+					<choose>
+						<when test='teamOrder == "DESC"'>
+							b.team_name DESC
+						</when>
+						<when test='teamOrder == "ASC"'>
+							b.team_name ASC
+						</when>
+						<when test='levelOrder == "DESC"'>
+							a.work_level DESC, b.team_group_order, b.team_order
+						</when>
+						<when test='levelOrder == "ASC"'>
+							a.work_level ASC, b.team_group_order, b.team_order
+						</when>
+						<when test='workOrder == "DESC"'>
+							new_work_order DESC, b.team_group_order, b.team_order
+						</when>
+						<when test='workOrder == "ASC"'>
+							new_work_order ASC, b.team_group_order, b.team_order
+						</when>
+						<when test='userNameOrder == "DESC"'>
+							a.user_name DESC, b.team_group_order, b.team_order
+						</when>
+						<when test='userNameOrder == "ASC"'>
+							a.user_name ASC, b.team_group_order, b.team_order
+						</when>
+						<when test='joinOrder == "DESC"'>
+							a.join_date DESC, b.team_group_order, b.team_order
+						</when>
+						<when test='joinOrder == "ASC"'>
+							a.join_date ASC, b.team_group_order, b.team_order
+						</when>						
+						<when test='outOrder == "DESC"'>
+							a.out_date DESC, b.team_group_order, b.team_order
+						</when>
+						<when test='outOrder == "ASC"'>
+							a.out_date ASC, b.team_group_order, b.team_order
+						</when>
+						<otherwise>
+							b.team_group_order, b.team_order, a.work_level, a.join_date DESC, new_work_order							 
+						</otherwise>
+					</choose>
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	</select>
+	
+	<select id="searchMemberListByCid" parameterType="java.util.HashMap" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT a.user_no
+						, a.user_name
+						, a.user_id
+						, getTopTmBscCenterName(b.team_id) center_name						
+						, b.team_name
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						, IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d'),"") join_date
+					    , IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d'),"") out_date
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id  
+					<if test="ustat != 10">
+						<choose>
+							<when test="ustat == 0">
+								<!-- and a.user_state in (0,9) -->
+								and a.user_state != 1
+							</when>
+							<otherwise>
+								and a.user_state = #{ustat}
+							</otherwise>
+						</choose>
+					</if>
+					<if test="tid != 0">
+						<choose>
+							<when test="gid == -1">
+								and a.team_id_main in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+														= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tid}))
+							</when>
+							<otherwise>
+								and a.team_id_main = #{tid}
+							</otherwise>
+						</choose>
+					</if>					
+					<if test="cid != 0">
+						and b.team_center = #{cid}
+					</if>
+					<if test="searchStr != ''">
+						and (a.user_name like '%${searchStr}%'
+							 or a.handphone like '%${searchStr}%'
+							 or a.user_id like '%${searchStr}%'
+							 or a.office_tel like '%${searchStr}%'
+							 or a.office_fax like '%${searchStr}%')
+					</if>
+				ORDER BY
+					b.team_group_order , a.work_level  
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	</select>
+
+	<select id="searchMemberList" parameterType="java.util.HashMap" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT a.user_no
+						, a.user_name
+						, a.user_id
+						, getTopTmBscCenterName(b.team_id) center_name						
+						, b.team_name
+		      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank
+						, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+		      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+						, IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d'),"") join_date
+					    , IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d'),"") out_date
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE 
+					a.team_id_loc = b.team_id  
+					<if test="ustat != 10">
+						<choose>
+							<when test="ustat == 0">
+								<!-- and a.user_state in (0,9) -->
+								and a.user_state != 1
+							</when>
+							<otherwise>
+								and a.user_state = #{ustat}
+							</otherwise>
+						</choose>
+					</if>
+					<if test="tid != 0">
+						<choose>
+							<when test="gid == -1">
+								and a.team_id_main in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+														= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tid}))
+							</when>
+							<otherwise>
+								and a.team_id_main = #{tid}
+							</otherwise>
+						</choose>
+					</if>
+					<if test="searchStr != ''">
+						and (a.user_name like '%${searchStr}%'
+							 or a.handphone like '%${searchStr}%'
+							 or a.user_id like '%${searchStr}%'
+							 or a.office_tel like '%${searchStr}%'
+							 or a.office_fax like '%${searchStr}%')
+					</if>
+				ORDER BY
+					b.team_group_order , a.work_level  
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	</select>
+
+	<select id="teamListForSearch" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT
+			team_id, team_name, team_level, team_type, team_written
+		  FROM
+			top_tm_bsc
+		 WHERE team_level != 2
+		 ORDER BY 
+			team_group_order desc, team_order desc
+	</select>
+	
+	<!-- 엑셀 다운, 170202 LDS -->
+	<select id="topMemberListExcel" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT a.user_no
+			  ,b.team_name
+			  ,getTopTmBscCenterName(a.team_id_loc) center_name
+			  ,b.team_type
+			  ,a.job_memo
+			  ,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level			  
+			  ,IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank  			  
+			  ,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			  ,a.user_name
+			  ,a.user_id
+			  ,a.email
+			  ,a.handphone
+			  ,a.office_tel
+			  ,a.office_fax
+			  ,IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d'),"") join_date
+		      ,IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d'),"") out_date
+		      ,CASE a.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15	
+			END AS new_work_order
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		 WHERE a.team_id_loc = b.team_id 
+		<choose>
+			<!-- 근무중 -->
+			<when test="_parameter == 'work'">
+				and a.user_state in (0,9,3)
+			</when>
+			<!-- 퇴사자 -->
+			<when test="_parameter == 'out'">
+				and a.user_state = 1
+			</when>
+			<!-- 발령대기자 -->
+			<when test="_parameter == 'standby'">
+				and a.user_state = 2
+			</when>
+		</choose>
+		
+		<choose>
+			<when test="_parameter == 'out'">
+				ORDER BY a.out_date desc, new_work_order asc;
+			</when>
+			<otherwise>
+				ORDER BY a.join_date desc, new_work_order asc;
+			</otherwise>
+		</choose>	
+	</select>
+
+	<update id="updateMmsImage" parameterType="hashmap">
+		UPDATE  top_mbr_bsc
+		   SET  MMS_PICTURE = #{filename}
+		 WHERE  USER_NO = #{user_no}
+	</update>
+
+    <update id="deleteMmsPicture" parameterType="String">
+		UPDATE  top_mbr_bsc
+		   SET  MMS_PICTURE = NULL
+		 WHERE  USER_NO = #{user_no}
+    </update>
+    
+    
+   	<!-- 재무 - 입/퇴사 확인 180705. lds-->
+	<select id="selectStaffList"  parameterType="HashMap" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT a.user_no
+			  ,a.user_name
+			  ,a.user_id
+			  ,b.team_name
+			  ,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+      		  ,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+      		  ,getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+			  <!-- ,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date -->
+			  ,CASE
+					WHEN (a.join_date = 0)
+					THEN ''
+					ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+				END join_date
+			  ,IFNULL(DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d'),'-') out_date
+			  ,CASE a.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15	
+			END AS new_work_order
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		 WHERE a.team_id_loc = b.team_id
+		<if test="staffState != 10">
+			<choose>			
+				<when test="staffState == 0">
+					AND a.user_state != 1  
+				</when>
+				<otherwise>
+					AND a.user_state = #{staffState}
+				</otherwise>						
+			</choose>
+		</if>
+		
+		<if test="teamId != null and teamId != 0">
+			AND a.team_id_loc = #{teamId} 
+		</if>
+		
+		<if test="searchStr != null and searchStr != ''">
+			AND (   user_name like CONCAT('%',#{searchStr},'%')
+			     OR user_id like CONCAT('%',#{searchStr},'%')
+			     OR handphone like CONCAT('%',#{searchStr},'%')
+			     OR office_tel like CONCAT('%',#{searchStr},'%') )
+		</if>
+		
+		<choose>
+			<when test="staffState == 1">
+				ORDER BY out_date DESC
+			</when>
+			<otherwise> 
+				ORDER BY b.team_group_order desc, b.team_order desc, new_work_order, a.work_level desc, a.join_date
+			</otherwise>
+		</choose>
+		 
+	</select>
+	
+
+</mapper>

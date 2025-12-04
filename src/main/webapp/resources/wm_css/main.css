@@ -1,0 +1,180 @@
+@CHARSET "UTF-8";
+/* 공통 */
+/* .left_cnt {width:289px; height:720px; float:left; border:1px solid #e8e8e8; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; position:relative;}2016.01.12.rjh.수정.height:660px;->height:720px; */
+.left_cnt {width:289px; height:740px; float:left; border:1px solid #e8e8e8; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; position:relative;}
+.center_cnt {width:1000px; float:left; position:relative; margin-left:7px; display:inline; }
+
+/*2016.06.01.lsh.add.center_cnt_site.start.*/
+.center_cnt_site {width:800px; float:left; position:relative; margin-left:7px; display:inline; }
+/*2016.06.01.lsh.add.center_cnt_site.start.*/
+
+/* 170529 LDS, 메인 미결 팝업 */
+.nosite_mng_pop_cnt {width:1120px; height:100%; padding-bottom:15px; float:left; border:1px solid #e8e8e8; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; position:relative;}/*2016.01.12.rjh.수정.height:660px;->height:720px;*/
+
+/* contents */
+.left_cnt .topinfo {
+	width:249px; height:30px; margin:11px auto 0 auto;
+	font-size:12px; line-height:31px; color:#fff; letter-spacing:-1px;
+	background:url(../wm_img/main/bg_ttl02.png) no-repeat;
+}
+
+.left_cnt .topinfo>p {
+	padding-left:33px; background:url(../wm_img/main/ico_teamdot.gif) no-repeat 18px center;
+}
+
+.left_cnt .topinfo span {color:#fffc00;}
+.tArea {height:65%; margin:10px 15px 0 20px;  overflow-x: hidden; overflow-y: auto;}
+.tArea4Pop {height:94%; margin:10px 15px 0 20px;  overflow-x: hidden; overflow-y: auto;}
+
+/* .tArea {height:590px; margin:10px 15px 0 20px;  overflow-x: hidden; overflow-y: auto;} */
+.left_cnt .suttl, .nosite_mng_pop_cnt .suttl  {
+	margin:10px 0 8px 0;
+	background:url(../wm_img/common/ico_suttl.png) no-repeat 0 50%;
+	padding-left:16px; font-size:12px; line-height:14px; color:#333; letter-spacing:-1px; font-family:'굴림'; font-weight:bold;
+}
+.tArea .suttl:first-child {margin-top:1;}
+.tArea .tableStyle3 {width:97%;}
+
+.tArea4Pop .suttl:first-child {margin-top:1;}
+.tArea4Pop .tableStyle3 {width:98%;}
+
+
+
+.center_cnt .centercnt_top {overflow:hidden;}
+.centercnt_top .nociteA {float:left;}
+.centercnt_top .notice02 {margin-left:5px;}
+.centercnt_top .nocite {
+	width:495px; height:360px; border:1px solid #edeeed; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; position:relative;
+}
+/* .centercnt_top .nocite .notice_top {height:34px; border-bottom:1px solid #e5e5e5;} */
+.centercnt_top .nocite .notice_top {height:28px; border-bottom:1px solid #e5e5e5;}
+/* .centercnt_top .nocite h3 {
+	margin-left:13px; padding:0 0 0 20px;
+	background:url(../wm_img/common/dot_bg.png) no-repeat 0 50%;
+	font-size:13px; line-height:35px; color:#333; font-family:'굴림'; font-weight:bold;
+	font-weight:bold;
+} */
+.centercnt_top .nocite h3 {
+	margin-left:13px; padding:0 0 0 20px;
+	background:url(../wm_img/common/dot_bg.png) no-repeat 0 50%;
+	font-size:12px; line-height:30px; color:#333; font-family:'굴림'; font-weight:bold;
+	font-weight:bold;
+}
+.centercnt_top .nocite .notice_bot {margin:15px 13px 10px 13px; position:relative;}
+.centercnt_top .nocite .btn_more {position:absolute; right:15px; top:4px;}
+.centercnt_bot {width:998px; height:267px; margin-top:10px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;}
+/* .centercnt_bot {width:998px; height:288px; margin-top:10px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;} */
+.guest {margin:15px 20px 0 18px;}
+.guest .guestTap>ul {width:100%; border-bottom:2px solid #5a96c8; overflow:hidden;}
+/* .guest .guestTap>ul>li {width:159px; height:28px; float:left;} */
+/* .guest .guestTap>ul>li>a {
+	width:159px; height:28px;
+	display:block; background:url(../wm_img/common/guestTap.gif) no-repeat;
+	font-size:12px; line-height:28px; color:#666; font-weight:bold; text-align:center; letter-spacing:-1px; font-family:'굴림';
+} */
+.guest .guestTap>ul>li {width:157px; height:28px; float:left;}
+.guest .guestTap>ul>li>a {
+	width:157px; height:28px;
+	display:block; background:url(../wm_img/common/guestTap.gif) no-repeat;
+	font-size:12px; line-height:28px; color:#666; font-weight:bold; text-align:center; letter-spacing:-1px; font-family:'굴림';
+}
+
+.guest .guestTap>ul>li.on>a,
+.guest .guestTap>ul>li>a:hover {background:url(../wm_img/common/guestTap_on.gif) no-repeat; color:#fff;}
+.guest .guestcnt {height:190px; display:block; margin-top:10px; padding:0 0 10px 0; overflow:auto;}
+
+/* 미제출팝업, by lds,170612 */
+.guest {margin:15px 20px 0 18px;}
+.guest .guestPopTap>ul {width:100%; border-bottom:2px solid #5a96c8; overflow:hidden;}
+.guest .guestPopTap>ul>li {width:146px; height:28px; float:left;}
+.guest .guestPopTap>ul>li>a {
+	width:146px; height:28px;
+	display:block; background:url(../wm_img/common/guestPopTap.gif) no-repeat;
+	font-size:12px; line-height:28px; color:#666; font-weight:bold; text-align:center; letter-spacing:-1px; font-family:'굴림';
+}
+
+.guest .guestPopTap>ul>li.on>a,
+.guest .guestPopTap>ul>li>a:hover {background:url(../wm_img/common/guestPopTap_on.gif) no-repeat; color:#fff;}
+.guest .guestcnt {height:190px; display:block; margin-top:10px; padding:0 0 10px 0; overflow:auto;}
+/* /미제출팝업/ */
+
+
+
+
+.banner {width:998px; height:52px; margin-top:5px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%;}
+.banner ul {margin:17px 0 0 44px; overflow:hidden;}
+.banner ul li:first-child {margin-left:0;}
+.banner ul li {float:left; margin-left:59px; display:inline;}
+
+/*2016.01.14.rjh.add.start.*/
+.center_cnt3 {width:100%; float:left; position:relative; display:inline; }
+/* .centercnt_bot1-2 {width:998px; height:660px; margin-top:0px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;} */
+.centercnt_bot1-2 {width:998px; height:681px; margin-top:0px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;}
+
+/* 2016.04.06.lsh 추가 */
+.centercnt_bot1-3 {width:980px; height:560px; margin-top:0px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;}
+/*.centercnt_bot1-3 {width:980px; height:100%; margin-top:0px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;}*/
+/* 2016.04.06.lsh 추가 */
+
+/* 2016.06.01.lsh 추가 : 현장 보고 및 중간 보고서 작성 팝업용*/
+.centercnt_bot1-4 {width:800px; height:560px; margin-top:0px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;}
+/* 2016.06.01.lsh 추가 */
+
+/* 2017.05.22.ksh 추가 */
+.centercnt_bot1_5 {width:980px; height:100%; margin-top:0px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:hidden;}
+/* 2017.05.22.ksh 추가 */
+
+
+
+.centercnt_bot3 {width:100%; height:100%; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:auto;}
+.centercnt_bot4 {width:100%; height:660px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:auto;}
+.guest .guestcnt3 {height:100%; display:block; margin-top:10px; padding:0 0 10px 0; overflow-x:hidden; overflow-y:hidden;}
+.guest .guestcnt4 {height:600px; display:block; margin-top:10px; padding:0 0 10px 0; overflow:auto;}
+/*2016.01.14.rjh.add.end.*/
+
+/* 2016.04.08 lsh add.start */
+.guest .guestcnt5 {height:475px; display:block; margin-top:10px; padding:10px 0 10px 0; overflow:auto;}
+/*.guest .guestcnt5 {height:100%; display:block; margin-top:10px; padding:10px 0 10px 0; overflow:auto;}*/
+/* 2016.04.08 lsh add.end */
+
+/* 2016.06.28 lsh add.start */
+.guest .guestcnt5 #rptBody6Table {width:640px;}
+/* 2016.06.28 lsh add.end */
+
+/* 2017.05.22.ksh 추가 */
+.guest .guestcnt6 {height:100%; display:block; margin-top:10px; padding:10px 0 10px 0; overflow:auto;}
+.guest .guestcnt6 #rptBody6Table {width:640px;}
+/* 2017.05.22.ksh 추가 */
+
+/* 2017.12.12.lds 추가 */
+.guest .guestcnt7 {height:745px; display:block; margin-top:10px; padding:10px 0 10px 0; overflow-x:hidden;}
+/* 2017.12.12.lds 추가 */
+
+/* 휴가 */
+.guest .guestcnt8 {height:860px; display:block; margin-top:10px; padding:10px 0 10px 0; overflow-x:hidden;}
+
+
+
+/*2016.01.15.rjh.add.따라다니는버튼.start.*/
+#floatdiv {position:fixed; _position:absolute; z-index:30; width:41px; overflow:hidden; top:85px; background-color: transparent; margin:0; padding:0;}
+#floatdiv ul {list-style: none;}
+#floatdiv li {margin-bottom: 2px; text-align: center;}
+/*2016.01.15.rjh.add.따라다니는버튼.end.*/
+
+/*2016.01.15.rjh.add.따라다니는버튼.start.*/
+#floatdiv2 {position:fixed; _position:absolute; z-index:30; width:41px; overflow:hidden; top:648px; background-color: transparent; margin:0; padding:0;}
+#floatdiv2 ul {list-style: none;}
+#floatdiv2 li {margin-bottom: 2px; text-align: center; display:inline;}
+/*2016.01.15.rjh.add.따라다니는버튼.end.*/
+
+/*2016.01.11.rjh.add.자바통계전용.start.*/
+.center_cnt2 {width:100%; float:left; position:relative; margin-left:0px; display:inline;}
+.centercnt_top .log_top {width:100%; border:1px solid #edeeed; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; position:relative;}
+.centercnt_top .log_top .search_bar {margin:10px 25px 10px 25px;}
+.centercnt_bot2 {width:100%; height:100%; margin-top:10px; border:1px solid #e9e9e9; background:#fff url(../wm_img/main/bg_botbar.gif) repeat-x 0 100%; overflow:auto;}
+.guest .guestcnt2 {height:100%; display:block; margin-top:10px; padding:0 0 10px 0; overflow-x:hidden; overflow-y:hidden;}
+/*2016.01.11.rjh.add.자바통계전용.end.*/
+
+/* 통계 - 열 구분 border 처리 */
+.border-right{ border-right : 1px solid #b9b9b9 !important; }
+.border-left{ border-left : 1px solid #b9b9b9 !important; }

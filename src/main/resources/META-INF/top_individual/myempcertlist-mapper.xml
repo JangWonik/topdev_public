@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="MyEmpCertList">
+	
+	<select id="selectNilinkFileName" parameterType="String" resultType="String">
+		SELECT
+			file_name
+		FROM nilink_record
+		WHERE rkey = #{rkey}
+	</select>
+	
+	<select id="selectNilinkFilePath" parameterType="String" resultType="String">
+		SELECT
+			full_path
+		FROM nilink_record
+		WHERE rkey = #{rkey}
+	</select>
+	
+	<!-- 로그인 로그목록 엑실 다운로드 -->
+	<select id="selectLoginLogListExcel" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,a.ip_addr AS ip			
+			,DATE_FORMAT( FROM_UNIXTIME( a.reg_date ) , '%Y-%m-%d %H:%i:%s' ) AS login_time
+			,b.user_name AS user_name
+			,b.team_id_main AS team_id
+			,getTopTmBscTeamName(b.team_id_main) AS team_name
+		FROM top_login_log a
+		LEFT JOIN top_mbr_bsc b
+		ON a.user_no = b.user_no
+		WHERE 1=1 
+		AND a.reg_date > UNIX_TIMESTAMP(#{srchSdate})
+		AND a.reg_date &lt; UNIX_TIMESTAMP(#{srchEdate})
+		<if test="srchTeamId != 0">
+			AND b.team_id_main = #{srchTeamId}
+		</if>		
+		<if test='srchUserName != null and srchUserName != ""'>			
+			AND b.user_name like '%${srchUserName}%'	
+		</if>
+		ORDER BY a.serial_no DESC			
+	</select>
+	
+	<!-- 로그인 로그목록 불러오기 -->
+	<select id="selectLoginLogList" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,a.ip_addr AS ip
+			,DATE_FORMAT( FROM_UNIXTIME( a.reg_date ) , '%Y-%m-%d %H:%i:%s' ) AS login_time
+			,b.user_name AS user_name
+			,b.team_id_main AS team_id
+			,getTopTmBscTeamName(b.team_id_main) AS team_name
+		FROM top_login_log a
+		LEFT JOIN top_mbr_bsc b
+		ON a.user_no = b.user_no
+		WHERE 1=1 
+		AND a.reg_date > UNIX_TIMESTAMP(#{srchSdate})
+		AND a.reg_date &lt; UNIX_TIMESTAMP(#{srchEdate})
+		<if test="srchTeamId != 0">
+			AND b.team_id_main = #{srchTeamId}
+		</if>		
+		<if test='srchUserName != null and srchUserName != ""'>			
+			AND b.user_name like '%${srchUserName}%'	
+		</if>
+		ORDER BY a.serial_no DESC
+		LIMIT #{limitPage}, #{sizePerPage}	
+	</select>
+	
+	<!-- 로그인 로그목록 불러오기 -->
+	<select id="selectLoginLogListCnt" parameterType="hashMap" resultType="integer">
+		SELECT 
+			count(*) as nCnt
+		FROM top_login_log a
+		LEFT JOIN top_mbr_bsc b
+		ON a.user_no = b.user_no
+		WHERE 1=1 
+		AND a.reg_date > UNIX_TIMESTAMP(#{srchSdate})
+		AND a.reg_date &lt; UNIX_TIMESTAMP(#{srchEdate})
+		<if test="srchTeamId != 0">
+			AND b.team_id_main = #{srchTeamId}
+		</if>
+		<if test='srchUserName != null and srchUserName != ""'>			
+			AND b.user_name like '%${srchUserName}%'	
+		</if>
+	</select>
+	
+	<select id="selectNilinkRecordList" parameterType="hashMap" resultType="kr.co.toplac.topteam.NilinkRecordVO">
+		SELECT
+			rkey
+			,rtype
+			,send_num
+			,receive_num
+			,folder_date
+			,record_time
+			,file_name
+			,SUBSTR(file_name,-21) AS file_name_fmt
+			,full_path
+			,file_size
+			,sync_date
+		FROM nilink_record
+		WHERE 1=1
+		<if test='tail_office != null and !tail_office.equals("")'>
+			AND (send_num = #{tail_office} OR receive_num = #{tail_office})  		
+		</if>
+		<if test='search_send_num != null and !search_send_num.equals("")'>
+			AND send_num like CONCAT('%',#{search_send_num},'%')
+		</if>
+		<if test='search_receive_num != null and !search_receive_num.equals("")'>
+			AND receive_num like CONCAT('%',#{search_receive_num},'%') 
+		</if>
+		<if test='search_sdate != null and !search_sdate.equals("")'>
+			AND folder_date >= #{search_sdate}
+		</if>
+		<if test='search_edate != null and !search_edate.equals("")'>
+			AND folder_date &lt;= #{search_edate}
+		</if>
+		ORDER BY folder_date DESC, record_time DESC
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<select id="selectNilinkRecordListCnt" parameterType="java.util.HashMap" resultType="integer">
+		SELECT
+			COUNT(*) as Cnt
+		FROM nilink_record
+		WHERE 1=1
+		<if test='tail_office != null and !tail_office.equals("")'>
+			AND (send_num = #{tail_office} OR receive_num = #{tail_office})  		
+		</if>
+		<if test='search_send_num != null and !search_send_num.equals("")'>
+			AND send_num like CONCAT('%',#{search_send_num},'%')
+		</if>
+		<if test='search_receive_num != null and !search_receive_num.equals("")'>
+			AND receive_num like CONCAT('%',#{search_receive_num},'%') 
+		</if>
+		<if test='search_sdate != null and !search_sdate.equals("")'>
+			AND folder_date >= #{search_sdate}
+		</if>
+		<if test='search_edate != null and !search_edate.equals("")'>
+			AND folder_date &lt;= #{search_edate}
+		</if>
+	</select>
+	
+	<select id="myOfficeNoTail" parameterType="String" resultType="String">
+		SELECT
+			IFNULL(SUBSTR(office_tel,-4),'-') AS office_num 
+		FROM top_mbr_bsc 
+		WHERE user_no = #{user_no}
+	</select>
+	
+	<select  id="myCertList" parameterType="java.util.HashMap" resultType="kr.co.toplac.topteam.TopCertVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT
+					serial_no,
+					user_no,
+					team_id_loc,
+					work_level,
+					issue_reason,
+					issue_state,
+					DATE_FORMAT(FROM_UNIXTIME(expiry_date), '%Y-%m-%d') expiry_date,
+					DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d, %h:%m:%s') reg_date,
+					if(FROM_UNIXTIME(now(), '%Y-%m-%d') > FROM_UNIXTIME(expiry_date, '%Y-%m-%d'), 1, 0) expire_yn,
+					state_chg_date
+				FROM
+					top_emp_cert
+				WHERE
+					user_no = #{user_no}
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY ROWNUM DESC
+			LIMIT #{queryPgNoInt}, 17
+	</select>
+	
+	<select id="myCertListCnt" resultType = "int">
+				SELECT count(serial_no) cnt
+				FROM
+					top_emp_cert
+				WHERE
+					user_no = #{user_no}
+	</select>
+	
+	<select  id="myCertPrint" parameterType="String" resultType="kr.co.toplac.topteam.TopCertVO">
+		
+		SELECT
+			a.serial_no,
+			a.user_no,
+			a.team_id_loc,
+			getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level,
+			a.issue_reason,
+			a.issue_state,
+			DATE_FORMAT(FROM_UNIXTIME(a.expiry_date), '%Y-%m-%d') expiry_date,
+			DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d, %h:%m:%s') reg_date,
+			b.user_name,
+			b.jumin_no1,
+			b.jumin_no2,
+			b.home_address,
+			c.team_name,
+			DATE_FORMAT(FROM_UNIXTIME(b.join_date), '%Y년 %m월 %d일') join_date,
+			DATE_FORMAT(FROM_UNIXTIME(a.state_chg_date), '%Y년 %m월 %d일') now
+			
+		FROM
+			top_emp_cert a, top_mbr_bsc b, top_tm_bsc c
+		WHERE
+			a.user_no = b.user_no and
+			b.team_id_loc = c.team_id and
+			a.serial_no = #{serial_no}
+		
+	</select>
+	
+	
+</mapper>

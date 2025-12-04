@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NewCostTmListMapper">
+
+	<select id="getNewCostTmList" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT tmMbr.user_no, tmMbr.user_name
+			, item.cost_pay_amt, item.cost_deposit_amt, item.cost_aprv_state
+			, base_item.cost_base_pay_amt, base_item.cost_base_deposit_amt
+			, claim_item.cost_claim_pay_amt, claim_item.cost_claim_deposit_amt
+			, addition_item.cost_addition_pay_amt, addition_item.cost_addition_deposit_amt
+			, ifnull(base_cnt.baseCnt, 0) baseCnt, claim_cnt.claimCnt, addition_cnt.additionCnt
+			, deposit.cost_deposit_no
+			, deposit.amt_hq_aprv, getTopMbrBscUserName(deposit.user_no_hq_aprv) user_nm_hq_aprv
+			, deposit.amt_finance_aprv, getTopMbrBscUserName(deposit.user_no_finance_aprv) user_nm_finance_aprv
+			, deposit.amt_deposit, deposit.date_deposit, deposit.date_deposit_fmt
+			, helpClient.help_client_traffic_fee, helpClient.help_client_chart_fee
+			, helpAccept.help_accept_traffic_fee, helpAccept.help_accept_chart_fee
+		FROM (SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name
+				FROM top_mbr_bsc mbrBsc
+				WHERE mbrBsc.team_id_main = #{team_id}
+				AND ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+					OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+				ORDER BY mbrBsc.work_type, mbrBsc.work_level DESC, mbrBsc.user_no ASC) tmMbr
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_pay_amt, SUM(cost_deposit_amt) cost_deposit_amt, cost_aprv_state
+					FROM top_cost_item
+					WHERE (cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))) OR
+					(cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day)) AND cost_gubun = 3)
+					GROUP BY user_no) item ON tmMbr.user_no = item.user_no
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_base_pay_amt, SUM(cost_deposit_amt) cost_base_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no != '999'
+					AND cost_gubun is null
+					GROUP BY user_no) base_item ON tmMbr.user_no = base_item.user_no
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_claim_pay_amt, SUM(cost_deposit_amt) cost_claim_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no = '999'
+					GROUP BY user_no) claim_item ON tmMbr.user_no = claim_item.user_no
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_addition_pay_amt, SUM(cost_deposit_amt) cost_addition_deposit_amt
+					FROM top_cost_item
+					WHERE cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_gubun = 3
+					GROUP BY user_no) addition_item ON tmMbr.user_no = addition_item.user_no					
+		LEFT JOIN (SELECT user_no, cost_deposit_no
+				, amt_hq_aprv, user_no_hq_aprv
+				, amt_finance_aprv, user_no_finance_aprv
+				, amt_deposit ,date_deposit
+				, IF(date_deposit = NULL || date_deposit &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(date_deposit), '%Y-%m-%d')) date_deposit_fmt
+					FROM top_cost_deposit
+					WHERE date_mbr_ins = UNIX_TIMESTAMP(#{viewFromDate})
+					GROUP BY user_no) deposit ON tmMbr.user_no = deposit.user_no
+		LEFT JOIN (SELECT client_id, SUM(traffic_fee) help_client_traffic_fee, SUM(chart_fee) help_client_chart_fee
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY client_id) helpClient ON tmMbr.user_no = helpClient.client_id
+		LEFT JOIN (SELECT accept_id, SUM(traffic_fee) help_accept_traffic_fee, SUM(chart_fee) help_accept_chart_fee
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY accept_id) helpAccept ON tmMbr.user_no = helpAccept.accept_id
+		LEFT JOIN (SELECT user_no, COUNT(*) AS baseCnt from top_cost_item
+					WHERE
+					cost_aprv_state = '0'
+					AND cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY user_no) base_cnt ON tmMbr.user_no = base_cnt.user_no
+		LEFT JOIN (SELECT user_no, COUNT(*) AS claimCnt from top_cost_item
+					WHERE
+					cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY user_no) claim_cnt ON tmMbr.user_no = claim_cnt.user_no
+		LEFT JOIN (SELECT user_no, COUNT(*) AS additionCnt from top_cost_item
+					WHERE
+					cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_gubun = 3
+					GROUP BY user_no) addition_cnt ON tmMbr.user_no = addition_cnt.user_no					
+	</select>
+
+	<select id="getNewCostTmList_20180703" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT tmMbr.user_no
+			  ,tmMbr.user_name
+			  -- ,item.cost_pay_amt
+			  
+			  ,(IFNULL(base_item.cost_base_pay_amt,0) + IFNULL(claim_item.cost_claim_pay_amt,0) + IFNULL(addition_item.cost_addition_pay_amt,0)) cost_pay_amt
+			  ,(IFNULL(item.cost_deposit_amt,0) + IFNULL(addItem.cost_deposit_amt,0)) cost_deposit_amt
+			  ,CASE WHEN item.cost_aprv_state is null and addItem.cost_aprv_state is null THEN 0
+				    WHEN item.cost_aprv_state is not null and  addItem.cost_aprv_state is null THEN item.cost_aprv_state			  
+				    WHEN item.cost_aprv_state is null and addItem.cost_aprv_state is not null THEN addItem.cost_aprv_state
+				    WHEN item.cost_aprv_state = addItem.cost_aprv_state THEN item.cost_aprv_state
+				    ELSE IF(item.cost_aprv_state > addItem.cost_aprv_state, addItem.cost_aprv_state, item.cost_aprv_state)
+			   END cost_aprv_state
+			  ,base_item.cost_base_pay_amt
+			  ,base_item.cost_base_deposit_amt
+			  ,claim_item.cost_claim_pay_amt
+			  ,claim_item.cost_claim_deposit_amt
+			  ,addition_item.cost_addition_pay_amt
+			  ,addition_item.cost_addition_deposit_amt
+			  ,ifnull(base_cnt.baseCnt, 0) baseCnt
+			  ,claim_cnt.claimCnt
+			  ,addition_cnt.additionCnt
+			  ,deposit.cost_deposit_no
+			  ,deposit.amt_hq_aprv
+			  ,getTopMbrBscUserName(deposit.user_no_hq_aprv) user_nm_hq_aprv
+			  ,deposit.amt_finance_aprv
+			  ,getTopMbrBscUserName(deposit.user_no_finance_aprv) user_nm_finance_aprv
+			  ,deposit.amt_deposit
+			  ,deposit.date_deposit
+			  ,deposit.date_deposit_fmt
+			  ,helpClient.help_client_traffic_fee
+			  ,helpClient.help_client_chart_fee
+			  ,helpAccept.help_accept_traffic_fee
+			  ,helpAccept.help_accept_chart_fee
+		  FROM (SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name
+				  FROM top_mbr_bsc mbrBsc
+				 WHERE 1=1
+				<if test="team_id != 0">
+				   AND  mbrBsc.team_id_main = #{team_id}
+				</if>
+				   AND (
+				   		(mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate})) OR 
+				   		(mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day)))
+				   		)
+		         <if test="search_no != 0">
+				   AND mbrBsc.user_no = #{search_no}
+		         </if>				
+				 ORDER BY mbrBsc.work_type, mbrBsc.work_level DESC, mbrBsc.user_no ASC) tmMbr
+				
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_pay_amt, SUM(cost_deposit_amt) cost_deposit_amt, cost_aprv_state
+					 FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate}) AND 
+						  cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day)) AND
+						  cost_gubun IS NULL
+					GROUP BY user_no) item ON tmMbr.user_no = item.user_no
+					
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_pay_amt, SUM(cost_deposit_amt) cost_deposit_amt, cost_aprv_state
+					 FROM top_cost_item
+					WHERE cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate}) 
+					  AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day)) 
+					  AND cost_gubun = 3
+					GROUP BY user_no) addItem ON tmMbr.user_no = addItem.user_no					
+					
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_base_pay_amt, SUM(cost_deposit_amt) cost_base_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no != '999'
+					AND cost_gubun is null
+					GROUP BY user_no) base_item ON tmMbr.user_no = base_item.user_no
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_claim_pay_amt, SUM(cost_deposit_amt) cost_claim_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no = '999'
+					GROUP BY user_no) claim_item ON tmMbr.user_no = claim_item.user_no
+		LEFT JOIN (SELECT user_no, SUM(cost_pay_amt) cost_addition_pay_amt, SUM(cost_deposit_amt) cost_addition_deposit_amt
+					FROM top_cost_item
+					WHERE cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_gubun = 3
+					GROUP BY user_no) addition_item ON tmMbr.user_no = addition_item.user_no					
+		LEFT JOIN (SELECT user_no, cost_deposit_no
+				, amt_hq_aprv, user_no_hq_aprv
+				, amt_finance_aprv, user_no_finance_aprv
+				, amt_deposit ,date_deposit
+				, IF(date_deposit = NULL || date_deposit &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(date_deposit), '%Y-%m-%d')) date_deposit_fmt
+					FROM top_cost_deposit
+					WHERE date_mbr_ins = UNIX_TIMESTAMP(#{viewFromDate})
+					GROUP BY user_no) deposit ON tmMbr.user_no = deposit.user_no
+		LEFT JOIN (SELECT client_id, SUM(traffic_fee) help_client_traffic_fee, SUM(chart_fee) help_client_chart_fee
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY client_id) helpClient ON tmMbr.user_no = helpClient.client_id
+		LEFT JOIN (SELECT accept_id, SUM(traffic_fee) help_accept_traffic_fee, SUM(chart_fee) help_accept_chart_fee
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY accept_id) helpAccept ON tmMbr.user_no = helpAccept.accept_id
+		LEFT JOIN (SELECT user_no, COUNT(*) AS baseCnt from top_cost_item
+					WHERE
+					cost_aprv_state = '0'
+					AND cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY user_no) base_cnt ON tmMbr.user_no = base_cnt.user_no
+		LEFT JOIN (SELECT user_no, COUNT(*) AS claimCnt from top_cost_item
+					WHERE
+					cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY user_no) claim_cnt ON tmMbr.user_no = claim_cnt.user_no
+		LEFT JOIN (SELECT user_no, COUNT(*) AS additionCnt from top_cost_item
+					WHERE
+					cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_gubun = 3
+					GROUP BY user_no) addition_cnt ON tmMbr.user_no = addition_cnt.user_no	
+	</select>
+
+	<update id="aprv_item" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET cost_aprv_state=#{aprvNo}, cost_aprv_user_no = #{loginUserNo}
+		<if test="aprvCode == 'deposit'">
+			, cost_deposit_date = UNIX_TIMESTAMP(#{date_deposit})
+		</if>
+		<if test="aprvCode == 'depositX'">
+			, cost_deposit_date = NULL
+		</if>
+		WHERE user_no = #{user_no} AND cost_aprv_state=#{stateNo}
+		AND cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+	</update>
+
+	<update id="aprv_addtion_item" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET cost_aprv_state=#{aprvNo}, cost_aprv_user_no = #{loginUserNo}
+		<if test="aprvCode == 'deposit'">
+			, cost_deposit_date = UNIX_TIMESTAMP(#{date_deposit})
+		</if>
+		<if test="aprvCode == 'depositX'">
+			, cost_deposit_date = NULL
+		</if>
+		WHERE user_no = #{user_no} AND cost_aprv_state=#{stateNo}
+		AND cost_gubun = 3
+		AND cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))	
+	</update>
+
+	<update id="aprv_deposit" parameterType="java.util.HashMap">
+		UPDATE top_cost_deposit
+		SET
+		<choose>
+			<when test="aprvCode == 'hqAprv'">
+				<!-- amt_hq_aprv = (SELECT SUM(cost_deposit_amt) FROM top_cost_item
+								WHERE user_no = #{user_no} AND cost_aprv_state=#{aprvNo}
+								AND cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+								AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day)))
+				, user_no_hq_aprv = #{loginUserNo}, date_hq_aprv = UNIX_TIMESTAMP(NOW())
+				  --> 
+				   amt_hq_aprv = #{amt_hq_aprv}
+				 ,user_no_hq_aprv = #{loginUserNo}
+				 ,date_hq_aprv = UNIX_TIMESTAMP(NOW())				   
+			</when>
+			<when test="aprvCode == 'hqAprvX'">
+				amt_hq_aprv = NULL, user_no_hq_aprv = NULL, date_hq_aprv = NULL
+			</when>
+			<when test="aprvCode == 'fiAprv'">
+				amt_finance_aprv = amt_hq_aprv, user_no_finance_aprv = #{loginUserNo}, date_finance_aprv = UNIX_TIMESTAMP(NOW())
+			</when>
+			<when test="aprvCode == 'fiAprvX'">
+				amt_finance_aprv = NULL, user_no_finance_aprv = NULL, date_finance_aprv = NULL
+			</when>
+			<when test="aprvCode == 'deposit'">
+				amt_deposit = #{amt_deposit}, date_deposit = UNIX_TIMESTAMP(#{date_deposit})
+			</when>
+			<when test="aprvCode == 'depositX'">
+				amt_deposit = NULL, date_deposit = NULL
+			</when>
+		</choose>
+		WHERE cost_deposit_no = #{cost_deposit_no} 
+	</update>
+	
+	<select id="getUserInfo" resultType="kr.co.toplac.topcostnew.NewCostViewVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		select a.user_no, a.user_name, b.team_id, b.team_name 
+		from 
+		top_mbr_bsc a,
+		top_tm_bsc b
+		where 
+		a.team_id_main = b.team_id
+		and a.user_no = #{user_no}
+	</select>
+	
+	<select id="getTeamInfo" resultType="kr.co.toplac.topcostnew.NewCostViewVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		select team_name, team_id
+		from 
+		top_tm_bsc
+		where 
+		team_id = #{team_id}
+	</select>
+
+	<select id="getNewCostDepositPop" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT tmMbr.user_no
+			, deposit.cost_deposit_no, deposit.amt_finance_aprv
+			, helpClient.help_client_traffic_fee, helpClient.help_client_chart_fee
+			, helpAccept.help_accept_traffic_fee, helpAccept.help_accept_chart_fee
+		FROM (SELECT mbrBsc.user_no
+				FROM top_mbr_bsc mbrBsc
+				WHERE mbrBsc.user_no = #{user_no}) tmMbr
+		LEFT JOIN (SELECT user_no, cost_deposit_no, amt_finance_aprv
+					FROM top_cost_deposit
+					WHERE cost_deposit_no = #{cost_deposit_no}
+					) deposit
+		ON tmMbr.user_no = deposit.user_no
+		LEFT JOIN (SELECT client_id, SUM(traffic_fee) help_client_traffic_fee, SUM(chart_fee) help_client_chart_fee
+					FROM top_rpt_help
+					WHERE client_id = #{user_no}
+					AND end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					) helpClient
+		ON tmMbr.user_no = helpClient.client_id
+		LEFT JOIN (SELECT accept_id, SUM(traffic_fee) help_accept_traffic_fee, SUM(chart_fee) help_accept_chart_fee
+					FROM top_rpt_help
+					WHERE accept_id = #{user_no}
+					AND end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					) helpAccept
+		ON tmMbr.user_no = helpAccept.accept_id
+	</select>
+
+</mapper>

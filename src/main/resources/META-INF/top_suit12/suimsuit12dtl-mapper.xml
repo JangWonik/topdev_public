@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimSuit12DtlMapper">
+
+	<select id="getSuimSuit12DtlBsc" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="kr.co.toplac.topsuit12.SuimSuit_12VO">
+		SELECT 
+			suim_rpt_no suimRptNo
+			, suim_accept_no suimAcceptNo
+			, suim_close_no suimCloseNo
+			, suim_rpt_state suimRptState
+			, team_id teamId
+			, getTopTmBscTeamName(team_id) teamName, getTopTmBscTeamMark(team_id) teamMark
+			, user_no userNo
+			, getTopMbrBscUserName(user_no) userName
+			, ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(ptnr_id) ptnrNick, getTopPtnrBscPtnrName(ptnr_id) ptnrName
+			, policyholder_nm policyholderNm
+			, policyholder_hp policyholderHp
+			, reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDateFmt
+			, close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') closeDateFmt
+			, getDateDiff(reg_date)+1 pastDate
+			, del_date delDate
+			, lock_flag lockFlag
+			, bd_type bdType
+			, rqTrsOrgcd rqTrsOrgCd
+			, rstRcvOrgcd rstRcvOrgCd
+			, rqRqFlgcd rqRqFlgCd
+			, rqDlFlgcd rqDlFlgCd
+			, rqPptyRqdt rqPptyRqDt
+			, rqPlno rqPlNo
+			, rqRequSeqno rqRequSeqNo
+			, rqPlyno rqPlyNo
+			, rqGdcd rqGdCd
+			, rqGdnm rqGdNm
+			, rqPprDhOrgcd rqPprDhOrgCd
+			, rqPprDhOrgnm rqPprDhOrgNm
+			, rqDhOrgcd rqDhOrgCd
+			, rqDhOrgnm rqDhOrgNm
+			, rqDhOrgTlno rqDhOrgTlNo
+			, rqDhStfno rqDhStfNo
+			, rqDhStfnm rqDhStfNm
+			, rqDhStfTlno rqDhStfTlNo
+			, rqUdChrOrgno rqUdChrOrgNo
+			, rqUdChrOrgnm rqUdChrOrgNm
+			, rqUdChrOrgTlno rqUdChrOrgTlNo
+			, rqUdChrOrgFxno rqUdChrOrgFxNo
+			, rqUdChrStfno rqUdChrStfNo
+			, rqUdChrStfnm rqUdChrStfNm
+			, rqCrtNm rqCrtNm
+			, rqCnrdt rqCnrDt
+			, rqCrtHomeTlno rqCrtHomeTlNo
+			, rqCrtWpcTlno rqCrtWpcTlNo
+			, rqCrtHndphTlno rqCrtHndphTlNo
+			, rqBldCt rqBldCt
+			, rqOjCt rqOjCt
+			, rstPptyNvCpltYn rstPptyNvCpltYn
+			, rstUcNspRs rstUcNspRs
+			, rstNvRst rstNvRst
+			, rstNvRstCtn rstNvRstCtn
+			, rstRptgFileCt rstRptgFileCt
+			, getTopRptCloseAuthYN(team_id, #{user_no_session}) closeAuthYN
+			, getTopRptEditYN(team_id, #{user_no_session}) editYN
+			, getTopRptMbrChgYN(team_id, #{user_no_session}) mbrChgYN
+			, getTopRptPtnrMbrChgYN(team_id, #{user_no_session}) ptnrMbrChgYN
+			, getTopSuit12EditYN2(#{suimRptNo},team_id, #{user_no_session}) editYN2
+			, prHndphTlno
+			
+			FROM top_suitability_12
+			where suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<select id="getSuimSuit12DtlBld" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="kr.co.toplac.topsuit12.SuimSuit_12VO">
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no serialNo
+			, rqBld_Lctno rqBld_LctNo
+			, rqBld_OjSeqno rqBld_OjSeqNo
+			, rqBld_BldSeqno rqBld_BldSeqNo
+			, rqBld_BldRnkcd rqBld_BldRnkCd
+			, rqBld_RlOwrNm rqBld_RlOwrNm
+			, rqBld_CtnAdr rqBld_CtnAdr
+			, rqBld_MngmBnnm rqBld_MngmBnNm
+			, rqBld_MngmBnnm rqBld_MngmBnNm
+			, rqBld_Plenm rqBld_PleNm
+			, rqBld_Rofnm rqBld_RofNm
+			, rqBld_Wllnm rqBld_WllNm
+			, rqBld_Grod rqBld_Grod
+			, rqBld_Undg rqBld_Undg
+			, rqBld_Ttare rqBld_Ttare
+			, rqBld_IsAre rqBld_IsAre
+			, rqBld_IsTp rqBld_IsTp
+			, rqBld_BldXpnm rqBld_BldXpNm
+			, rstBld_Rcndt rstBld_RcnDt
+			, rstBld_InvpsNm rstBld_InvpsNm
+			, rstBld_CrRelpcRel rstBld_CrRelpcRel
+			, rstBld_InvpsCntad rstBld_InvpsCntAd
+			, ifnull(rstBld_RlOwrNm, 0) rstBld_RlOwrNm
+			, ifnull(rstBld_CtnAdr, 0) rstBld_CtnAdr
+			, ifnull(rstBld_MngmBnnm, 0) rstBld_MngmBnNm
+			, ifnull(rstBld_BldRnkcd, 0) rstBld_BldRnkCd
+			, ifnull(rstBld_GrodEqalYn, 0) rstBld_GrodEqalYn
+			, ifnull(rstBld_UndgEqalYn, 0) rstBld_UndgEqalYn
+			, ifnull(rstBld_TtareEqalYn, 0) rstBld_TtareEqalYn
+			, ifnull(rstBld_IsAreEqalYn, 0) rstBld_IsAreEqalYn
+			, ifnull(rstBld_IsTpEqalYn, 0) rstBld_IsTpEqalYn
+			, rstBld_RlOwrNmEtMtt rstBld_RlOwrNmEtMtt
+			, rstBld_CtnAdrEtMtt rstBld_CtnAdrEtMtt
+			, rstBld_MngmBnnmEtMtt rstBld_MngmBnnmEtMtt
+			, rstBld_BldRnkcdEtMtt rstBld_BldRnkcdEtMtt
+			, rstBld_GrodEtMtt rstBld_GrodEtMtt
+			, rstBld_UndgEtMtt rstBld_UndgEtMtt
+			, rstBld_TtareEtMtt rstBld_TtareEtMtt
+			, rstBld_IsAreEtMtt rstBld_IsAreEtMtt
+			, rstBld_IsTpEtMtt rstBld_IsTpEtMtt
+			, ifnull(rstBld_Plenm, 0) rstBld_PleNm
+			, ifnull(rstBld_Rofnm, 0) rstBld_RofNm
+			, ifnull(rstBld_Wllnm, 0) rstBld_WllNm
+			, ifnull(rstBld_PanlYn, 0) rstBld_PanlYn
+			, rstBld_PanlPst rstBld_PanlPst
+			, ifnull(rstBld_TntYn, 0) rstBld_TntYn
+			, rstBld_TntPst rstBld_TntPst
+			, ifnull(rstBld_FlrFirZoneYn, 0) rstBld_FlrFirZoneYn
+			, rstBld_EtMtt1 rstBld_EtMtt1
+			, rstBld_FlrBtpUndg rstBld_FlrBtpUndg
+			, rstBld_FlrBtpFloor1 rstBld_FlrBtpFloor1
+			, rstBld_FlrBtpFloor2 rstBld_FlrBtpFloor2
+			, rstBld_FlrBtpFloor3 rstBld_FlrBtpFloor3
+			, rstBld_SlEqmtDcYn rstBld_SlEqmtDcYn
+			, ifnull(rstBld_MrkYn, 0) rstBld_MrkYn
+			, ifnull(rstBld_EtMtt2, 0) rstBld_EtMtt2
+			
+			FROM top_suitability_12_bld
+			where
+			suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<select id="getSuimSuit12DtlOj" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO" parameterType="kr.co.toplac.topsuit12.SuimSuit_12VO">
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no serialNo
+			, rqOj_OjSeqno rqOj_OjSeqNo
+			, rqOj_BldSeqno rqOj_BldSeqNo
+			, rqOj_OjSign rqOj_OjSign
+			, rqOj_OjTp rqOj_OjTp
+			, rqOj_Rnk rqOj_Rnk
+			, rqOj_Dt_Mtt rqOj_Dt_Mtt
+			, rqOj_Dt_AccptPlc rqOj_Dt_AccptPlc
+			, rqOj_AccptPlcFlgcd rqOj_AccptPlcFlgCd
+			, rqOj_FldstObjFlgcd rqOj_FldstObjFlgCd
+			, rqOj_UndgAccptYn rqOj_UndgAccptYn
+			, ifnull(rstOj_OjTpEqalYn, 0) rstOj_OjTpEqalYn
+			, ifnull(rstOj_RnkEqalYn, 0) rstOj_RnkEqalYn
+			, ifnull(rstOj_Dt_MttEqalYn, 0) rstOj_Dt_MttEqalYn
+			, ifnull(rstOj_Dt_AccptPlcEqalYn, 0) rstOj_Dt_AccptPlcEqalYn
+			, ifnull(rstOj_AccptPlcFlgcdEqalYn, 0) rstOj_AccptPlcFlgcdEqalYn
+			, ifnull(rstOj_FldstObjFlgcdEqalYn, 0) rstOj_FldstObjFlgcdEqalYn
+			, ifnull(rstOj_UndgAccptYnEqalYn, 0) rstOj_UndgAccptYnEqalYn
+			, rstOj_EtMtt rstOj_EtMtt
+			
+			FROM top_suitability_12_oj
+			where
+			suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<update id="udtSuimSuit12Dtl" parameterType="kr.co.toplac.topsuit12.SuimSuit_12VO">
+		UPDATE top_suitability_12
+		SET
+			bd_type = #{bdType},
+			rstPptyNvCpltYn = #{rstPptyNvCpltYn},
+			rstUcNspRs = #{rstUcNspRs},
+			rstNvRst = #{rstNvRst},
+			rstNvRstCtn = #{rstNvRstCtn},
+			rstRptgFilect = #{rstRptgFileCt}
+			
+		WHERE suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="udtSuimSuit12Bld" parameterType="kr.co.toplac.topsuit12.SuimSuit12BldVO">
+		UPDATE top_suitability_12_bld
+		SET
+			rstBld_Rcndt = #{rstBld_RcnDt},                  
+			rstBld_InvpsNm = #{rstBld_InvpsNm},            
+			rstBld_CrRelpcRel = #{rstBld_CrRelpcRel},        
+			rstBld_InvpsCntad = #{rstBld_InvpsCntAd},        
+			rstBld_RlOwrNm = #{rstBld_RlOwrNm},              
+			rstBld_CtnAdr = #{rstBld_CtnAdr},                
+			rstBld_MngmBnnm = #{rstBld_MngmBnNm},            
+			rstBld_BldRnkcd = #{rstBld_BldRnkCd},            
+			rstBld_GrodEqalYn = #{rstBld_GrodEqalYn},        
+			rstBld_UndgEqalYn = #{rstBld_UndgEqalYn},        
+			rstBld_TtareEqalYn = #{rstBld_TtareEqalYn},      
+			rstBld_IsAreEqalYn = #{rstBld_IsAreEqalYn},      
+			rstBld_IsTpEqalYn = #{rstBld_IsTpEqalYn},        
+			rstBld_RlOwrNmEtMtt = #{rstBld_RlOwrNmEtMtt},    
+			rstBld_CtnAdrEtMtt = #{rstBld_CtnAdrEtMtt},      
+			rstBld_MngmBnnmEtMtt = #{rstBld_MngmBnnmEtMtt},  
+			rstBld_BldRnkcdEtMtt = #{rstBld_BldRnkcdEtMtt},  
+			rstBld_GrodEtMtt = #{rstBld_GrodEtMtt},          
+			rstBld_UndgEtMtt = #{rstBld_UndgEtMtt},          
+			rstBld_TtareEtMtt = #{rstBld_TtareEtMtt},        
+			rstBld_IsAreEtMtt = #{rstBld_IsAreEtMtt},        
+			rstBld_IsTpEtMtt = #{rstBld_IsTpEtMtt},          
+			rstBld_Plenm = #{rstBld_PleNm},                  
+			rstBld_Rofnm = #{rstBld_RofNm},                  
+			rstBld_Wllnm = #{rstBld_WllNm},                  
+			rstBld_PanlYn = #{rstBld_PanlYn},                
+			rstBld_PanlPst = #{rstBld_PanlPst},              
+			rstBld_TntYn = #{rstBld_TntYn},                  
+			rstBld_TntPst = #{rstBld_TntPst},                
+			rstBld_FlrFirZoneYn = #{rstBld_FlrFirZoneYn},    
+			rstBld_EtMtt1 = #{rstBld_EtMtt1},                
+			rstBld_FlrBtpUndg = #{rstBld_FlrBtpUndg},        
+			rstBld_FlrBtpFloor1 = #{rstBld_FlrBtpFloor1},    
+			rstBld_FlrBtpFloor2 = #{rstBld_FlrBtpFloor2},    
+			rstBld_FlrBtpFloor3 = #{rstBld_FlrBtpFloor3},    
+			rstBld_SlEqmtDcYn = #{rstBld_SlEqmtDcYn},        
+			rstBld_MrkYn = #{rstBld_MrkYn},                  
+			rstBld_EtMtt2 = #{rstBld_EtMtt2}               
+			
+		WHERE serial_no = #{serialNoBld}
+	</update>
+	
+	<update id="udtSuimSuit12Oj" parameterType="kr.co.toplac.topsuit12.SuimSuit12OjVO">
+		UPDATE top_suitability_12_oj
+		SET
+			rstOj_OjTpEqalYn = #{rstOj_OjTpEqalYn},                  
+			rstOj_RnkEqalYn = #{rstOj_RnkEqalYn},                     
+			rstOj_Dt_MttEqalYn = #{rstOj_Dt_MttEqalYn},               
+			rstOj_Dt_AccptPlcEqalYn = #{rstOj_Dt_AccptPlcEqalYn},     
+			rstOj_AccptPlcFlgcdEqalYn = #{rstOj_AccptPlcFlgcdEqalYn}, 
+			rstOj_FldstObjFlgcdEqalYn = #{rstOj_FldstObjFlgcdEqalYn}, 
+			rstOj_UndgAccptYnEqalYn = #{rstOj_UndgAccptYnEqalYn},     
+			rstOj_EtMtt = #{rstOj_EtMtt}                             
+			
+		WHERE serial_no = #{serialNoOj}
+	</update>
+	
+	<select id="getSuimSuit12DtlView" parameterType="java.lang.String" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO">
+		SELECT 
+							
+			info_ac infoAc,
+			policyholder_tel2 policyholderTel2,
+			info_w infoW,
+			info_z infoZ
+							
+		FROM
+		top_suitability_12
+		WHERE suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<select id="b2CodeList" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd, col_val
+		FROM sysadm_codedic
+		WHERE tbl_nm = 'top_suitability_12'
+		AND col_nm = 'b_2_code'
+		ORDER BY col_cd
+	</select>
+	
+	<update id="udtSuimSiut12DtlRpt" parameterType="kr.co.toplac.topsuit12.SuimSuit_12VO">
+		UPDATE top_suitability_12
+		SET
+			d_18 = #{d18},
+			b_2_code = #{b2code},     
+			d_19 = #{d19},     
+			d_20 = #{d20},     
+			re_g = #{reG},     
+			d_2 = #{d2},
+			d_3 = #{d3},     
+			d_4 = #{d4},     
+			d_5 = #{d5},     
+			d_16 = #{d16},     
+			d_8 = #{d8},     
+			d_9 = #{d9},     
+			d_10 = #{d10},     
+			d_11 = #{d11},    
+			d_12 = #{d12},    
+			d_13 = #{d13},     
+			d_12 = #{d12}  
+		WHERE suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<!-- 보고서 원본 파일 -->
+	<select id="suimSuit12FileList" parameterType="java.util.HashMap" resultType="kr.co.toplac.topsuit12.SuimSuit12OrgFileVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+		FROM
+			top_suitability_12_file
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<!-- 차기 영수증 파일 시리얼 No 가져오기 -->
+	<select id="nextSuimSuit12RptFileSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_suitability_12_file'
+	
+	</select>
+	
+	<!-- 보고서 파일 올리기 -->
+	<insert id="suimSuit12RptFileUploadForKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		
+		INSERT INTO top_suitability_12_file
+		( suim_rpt_no, file_path, file_name, reg_date)
+		VALUES
+		( #{suimRptNo}, #{filePath}, #{fileName}, unix_timestamp(now()))
+		
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+	</insert>
+	
+	<!-- 현장보고서 dummy 컬럼에 실제 Data Update -->
+	<update id="suimSuit12RptFileUploadForUpdate" parameterType="java.util.HashMap">
+		UPDATE 
+			top_suitability_12_file 
+		SET 
+			  suim_rpt_no = #{suimRptNo}
+			, file_path = #{filePath}			
+			, file_name = #{fileName}	  		
+		WHERE 
+			serial_no = #{nextSuimSuit12RptFileSerial}
+	</update>
+
+	
+	<!-- 보고서 파일 다운로드용 파일 경로 가져오기  -->
+	<select id="getSuimSuit12RptFileNameForDown" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,file_name) Path 
+ 		FROM 
+ 			top_suitability_12_file
+ 		WHERE 
+ 			serial_no = #{key}
+	
+	</select>
+	
+	
+	<!-- 보고서 파일 삭제용 풀패스 가져오기  -->
+	<select id="getSuimSuit12RptFilePathForDel" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path, file_name) filePath 
+ 		FROM 
+ 			top_suitability_12_file
+ 		WHERE 
+ 			serial_no = #{serialNo}
+	
+	</select>
+	
+	<!-- 보고서 원본 파일 삭제하기 -->
+	<delete id="delSuimSuit12RptFile" parameterType="String">
+	
+		DELETE FROM
+			top_suitability_12_file
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+
+
+</mapper>

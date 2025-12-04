@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrAuthList">
+	
+	<select  id="userAuthList" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrAuthVO">
+	
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT
+				serial_no,
+				user_no,
+				mbr_pms_1,
+				mbr_pms_3,
+				mbr_pms_4,
+				mbr_pms_5,
+				mbr_pms_6,
+				mbr_pms_7,
+				mbr_pms_8,
+				mbr_pms_9,
+				mbr_pms_10,
+				mbr_pms_11,
+				mbr_pms_12,
+				mbr_pms_13,
+				mbr_pms_14,
+				mbr_pms_15,
+				mbr_pms_16,
+				mbr_pms_17,
+				mbr_pms_18,
+				mbr_pms_19,
+				mbr_pms_20,
+				mbr_pms_21,
+				mbr_pms_22,
+				mbr_pms_23,
+				mbr_pms_24,
+				mbr_pms_25,
+				mbr_pms_26,
+				mbr_pms_27,
+				mbr_pms_28,
+				getTopMbrBscUserName(reg_user) reg_user,
+				DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date
+			FROM
+				top_mbr_pms_log
+			WHERE
+				user_no = #{user_no}
+			ORDER BY reg_date desc
+		) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY ROWNUM DESC
+	</select>
+	
+	<select  id="userAuthOne" parameterType="String" resultType="Integer">
+		SELECT 
+			count(*)
+		FROM
+			top_mbr_pms
+		WHERE 
+			user_no = #{user_no}
+	</select>
+	
+	
+	
+	
+	
+	<select  id="selectMbrAuthLogList" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrAuthVO">
+		SELECT serial_no
+			  ,user_no
+			  -- 보고서 접수
+			  ,CASE WHEN mbr_pms_1 = 0 THEN 'X'
+					WHEN mbr_pms_1 = 1 THEN 'O'
+			   END AS mbr_pms_1
+			  -- 보고서 삭제
+			  ,CASE WHEN mbr_pms_3 = 0 THEN 'X'
+					WHEN mbr_pms_3 = 1 THEN 'O'
+			   END AS mbr_pms_3
+			  -- 보고서 종결(결재) 취소
+			  ,CASE WHEN mbr_pms_4 = 0 THEN 'X'
+					WHEN mbr_pms_4 = 1 THEN 'O'
+			   END AS mbr_pms_4
+			  -- 보고서 잠금해제
+			  ,CASE WHEN mbr_pms_5 = 0 THEN 'X'
+					WHEN mbr_pms_5 = 1 THEN 'O'
+			   END AS mbr_pms_5
+			  -- 조사 보고서 엑셀 다운
+			  ,CASE WHEN mbr_pms_6 = 0 THEN 'X'
+					WHEN mbr_pms_6 = 1 THEN '팀'
+					WHEN mbr_pms_6 = 2 THEN '지역본부'
+					WHEN mbr_pms_6 = 3 THEN '업종'
+					WHEN mbr_pms_6 = 4 THEN '전체'															
+			   END AS mbr_pms_6
+			  -- 총무 경리 열람
+			  ,CASE WHEN mbr_pms_7 = 0 THEN 'X'
+					WHEN mbr_pms_7 = 1 THEN '팀'
+					WHEN mbr_pms_7 = 2 THEN '지역본부'
+					WHEN mbr_pms_7 = 3 THEN '업종'
+					WHEN mbr_pms_7 = 4 THEN '전체'															
+			   END AS mbr_pms_7
+			  -- 총무 경리 수정
+			  ,CASE WHEN mbr_pms_8 = 0 THEN 'X'
+					WHEN mbr_pms_8 = 1 THEN 'O'
+			   END AS mbr_pms_8
+			  -- 보험사 정보 수정
+			  ,CASE WHEN mbr_pms_9 = 0 THEN 'X'
+					WHEN mbr_pms_9 = 1 THEN 'O'
+			   END AS mbr_pms_9
+			  -- 관련 업체 엑셀 다운
+			  ,CASE WHEN mbr_pms_10 = 0 THEN 'X'
+					WHEN mbr_pms_10 = 1 THEN 'O'
+			   END AS mbr_pms_10
+			  -- 보험사 공지 관리(1종)
+			  ,CASE WHEN mbr_pms_11 = 0 THEN 'X'
+					WHEN mbr_pms_11 = 1 THEN 'O'
+			   END AS mbr_pms_11
+			  -- 보험사 공지 관리(4종)
+			  ,CASE WHEN mbr_pms_12 = 0 THEN 'X'
+					WHEN mbr_pms_12 = 1 THEN 'O'
+			   END AS mbr_pms_12
+			  -- 팀 관리
+			  ,CASE WHEN mbr_pms_13 = 0 THEN 'X'
+					WHEN mbr_pms_13 = 1 THEN 'O'
+			   END AS mbr_pms_13
+			  -- 인사 기록
+			  ,CASE WHEN mbr_pms_14 = 0 THEN 'X'
+					WHEN mbr_pms_14 = 1 THEN 'O'
+			   END AS mbr_pms_14
+			  -- 인사 평가 관리 권한
+			  ,CASE WHEN mbr_pms_15 = 0 THEN 'X'
+					WHEN mbr_pms_15 = 1 THEN 'O'
+			   END AS mbr_pms_15
+			  -- 재직 증명서 승인
+			  ,CASE WHEN mbr_pms_16 = 0 THEN 'X'
+					WHEN mbr_pms_16 = 1 THEN 'O'
+			   END AS mbr_pms_16
+			  -- 경비 내역 결재 및 취소
+			  ,CASE WHEN mbr_pms_17 = 0 THEN 'X'
+					WHEN mbr_pms_17 = 1 THEN 'O'
+			   END AS mbr_pms_17
+			  -- 경비 승인 결재 및 취소
+			  ,CASE WHEN mbr_pms_18 = 0 THEN 'X'
+					WHEN mbr_pms_18 = 1 THEN 'O'
+			   END AS mbr_pms_18
+			  -- 적부 워드 전환
+			  ,CASE WHEN mbr_pms_19 = 0 THEN 'X'
+					WHEN mbr_pms_19 = 1 THEN 'O'
+			   END AS mbr_pms_19
+			  -- 응답 전문
+			  ,CASE WHEN mbr_pms_20 = 0 THEN 'X'
+					WHEN mbr_pms_20 = 1 THEN 'O'
+			   END AS mbr_pms_20
+			  -- 통계
+			  ,CASE WHEN mbr_pms_21 = 0 THEN 'X'
+					WHEN mbr_pms_21 = 1 THEN 'O'
+			   END AS mbr_pms_21
+			  -- 당직 결재
+			  ,CASE WHEN mbr_pms_22 = 0 THEN 'X'
+					WHEN mbr_pms_22 = 1 THEN 'O'
+			   END AS mbr_pms_22
+			  -- 당직 등록
+			  ,CASE WHEN mbr_pms_23 = 0 THEN 'X'
+					WHEN mbr_pms_23 = 1 THEN 'O'
+			   END AS mbr_pms_23
+			  -- 보고서 알림
+			  ,CASE WHEN mbr_pms_24 = 0 THEN 'X'
+					WHEN mbr_pms_24 = 1 THEN '개인'
+					WHEN mbr_pms_24 = 2 THEN '팀장'
+					WHEN mbr_pms_24 = 3 THEN '관리자'										
+			   END AS mbr_pms_24
+			  -- 보고서 이첩
+			  ,CASE WHEN mbr_pms_25 = 0 THEN 'X'
+					WHEN mbr_pms_25 = 1 THEN '개인'
+					WHEN mbr_pms_25 = 2 THEN '팀장'
+					WHEN mbr_pms_25 = 3 THEN '관리자'										
+			   END AS mbr_pms_25
+			  -- 사내 지침
+			  ,CASE WHEN mbr_pms_26 = 0 THEN 'X'
+					WHEN mbr_pms_26 = 1 THEN 'O'
+			   END AS mbr_pms_26
+			  -- 강의실 결재
+			  ,CASE WHEN mbr_pms_27 = 0 THEN 'X'
+					WHEN mbr_pms_27 = 1 THEN 'O'
+			   END AS mbr_pms_27
+			  -- 휴가 결재
+			  ,CASE WHEN mbr_pms_28 = 0 THEN 'X'
+					WHEN mbr_pms_28 = 1 THEN '1종'
+					WHEN mbr_pms_28 = 4 THEN '4종'					
+			   END AS mbr_pms_28
+			  -- 빠른 결재
+			  ,CASE WHEN mbr_pms_29 = 0 THEN 'X'
+					WHEN mbr_pms_29 = 1 THEN '1종'
+					WHEN mbr_pms_29 = 4 THEN '4종'
+					WHEN mbr_pms_29 = 5 THEN '전체'					
+			   END AS mbr_pms_29
+			  -- 전산권한요청 결재권한
+			  ,CASE WHEN mbr_pms_30 = 0 THEN 'X'
+					WHEN mbr_pms_30 = 1 THEN '1종'
+					WHEN mbr_pms_30 = 4 THEN '4종'
+					WHEN mbr_pms_30 = 5 THEN '전체'					
+			   END AS mbr_pms_30
+			  -- 보험사 보고서양식 관리권한
+			  ,CASE WHEN mbr_pms_31 = 0 THEN 'X'
+					WHEN mbr_pms_31 = 1 THEN '1종'
+					WHEN mbr_pms_31 = 4 THEN '4종'
+					WHEN mbr_pms_31 = 5 THEN '전체'					
+			   END AS mbr_pms_31
+			  -- 서면심사(물) 실적관리
+			  ,CASE WHEN mbr_pms_32 = 0 THEN 'X'
+					WHEN mbr_pms_32 = 1 THEN 'O'
+			   END AS mbr_pms_32
+			  -- 검색후 엑셀다운로드
+			  ,CASE WHEN mbr_pms_33 = 0 THEN 'X'
+					WHEN mbr_pms_33 = 1 THEN 'O'
+			   END AS mbr_pms_33
+			  -- 관리자 휴가 신청권한
+			  ,CASE WHEN mbr_pms_34 = 0 THEN 'X'
+					WHEN mbr_pms_34 = 1 THEN '1종'
+					WHEN mbr_pms_34 = 4 THEN '4종'
+					WHEN mbr_pms_34 = 5 THEN '전체'					
+			   END AS mbr_pms_34
+			  -- 통화내역 조회권한
+			  ,CASE WHEN mbr_pms_35 = 0 THEN 'X'
+					WHEN mbr_pms_35 = 1 THEN 'O'
+					WHEN mbr_pms_35 = 2 THEN '전체'										
+			   END AS mbr_pms_35
+			   -- 교육 조회권한
+			  ,CASE WHEN mbr_pms_36 = 0 THEN 'X'
+					WHEN mbr_pms_36 = 1 THEN '1종'
+					WHEN mbr_pms_36 = 4 THEN '4종'
+					WHEN mbr_pms_36 = 5 THEN '전체'										
+			   END AS mbr_pms_36
+			   -- 계약관리 조회권한
+			  ,CASE WHEN mbr_pms_37 = 0 THEN 'X'
+					WHEN mbr_pms_37 = 1 THEN '1종'
+					WHEN mbr_pms_37 = 4 THEN '4종'
+					WHEN mbr_pms_37 = 5 THEN '전체'
+					WHEN mbr_pms_37 = 9 THEN '관리자'										
+			   END AS mbr_pms_37
+			   -- 현장보고서 팝업권한
+			  ,CASE WHEN mbr_pms_38 = 0 THEN 'X'
+					WHEN mbr_pms_38 = 1 THEN 'O'
+			   END AS mbr_pms_38
+			    -- 물보험 자료실 관리자권한
+			  ,CASE WHEN mbr_pms_39 = 0 THEN 'X'
+					WHEN mbr_pms_39 = 1 THEN 'O'
+			   END AS mbr_pms_39
+			   
+			   ,CASE WHEN mbr_pms_40 = 0 THEN 'X'
+					WHEN mbr_pms_40 = 1 THEN 'O'
+			   END AS mbr_pms_40
+			   ,CASE WHEN mbr_pms_41 = 0 THEN 'X'
+					WHEN mbr_pms_41 = 1 THEN 'O'
+			   END AS mbr_pms_41
+			   ,CASE WHEN mbr_pms_42 = 0 THEN 'X'
+					WHEN mbr_pms_42 = 1 THEN 'O'
+			   END AS mbr_pms_42
+			   ,CASE WHEN mbr_pms_43 = 0 THEN 'X'
+					WHEN mbr_pms_43 = 1 THEN 'O'
+			   END AS mbr_pms_43
+			   ,CASE WHEN mbr_pms_44 = 0 THEN 'X'
+					WHEN mbr_pms_44 = 1 THEN 'O'
+			   END AS mbr_pms_44
+			   ,CASE WHEN mbr_pms_45 = 0 THEN 'X'
+					WHEN mbr_pms_45 = 1 THEN 'O'
+			   END AS mbr_pms_45
+			   ,CASE WHEN mbr_pms_46 = 0 THEN 'X'
+					WHEN mbr_pms_46 = 1 THEN 'O'
+			   END AS mbr_pms_46
+			   -- 보험사별 손해사정서 교부현황
+			  ,CASE WHEN mbr_pms_47 = 0 THEN 'X'
+					WHEN mbr_pms_47 = 1 THEN '1종'
+					WHEN mbr_pms_47 = 4 THEN '4종'
+					WHEN mbr_pms_47 = 5 THEN '전체'
+					WHEN mbr_pms_47 = 9 THEN '관리자'										
+			   END AS mbr_pms_47
+			  ,getTopMbrBscUserName(reg_user) reg_user
+			  ,FROM_UNIXTIME(reg_date, '%Y-%m-%d') reg_date
+		  FROM top_mbr_pms_log
+		 WHERE user_no = #{user_no}
+		ORDER BY reg_date DESC
+	</select>
+	
+</mapper>

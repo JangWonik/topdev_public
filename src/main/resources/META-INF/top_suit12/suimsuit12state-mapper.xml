@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimSuit12StateMapper">
+
+	<!-- 결재 올리기 -->
+	<update id="suimSuit12RptActionRptSubmit" parameterType="String">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			suim_rpt_state = 1
+			,suim_rpt_aprv_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 결재 취소하기 -->
+	<update id="suimSuit12RptActionSangsinCancel" parameterType="String">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			suim_rpt_state = 0
+			,suim_rpt_aprv_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결 취소하기 -->
+	<update id="suimSuit12RptActionEndedCancel" parameterType="String">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			suim_rpt_state = 1
+			,close_date = 0
+			,lock_flag = 0          <!-- 운영은 종결 취소 시 이전 종결일을 남겨두고 있음 Tobe 에서는 0으로 업덷이트 -->
+			,suim_close_no = ''
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 위임 취소하기 -->
+	<update id="suimSuit12RptActionCancel" parameterType="String">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			suim_rpt_state = 3
+			,suim_rpt_aprv_date = 0
+			,suim_cancel_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 위임 취소를 취소하기 -->
+	<update id="suimSuit12RptActionCancelX" parameterType="String">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			 suim_rpt_state = 0
+			,suim_cancel_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 반려하기 -->
+	<update id="suimSuit12RptActionRptReturn" parameterType="String">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			 suim_rpt_state ='11'
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 반려 취소 -->
+	<update id="suimSuit12RptActionRptReturnCancel" parameterType="String">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			 suim_rpt_state='1'
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 보고서 정보 삭제 -->
+	<delete id="suimSuit12RptActionDel" parameterType="String">
+		UPDATE 
+			top_suitability_12
+		SET	
+			del_date = -1
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 종결하기 일반 보험사--> 
+	<update id="rptActionRptEnd" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_suitability_12
+		SET	
+			 suim_rpt_state='2'
+			 ,close_date = unix_timestamp(now())
+			 ,suim_close_no = #{nextCloseNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+
+	<update id="getNowResultNo" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET suit12_close_seq_no = suit12_close_seq_no + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT suit12_close_seq_no
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+	    </selectKey>
+
+	</update>
+
+	<select id="getNowResultNo1" parameterType="java.util.HashMap" resultType="String"><!-- //notUse-2016.11.02.rjh -->
+	
+		SELECT 
+			max(suim_close_no) 
+		FROM 
+			top_suitability_12
+		WHERE 
+			team_id in (6,8,9,10,11,13,24,38,39,40,43,44) 
+			and suim_close_no like '%${searchStr}%'
+			
+	</select>
+	
+	<select id="getNowResultNo2" parameterType="java.util.HashMap" resultType="String"><!-- //notUse-2016.11.02.rjh -->
+	
+		SELECT 
+			max(suim_close_no)
+		FROM 
+			top_suitability_12
+		WHERE 
+			team_id in (12,14,27) 
+			and suim_close_no like '%${searchStr}%'
+			
+	</select>
+	
+	<select id="getNowResultNo3" parameterType="java.util.HashMap" resultType="String"><!-- //notUse-2016.11.02.rjh -->
+	
+		SELECT 
+			max(suim_close_no)
+		FROM 
+			top_suitability_12
+		WHERE 
+			team_id = #{teamId} 
+			and suim_close_no like '%${searchStr}%'
+			
+	</select>
+
+</mapper>

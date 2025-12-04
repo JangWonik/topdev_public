@@ -1,0 +1,4097 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SuimSchedule">
+	
+	<select id="selectWorkloadTargetInfo" parameterType="HashMap" resultType="String">
+		SELECT 
+			target_val
+		FROM top_workload_target
+		WHERE user_no = #{user_no}
+		AND base_year = #{base_year}
+	</select>
+	
+	<select id="countWorkloadTargetInfo" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) cnt
+		FROM top_workload_target
+		WHERE user_no = #{user_no}
+		AND base_year = #{base_year}
+	</select>
+	
+	<!-- 시스템 코드에서 연간 목표건 가져오기 -->
+	<select id="selectWorkTargetByWorkjob" parameterType="HashMap" resultType="Integer">
+		SELECT 			
+			IFNULL(col_val,0) AS col_val
+			,COUNT(*) as cnt
+		FROM sysadm_codedic 
+		WHERE col_nm = #{job_code_full}
+		AND tbl_nm = 'top_rpt_head'
+		AND col_cd = #{work_job}
+	</select>
+	
+	
+	<!-- 시스템 코드에서 연간 목표 갯수 -->
+	<select id="countSysadmCodedicByJobcode" parameterType="HashMap" resultType="String">
+		SELECT 
+			COUNT(*) cnt
+		FROM sysadm_codedic 
+		WHERE col_nm = #{job_code_full}
+		AND tbl_nm = 'top_rpt_head'
+		AND col_cd = #{work_job}
+	</select>
+	
+	<!-- 시스템 코드에서 연간 목표건 가져오기 -->
+	<select id="selectSysadmCodedicByJobcode" parameterType="HashMap" resultType="String">
+		SELECT 
+			col_val
+		FROM sysadm_codedic 
+		WHERE col_nm = #{job_code_full}
+		AND tbl_nm = 'top_rpt_head'
+		AND col_cd = #{work_job}
+	</select>
+
+	<insert id="insertTopVacationSyncInfo" parameterType="HashMap" >
+		INSERT INTO top_vacation_sync (
+			user_no
+			,user_name
+			,join_date
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{user_name}
+			,#{join_date}
+			,now()		
+		)
+	</insert>
+
+	<select id="selectTopVacationSyncCountByUserno" parameterType="String" resultType="Integer">
+		SELECT 
+			COUNT(*) AS nCnt 
+		FROM top_vacation_sync
+		WHERE user_no = #{user_no}
+	</select>
+
+	<select id="selectTopMbrBscByJoinDate" parameterType="String" resultType="HashMap">
+		SELECT
+			user_no
+			,user_name
+			,join_date
+			,from_unixtime(join_date,"%Y-%m-%d") as join_date_fmt
+		FROM top_mbr_bsc
+		WHERE user_state != 1
+		AND join_date > UNIX_TIMESTAMP(#{join_date})
+		ORDER BY join_date
+	</select>
+
+	<!-- <update id="updateSuimRptNoUpdateTemp" parameterType="hashmap">
+		UPDATE tmp_rpt_head_site SET
+			update_flag = 1			
+		WHERE acc_num = #{acc_num}		
+	</update>
+
+	<update id="updateSuimRptNoUpdateSiteDate" parameterType="hashmap">
+		UPDATE top_rpt_head SET
+			site_rpt_state = 2
+			,site_rpt_aprv_date = #{site_rpt_aprv_date}
+		WHERE suim_rpt_no = #{suim_rpt_no}		
+	</update>
+
+	파일업로드 시간이 있는 현장보고서 등록일자를가져온다
+	<select id="selectSuimRptNoSiteDate" resultType="integer" parameterType="String">
+		SELECT 	
+			IFNULL(MIN(reg_date),0) AS reg_date	
+		FROM top_rpt_site_interim
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND interim_flag = 0	
+		AND sub_date IS NOT NULL
+		AND sub_date != 0
+	</select>
+	
+	대상자 접수번호를가지고 suim_rpt_no 값을 가져온다. 
+	<select id="selectSuimRptNoTemp" resultType="hashmap">
+		SELECT
+			a.acc_num
+			,b.suim_rpt_no			 
+		FROM tmp_rpt_head_site a, top_rpt_head b 
+		WHERE 1=1
+		AND a.acc_num = b.suim_accept_no
+		AND a.update_flag = 0
+	</select> -->
+	<select id="getMbrCareerMax" parameterType="String" resultType="hashmap">		
+		SELECT 
+			IFNULL(career_no, '')
+			,IFNULL(career_corporate_name, '') AS career_corporate_name
+			,IFNULL(MAX(career_year * 12 + career_month),0) AS career_date			
+		FROM top_mbr_career 
+		WHERE user_no =  #{user_no}
+	</select>
+	
+	<!-- 재직중인 물보험 대상자 입시 쿼리 -->
+	<select id="selectMemberListBy1Temp" resultType="hashmap">
+		SELECT
+			getTopTmBscCenterName(GA.team_id) AS center_name  
+			,GA.team_name AS team_name
+			,GA.user_name AS user_name
+			,GA.user_no AS user_no
+		FROM (
+		  SELECT
+		   a.user_no
+		   ,a.user_name
+		   ,a.work_level
+		   ,a.join_date
+		   ,a.user_state
+		   ,b.team_id
+		   ,b.team_name
+		   ,b.team_group_order
+		   ,b.team_order  
+		   ,CASE a.work_type
+		    WHEN 1 THEN 1
+		    WHEN 2 THEN 2
+		    WHEN 6 THEN 3
+		    WHEN 14 THEN 4
+		    WHEN 15 THEN 5
+		    WHEN 3 THEN 6
+		    WHEN 7 THEN 7
+		    WHEN 4 THEN 8
+		    WHEN 8 THEN 9
+		    WHEN 5 THEN 10
+		    WHEN 9 THEN 11
+		    WHEN 10 THEN 12
+		    WHEN 12 THEN 13
+		    WHEN 11 THEN 14
+		    WHEN 13 THEN 15 
+		   END AS new_work_order  
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		  WHERE a.team_id_main = b.team_id   
+		  AND a.user_state != 1   
+		  AND b.team_type IN(0,1)   
+		 )GA
+		 ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	</select>
+	
+	<!-- 보험사 부서정보와 일치하지 않는 보험사 담당자의 부서명을 갱신한다. -->	
+	<update id="updateTopPtnrMbrBscByPtnrTmNm" parameterType="hashmap">
+		UPDATE top_ptnr_mbr_bsc SET
+			ptnr_tm_nm = #{ptnr_tm_nm}
+		WHERE ptnr_mbr_no = #{ptnr_mbr_no}		
+	</update>
+	
+	<!-- 보험사 부서정보에서 아이디를 가지고 부서명을 가져온다. -->
+	<select id="selectTopPtnrDeptBscByDeptNm" parameterType="String" resultType="String">
+		SELECT
+			ptnr_dept_nm
+		FROM top_ptnr_dept_bsc
+		WHERE ptnr_dept_id = #{ptnr_dept_id}		
+	</select>
+	
+	<!-- 보고서 내 보험사 세부코드, 계약기간 갱신 -->
+	<update id="updateMigReportByPtnrIdSub" parameterType="hashmap">
+		UPDATE top_rpt_head SET
+			ptnr_id_sub = #{ptnr_id_sub}
+			,period_flag = #{period_flag}
+		WHERE suim_accept_no = #{suim_accept_no}		
+	</update>
+	
+	<!-- 보험사 아이디와 세부구분명으로 보험사 세부코드값 가져오기 -->
+	<select id="selectPtnrIdSubBySystemAdm" parameterType="hashmap" resultType="String">
+		SELECT 
+			col_cd2 AS ptnr_id_sub
+		FROM sysadm_codedic2
+		WHERE tbl_nm = 'top_rpt_head'
+		AND col_nm = 'ptnr_id_sub'
+		AND col_cd1 = #{ptnr_id}
+		AND col_val = #{ptnr_id_sub_nm}
+	</select>
+	
+	<!-- 보험사 이름으로 보험사 아이디 가져오기 -->
+	<select id="selectPtnrIdByPtnrName" parameterType="String" resultType="String">
+		SELECT 
+			ptnr_id 
+		FROM top_ptnr_bsc 
+		WHERE ptnr_name = #{ptnr_name}
+		AND del_state = 0 
+	</select>	
+	
+	<!-- 보험사 세부구분, 계약기간 마이그래이션 대상 보고서 목록 가져오기 -->
+	<select id="selectMigReportList" resultType="hashmap">
+		SELECT 
+			mkey
+			,suim_accept_no
+			,ptnr_id_nm
+			,ptnr_id_sub_nm
+			,period_flag_nm 
+		FROM mig_ptnr_id_sub
+	</select>
+	
+	<!-- 퇴사자를 제외한 보험사 담당자 정보 가져오기 -->
+	<select id="selectTopPtnrMbrBscList" resultType="hashmap">
+		SELECT 
+			ptnr_mbr_no
+			,ptnr_id
+			,ptnr_dept_id
+			,ptnr_tm_nm
+			,ptnr_mbr_nm
+		FROM top_ptnr_mbr_bsc 
+		WHERE del_state = 0
+	</select>
+	
+	<select id="selectApprovalCollaboListTempCnt" resultType="integer" parameterType="String">
+		SELECT 
+			COUNT(*) AS cnt
+		FROM top_rpt_collabo 
+		WHERE suim_rpt_no = #{suim_rpt_no} 
+	</select>
+	
+	<!-- 현대수수료 마이그래이션 임시 쿼리 -->
+	<select id="selectApprovalCollaboListTemp" resultType="hashmap">
+		SELECT 
+			b.suim_accept_no AS suim_accept_no
+			,a.suim_rpt_no AS suim_rpt_no 
+		FROM top_rpt_collabo a, top_rpt_head b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		AND a.approval_flag = 1
+		ORDER BY b.suim_rpt_no desc
+	</select>
+	
+	<!--  직급(work_rank) 업데이트 대상자 검색 -->
+	<select id="selectWorkRankMemberListTempName" resultType="hashmap">
+		SELECT 
+			a.wkey
+			,a.user_name
+			,a.work_rank
+			,b.user_no		
+		FROM top_work_rank_temp_username a 
+		LEFT JOIN top_mbr_bsc b
+		ON a.user_name = b.user_name
+		WHERE b.user_state != 1		
+	</select>
+	
+	<select id="selectWorkRankCodeByColVal" resultType="String" parameterType="String">
+		SELECT 
+			col_cd 
+		FROM sysadm_codedic
+		WHERE tbl_nm = 'top_mbr_bsc'
+		AND col_nm = 'work_rank'
+		AND col_val = #{sTempWorkRank}	
+	</select>
+	
+	<update id="updateWorkRankByTopMbrBsc" parameterType="hashmap">
+		UPDATE top_mbr_bsc SET 
+			work_rank = #{work_rank}
+		WHERE user_no = #{user_no}
+	</update>
+	
+	<!-- 교육대상자 등록 임시 쿼리1 -->
+	<select id="selectEduMemberListTemp" resultType="hashmap">
+		SELECT 
+			user_no 
+			,team_id_main
+		FROM top_mbr_bsc 
+		WHERE user_state != 1 AND user_no NOT IN(487,1158,877,588)		
+	</select>
+	
+	<!-- 장비 마이그래이션 대상자 검색 -->
+	<select id="selectEquipmentMigByUserName" resultType="hashmap">
+		SELECT 
+			a.ekey
+			,c.user_no
+			,a.user_name
+			,a.cpu_info
+			,a.memory_size
+			,b.col_cd
+		FROM top_equipment_temp_username a
+		LEFT JOIN sysadm_codedic b
+		ON a.cpu_info = b.col_val
+		LEFT JOIN top_mbr_bsc c
+		ON a.user_name = c.user_name
+		WHERE user_state != 1
+		ORDER BY user_name 
+	</select>
+	
+	<update id="updateEquipmentMigByUserName" parameterType="hashmap">
+		UPDATE top_equipment SET
+			cpu_info = #{cpu_info}
+			,memory_size = #{memory_size}
+		WHERE eq_type = 1 
+			AND eq_state = 2
+			AND user_no = #{user_no}
+	</update>
+	
+	<!-- 교육대상자 등록 이름으로 검색된 결과 -->
+	<select id="selectEduMemberListTempName" resultType="hashmap">
+		SELECT 
+			b.user_no 
+			,b.team_id_main
+			,a.user_name
+		FROM top_edu_temp_username a
+		LEFT JOIN top_mbr_bsc b
+		ON a.user_name = b.user_name 
+		WHERE b.user_state != 1				
+	</select>
+	
+	<!-- 교육대상자 등록 임시쿼리2 -->
+	<insert id="insertEduMemberApprovalTemp" parameterType="hashmap">
+		INSERT INTO top_lecture_approval (
+			pkey
+			,user_no
+			,team_id
+			,ap_user_no
+			,ap_state
+			,reg_date
+			,ap_date
+		)VALUES(
+			243
+			,#{user_no}
+			,#{team_id}
+			,1265
+			,11
+			,'2025-12-01 09:01:00'
+			,'2025-12-01 09:02:00'
+		)
+	</insert>
+	
+	<!-- 한화 개인정보삭제  마이그래이션-->
+	<select id="selectHanHwaSuimRptNoTemp" resultType="hashmap">
+		SELECT
+		  A.suim_rpt_no
+		  ,A.suim_accept_no
+		FROM top_rpt_head A
+		JOIN top_rpt_invoice B
+		WHERE ((1 = 1)
+		       AND (A.suim_rpt_no = B.suim_rpt_no)       
+		       AND (
+				A.policyholder_nm != ''
+				OR A.beneficiary_nm != ''
+				OR A.damaged_nm != ''
+		       )
+		       AND (((A.ptnr_id = 12)
+			 AND (A.close_date &lt; UNIX_TIMESTAMP((NOW() + INTERVAL - (7)DAY)))
+			 AND (B.deposit_date &lt; UNIX_TIMESTAMP((NOW() + INTERVAL - (7)DAY)))
+			 AND (A.close_date > 0)
+			 AND (B.deposit_date > 0))
+			OR ((A.ptnr_id = 12)
+		         AND (A.suim_cancel_date &lt; UNIX_TIMESTAMP((NOW() + INTERVAL - (7)DAY)))
+		         AND (A.suim_cancel_date > 0))))            
+		ORDER BY A.suim_rpt_no DESC
+	</select>
+	
+	<!-- 삼성 개인정보삭제  마이그래이션-->
+	<select id="selectSamsungSuimRptNoTemp" resultType="hashmap">
+		SELECT
+		  A.suim_rpt_no
+		  ,A.suim_accept_no
+		FROM top_rpt_head A
+		JOIN top_rpt_invoice B
+		WHERE ((1 = 1)
+		       AND (A.suim_rpt_no = B.suim_rpt_no)       
+		       AND (
+			A.policyholder_nm != ''
+			OR A.beneficiary_nm != ''
+			OR A.damaged_nm != ''
+		       )
+		       AND (((A.ptnr_id = 18)
+			 AND (A.close_date &lt; UNIX_TIMESTAMP((NOW() + INTERVAL - (5)DAY)))
+			 AND (B.deposit_date &lt; UNIX_TIMESTAMP((NOW() + INTERVAL - (5)DAY)))
+			 AND (A.close_date > 0)
+			 AND (B.deposit_date > 0))
+			OR ((A.ptnr_id = 18)
+		         AND (A.suim_cancel_date &lt; UNIX_TIMESTAMP((NOW() + INTERVAL - (5)DAY)))
+		         AND (A.suim_cancel_date > 0))))            
+		ORDER BY A.suim_rpt_no DESC
+	</select>
+	
+	<update id="updateHanhwaPersonInfoDel" parameterType="hashmap">	
+		UPDATE  top_rpt_head A , top_rpt_body B
+           SET 
+                B.INVESTIGATE_POSTCODE = ''
+               ,B.INVESTIGATE_ADDR1 = ''
+               ,B.INVESTIGATE_ADDR2 = ''
+               
+               ,A.POLICYHOLDER_NM = 
+				CASE WHEN CHAR_LENGTH(A.POLICYHOLDER_NM) = 2 
+					 THEN CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), '*')
+					 ELSE CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.POLICYHOLDER_NM)-2)), SUBSTR(A.POLICYHOLDER_NM,-1)) 
+				 END
+				,A.BENEFICIARY_NM = 
+				 CASE WHEN CHAR_LENGTH(A.BENEFICIARY_NM) = 2 
+					  THEN CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), '*')
+					  ELSE CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.BENEFICIARY_NM)-2)), SUBSTR(A.BENEFICIARY_NM,-1)) 
+				 END
+				,A.DAMAGED_NM = 
+				 CASE WHEN CHAR_LENGTH(A.DAMAGED_NM) = 2 
+					  THEN CONCAT(SUBSTR(A.DAMAGED_NM,1,1), '*')
+					  ELSE CONCAT(SUBSTR(A.DAMAGED_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.DAMAGED_NM)-2)), SUBSTR(A.DAMAGED_NM,-1)) 
+				 END
+         WHERE A.SUIM_RPT_NO = #{suim_rpt_no}
+			AND B.SUIM_RPT_NO = #{suim_rpt_no}
+			AND A.ptnr_id = 12
+	</update>
+	
+	<update id="updateSamsungPersonInfoDel" parameterType="hashmap">
+		UPDATE top_rpt_head SET
+			policyholder_nm = ''
+			,beneficiary_nm = ''
+			,damaged_nm = ''
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND ptnr_id = 18
+	</update>
+	
+
+	<!-- 테스트(개발)용 수임번호가져오기-->
+	<!-- <update id="updateSuimRptNoUpdateAsta" parameterType="String">
+		UPDATE  top_rpt_head A SET
+			A.POLICYHOLDER_NM =
+			CASE WHEN CHAR_LENGTH(A.POLICYHOLDER_NM) = 2 
+				 THEN CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), '*')
+				 ELSE CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.POLICYHOLDER_NM)-2)), SUBSTR(A.POLICYHOLDER_NM,-1)) 
+			 END
+			,A.BENEFICIARY_NM = 
+			 CASE WHEN CHAR_LENGTH(A.BENEFICIARY_NM) = 2 
+				  THEN CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), '*')
+				  ELSE CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.BENEFICIARY_NM)-2)), SUBSTR(A.BENEFICIARY_NM,-1)) 
+			 END
+			,A.DAMAGED_NM = 
+			 CASE WHEN CHAR_LENGTH(A.DAMAGED_NM) = 2 
+				  THEN CONCAT(SUBSTR(A.DAMAGED_NM,1,1), '*')
+				  ELSE CONCAT(SUBSTR(A.DAMAGED_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.DAMAGED_NM)-2)), SUBSTR(A.DAMAGED_NM,-1)) 
+			 END				 
+         WHERE A.SUIM_RPT_NO = #{suim_rpt_no}		
+	</update> -->
+	
+	<!-- 테스트 개발용.. 종결상태이면서 종결시점 보험사 정보 없는 보고서 목록을 가져온다. -->
+	<!-- <select id="selectSuimRptNoBizEndReport" resultType="hashmap">
+		SELECT 
+			suim_rpt_no
+		FROM top_prim_biz_rpt_head 
+		WHERE suim_rpt_state = 2
+		AND (close_ptnr_dept_nm IS NULL OR close_ptnr_tm2_nm IS NULL)
+		AND reg_date &lt; unix_timestamp('2018-01-01')		
+		AND reg_date &lt; unix_timestamp('2019-01-01')
+		AND reg_date >= unix_timestamp('2018-01-01')
+		AND reg_date &lt; unix_timestamp('2020-01-01')
+		AND reg_date >= unix_timestamp('2019-01-01')
+		AND reg_date &lt; unix_timestamp('2021-01-01')
+		AND reg_date >= unix_timestamp('2020-01-01')
+		AND reg_date >= unix_timestamp('2021-01-01')
+		ORDER BY suim_rpt_no
+	</select> -->
+	
+	<!-- 테스트 개발용 보험사 부서정보 팀 정보 갱신-->
+	<!-- <update id="updateSuimRptNoBizEndPtnrInfo" parameterType="String">
+		UPDATE 
+			top_prim_biz_rpt_head a
+		SET
+			 a.close_ptnr_dept_nm = getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id)
+			 ,a.close_ptnr_tm2_nm = (SELECT IFNULL(ptnr_tm2_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no)
+		WHERE
+			a.suim_rpt_no = #{sBizSuimRptNo}
+	</update> -->
+	
+	<!-- 현장보고서 등록일자 가져오기 -->
+	<!-- <select id="selectSuimRptSiteRegDate" resultType="String" parameterType="String">
+		SELECT 
+			IFNULL(MAX(reg_date),0) AS reg_date
+		FROM top_rpt_site_interim 
+		WHERE interim_flag = 0
+		AND suim_rpt_no = #{suim_rpt_no}
+		ORDER BY rpt_site_no DESC
+		LIMIT 1	
+	</select> -->
+	
+	<!-- 기준업무량 코드 없는 목록 -->
+	<!-- <select id="selectSuimRptNoWorkloadEmpty" resultType="hashmap">
+		SELECT suim_rpt_no 
+		FROM top_rpt_head a 
+		WHERE 1=1
+		AND a.suim_rpt_type1 IN (1,2,11,12,13) 
+		AND a.suim_rpt_state IN (0,1)
+		AND a.workload_type IS NULL
+		ORDER BY suim_rpt_no DESC
+	</select> -->
+	
+	<!-- 기준업무량 코드 없는 목록 -->
+	<!-- <select id="selectSuimRptHeadLogWorkloadType" resultType="integer" parameterType="String">
+		SELECT 
+			IFNULL(SUM(workload_type),0) AS workload_type
+		FROM top_rpt_head_log 
+		WHERE 1=1
+		AND workload_type IS NOT NULL
+		AND suim_rpt_no = #{suim_rpt_no}
+	</select> -->
+	
+	<!-- 현장보고서 마이그래이션 (특정 보고서 내 현장보고서 결재정보가 없는경우) -->
+	<!-- <select id="selectSuimRptSiteEndReport" resultType="hashmap">
+		SELECT 
+			suim_rpt_no
+			, close_date
+			, site_rpt_state
+			, site_rpt_aprv_date
+		FROM top_rpt_head 
+		WHERE 1=1
+			AND suim_rpt_type1 IN (1, 2, 11, 12, 13)
+			AND pendncy_trget_at IN (1, 4)
+			AND suim_rpt_state IN (0, 1, 2)
+			AND suim_rpt_state = 0
+			AND site_rpt_state = 0
+			AND site_rpt_aprv_date = 0			
+			AND reg_date >= unix_timestamp('2020-01-01')
+			AND reg_date &lt; unix_timestamp('2021-01-01')
+			AND reg_date &lt; unix_timestamp('2021-03-13')
+		ORDER BY suim_rpt_no DESC
+	</select> -->
+	
+	<!-- 현장보고서 종결건 마이그래이션 -->
+	<!-- <update id="updateSuimRptNoEndReport" parameterType="hashmap">
+		UPDATE top_rpt_head SET
+			site_rpt_state = 2
+			,site_rpt_aprv_date = #{site_rpt_aprv_date}
+		WHERE suim_rpt_no = #{suim_rpt_no}		
+	</update> -->
+	
+	<!-- 테스트 개발용.. 종결상태이면서 종결시점 보험사 정보 없는 보고서 목록을 가져온다. -->
+	<!-- <select id="selectSuimRptNoEndReport" resultType="hashmap">
+		SELECT 
+			suim_rpt_no
+		FROM top_rpt_head 
+		WHERE suim_rpt_state = 2
+		AND (close_ptnr_dept_nm IS NULL OR close_ptnr_tm2_nm IS NULL)
+		AND reg_date &lt; unix_timestamp('2018-01-01')
+		AND reg_date &lt; unix_timestamp('2019-01-01')
+		AND reg_date >= unix_timestamp('2018-01-01')
+		AND reg_date &lt; unix_timestamp('2020-01-01')
+		AND reg_date >= unix_timestamp('2019-01-01')
+		AND reg_date &lt; unix_timestamp('2021-01-01')
+		AND reg_date >= unix_timestamp('2020-01-01')
+		AND reg_date >= unix_timestamp('2021-01-01')
+		ORDER BY suim_rpt_no
+	</select> -->
+	
+	<!-- 테스트 개발용 보험사 부서정보 팀 정보 갱신-->
+	<!-- <update id="updateSuimRptNoEndPtnrInfo" parameterType="String">
+		UPDATE 
+			top_rpt_head a
+		SET
+			 a.close_ptnr_dept_nm = getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id)
+			 ,a.close_ptnr_tm2_nm = (SELECT IFNULL(ptnr_tm2_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no)
+		WHERE
+			a.suim_rpt_no = #{sSuimRptNo}
+	</update>	 -->
+
+	<!-- 테스트(개발)용 수임번호가져오기-->
+	<!-- <select id="selectSuimRptNoUpdateChk" parameterType="String" resultType="hashmap">
+		SELECT 
+			a.suim_rpt_no			
+		FROM top_rpt_head a LEFT JOIN top_rpt_invoice b 
+		ON a.suim_rpt_no = b.suim_rpt_no
+		WHERE (a.ptnr_id = #{ptnr_id} AND a.close_date > 0 AND b.deposit_date > 0)
+		OR (a.ptnr_id = #{ptnr_id} AND a.suim_cancel_date > 0)
+	</select> -->
+	
+	<!-- 특정 기간 내 직원의 기준업무량(환산으로 수정) 합계정보  가져오기-->
+	<select id="schWorkloadEaAllQuarter" parameterType="hashmap" resultType="String">
+		SELECT
+			IFNULL(ROUND( (workload_ea - minus_workload_ea + plus_workload_ea + prim_workload_ea) ,3 ),0) AS total_workload_ea	
+		FROM(
+			SELECT
+				SUM(GA.workload_ea) AS workload_ea
+				,SUM(GA.minus_workload_ea) AS minus_workload_ea
+				,SUM(GA.plus_workload_ea) AS plus_workload_ea
+				,SUM(GA.prim_workload_ea) AS prim_workload_ea
+			FROM(
+				SELECT										
+					ROUND((#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), a.suim_rpt_type1) * a.workload_ea),3) AS workload_ea
+					,0 AS minus_workload_ea
+					,0 AS plus_workload_ea
+					,0 AS prim_workload_ea
+				FROM top_rpt_head a
+				WHERE 1=1
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt;= UNIX_TIMESTAMP( #{eDate} )
+		
+				UNION ALL
+		
+				SELECT 	
+					0 AS workload_ea
+					,CASE
+						WHEN( b.written_cnt > 0 )
+						THEN b.written_cnt
+						ELSE IFNULL((ROUND(#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), a.suim_rpt_type1) * a.workload_ea * ( SELECT IFNULL(SUM(collabo_pp),0) FROM top_rpt_collabo WHERE suim_rpt_no = a.suim_rpt_no) * 0.01,3)),0)
+					END AS minus_workload_ea			
+					,0 AS plus_workload_ea
+					,0 AS prim_workload_ea
+				FROM top_rpt_head a, top_rpt_collabo b	
+				WHERE 1=1
+				AND a.suim_rpt_no = b.suim_rpt_no
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt;= UNIX_TIMESTAMP( #{eDate} )
+				AND b.user_id != #{user_no}
+		
+				UNION ALL
+		
+				SELECT
+					0 AS workload_ea
+					,0 AS minus_workload_ea
+					,CASE
+						WHEN ( a.written_cnt > 0 )
+						THEN a.written_cnt
+						ELSE IFNULL((ROUND(#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), b.suim_rpt_type1) * b.workload_ea * a.collabo_pp * 0.01,3)),0)						
+					END AS plus_workload_ea		
+					,0 AS prim_workload_ea
+				FROM top_rpt_collabo a
+				LEFT JOIN top_rpt_head b
+				ON a.suim_rpt_no = b.suim_rpt_no
+				WHERE a.user_id = #{user_no}
+				AND b.suim_rpt_state = 2
+				AND b.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND b.close_date &lt;= UNIX_TIMESTAMP( #{eDate} )
+				
+				UNION ALL
+		
+				SELECT
+					0 AS workload_ea
+					,0 AS minus_workload_ea
+					,0 AS plus_workload_ea
+					,IFNULL(PM.prim_workload_ea,0) AS prim_workload_ea					
+				FROM
+				(
+					SELECT
+						ROUND((#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), a.suim_rpt_type1) * b.share_workload_ea), 3) AS prim_workload_ea
+					FROM top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+					WHERE 1=1
+					AND a.suim_rpt_no = b.suim_rpt_no
+					AND b.share_user_no = #{user_no}
+					AND a.suim_rpt_state = 2
+					AND FROM_UNIXTIME(a.close_date,'%Y-%m-%d') >= #{sDate}
+					AND FROM_UNIXTIME(a.close_date,'%Y-%m-%d') &lt;= #{eDate}
+					<!-- AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+					AND a.close_date &lt;= UNIX_TIMESTAMP( #{eDate} ) -->
+				)PM
+			)GA
+		)GB		
+	</select>
+	
+	<!-- 특정 기간 내 직원의 기준업무량(환산으로 수정) 합계정보  가져오기-->
+	<select id="schWorkloadEaAll" parameterType="hashmap" resultType="String">
+		SELECT
+			IFNULL(ROUND( (workload_ea - minus_workload_ea + plus_workload_ea + prim_workload_ea) ,3 ),0) AS total_workload_ea	
+		FROM(
+			SELECT
+				SUM(GA.workload_ea) AS workload_ea
+				,SUM(GA.minus_workload_ea) AS minus_workload_ea
+				,SUM(GA.plus_workload_ea) AS plus_workload_ea
+				,SUM(GA.prim_workload_ea) AS prim_workload_ea
+			FROM(
+				SELECT										
+					ROUND((#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), a.suim_rpt_type1) * a.workload_ea),3) AS workload_ea
+					,0 AS minus_workload_ea
+					,0 AS plus_workload_ea
+					,0 AS prim_workload_ea
+				FROM top_rpt_head a
+				WHERE 1=1
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+		
+				UNION ALL
+		
+				SELECT 	
+					0 AS workload_ea
+					,CASE
+						WHEN( b.written_cnt > 0 )
+						THEN b.written_cnt
+						ELSE IFNULL((ROUND(#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), a.suim_rpt_type1) * a.workload_ea * ( SELECT IFNULL(SUM(collabo_pp),0) FROM top_rpt_collabo WHERE suim_rpt_no = a.suim_rpt_no) * 0.01,3)),0)
+					END AS minus_workload_ea			
+					,0 AS plus_workload_ea
+					,0 AS prim_workload_ea
+				FROM top_rpt_head a, top_rpt_collabo b	
+				WHERE 1=1
+				AND a.suim_rpt_no = b.suim_rpt_no
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+				AND b.user_id != #{user_no}
+		
+				UNION ALL
+		
+				SELECT
+					0 AS workload_ea
+					,0 AS minus_workload_ea
+					,CASE
+						WHEN ( a.written_cnt > 0 )
+						THEN a.written_cnt
+						ELSE IFNULL((ROUND(#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), b.suim_rpt_type1) * b.workload_ea * a.collabo_pp * 0.01,3)),0)						
+					END AS plus_workload_ea		
+					,0 AS prim_workload_ea
+				FROM top_rpt_collabo a
+				LEFT JOIN top_rpt_head b
+				ON a.suim_rpt_no = b.suim_rpt_no
+				WHERE a.user_id = #{user_no}
+				AND b.suim_rpt_state = 2
+				AND b.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND b.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+				
+				UNION ALL
+		
+				SELECT
+					0 AS workload_ea
+					,0 AS minus_workload_ea
+					,0 AS plus_workload_ea
+					,IFNULL(PM.prim_workload_ea,0) AS prim_workload_ea					
+				FROM
+				(
+					SELECT
+						ROUND((#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{base_year}), a.suim_rpt_type1) * b.share_workload_ea), 3) AS prim_workload_ea
+					FROM top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+					WHERE 1=1
+					AND a.suim_rpt_no = b.suim_rpt_no
+					AND b.share_user_no = #{user_no}
+					AND a.suim_rpt_state = 2
+					AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+					AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+				)PM
+			)GA
+		)GB		
+	</select>
+	
+	<!-- 특정 기간 내 직원의 기준업무량 합계정보  가져오기-->
+	<select id="schWorkloadEaAll_20230314" parameterType="hashmap" resultType="String">
+		SELECT
+			ROUND( (workload_ea - minus_workload_ea + plus_workload_ea + prim_workload_ea) ,3 ) AS total_workload_ea	
+		FROM(
+			SELECT
+				SUM(GA.workload_ea) AS workload_ea
+				,SUM(GA.minus_workload_ea) AS minus_workload_ea
+				,SUM(GA.plus_workload_ea) AS plus_workload_ea
+				,SUM(GA.prim_workload_ea) AS prim_workload_ea
+			FROM(
+				SELECT 
+					SUM(a.workload_ea) AS workload_ea	
+					,0 AS minus_workload_ea
+					,0 AS plus_workload_ea
+					,0 AS prim_workload_ea
+				FROM top_rpt_head a
+				WHERE 1=1
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+		
+				UNION ALL
+		
+				SELECT 	
+					0 AS workload_ea
+					,CASE
+						WHEN( b.written_cnt > 0 )
+						THEN SUM(b.written_cnt)
+						ELSE SUM(a.workload_ea * b.collabo_pp / 100)
+					END AS minus_workload_ea			
+					,0 AS plus_workload_ea
+					,0 AS prim_workload_ea
+				FROM top_rpt_head a, top_rpt_collabo b	
+				WHERE 1=1
+				AND a.suim_rpt_no = b.suim_rpt_no
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+				AND b.user_id != #{user_no}
+		
+				UNION ALL
+		
+				SELECT
+					0 AS workload_ea
+					,0 AS minus_workload_ea
+					,CASE
+						WHEN ( a.written_cnt > 0 )
+						THEN SUM(a.written_cnt)
+						ELSE SUM(b.workload_ea * a.collabo_pp / 100)
+					END AS plus_workload_ea		
+					,0 AS prim_workload_ea
+				FROM top_rpt_collabo a
+				LEFT JOIN top_rpt_head b
+				ON a.suim_rpt_no = b.suim_rpt_no
+				WHERE a.user_id = #{user_no}
+				AND b.suim_rpt_state = 2
+				AND b.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND b.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+				
+				UNION ALL
+		
+				SELECT
+					0 AS workload_ea
+					,0 AS minus_workload_ea
+					,0 AS plus_workload_ea
+					,IFNULL(PM.prim_workload_ea,0) AS prim_workload_ea
+				FROM
+				(
+					SELECT
+						SUM(share_ea) AS prim_workload_ea
+					FROM top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+					WHERE 1=1
+					AND a.suim_rpt_no = b.suim_rpt_no
+					AND b.share_user_no = #{user_no}
+					AND a.suim_rpt_state = 2
+					AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+					AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+				)PM
+			)GA	
+			
+		)GB
+		
+	</select>
+	
+	<!-- 특정 기간 내 직원의 성과급정보 합계 가져오기(분기 계산용 종료일자까지 성과급 포함) -->	
+	<select id="schBonusPayAllQuarter" parameterType="hashmap" resultType="Integer">
+		SELECT			
+			ROUND(IFNULL((GD.amt_basic - GD.minus_basic_amt + GD.plus_basic_amt + GD.prim_basic_amt),0)) AS bonus_amt
+		FROM
+		(
+			SELECT
+				GC.user_no
+				,IFNULL(SUM(GC.amt_basic),0) AS amt_basic
+				,IFNULL(SUM(GC.minus_basic_amt),0) AS minus_basic_amt
+				,IFNULL(SUM(GC.plus_basic_amt),0) AS plus_basic_amt
+				,IFNULL(SUM(GC.prim_basic_amt),0) AS prim_basic_amt
+			FROM
+			(				
+				SELECT 	
+					a.user_no
+					,SUM(b.amt_basic+getCollaboApprovalAmt(a.suim_rpt_no)) AS amt_basic
+					,0 AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,0 AS prim_basic_amt					
+				FROM top_rpt_head a, top_rpt_invoice b
+				WHERE a.suim_rpt_no = b.suim_rpt_no
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt;= UNIX_TIMESTAMP( #{eDate} )
+		
+				UNION ALL
+		
+				SELECT
+					GB.user_no
+					,0 AS amt_basic
+					,SUM(GB.minus_basic_amt) AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,0 AS prim_basic_amt
+				FROM(
+					SELECT
+						GA.user_no	
+						,CASE
+							WHEN ( TC.written_basic > 0 )
+							THEN TC.written_basic
+							WHEN ( TC.collabo_pp = 0 AND TC.collabo_price = 0 )
+							THEN 0
+							WHEN ( TC.collabo_price_type = 0 )
+							THEN ( GA.amt_basic * TC.collabo_pp / 100 )
+							WHEN ( TC.collabo_price_type = 1 )
+							THEN TC.collabo_price	
+						END minus_basic_amt
+					FROM
+					(
+						SELECT 	
+							a.user_no	
+							,a.suim_rpt_no
+							,a.suim_accept_no
+							,b.amt_basic
+							,a.close_date
+						FROM top_rpt_head a
+						LEFT JOIN top_rpt_invoice b
+						ON a.suim_rpt_no = b.suim_rpt_no
+						WHERE a.user_no = #{user_no}
+						AND a.suim_rpt_state = 2						
+						AND a.close_date >= UNIX_TIMESTAMP(#{sDate})
+						AND a.close_date &lt;= UNIX_TIMESTAMP(#{eDate})
+					)GA, top_rpt_collabo TC
+					WHERE GA.suim_rpt_no = TC.suim_rpt_no
+					<!-- AND TC.user_id != #{user_no} -->
+				)GB
+		
+				UNION ALL
+		
+				SELECT
+					GB.user_no
+					,0 AS amt_basic
+					,0 AS minus_basic_amt
+					,SUM(GB.plus_basic_amt) AS plus_basic_amt	
+					,0 AS prim_basic_amt
+				FROM
+				(
+					SELECT
+						GA.user_id AS user_no
+						,CASE
+							WHEN ( GA.written_basic > 0 )
+							THEN GA.written_basic
+							WHEN ( GA.collabo_pp = 0 AND GA.collabo_price = 0 )
+							THEN 0
+							WHEN ( GA.collabo_price_type = 0 )
+							THEN ( TI.amt_basic * GA.collabo_pp / 100 )
+							WHEN ( GA.collabo_price_type = 1 )
+							THEN GA.collabo_price	
+						END plus_basic_amt
+						,GA.suim_rpt_no		
+					FROM(
+						SELECT 
+							a.user_id
+							,a.collabo_pp
+							,a.collabo_price
+							,a.collabo_price_type
+							,a.written_basic
+							,b.suim_rpt_no							
+						FROM top_rpt_collabo a
+						LEFT JOIN top_rpt_head b
+						ON a.suim_rpt_no = b.suim_rpt_no
+						WHERE a.user_id = #{user_no}
+						AND b.suim_rpt_state = 2
+						AND b.close_date >= UNIX_TIMESTAMP(#{sDate})
+						AND b.close_date &lt;= UNIX_TIMESTAMP(#{eDate})
+					)GA, top_rpt_invoice TI
+					WHERE GA.suim_rpt_no = TI.suim_rpt_no
+				)GB
+				
+				UNION ALL				
+
+				SELECT
+					GA.user_no
+					,0 AS amt_basic
+					,0 AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,IFNULL(GA.prim_basic_amt,0)
+				FROM
+				(
+					SELECT 	
+						b.share_user_no AS user_no	
+						,SUM(b.share_amt_basic) AS prim_basic_amt
+					FROM top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+					WHERE a.suim_rpt_no = b.suim_rpt_no
+					AND b.share_user_no = #{user_no}
+					AND a.suim_rpt_state = 2
+					AND FROM_UNIXTIME(a.close_date,'%Y-%m-%d') >= #{sDate}
+					AND FROM_UNIXTIME(a.close_date,'%Y-%m-%d') &lt;= #{eDate}
+					<!-- AND a.close_date >= UNIX_TIMESTAMP(#{sDate})
+					AND a.close_date &lt;= UNIX_TIMESTAMP(#{eDate}) -->
+				)GA
+			)GC
+		)GD
+	</select>
+	
+	<!-- 특정 기간 내 직원의 성과급정보 합계 가져오기 기본급에 현대해상 수수료 항목 추가 -->	
+	<select id="schBonusPayAll" parameterType="hashmap" resultType="Integer">
+		SELECT			
+			ROUND(IFNULL((GD.amt_basic - GD.minus_basic_amt + GD.plus_basic_amt + GD.prim_basic_amt),0)) AS bonus_amt
+		FROM
+		(
+			SELECT
+				GC.user_no
+				,IFNULL(SUM(GC.amt_basic),0) AS amt_basic
+				,IFNULL(SUM(GC.minus_basic_amt),0) AS minus_basic_amt
+				,IFNULL(SUM(GC.plus_basic_amt),0) AS plus_basic_amt
+				,IFNULL(SUM(GC.prim_basic_amt),0) AS prim_basic_amt
+			FROM
+			(				
+				SELECT 	
+					a.user_no	
+					,SUM(b.amt_basic+getCollaboApprovalAmt(a.suim_rpt_no)) AS amt_basic
+					,0 AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,0 AS prim_basic_amt					
+				FROM top_rpt_head a, top_rpt_invoice b
+				WHERE a.suim_rpt_no = b.suim_rpt_no
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+		
+				UNION ALL
+		
+				SELECT
+					GB.user_no
+					,0 AS amt_basic
+					,SUM(GB.minus_basic_amt) AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,0 AS prim_basic_amt
+				FROM(
+					SELECT
+						GA.user_no	
+						,CASE
+							WHEN ( TC.written_basic > 0 )
+							THEN TC.written_basic
+							WHEN ( TC.collabo_pp = 0 AND TC.collabo_price = 0 )
+							THEN 0
+							WHEN ( TC.collabo_price_type = 0 )
+							THEN ( GA.amt_basic * TC.collabo_pp / 100 )
+							WHEN ( TC.collabo_price_type = 1 )
+							THEN TC.collabo_price	
+						END minus_basic_amt
+					FROM
+					(
+						SELECT 	
+							a.user_no	
+							,a.suim_rpt_no
+							,a.suim_accept_no
+							,b.amt_basic
+							,a.close_date
+						FROM top_rpt_head a
+						LEFT JOIN top_rpt_invoice b
+						ON a.suim_rpt_no = b.suim_rpt_no
+						WHERE a.user_no = #{user_no}
+						AND a.suim_rpt_state = 2						
+						AND a.close_date >= UNIX_TIMESTAMP(#{sDate})
+						AND a.close_date &lt; UNIX_TIMESTAMP(#{eDate})
+					)GA, top_rpt_collabo TC
+					WHERE GA.suim_rpt_no = TC.suim_rpt_no
+					<!-- AND TC.user_id != #{user_no} -->
+				)GB
+		
+				UNION ALL
+		
+				SELECT
+					GB.user_no
+					,0 AS amt_basic
+					,0 AS minus_basic_amt
+					,SUM(GB.plus_basic_amt) AS plus_basic_amt	
+					,0 AS prim_basic_amt
+				FROM
+				(
+					SELECT
+						GA.user_id AS user_no
+						,CASE
+							WHEN ( GA.written_basic > 0 )
+							THEN GA.written_basic
+							WHEN ( GA.collabo_pp = 0 AND GA.collabo_price = 0 )
+							THEN 0
+							WHEN ( GA.collabo_price_type = 0 )
+							THEN ( TI.amt_basic * GA.collabo_pp / 100 )
+							WHEN ( GA.collabo_price_type = 1 )
+							THEN GA.collabo_price	
+						END plus_basic_amt
+						,GA.suim_rpt_no		
+					FROM(
+						SELECT 
+							a.user_id
+							,a.collabo_pp
+							,a.collabo_price
+							,a.collabo_price_type
+							,a.written_basic
+							,b.suim_rpt_no							
+						FROM top_rpt_collabo a
+						LEFT JOIN top_rpt_head b
+						ON a.suim_rpt_no = b.suim_rpt_no
+						WHERE a.user_id = #{user_no}
+						AND b.suim_rpt_state = 2
+						AND b.close_date >= UNIX_TIMESTAMP(#{sDate})
+						AND b.close_date &lt; UNIX_TIMESTAMP(#{eDate})
+					)GA, top_rpt_invoice TI
+					WHERE GA.suim_rpt_no = TI.suim_rpt_no
+				)GB
+				
+				UNION ALL				
+
+				SELECT
+					GA.user_no
+					,0 AS amt_basic
+					,0 AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,IFNULL(GA.prim_basic_amt,0)
+				FROM
+				(
+					SELECT 	
+						b.share_user_no AS user_no	
+						,SUM(b.share_amt_basic) AS prim_basic_amt
+					FROM top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+					WHERE a.suim_rpt_no = b.suim_rpt_no
+					AND b.share_user_no = #{user_no}
+					AND a.suim_rpt_state = 2
+					AND a.close_date >= UNIX_TIMESTAMP(#{sDate})
+					AND a.close_date &lt; UNIX_TIMESTAMP(#{eDate})
+				)GA
+			)GC
+		)GD
+	</select>
+	
+	<!-- 특정 기간 내 직원의 성과급정보 합계 가져오기 -->
+	<select id="schBonusPayAll_20240920" parameterType="hashmap" resultType="Integer">
+		SELECT			
+			ROUND(IFNULL((GD.amt_basic - GD.minus_basic_amt + GD.plus_basic_amt + GD.prim_basic_amt),0)) AS bonus_amt
+		FROM
+		(
+			SELECT
+				GC.user_no
+				,IFNULL(SUM(GC.amt_basic),0) AS amt_basic
+				,IFNULL(SUM(GC.minus_basic_amt),0) AS minus_basic_amt
+				,IFNULL(SUM(GC.plus_basic_amt),0) AS plus_basic_amt
+				,IFNULL(SUM(GC.prim_basic_amt),0) AS prim_basic_amt
+			FROM
+			(				
+				SELECT 	
+					a.user_no	
+					,SUM(b.amt_basic) AS amt_basic
+					,0 AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,0 AS prim_basic_amt					
+				FROM top_rpt_head a, top_rpt_invoice b
+				WHERE a.suim_rpt_no = b.suim_rpt_no
+				AND a.user_no = #{user_no}
+				AND a.suim_rpt_state = 2
+				AND a.close_date >= UNIX_TIMESTAMP( #{sDate} )
+				AND a.close_date &lt; UNIX_TIMESTAMP( #{eDate} )
+		
+				UNION ALL
+		
+				SELECT
+					GB.user_no
+					,0 AS amt_basic
+					,SUM(GB.minus_basic_amt) AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,0 AS prim_basic_amt
+				FROM(
+					SELECT
+						GA.user_no	
+						,CASE
+							WHEN ( TC.written_basic > 0 )
+							THEN TC.written_basic
+							WHEN ( TC.collabo_pp = 0 AND TC.collabo_price = 0 )
+							THEN 0
+							WHEN ( TC.collabo_price_type = 0 )
+							THEN ( GA.amt_basic * TC.collabo_pp / 100 )
+							WHEN ( TC.collabo_price_type = 1 )
+							THEN TC.collabo_price	
+						END minus_basic_amt
+					FROM
+					(
+						SELECT 	
+							a.user_no	
+							,a.suim_rpt_no
+							,a.suim_accept_no
+							,b.amt_basic
+							,a.close_date
+						FROM top_rpt_head a
+						LEFT JOIN top_rpt_invoice b
+						ON a.suim_rpt_no = b.suim_rpt_no
+						WHERE a.user_no = #{user_no}
+						AND a.suim_rpt_state = 2						
+						AND a.close_date >= UNIX_TIMESTAMP(#{sDate})
+						AND a.close_date &lt; UNIX_TIMESTAMP(#{eDate})
+					)GA, top_rpt_collabo TC
+					WHERE GA.suim_rpt_no = TC.suim_rpt_no
+					<!-- AND TC.user_id != #{user_no} -->
+				)GB
+		
+				UNION ALL
+		
+				SELECT
+					GB.user_no
+					,0 AS amt_basic
+					,0 AS minus_basic_amt
+					,SUM(GB.plus_basic_amt) AS plus_basic_amt	
+					,0 AS prim_basic_amt
+				FROM
+				(
+					SELECT
+						GA.user_id AS user_no
+						,CASE
+							WHEN ( GA.written_basic > 0 )
+							THEN GA.written_basic
+							WHEN ( GA.collabo_pp = 0 AND GA.collabo_price = 0 )
+							THEN 0
+							WHEN ( GA.collabo_price_type = 0 )
+							THEN ( TI.amt_basic * GA.collabo_pp / 100 )
+							WHEN ( GA.collabo_price_type = 1 )
+							THEN GA.collabo_price	
+						END plus_basic_amt
+						,GA.suim_rpt_no		
+					FROM(
+						SELECT 
+							a.user_id
+							,a.collabo_pp
+							,a.collabo_price
+							,a.collabo_price_type
+							,a.written_basic
+							,b.suim_rpt_no							
+						FROM top_rpt_collabo a
+						LEFT JOIN top_rpt_head b
+						ON a.suim_rpt_no = b.suim_rpt_no
+						WHERE a.user_id = #{user_no}
+						AND b.suim_rpt_state = 2
+						AND b.close_date >= UNIX_TIMESTAMP(#{sDate})
+						AND b.close_date &lt; UNIX_TIMESTAMP(#{eDate})
+					)GA, top_rpt_invoice TI
+					WHERE GA.suim_rpt_no = TI.suim_rpt_no
+				)GB
+				
+				UNION ALL				
+
+				SELECT
+					GA.user_no
+					,0 AS amt_basic
+					,0 AS minus_basic_amt
+					,0 AS plus_basic_amt
+					,IFNULL(GA.prim_basic_amt,0)
+				FROM
+				(
+					SELECT 	
+						b.share_user_no AS user_no	
+						,SUM(b.share_amt_basic) AS prim_basic_amt
+					FROM top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+					WHERE a.suim_rpt_no = b.suim_rpt_no
+					AND b.share_user_no = #{user_no}
+					AND a.suim_rpt_state = 2
+					AND a.close_date >= UNIX_TIMESTAMP(#{sDate})
+					AND a.close_date &lt; UNIX_TIMESTAMP(#{eDate})
+				)GA
+			)GC
+		)GD
+	</select>
+	
+	<!-- 관리자 분기기준 성과급 스케줄러 휴직일 계산 후 업데이트 -->
+	<update id="updateSchBonusQuarterWorkList" parameterType="hashmap">
+		UPDATE sch_bonus_team_quarter_daily SET
+			workday_cnt = #{workday_cnt}
+			,workday_interval = #{workday_interval}
+			,workday_per = #{workday_per}
+			,bonus_pay = #{bonus_pay}
+			,workload_target = #{workload_target} 
+			,workload_cnt = #{workload_cnt} 
+			,workload_per = #{workload_per}
+		WHERE skey = #{skey}
+	</update>
+	
+	<!-- 관리자 성과급 스케줄러 휴직일 계산 후 업데이트 -->
+	<update id="updateSchBonusWorkList" parameterType="hashmap">
+		UPDATE sch_bonus_team_daily SET
+			workday_cnt = #{workday_cnt}
+			,workday_interval = #{workday_interval}
+			,workday_per = #{workday_per}
+			,bonus_pay = #{bonus_pay}
+			,workload_target = #{workload_target} 
+			,workload_cnt = #{workload_cnt} 
+			,workload_per = #{workload_per}
+		WHERE skey = #{skey}
+	</update>
+	
+	<!-- 해당 기간 내 시작 종료일자로 휴직일자 정보 가져오기 -->
+	<select id="SchBonusWorkListByReverse" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			work_no
+			,user_no			
+			,date_format(work_sdate,'%Y-%m-%d') as work_sdate
+			,date_format(work_edate,'%Y-%m-%d') as work_edate
+			,reg_date
+		FROM top_mbr_work
+		WHERE user_no = #{user_no}
+		AND ( work_sdate BETWEEN #{sDate} AND #{eDate} OR work_edate BETWEEN #{sDate} AND #{eDate} )		
+	</select>
+	
+	<!-- 해당 기간 내 휴직일자 정보 가져오기 -->
+	<select id="SchBonusWorkList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			work_no
+			,user_no			
+			,date_format(work_sdate,'%Y-%m-%d') as work_sdate
+			,date_format(work_edate,'%Y-%m-%d') as work_edate
+			,reg_date
+		FROM top_mbr_work
+		WHERE user_no = #{user_no}
+		AND ( #{sDate} BETWEEN work_sdate AND work_edate OR #{eDate} BETWEEN work_sdate AND work_edate )
+	</select>
+	
+	<!-- 관리자 성과급 계상 대상자 기간 내 발령 갯수 확인 -->
+	<select id="SchBonusTeamApCount"  parameterType="hashmap" resultType="integer">
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_mbr_appoint
+		WHERE 1=1
+		AND user_no = #{user_no}
+		AND appoint_date >= UNIX_TIMESTAMP(#{sdate})
+		AND appoint_date &lt;= UNIX_TIMESTAMP(#{edate})
+	</select>
+	
+	<!-- 관리자 성과급 계산 대상자 중 분기 기준 발령 목록 다음 발령일자 가져오기 -->
+	<select id="SchBonusTeamQuarterMemberApNextEdate" parameterType="hashmap" resultType="String">
+		SELECT
+			IF(GA.edate > #{edate},'',GA.edate) AS edate
+		FROM(
+			SELECT			
+				IFNULL(DATE_ADD(FROM_UNIXTIME(MIN(appoint_date),"%Y-%m-%d"), INTERVAL -1 DAY),'') AS edate
+			FROM top_mbr_appoint
+			WHERE user_no = #{user_no}
+			AND appoint_date > UNIX_TIMESTAMP(#{appoint_date})
+		)GA
+	</select>
+	
+	<!-- 관리자 성과급 계산 대상자 중 발령 목록 다음 발령일자 가져오기 -->
+	<select id="SchBonusTeamMemberApNextEdate" parameterType="hashmap" resultType="String">
+		SELECT			
+			IFNULL(DATE_ADD(FROM_UNIXTIME(MIN(appoint_date),"%Y-%m-%d"), INTERVAL -1 DAY),'') AS edate
+		FROM top_mbr_appoint
+		WHERE user_no = #{user_no}
+		AND appoint_date > UNIX_TIMESTAMP(#{appoint_date})
+	</select>
+	
+	<!-- 관리자 성과급 분기기준 계산 대상자 중 발령 목록 가져오기 -->
+	<select id="SchBonusTeamQuarterMemberApList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.user_no	
+			,getTopTmBscCenterName(GA.appoint_team_id) AS center_name
+			,(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_tm_bsc' AND col_nm = 'team_sector' AND col_cd = TMT.team_sector) AS team_sector_name
+			,TMT.team_sector
+			,TMT.team_name
+			,TMB.user_name
+			,getCodeValue("top_mbr_bsc", "work_level", GA.appoint_work_level_cd) AS work_level_name
+			,getCodeValue("top_mbr_bsc", "work_type", GA.appoint_work_type_cd) AS work_type_name	
+			,TMT.team_id
+			,TMT.team_center
+			,TMB.join_date	
+			,FROM_UNIXTIME(TMB.join_date,"%Y-%m-%d") AS join_date_fmt
+			,GA.appoint_work_job_cd AS work_job	
+			,TMT.team_written
+			,TMB.bonus_career_state
+			,CASE 
+				WHEN GA.appoint_date_fmt &lt; #{sdate}
+				THEN #{sdate}
+				ELSE GA.appoint_date_fmt	
+			END sdate
+			,#{edate} AS edate
+			,#{base_date} AS base_date
+			
+			,TMB.user_state
+			,TMT.team_group_order
+			,TMT.team_order
+			,TMB.work_level	
+			,CASE TMB.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15
+			END AS new_work_order	
+			,GA.appoint_date_fmt	
+		FROM
+		(
+			(
+				SELECT 
+					appoint_no
+					,appoint_date
+					,FROM_UNIXTIME(appoint_date,"%Y-%m-%d") AS appoint_date_fmt	
+					,appoint_team_id
+					,appoint_work_job_cd
+					,appoint_work_level_cd
+					,appoint_work_type_cd
+					,user_no
+				FROM top_mbr_appoint 
+				WHERE 1=1		
+				AND appoint_date &lt; UNIX_TIMESTAMP(#{sdate})		
+				AND user_no = #{user_no}
+				ORDER BY appoint_no DESC
+				LIMIT 1
+			)
+		
+			UNION ALL		
+			
+			(
+					
+				SELECT 
+					appoint_no
+					,appoint_date
+					,FROM_UNIXTIME(appoint_date,"%Y-%m-%d") AS appoint_date_fmt	
+					,appoint_team_id
+					,appoint_work_job_cd
+					,appoint_work_level_cd
+					,appoint_work_type_cd
+					,user_no
+				FROM top_mbr_appoint 
+				WHERE 1=1
+				AND appoint_date >= UNIX_TIMESTAMP(#{sdate})		
+				AND appoint_date &lt; UNIX_TIMESTAMP(#{edate})
+				AND user_no = #{user_no}
+			)
+		)GA 
+		LEFT JOIN top_mbr_bsc TMB
+		ON GA.user_no = TMB.user_no
+		LEFT JOIN top_tm_bsc TMT
+		ON GA.appoint_team_id = TMT.team_id	
+	</select>
+	
+	<!-- 관리자 성과급 계산 대상자 중 발령 목록 가져오기 -->
+	<select id="SchBonusTeamMemberApList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.user_no	
+			,getTopTmBscCenterName(GA.appoint_team_id) AS center_name
+			,(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_tm_bsc' AND col_nm = 'team_sector' AND col_cd = TMT.team_sector) AS team_sector_name
+			,TMT.team_sector
+			,TMT.team_name
+			,TMB.user_name
+			,getCodeValue("top_mbr_bsc", "work_level", GA.appoint_work_level_cd) AS work_level_name
+			,getCodeValue("top_mbr_bsc", "work_type", GA.appoint_work_type_cd) AS work_type_name	
+			,TMT.team_id
+			,TMT.team_center
+			,TMB.join_date	
+			,FROM_UNIXTIME(TMB.join_date,"%Y-%m-%d") AS join_date_fmt
+			,GA.appoint_work_job_cd AS work_job	
+			,TMT.team_written
+			,TMB.bonus_career_state
+			,CASE 
+				WHEN GA.appoint_date_fmt &lt; #{sdate}
+				THEN #{sdate}
+				ELSE GA.appoint_date_fmt	
+			END sdate
+			,#{base_date} AS edate
+			,#{base_date} AS base_date
+			
+			,TMB.user_state
+			,TMT.team_group_order
+			,TMT.team_order
+			,TMB.work_level	
+			,CASE TMB.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15
+			END AS new_work_order	
+			,GA.appoint_date_fmt	
+		FROM
+		(
+			(
+				SELECT 
+					appoint_no
+					,appoint_date
+					,FROM_UNIXTIME(appoint_date,"%Y-%m-%d") AS appoint_date_fmt	
+					,appoint_team_id
+					,appoint_work_job_cd
+					,appoint_work_level_cd
+					,appoint_work_type_cd
+					,user_no
+				FROM top_mbr_appoint 
+				WHERE 1=1		
+				AND appoint_date &lt; UNIX_TIMESTAMP(#{sdate})		
+				AND user_no = #{user_no}
+				ORDER BY appoint_no DESC
+				LIMIT 1
+			)
+		
+			UNION ALL		
+			
+			(
+					
+				SELECT 
+					appoint_no
+					,appoint_date
+					,FROM_UNIXTIME(appoint_date,"%Y-%m-%d") AS appoint_date_fmt	
+					,appoint_team_id
+					,appoint_work_job_cd
+					,appoint_work_level_cd
+					,appoint_work_type_cd
+					,user_no
+				FROM top_mbr_appoint 
+				WHERE 1=1
+				AND appoint_date >= UNIX_TIMESTAMP(#{sdate})		
+				AND appoint_date &lt; UNIX_TIMESTAMP(#{edate})
+				AND user_no = #{user_no}
+			)
+		)GA 
+		LEFT JOIN top_mbr_bsc TMB
+		ON GA.user_no = TMB.user_no
+		LEFT JOIN top_tm_bsc TMT
+		ON GA.appoint_team_id = TMT.team_id		
+	</select>
+	
+	<!-- 관리자 성과급 분기기준 실적 제외 데이터 삭제 처리-->
+	<delete id="deleteSchBonusTeamQuarterMemberByReverseDay" parameterType="String">
+		DELETE FROM sch_bonus_team_quarter_daily 
+		WHERE sdate > edate
+		AND base_date = #{base_date}
+	</delete>
+	
+	<!-- 관리자 성과급 실적 제외 데이터 삭제 처리-->
+	<delete id="deleteSchBonusTeamMemberByReverseDay" parameterType="String">
+		DELETE FROM sch_bonus_team_daily 
+		WHERE sdate > edate
+		AND base_date = #{base_date}
+	</delete>
+	
+	<!-- 관리자 성과급 계산 스케줄러 불러오기 -->
+	<select id="selectSchTeamMemberQuarterListByBaseDate" parameterType="String" resultType="hashmap">
+		SELECT
+			skey
+			,user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,work_job
+			,bonus_pay
+			,workday_cnt
+			,workday_interval
+			,workday_per
+			,workload_target
+			,workload_cnt
+			,workload_per
+			,base_year
+			,bonus_career_state
+			,team_written
+			,base_date	
+			,quarter_flag
+			,DATE_FORMAT(sdate,"%Y-%m-%d") AS sdate
+			,DATE_FORMAT(edate,"%Y-%m-%d") AS edate
+			,reg_date	
+		FROM sch_bonus_team_quarter_daily
+		WHERE base_date = #{base_date}
+	</select>
+	
+	<!-- 관리자 분기기준 성과급 계산 스케줄러 불러오기 -->
+	<select id="selectSchTeamQuarterMemberListByBaseDate" parameterType="String" resultType="hashmap">
+		SELECT
+			skey
+			,user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,work_job
+			,bonus_pay
+			,workday_cnt
+			,workday_interval
+			,workday_per
+			,workload_target
+			,workload_cnt
+			,workload_per
+			,base_year
+			,bonus_career_state
+			,team_written
+			,base_date	
+			,quarter_flag
+			,DATE_FORMAT(sdate,"%Y-%m-%d") AS sdate
+			,DATE_FORMAT(edate,"%Y-%m-%d") AS edate
+			,reg_date	
+		FROM sch_bonus_team_quarter_daily
+		WHERE base_date = #{base_date}
+	</select>
+	
+	<!-- 관리자 성과급 계산 스케줄러 불러오기 -->
+	<select id="selectSchTeamMemberListByBaseDate" parameterType="String" resultType="hashmap">
+		SELECT
+			skey
+			,user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,work_job
+			,bonus_pay
+			,workday_cnt
+			,workday_interval
+			,workday_per
+			,workload_target
+			,workload_cnt
+			,workload_per
+			,base_year
+			,bonus_career_state
+			,team_written
+			,base_date	
+			,DATE_FORMAT(sdate,"%Y-%m-%d") AS sdate
+			,DATE_FORMAT(edate,"%Y-%m-%d") AS edate
+			,reg_date	
+		FROM sch_bonus_team_daily
+		WHERE base_date = #{base_date}
+	</select>
+	
+	<!-- 관리자 성과급 분기기준 계산 대상자 삭제 -->
+	<delete id="deleteSchBonusTeamQuarterMemberBySkey" parameterType="String">
+		DELETE FROM sch_bonus_team_quarter_daily WHERE skey = #{skey}
+	</delete>
+	
+	<!-- 관리자 성과급 계산 대상자 삭제 -->
+	<delete id="deleteSchBonusTeamMemberBySkey" parameterType="String">
+		DELETE FROM sch_bonus_team_daily WHERE skey = #{skey}
+	</delete>
+	
+	<!-- 관리자 성과급 계산 대상자 분기기준 기본목록 등록 -->
+	<insert id="insertSchBonusTeamQuarterMemberBasicList" parameterType="java.util.List">	
+		INSERT INTO sch_bonus_team_quarter_daily (
+			user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,work_job
+			,base_year
+			,bonus_career_state
+			,team_written
+			,base_date
+			,quarter_flag
+			,sdate
+			,edate
+			,reg_date
+		) VALUES 
+		<foreach collection="list" item="item" separator=",">
+		(
+			#{item.user_no}
+			,#{item.team_id}
+			,#{item.team_center}
+			,#{item.center_name}
+			,#{item.team_name}
+			,#{item.team_sector}
+			,#{item.team_sector_name}
+			,#{item.work_level_name}
+			,#{item.work_type_name}
+			,#{item.user_name}
+			,#{item.work_job}
+			,#{item.base_year}
+			,#{item.bonus_career_state}
+			,#{item.team_written}
+			,#{item.base_date}
+			,#{item.quarter_flag}
+			,#{item.sdate}
+			,#{item.edate}
+			,NOW()
+		)
+		</foreach>		
+	</insert>
+	
+	<!-- 관리자 성과급 계산 대상자 기본목록 등록 -->
+	<insert id="insertSchBonusTeamMemberQuarterBasicList" parameterType="java.util.List">
+		INSERT INTO sch_bonus_team_quarter_daily (
+			user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,work_job
+			,base_year
+			,bonus_career_state
+			,team_written
+			,base_date
+			,quarter_flag
+			,sdate
+			,edate
+			,reg_date
+		) VALUES 
+		<foreach collection="list" item="item" separator=",">
+		(
+			#{item.user_no}
+			,#{item.team_id}
+			,#{item.team_center}
+			,#{item.center_name}
+			,#{item.team_name}
+			,#{item.team_sector}
+			,#{item.team_sector_name}
+			,#{item.work_level_name}
+			,#{item.work_type_name}
+			,#{item.user_name}
+			,#{item.work_job}
+			,#{item.base_year}
+			,#{item.bonus_career_state}
+			,#{item.team_written}
+			,#{item.base_date}
+			,#{item.quarter_flag}
+			,#{item.sdate}
+			,#{item.edate}
+			,NOW()
+		)
+		</foreach>
+	</insert>
+		
+	<!-- 관리자 성과급 계산 대상자 기본목록 등록 -->
+	<insert id="insertSchBonusTeamMemberBasicList" parameterType="java.util.List">	
+		INSERT INTO sch_bonus_team_daily (
+			user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,work_job
+			,base_year
+			,bonus_career_state
+			,team_written
+			,base_date
+			,sdate
+			,edate
+			,reg_date
+		) VALUES 
+		<foreach collection="list" item="item" separator=",">
+		(
+			#{item.user_no}
+			,#{item.team_id}
+			,#{item.team_center}
+			,#{item.center_name}
+			,#{item.team_name}
+			,#{item.team_sector}
+			,#{item.team_sector_name}
+			,#{item.work_level_name}
+			,#{item.work_type_name}
+			,#{item.user_name}
+			,#{item.work_job}
+			,#{item.base_year}
+			,#{item.bonus_career_state}
+			,#{item.team_written}
+			,#{item.base_date}
+			,#{item.sdate}
+			,#{item.edate}
+			,NOW()
+		)
+		</foreach>		
+	</insert>
+	
+	<select id="selectTopTmBscUpdateInfo" parameterType="String" resultType="hashmap">
+		SELECT
+			team_id
+			,team_center	
+			,getTopTmBscCenterName(team_id) AS center_name	
+			,team_name
+			,team_sector
+			,(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_tm_bsc' AND col_nm = 'team_sector' AND col_cd = team_sector) AS team_sector_name
+			,team_written
+		FROM top_tm_bsc
+		WHERE team_id = #{team_id}				
+	</select>
+	
+	<select id="selectTopMbrAppointLastTeamInfo" parameterType="hashmap" resultType="String">
+		SELECT
+			IFNULL(GA.appoint_team_id,'') AS appoint_team_id
+			,COUNT(*) AS cnt
+		FROM(
+			SELECT
+				appoint_team_id
+				,FROM_UNIXTIME(appoint_date)	
+			FROM top_mbr_appoint
+			WHERE 1=1
+			AND user_no = #{user_no}
+			AND FROM_UNIXTIME(appoint_date,"%Y-%m-%d") &lt;= #{sdate}
+			ORDER BY appoint_date DESC
+			LIMIT 1
+		)GA
+	</select>
+	
+	<!-- 관리자 성과급 분기기준 계산 대상자(신입, 경력처리) 목록 가져오기 -->
+	<select id="SchBonusTeamMemberQuarterListAll" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GB.user_no
+			,GB.center_name
+			,GB.team_sector_name
+			,GB.team_sector
+			,GB.team_name
+			,GB.user_name
+			,GB.work_level_name
+			,GB.work_type_name
+			,GB.team_id
+			,GB.team_center
+			,GB.join_date
+			,GB.join_date_fmt
+			,GB.work_job
+			,GB.team_written
+			,GB.bonus_career_state
+			,GB.sdate
+			,GB.edate
+			,GB.base_date
+			
+			,GB.user_state
+			,GB.team_group_order
+			,GB.team_order
+			,GB.work_level	
+			,GB.new_work_order
+		FROM
+		(
+			SELECT
+				GA.user_no
+				,getTopTmBscCenterName(GA.team_id) AS center_name
+				,(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_tm_bsc' AND col_nm = 'team_sector' AND col_cd = GA.team_sector) AS team_sector_name
+				,GA.team_sector
+				,GA.team_name AS team_name
+				,GA.user_name AS user_name  
+				,getCodeValue("top_mbr_bsc", "work_level", GA.work_level) AS work_level_name
+				,getCodeValue("top_mbr_bsc", "work_type", GA.work_type) AS work_type_name
+				,GA.team_id	
+				,GA.team_center
+				,GA.join_date
+				,GA.join_date_fmt
+				,GA.work_job		
+				,GA.team_written
+				,GA.bonus_career_state
+				,CASE
+					WHEN GA.bonus_career_state = 2
+					THEN GA.join_date_fmt
+					WHEN GA.bonus_career_state = 1
+					THEN DATE_ADD(GA.join_date_fmt, INTERVAL 3 MONTH)
+					ELSE DATE_ADD(GA.join_date_fmt, INTERVAL 1 YEAR)
+				END AS sdate
+				,CASE
+					WHEN (GA.user_state = 1 and FROM_UNIXTIME(GA.out_date,"%Y-%m-%d") &lt; #{edate})										
+					THEN FROM_UNIXTIME(GA.out_date,"%Y-%m-%d")
+					WHEN (GA.user_state = 1 and FROM_UNIXTIME(GA.out_date,"%Y-%m-%d") >= #{edate})										
+					THEN DATE_ADD(#{edate},INTERVAL -1 DAY)
+					WHEN #{edate} &lt; #{base_date}
+					THEN DATE_ADD(#{edate},INTERVAL -1 DAY)
+					ELSE #{edate} 
+				END AS edate
+				,#{base_date} AS base_date
+				
+				,GA.user_state
+				,GA.team_group_order
+				,GA.team_order
+				,GA.work_level		
+				,GA.new_work_order
+			FROM (
+				SELECT
+					a.user_no
+					,a.user_name
+					,a.work_level
+					,a.work_type
+					,a.join_date
+					,FROM_UNIXTIME(a.join_date,"%Y-%m-%d") AS join_date_fmt
+					,a.user_state
+					,a.work_job
+					,a.bonus_career_state
+					,b.team_id
+					,b.team_name
+					,b.team_group_order
+					,b.team_order 
+					,b.team_type
+					,b.team_center
+					,b.team_sector
+					,b.team_written
+					,CASE a.work_type
+						WHEN 1 THEN 1
+						WHEN 2 THEN 2
+						WHEN 6 THEN 3
+						WHEN 14 THEN 4
+						WHEN 15 THEN 5
+						WHEN 3 THEN 6
+						WHEN 7 THEN 7
+						WHEN 4 THEN 8
+						WHEN 8 THEN 9
+						WHEN 5 THEN 10
+						WHEN 9 THEN 11
+						WHEN 10 THEN 12
+						WHEN 12 THEN 13
+						WHEN 11 THEN 14
+						WHEN 13 THEN 15
+					END AS new_work_order
+					,a.out_date    
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE a.team_id_main = b.team_id  
+				AND a.user_state != 1
+				AND b.team_type IN(0,1)
+				AND a.bonus_state != 2
+				AND a.bonus_manager_state != 2
+				
+				UNION ALL
+				
+				SELECT
+					a.user_no
+					,a.user_name
+					,a.work_level
+					,a.work_type
+					,a.join_date
+					,FROM_UNIXTIME(a.join_date,"%Y-%m-%d") AS join_date_fmt
+					,a.user_state
+					,a.work_job
+					,a.bonus_career_state
+					,b.team_id
+					,b.team_name
+					,b.team_group_order
+					,b.team_order 
+					,b.team_type
+					,b.team_center
+					,b.team_sector
+					,b.team_written
+					,CASE a.work_type
+						WHEN 1 THEN 1
+						WHEN 2 THEN 2
+						WHEN 6 THEN 3
+						WHEN 14 THEN 4
+						WHEN 15 THEN 5
+						WHEN 3 THEN 6
+						WHEN 7 THEN 7
+						WHEN 4 THEN 8
+						WHEN 8 THEN 9
+						WHEN 5 THEN 10
+						WHEN 9 THEN 11
+						WHEN 10 THEN 12
+						WHEN 12 THEN 13
+						WHEN 11 THEN 14
+						WHEN 13 THEN 15
+					END AS new_work_order
+					,a.out_date   					 
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE a.team_id_main = b.team_id  
+				AND a.user_state = 1
+				AND b.team_type IN(0,1)
+				AND a.bonus_state != 2
+				AND a.bonus_manager_state != 2
+				AND a.out_date >= UNIX_TIMESTAMP(#{sdate})
+				<!-- AND a.out_date &lt; UNIX_TIMESTAMP(#{edate}) -->
+							
+			)GA
+		)GB
+		WHERE 1=1
+		AND GB.sdate &lt;= #{edate}
+		ORDER BY GB.user_state, GB.team_group_order DESC, GB.team_order DESC, GB.work_level DESC, GB.join_date, GB.new_work_order			
+	</select>
+	
+	<!-- 관리자 성과급 계산 대상자(신입, 경력처리) 목록 가져오기 -->	
+	<select id="SchBonusTeamMemberListAll" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GB.user_no
+			,GB.center_name
+			,GB.team_sector_name
+			,GB.team_sector
+			,GB.team_name
+			,GB.user_name
+			,GB.work_level_name
+			,GB.work_type_name
+			,GB.team_id
+			,GB.team_center
+			,GB.join_date
+			,GB.join_date_fmt
+			,GB.work_job
+			,GB.team_written
+			,GB.bonus_career_state
+			,GB.sdate
+			,GB.edate
+			,GB.base_date
+			
+			,GB.user_state
+			,GB.team_group_order
+			,GB.team_order
+			,GB.work_level	
+			,GB.new_work_order
+		FROM
+		(
+			SELECT
+				GA.user_no
+				,getTopTmBscCenterName(GA.team_id) AS center_name
+				,(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_tm_bsc' AND col_nm = 'team_sector' AND col_cd = GA.team_sector) AS team_sector_name
+				,GA.team_sector
+				,GA.team_name AS team_name
+				,GA.user_name AS user_name  
+				,getCodeValue("top_mbr_bsc", "work_level", GA.work_level) AS work_level_name
+				,getCodeValue("top_mbr_bsc", "work_type", GA.work_type) AS work_type_name
+				,GA.team_id	
+				,GA.team_center
+				,GA.join_date
+				,GA.join_date_fmt
+				,GA.work_job		
+				,GA.team_written
+				,GA.bonus_career_state
+				,CASE
+					WHEN GA.bonus_career_state = 2
+					THEN GA.join_date_fmt
+					WHEN GA.bonus_career_state = 1
+					THEN DATE_ADD(GA.join_date_fmt, INTERVAL 3 MONTH)
+					ELSE DATE_ADD(GA.join_date_fmt, INTERVAL 1 YEAR)
+				END AS sdate
+				,CASE
+					WHEN GA.user_state = 1
+					THEN FROM_UNIXTIME(GA.out_date,"%Y-%m-%d")
+					ELSE #{base_date}
+				END AS edate
+				,#{base_date} AS base_date
+				
+				,GA.user_state
+				,GA.team_group_order
+				,GA.team_order
+				,GA.work_level		
+				,GA.new_work_order
+			FROM (
+				SELECT
+					a.user_no
+					,a.user_name
+					,a.work_level
+					,a.work_type
+					,a.join_date
+					,FROM_UNIXTIME(a.join_date,"%Y-%m-%d") AS join_date_fmt
+					,a.user_state
+					,a.work_job
+					,a.bonus_career_state
+					,b.team_id
+					,b.team_name
+					,b.team_group_order
+					,b.team_order 
+					,b.team_type
+					,b.team_center
+					,b.team_sector
+					,b.team_written
+					,CASE a.work_type
+						WHEN 1 THEN 1
+						WHEN 2 THEN 2
+						WHEN 6 THEN 3
+						WHEN 14 THEN 4
+						WHEN 15 THEN 5
+						WHEN 3 THEN 6
+						WHEN 7 THEN 7
+						WHEN 4 THEN 8
+						WHEN 8 THEN 9
+						WHEN 5 THEN 10
+						WHEN 9 THEN 11
+						WHEN 10 THEN 12
+						WHEN 12 THEN 13
+						WHEN 11 THEN 14
+						WHEN 13 THEN 15
+					END AS new_work_order
+					,a.out_date    
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE a.team_id_main = b.team_id  
+				AND a.user_state != 1
+				AND b.team_type IN(0,1)
+				AND a.bonus_state != 2
+				AND a.bonus_manager_state != 2
+				
+				UNION ALL
+				
+				SELECT
+					a.user_no
+					,a.user_name
+					,a.work_level
+					,a.work_type
+					,a.join_date
+					,FROM_UNIXTIME(a.join_date,"%Y-%m-%d") AS join_date_fmt
+					,a.user_state
+					,a.work_job
+					,a.bonus_career_state
+					,b.team_id
+					,b.team_name
+					,b.team_group_order
+					,b.team_order 
+					,b.team_type
+					,b.team_center
+					,b.team_sector
+					,b.team_written
+					,CASE a.work_type
+						WHEN 1 THEN 1
+						WHEN 2 THEN 2
+						WHEN 6 THEN 3
+						WHEN 14 THEN 4
+						WHEN 15 THEN 5
+						WHEN 3 THEN 6
+						WHEN 7 THEN 7
+						WHEN 4 THEN 8
+						WHEN 8 THEN 9
+						WHEN 5 THEN 10
+						WHEN 9 THEN 11
+						WHEN 10 THEN 12
+						WHEN 12 THEN 13
+						WHEN 11 THEN 14
+						WHEN 13 THEN 15
+					END AS new_work_order
+					,a.out_date   					 
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE a.team_id_main = b.team_id  
+				AND a.user_state = 1
+				AND b.team_type IN(0,1)
+				AND a.bonus_state != 2
+				AND a.bonus_manager_state != 2
+				AND a.out_date >= UNIX_TIMESTAMP(#{start_year_date})
+				AND a.out_date &lt;= UNIX_TIMESTAMP(#{base_date})
+							
+			)GA
+		)GB
+		WHERE 1=1
+		AND GB.sdate &lt;= #{base_date}
+		ORDER BY GB.user_state, GB.team_group_order DESC, GB.team_order DESC, GB.work_level DESC, GB.join_date, GB.new_work_order	
+	</select>
+	
+	<!-- 성과급 계산 대상자 목록 가져오기 -->	
+	<select id="SchBonusMemberListAll" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.user_no
+			,getTopTmBscCenterName(GA.team_id) AS center_name
+			,(SELECT col_val FROM sysadm_codedic WHERE tbl_nm = 'top_tm_bsc' AND col_nm = 'team_sector' AND col_cd = GA.team_sector) AS team_sector_name
+			,GA.team_sector
+			,GA.team_name AS team_name
+			,GA.user_name AS user_name  
+			,getCodeValue("top_mbr_bsc", "work_level", GA.work_level) AS work_level_name
+			,getCodeValue("top_mbr_bsc", "work_type", GA.work_type) AS work_type_name
+			,GA.team_id	
+			,GA.team_center
+			,GA.join_date
+			,GA.join_date_fmt
+			,GA.work_job		
+			,GA.team_written
+		FROM (
+			SELECT
+				a.user_no
+				,a.user_name
+				,a.work_level
+				,a.work_type
+				,a.join_date
+				,from_unixtime(a.join_date,"%Y-%m-%d") as join_date_fmt
+				,a.user_state
+				,a.work_job
+				,b.team_id
+				,b.team_name
+				,b.team_group_order
+				,b.team_order 
+				,b.team_type
+				,b.team_center
+				,b.team_sector
+				,b.team_written
+				,CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15
+				END AS new_work_order    
+			FROM top_mbr_bsc a, top_tm_bsc b
+			WHERE a.team_id_main = b.team_id  
+			AND a.user_state != 1  
+			AND b.team_type IN(0,1)
+			AND a.bonus_state != 2
+ 		)GA
+ 		ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	</select>
+	
+	<!-- 작업일자 기준 관리자 성과급 분기별 등록정보가 있는지 체크-->
+	<select id="selectSchBonusTeamQuarterDailyChk" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(*) as Cnt
+		FROM sch_bonus_team_quarter_daily
+		WHERE base_date = #{chkDate}
+	</select>
+	
+	<!-- 작업일자 기준 관리자 성과급 등록정보가 있는지 체크-->
+	<select id="selectSchBonusTeamDailyChk" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(*) as Cnt
+		FROM sch_bonus_team_daily
+		WHERE base_date = #{chkDate}
+	</select>
+	
+	<!-- 작업일자 기준 연간 성과급 등록정보가 있는지 체크-->
+	<select id="selectSchBonusYearDailyChk" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(*) as Cnt
+		FROM sch_bonus_year_daily
+		WHERE base_date = #{chkDate}
+	</select>
+	
+	<!-- 작업일자 기준 성과급 등록정보가 있는지 체크-->
+	<select id="selectSchBonusDailyChk" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(*) as Cnt
+		FROM sch_bonus_daily
+		WHERE base_date = #{chkDate}
+	</select>
+	
+	<!-- 현장보고서 개인 통계데이터 체크 -->
+	<select id="selectTopSiteMemberChk" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(*) as Cnt
+		FROM top_site_daily_member
+		WHERE regdate = #{chkDate}
+	</select>
+	
+	<!-- 현장보고서 팀 통계데이터 체크 -->
+	<select id="selectTopSiteTeamChk" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(*) as Cnt
+		FROM top_site_daily_team
+		WHERE regdate = #{chkDate}
+	</select>
+	
+	
+	<!-- 스케줄러에서 기준업무량 데이터를 가져온다. -->
+	<select id="selectWorkloadDailyByUserNo" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			user_no
+			,IFNULL(ROUND(purpose_workload,3),0) AS purpose_workload
+			,IFNULL(ROUND(calc_workload,3),0) AS cal_workload			
+		FROM top_rpt_workload_daily 
+		WHERE user_no = #{user_no}
+		AND base_date = UNIX_TIMESTAMP(#{base_date})
+		LIMIT 1
+	</select>
+	
+	<!-- 스케줄러에서 기준업무량 데이터 갯수를 가져온다. -->
+	<select id="countWorkloadDailyByUserNo" parameterType="HashMap" resultType="integer">
+		SELECT 
+			count(*) as Cnt
+		FROM top_rpt_workload_daily 
+		WHERE user_no = #{user_no}
+		AND base_date = UNIX_TIMESTAMP(#{base_date})
+	</select>
+	
+	<!-- 일일 성과급 연간 기준 스케줄러 데이터 등록-->
+	<insert id="insertSchBonusYearDaily" parameterType="java.util.List">
+		INSERT INTO sch_bonus_year_daily (
+			user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,bonus_pay
+			,workday_cnt
+			,workday_interval
+			,workday_per
+			,workload_target
+			,workload_cnt
+			,workload_per
+			,base_year
+			,team_written			
+			,base_date
+			,reg_date			
+		) VALUES 
+		<foreach collection="list" item="item" separator=",">
+		(
+			#{item.user_no}
+			,#{item.team_id}
+			,#{item.team_center}
+			,#{item.center_name}
+			,#{item.team_name}
+			,#{item.team_sector}
+			,#{item.team_sector_name}
+			,#{item.work_level_name}
+			,#{item.work_type_name}
+			,#{item.user_name}
+			,#{item.bonus_pay}
+			,#{item.workday_cnt}
+			,#{item.workday_interval}
+			,#{item.workday_per}
+			,#{item.workload_target}
+			,#{item.workload_cnt}
+			,#{item.workload_per}
+			,#{item.base_year}			
+			,#{item.team_written}
+			,#{item.base_date}
+			,NOW()
+		)
+		</foreach>		
+	</insert>
+	
+	<!-- 일일 성과급 스케줄러 데이터 등록-->
+	<insert id="insertSchBonusDaily" parameterType="java.util.List">
+		INSERT INTO sch_bonus_daily (
+			user_no
+			,team_id
+			,team_center
+			,center_name
+			,team_name
+			,team_sector
+			,team_sector_name
+			,work_level_name
+			,work_type_name
+			,user_name
+			,bonus_pay
+			,workday_cnt
+			,workday_interval
+			,workday_per
+			,workload_target
+			,workload_cnt
+			,workload_per
+			,base_year			
+			,quater_flag
+			,team_written			
+			,base_date
+			,reg_date			
+		) VALUES 
+		<foreach collection="list" item="item" separator=",">
+		(
+			#{item.user_no}
+			,#{item.team_id}
+			,#{item.team_center}
+			,#{item.center_name}
+			,#{item.team_name}
+			,#{item.team_sector}
+			,#{item.team_sector_name}
+			,#{item.work_level_name}
+			,#{item.work_type_name}
+			,#{item.user_name}
+			,#{item.bonus_pay}
+			,#{item.workday_cnt}
+			,#{item.workday_interval}
+			,#{item.workday_per}
+			,#{item.workload_target}
+			,#{item.workload_cnt}
+			,#{item.workload_per}
+			,#{item.base_year}
+			,#{item.quater_flag}
+			,#{item.team_written}
+			,#{item.base_date}
+			,NOW()
+		)
+		</foreach>		
+	</insert>
+	
+	<!-- 현장보고서 개인통계데이터 등록 -->
+	<insert id="insertTopSiteMember" parameterType="java.util.List">
+		INSERT INTO top_site_daily_member (
+			user_no         
+			,user_name       
+			,user_state      
+			,team_id         
+			,center_name     
+			,team_name       
+			,team_group_order
+			,team_order      
+			,work_level      
+			,new_work_order  
+			,join_date       
+			,suim_cnt        
+			,sub_3_in_cnt    
+			,sub_3_over_cnt  
+			,not_3_in_cnt    
+			,not_3_over_cnt  
+			,not_30_over_cnt 
+			,over_per        
+			,regdate
+		) VALUES 
+		<foreach collection="list" item="item" separator=",">
+		(
+			#{item.user_no}
+			,#{item.user_name}
+			,#{item.user_state}
+			,#{item.team_id_main}
+			,#{item.center_name}
+			,#{item.team_name}
+			,#{item.team_group_order}
+			,#{item.team_order}
+			,#{item.work_level}
+			,#{item.new_work_order}
+			,#{item.join_date}
+			,#{item.suim_cnt}
+			,#{item.sub_3_in_cnt}
+			,#{item.sub_3_over_cnt}
+			,#{item.not_3_in_cnt}
+			,#{item.not_3_over_cnt}
+			,#{item.not_30_over_cnt}
+			,#{item.over_per}
+			,#{item.regdate}
+		)
+		</foreach>		
+	</insert>
+	
+	<!-- 현장보고서 팀 통계데이터 등록 -->
+	<insert id="insertTopSiteTeam" parameterType="java.util.List">
+		INSERT INTO top_site_daily_team (
+			team_id
+			,team_name
+			,team_center
+			,team_sector
+			,suim_cnt
+			,sub_3_in_cnt
+			,sub_3_over_cnt
+			,not_3_in_cnt
+			,not_3_over_cnt
+			,not_30_over_cnt
+			,over_per
+			,regdate
+		)VALUES
+		<foreach collection="list" item="item" separator=",">
+		(
+			#{item.team_id}
+			,#{item.team_name}
+			,#{item.team_center}
+			,#{item.team_sector}
+			,#{item.suim_cnt}
+			,#{item.sub_3_in_cnt}
+			,#{item.sub_3_over_cnt}
+			,#{item.not_3_in_cnt}
+			,#{item.not_3_over_cnt}
+			,#{item.not_30_over_cnt}
+			,#{item.over_per}
+			,#{item.regdate}
+		)		
+		</foreach>		
+	</insert>
+	
+	<!-- 현장보고서 개인 통계데이터 가져오기, 일반건 전환일자조건 추가로 변경 by top3009-->
+	<select id="selectTopSiteMemberListAll" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GC.user_no
+			,GC.user_name
+			,GC.user_state
+			,GC.team_id_main
+			,getTopTmBscCenterName(GC.team_id_main) center_name
+			,TB.team_name
+			,TB.team_group_order
+			,TB.team_order
+			,GC.work_level
+			,GC.new_work_order
+			,GC.join_date
+			,GC.suim_cnt
+			,GC.sub_3_in_cnt
+			,GC.sub_3_over_cnt
+			,GC.not_3_in_cnt
+			,GC.not_3_over_cnt
+			,GC.not_30_over_cnt
+			,IFNULL((((GC.sub_3_over_cnt + GC.not_3_over_cnt)*100)/GC.suim_cnt),0) AS over_per
+			,DATE_FORMAT(NOW(), '%Y-%m-%d') AS regdate	
+		FROM
+		(
+			SELECT
+				GB.user_no
+				,TM.user_state
+				,TM.user_name				
+				,TM.team_id_main
+				,TM.work_level
+				,CASE TM.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+				,TM.join_date
+				,GB.suim_cnt
+				,GB.sub_3_in_cnt
+				,GB.sub_3_over_cnt
+				,GB.not_3_in_cnt
+				,GB.not_3_over_cnt
+				,GB.not_30_over_cnt	
+			FROM(	
+				SELECT 
+					GA.user_no AS user_no		
+					,(SUM(GA.suim_cnt) + SUM(GA.trans_suim_cnt)) AS suim_cnt
+					,(SUM(GA.sub_3_in_cnt) + SUM(GA.trans_sub_3_in_cnt)) AS sub_3_in_cnt
+					,(SUM(GA.sub_3_over_cnt) + SUM(GA.trans_sub_3_over_cnt)) AS sub_3_over_cnt
+					,(SUM(GA.not_3_in_cnt) + SUM(GA.trans_not_3_in_cnt)) AS not_3_in_cnt
+					,(SUM(GA.not_3_over_cnt) + SUM(GA.trans_not_3_over_cnt)) AS not_3_over_cnt
+					,(SUM(GA.not_30_over_cnt) + SUM(GA.trans_not_30_over_cnt)) AS not_30_over_cnt
+				FROM
+				(
+					SELECT
+						th.user_no		
+						,COUNT(*) AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1,2,11,12,13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,COUNT(*) AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1,2,11,12,13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.user_no
+		
+					UNION ALL
+		
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,COUNT(*) AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+		
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,COUNT(*) AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.trans_date,th.site_rpt_aprv_date) &lt; 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,COUNT(*) AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,COUNT(*) AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.trans_date,th.site_rpt_aprv_date) >= 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,COUNT(*) AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,COUNT(*) AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.trans_date) &lt; 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,COUNT(*) AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,COUNT(*) AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.trans_date) >= 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,COUNT(*) AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1)
+					AND th.site_rpt_state IN (0,1)				
+					AND th.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,COUNT(*) AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1)
+					AND th.site_rpt_state IN (0,1)				
+					AND th.trans_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.user_no
+					
+				) GA 
+				GROUP BY GA.user_no
+			)GB LEFT JOIN top_mbr_bsc TM
+			ON GB.user_no = TM.user_no
+		)GC LEFT JOIN top_tm_bsc TB
+		ON GC.team_id_main = TB.team_id
+		WHERE GC.user_no != 0
+		AND GC.user_name IS NOT NULL
+		ORDER BY TB.team_group_order DESC, TB.team_order DESC, GC.new_work_order, GC.work_level DESC, GC.join_date
+	</select>	
+	
+	<!-- 현장보고서 개인 통계데이터 가져오기 -->
+	<select id="selectTopSiteMemberListAll_20210405" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GC.user_no
+			,GC.user_name
+			,GC.user_state
+			,GC.team_id_main
+			,getTopTmBscCenterName(GC.team_id_main) center_name
+			,TB.team_name
+			,TB.team_group_order
+			,TB.team_order
+			,GC.work_level
+			,GC.new_work_order
+			,GC.join_date
+			,GC.suim_cnt
+			,GC.sub_3_in_cnt
+			,GC.sub_3_over_cnt
+			,GC.not_3_in_cnt
+			,GC.not_3_over_cnt
+			,GC.not_30_over_cnt
+			,IFNULL((((GC.sub_3_over_cnt + GC.not_3_over_cnt)*100)/GC.suim_cnt),0) AS over_per
+			,DATE_FORMAT(now(), '%Y-%m-%d') as regdate	
+		FROM
+		(
+			SELECT
+				GB.user_no
+				,TM.user_state
+				,TM.user_name				
+				,TM.team_id_main
+				,TM.work_level
+				,CASE TM.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+				,TM.join_date
+				,GB.suim_cnt
+				,GB.sub_3_in_cnt
+				,GB.sub_3_over_cnt
+				,GB.not_3_in_cnt
+				,GB.not_3_over_cnt
+				,GB.not_30_over_cnt	
+			FROM(	
+				SELECT 
+					GA.user_no AS user_no		
+					,SUM(GA.suim_cnt) AS suim_cnt
+					,SUM(GA.sub_3_in_cnt) AS sub_3_in_cnt
+					,SUM(GA.sub_3_over_cnt) AS sub_3_over_cnt
+					,SUM(GA.not_3_in_cnt) AS not_3_in_cnt
+					,SUM(GA.not_3_over_cnt) AS not_3_over_cnt
+					,SUM(GA.not_30_over_cnt) AS not_30_over_cnt
+				FROM
+				(
+					SELECT
+						th.user_no		
+						,COUNT(*) AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1,2,11,12,13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.user_no
+		
+					UNION ALL
+		
+					SELECT
+						th.user_no
+						,0 AS suim_cnt	
+						,COUNT(*) AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,COUNT(*) AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,COUNT(*) AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,COUNT(*) AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.user_no
+					
+					UNION ALL
+					
+					SELECT
+						th.user_no
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,COUNT(*) AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1)
+					AND th.site_rpt_state IN (0,1)				
+					AND th.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.user_no
+					
+				) GA 
+				GROUP BY GA.user_no
+			)GB LEFT JOIN top_mbr_bsc TM
+			ON GB.user_no = TM.user_no
+		)GC LEFT JOIN top_tm_bsc TB
+		ON GC.team_id_main = TB.team_id
+		WHERE GC.user_no != 0
+		AND GC.user_name IS NOT NULL
+		ORDER BY TB.team_group_order DESC, TB.team_order DESC, GC.new_work_order, GC.work_level DESC, GC.join_date
+	</select>
+	
+	<!-- 현장보고서 팀 통계데이터 가져오기, 일반건 전환일자조건 추가로 변경 by top3009 -->
+	<select id="selectTopSiteTeamListAll" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GB.team_id AS team_id
+			,tb.team_name AS team_name	
+			,tb.team_center AS team_center
+			,tb.team_sector AS team_sector			
+			,GB.suim_cnt AS suim_cnt
+			,GB.sub_3_in_cnt AS sub_3_in_cnt
+			,GB.sub_3_over_cnt AS sub_3_over_cnt
+			,GB.not_3_in_cnt AS not_3_in_cnt
+			,GB.not_3_over_cnt AS not_3_over_cnt
+			,GB.not_30_over_cnt AS not_30_over_cnt
+			,IFNULL((((GB.sub_3_over_cnt + GB.not_3_over_cnt)*100)/GB.suim_cnt),0) AS over_per
+			,DATE_FORMAT(NOW(), '%Y-%m-%d') AS regdate
+		FROM(
+				SELECT 
+					GA.team_id AS team_id	
+					,(SUM(GA.suim_cnt) + SUM(GA.trans_suim_cnt)) AS suim_cnt
+					,(SUM(GA.sub_3_in_cnt) + SUM(GA.trans_sub_3_in_cnt)) AS sub_3_in_cnt
+					,(SUM(GA.sub_3_over_cnt) + SUM(GA.trans_sub_3_over_cnt)) AS sub_3_over_cnt
+					,(SUM(GA.not_3_in_cnt) + SUM(GA.trans_not_3_in_cnt)) AS not_3_in_cnt
+					,(SUM(GA.not_3_over_cnt) + SUM(GA.trans_not_3_over_cnt)) AS not_3_over_cnt
+					,(SUM(GA.not_30_over_cnt) + SUM(GA.trans_not_30_over_cnt)) AS not_30_over_cnt
+				FROM
+				(
+					SELECT
+						th.team_id		
+						,COUNT(*) AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1,2,11,12,13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,COUNT(*) AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1,2,11,12,13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.team_id
+			
+					UNION ALL
+			
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,COUNT(*) AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+			
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,COUNT(*) AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.trans_date,th.site_rpt_aprv_date) &lt; 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,COUNT(*) AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,COUNT(*) AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.trans_date,th.site_rpt_aprv_date) >= 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,COUNT(*) AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,COUNT(*) AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.trans_date) &lt; 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,COUNT(*) AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,COUNT(*) AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.trans_date) >= 3
+					AND th.trans_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,COUNT(*) AS not_30_over_cnt
+						,0 AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1)
+					AND th.site_rpt_state IN (0,1)				
+					AND th.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NULL
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id		
+						,0 AS suim_cnt
+						,0 AS trans_suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS trans_sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS trans_sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS trans_not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS trans_not_3_over_cnt
+						,0 AS not_30_over_cnt
+						,COUNT(*) AS trans_not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1)
+					AND th.site_rpt_state IN (0,1)				
+					AND th.trans_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					AND th.trans_date IS NOT NULL
+					GROUP BY th.team_id
+					
+				) GA 
+				GROUP BY GA.team_id
+			)GB LEFT JOIN top_tm_bsc tb
+		ON GB.team_id = tb.team_id	
+		WHERE 1=1
+		ORDER BY tb.team_group_order DESC, tb.team_order DESC
+	</select>
+	
+	
+	<!-- 현장보고서 팀 통계데이터 가져오기 -->
+	<select id="selectTopSiteTeamListAll20210405" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GB.team_id AS team_id
+			,tb.team_name AS team_name	
+			,tb.team_center AS team_center
+			,tb.team_sector AS team_sector			
+			,GB.suim_cnt AS suim_cnt
+			,GB.sub_3_in_cnt AS sub_3_in_cnt
+			,GB.sub_3_over_cnt AS sub_3_over_cnt
+			,GB.not_3_in_cnt AS not_3_in_cnt
+			,GB.not_3_over_cnt AS not_3_over_cnt
+			,GB.not_30_over_cnt AS not_30_over_cnt
+			,IFNULL((((GB.sub_3_over_cnt + GB.not_3_over_cnt)*100)/GB.suim_cnt),0) AS over_per
+			,DATE_FORMAT(now(), '%Y-%m-%d') as regdate
+		FROM(
+				SELECT 
+					GA.team_id AS team_id	
+					,SUM(GA.suim_cnt) AS suim_cnt
+					,SUM(GA.sub_3_in_cnt) AS sub_3_in_cnt
+					,SUM(GA.sub_3_over_cnt) AS sub_3_over_cnt
+					,SUM(GA.not_3_in_cnt) AS not_3_in_cnt
+					,SUM(GA.not_3_over_cnt) AS not_3_over_cnt
+					,SUM(GA.not_30_over_cnt) AS not_30_over_cnt
+				FROM
+				(
+					SELECT
+						th.team_id		
+						,COUNT(*) AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1,2,11,12,13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.team_id
+			
+					UNION ALL
+			
+					SELECT
+						th.team_id
+						,0 AS suim_cnt	
+						,COUNT(*) AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,COUNT(*) AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state = 2
+					AND getDateDiffDiv(th.reg_date,th.site_rpt_aprv_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,COUNT(*) AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) &lt; 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,COUNT(*) AS not_3_over_cnt
+						,0 AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1,2)
+					AND th.site_rpt_state IN (0,1)
+					AND getDateDiff(th.reg_date) >= 3
+					AND th.reg_date > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.team_id
+					
+					UNION ALL
+					
+					SELECT
+						th.team_id
+						,0 AS suim_cnt	
+						,0 AS sub_3_in_cnt
+						,0 AS sub_3_over_cnt
+						,0 AS not_3_in_cnt
+						,0 AS not_3_over_cnt
+						,COUNT(*) AS not_30_over_cnt
+					FROM top_rpt_head th
+					WHERE th.suim_rpt_type1 IN (1, 2, 11, 12, 13)
+					AND th.pendncy_trget_at IN (1,4)
+					AND th.suim_rpt_state IN (0,1)
+					AND th.site_rpt_state IN (0,1)				
+					AND th.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+					GROUP BY th.team_id
+					
+				) GA 
+				GROUP BY GA.team_id
+			)GB LEFT JOIN top_tm_bsc tb
+		ON GB.team_id = tb.team_id	
+		WHERE 1=1
+		ORDER BY tb.team_group_order DESC, tb.team_order DESC
+	</select>
+	
+
+    <select id="selectSiteInterimImgList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SUIM_RPT_NO
+               ,B.RPT_SITE_NO
+               ,C.RPT_SITE_IMG_NO
+               ,CONCAT(C.IMG_PATH,C.IMG_NAME) AS FILE_PATH
+               ,C.IMG_PATH AS FOLDER_PATH
+               ,C.IMG_NAME
+          FROM  vn_rpt_head_del A
+               ,top_rpt_site_interim B
+               ,top_rpt_site_img C
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND  B.RPT_SITE_NO = C.RPT_SITE_NO
+        ORDER BY A.SUIM_RPT_NO ASC, B.RPT_SITE_NO ASC, C.RPT_SITE_IMG_NO ASC
+    </select>
+
+    <!-- 사고처리 과정표 삭제 -->
+    <delete id="deleteTopRptCtrl">
+        DELETE A FROM top_rpt_ctrl AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 중간 현장 보고서 이미지 데이터 삭제 -->
+    <delete id="deleteTopRptSiteImg">
+        DELETE  FROM  top_rpt_site_img
+         WHERE  RPT_SITE_NO IN(
+                                SELECT  B.RPT_SITE_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_site_interim B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+
+    <!-- 중간 현장 보고서 파일 리스트 -->
+    <select id="selectSiteInterimFileList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SUIM_RPT_NO
+               ,B.RPT_SITE_NO
+               ,CONCAT(B.FILE_PATH,B.FILE_NAME) AS FILE_PATH
+               ,B.FILE_PATH AS FOLDER_PATH
+               ,B.FILE_NAME
+          FROM  vn_rpt_head_del A
+               ,top_rpt_site_interim B
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND  B.FILE_PATH IS NOT NULL
+           AND  B.FILE_PATH != ''
+        ORDER BY A.SUIM_RPT_NO ASC
+    </select>
+
+    <!-- 현장 중간 보고서 삭제 -->
+    <delete id="deleteTopRptSiteInterim">
+        DELETE A FROM top_rpt_site_interim AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 현재 진행사항 삭제 -->
+    <delete id="deleteTopRptNow">
+        DELETE A FROM top_rpt_now AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 나도 한마디 삭제 -->
+    <delete id="deleteTopRptMemo">
+        DELETE A FROM top_rpt_memo AS A JOIN vn_rpt_head_del AS B ON A.FK_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 보고서 기본 첨부 파일 리스트 -->
+    <select id="selectTopRptFileList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SUIM_RPT_NO
+               ,CONCAT(B.FILE_PATH,B.FILE_NAME) AS FILE_PATH
+               ,B.FILE_PATH AS FOLDER_PATH
+               ,B.FILE_NAME
+          FROM  vn_rpt_head_del A
+               ,top_rpt_file B
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND  B.FILE_PATH IS NOT NULL
+           AND  B.FILE_PATH != ''
+        ORDER BY A.SUIM_RPT_NO ASC
+    </select>
+
+    <!-- 보고서 기본 첨부 파일 삭제 -->
+    <delete id="deleteTopRptFile">
+        DELETE A FROM top_rpt_file AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+
+    <!-- 보고서 1 삭제 -->
+    <delete id="deleteTopRptPrint1_2">
+        DELETE FROM  top_rpt_print_1_2
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_1 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint1_5">
+        DELETE FROM  top_rpt_print_1_5
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_1 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint1_6_1">
+        DELETE FROM  top_rpt_print_1_6_1
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_1 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint1_6_2">
+        DELETE FROM  top_rpt_print_1_6_2
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_1 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint1_8">
+        DELETE FROM  top_rpt_print_1_8
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_1 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint1">
+        DELETE A FROM top_rpt_print_1 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 보고서 6 삭제 -->
+    <delete id="deleteTopRptPrint6">
+        DELETE A FROM top_rpt_print_6 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 보고서 9 삭제 -->
+    <delete id="deleteTopRptPrint9_5_1">
+        DELETE FROM  top_rpt_print_9_5_1
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_9 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint9_5_2">
+        DELETE FROM  top_rpt_print_9_5_2
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_9 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint9_6">
+        DELETE FROM  top_rpt_print_9_6
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_9 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint9_8">
+        DELETE FROM  top_rpt_print_9_8
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_9 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint9">
+        DELETE A FROM top_rpt_print_9 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 보고서 16 삭제 -->
+    <delete id="deleteTopRptPrint16_3">
+        DELETE FROM  top_rpt_print_16_3
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_16 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint16_4">
+        DELETE FROM  top_rpt_print_16_4
+         WHERE RPT_PRINT_NO IN(
+                                SELECT  B.RPT_PRINT_NO
+                                  FROM  vn_rpt_head_del A
+                                       ,top_rpt_print_16 B
+                                 WHERE  1=1
+                                   AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+        )
+    </delete>
+    <delete id="deleteTopRptPrint16">
+        DELETE A FROM top_rpt_print_16 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 보고서 17 삭제 -->
+    <delete id="deleteTopRptPrint17_2">
+        DELETE A FROM top_rpt_print_17_2 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+    <delete id="deleteTopRptPrint17_4">
+        DELETE A FROM top_rpt_print_17_4 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+    <delete id="deleteTopRptPrint17_7">
+        DELETE A FROM top_rpt_print_17_7 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+    <delete id="deleteTopRptPrint17_13">
+        DELETE A FROM top_rpt_print_17_13 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+    <delete id="deleteTopRptPrint17">
+        DELETE A FROM top_rpt_print_17 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <!-- 보고서 1700 삭제 -->
+    <delete id="deleteTopRptPrint1700_7">
+        DELETE A FROM top_rpt_print_1700_7 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+    <delete id="deleteTopRptPrint1700">
+        DELETE A FROM top_rpt_print_1700 AS A JOIN vn_rpt_head_del AS B ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+    </delete>
+
+    <insert id="insertDailyScheduleLogSuim">
+        INSERT INTO TH_DAILY_SCHEDULE(SUIM_RPT_NO, REPORT_TYPE, DEL_DATE) SELECT SUIM_RPT_NO, 1, NOW() FROM vn_rpt_head_del
+    </insert>
+    <insert id="insertDailyScheduleLogJukbu">
+        INSERT INTO TH_DAILY_SCHEDULE(SUIM_RPT_NO, REPORT_TYPE, DEL_DATE)
+               SELECT  A.SUIM_RPT_NO, 2, NOW()
+                 FROM  top_contract A
+                WHERE  1=1
+                  AND  A.REG_DATE &lt; UNIX_TIMESTAMP(CONCAT(DATE_FORMAT(NOW(), '%Y-%m'), '-01'))
+                  AND  ((A.LOCK_FLAG = 1 AND A.CLOSE_DATE > 0) OR A.SUIM_CANCEL_DATE > 0)
+                  AND  A.DEL_DATE = 0
+    </insert>
+    
+    <update id="updateTopRptHeadBodyPrivateInfo180SamSung">
+        UPDATE  top_rpt_head A , top_rpt_body B, vn_rpt_head_samsung_180_del C
+           SET A.accident_date = -1
+				,A.policyholder_nm = ''
+				,A.beneficiary_nm = ''
+				,A.damaged_nm = ''
+           		,B.accident_no = ''
+           		,B.policy_no = ''
+           		,B.insurance_nm = ''
+           		,B.accident_facts = ''
+           		,B.insu_mortgage = ''
+           		,B.damaged_facts = ''
+           		,B.reference_facts = ''
+           		,B.insu_condition = ''           		
+         WHERE A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND A.SUIM_RPT_NO = C.SUIM_RPT_NO
+           AND A.ptnr_id = 18
+    </update>
+    
+    <update id="updateTopRptHeadBodyPrivateInfo180SamSung_20210520">
+        UPDATE  top_rpt_head A , top_rpt_body B, vn_rpt_head_samsung_180_del C
+           SET A.accident_date = -1
+           		,B.accident_no = ''
+           		,B.policy_no = ''
+           		,B.insurance_nm = ''
+           		,B.accident_facts = ''
+           		,B.insu_mortgage = ''
+           		,B.damaged_facts = ''
+           		,B.reference_facts = ''
+           		,B.insu_condition = ''           		
+         WHERE A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND A.SUIM_RPT_NO = C.SUIM_RPT_NO
+           AND A.ptnr_id = 18
+    </update>
+    
+    <update id="updateTopRptHeadBodyPrivateInfo5SamSung">
+        UPDATE  top_rpt_head A , top_rpt_body B, vn_rpt_head_del C
+           SET 
+           		A.POLICYHOLDER_NM = 
+				CASE WHEN CHAR_LENGTH(A.POLICYHOLDER_NM) = 2 
+					 THEN CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), '*')
+					 ELSE CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.POLICYHOLDER_NM)-2)), SUBSTR(A.POLICYHOLDER_NM,-1)) 
+				 END
+				,A.BENEFICIARY_NM = 
+				 CASE WHEN CHAR_LENGTH(A.BENEFICIARY_NM) = 2 
+					  THEN CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), '*')
+					  ELSE CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.BENEFICIARY_NM)-2)), SUBSTR(A.BENEFICIARY_NM,-1)) 
+				 END
+				,A.DAMAGED_NM = 
+				 CASE WHEN CHAR_LENGTH(A.DAMAGED_NM) = 2 
+					  THEN CONCAT(SUBSTR(A.DAMAGED_NM,1,1), '*')
+					  ELSE CONCAT(SUBSTR(A.DAMAGED_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.DAMAGED_NM)-2)), SUBSTR(A.DAMAGED_NM,-1)) 
+				 END			
+         WHERE A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND A.SUIM_RPT_NO = C.SUIM_RPT_NO
+           AND A.ptnr_id = 18
+    </update>
+    
+    <update id="updateTopRptHeadBodyPrivateInfo5SamSung_20210520">
+        UPDATE  top_rpt_head A , top_rpt_body B, vn_rpt_head_del C
+           SET A.policyholder_nm = ''
+				,A.beneficiary_nm = ''
+				,A.damaged_nm = ''				
+         WHERE A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND A.SUIM_RPT_NO = C.SUIM_RPT_NO
+           AND A.ptnr_id = 18
+    </update>
+	
+	<!-- 한화생명, 새마을 보험사 제외하고 처리 -->
+    <update id="updateTopRptHeadBodyPrivateInfo">
+        UPDATE  top_rpt_head A , top_rpt_body B, vn_rpt_head_del C
+           SET  A.SUIM_RPT_TYPE2 = 0
+               ,A.DEL_DATE = UNIX_TIMESTAMP(NOW())
+               ,B.POLICYHOLDER_SSN = ''
+               ,B.POLICYHOLDER_TEL = ''
+               ,B.BENEFICIARY_SSN = ''
+               ,B.BENEFICIARY_TEL = ''
+               ,B.DAMAGED_TEL = ''
+               ,B.POLICYHOLDER_ADDR = ''
+               ,B.POLICYHOLDER_CONTACT = ''
+               ,B.INVESTIGATE_POSTCODE = ''
+               ,B.INVESTIGATE_ADDR1 = ''
+               ,B.INVESTIGATE_ADDR2 = ''
+         WHERE A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND A.SUIM_RPT_NO = C.SUIM_RPT_NO
+           AND A.ptnr_id != 26
+           AND A.ptnr_id != 12 
+    </update>    
+    
+    <!-- 보험사가 한화손해(12)인 경우 사고내용을 삭제한다. (보험사 요청사항 : 2023-09-15) -->
+    <update id="updateTopRptHeadBodyPrivateInfoHanWhaByAccidentInfo">
+    	UPDATE  top_rpt_head A , top_rpt_body B, vn_rpt_head_del C
+           SET B.accident_facts = ''
+         WHERE A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND A.SUIM_RPT_NO = C.SUIM_RPT_NO
+           AND A.ptnr_id = 12
+    </update>
+
+    <update id="updateTopRptHeadBodyPrivateInfo_asta">
+        UPDATE  top_rpt_head A , top_rpt_body B, vn_rpt_head_del C
+           SET  A.SUIM_RPT_TYPE2 = 0
+               ,A.DEL_DATE = UNIX_TIMESTAMP(NOW())
+               ,B.POLICYHOLDER_SSN = ''
+               ,B.POLICYHOLDER_TEL = ''
+               ,B.BENEFICIARY_SSN = ''
+               ,B.BENEFICIARY_TEL = ''
+               ,B.DAMAGED_TEL = ''
+               ,B.POLICYHOLDER_ADDR = ''
+               ,B.POLICYHOLDER_CONTACT = ''
+               ,B.INVESTIGATE_POSTCODE = ''
+               ,B.INVESTIGATE_ADDR1 = ''
+               ,B.INVESTIGATE_ADDR2 = ''
+               
+               ,A.POLICYHOLDER_NM = 
+				CASE WHEN CHAR_LENGTH(A.POLICYHOLDER_NM) = 2 
+					 THEN CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), '*')
+					 ELSE CONCAT(SUBSTR(A.POLICYHOLDER_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.POLICYHOLDER_NM)-2)), SUBSTR(A.POLICYHOLDER_NM,-1)) 
+				 END
+				,A.BENEFICIARY_NM = 
+				 CASE WHEN CHAR_LENGTH(A.BENEFICIARY_NM) = 2 
+					  THEN CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), '*')
+					  ELSE CONCAT(SUBSTR(A.BENEFICIARY_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.BENEFICIARY_NM)-2)), SUBSTR(A.BENEFICIARY_NM,-1)) 
+				 END
+				,A.DAMAGED_NM = 
+				 CASE WHEN CHAR_LENGTH(A.DAMAGED_NM) = 2 
+					  THEN CONCAT(SUBSTR(A.DAMAGED_NM,1,1), '*')
+					  ELSE CONCAT(SUBSTR(A.DAMAGED_NM,1,1), REPEAT('*',(CHAR_LENGTH(A.DAMAGED_NM)-2)), SUBSTR(A.DAMAGED_NM,-1)) 
+				 END          
+				 
+         WHERE A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND A.SUIM_RPT_NO = C.SUIM_RPT_NO
+           AND A.ptnr_id IN (12, 26, 9)
+    </update>    
+
+    <!-- 삼성적부 기본 첨부 파일 리스트 -->
+    <select id="selectTopContractFileList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SUIM_RPT_NO
+               ,CONCAT(B.FILE_PATH,B.FILE_NAME) AS FILE_PATH
+               ,B.FILE_PATH AS FOLDER_PATH
+               ,B.FILE_NAME
+          FROM  top_contract A
+               ,top_contract_file B
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+           AND  A.REG_DATE &lt; UNIX_TIMESTAMP(CONCAT(DATE_FORMAT(NOW(), '%Y-%m'), '-01'))
+           AND  ((A.LOCK_FLAG = 1 AND A.CLOSE_DATE > 0) OR A.SUIM_CANCEL_DATE > 0)
+           AND  A.DEL_DATE = 0
+        ORDER BY B.SUIM_RPT_NO DESC, B.SERIAL_NO DESC
+    </select>
+    
+    <!-- 적부보고서 삭제처리 후 문자발송내역 삭제 -->
+    <delete id="deleteTopContractSms">
+        DELETE  FROM  top_contract_sms
+         WHERE  SUIM_RPT_NO IN(
+                                SELECT  A.SUIM_RPT_NO
+                                  FROM  top_contract A
+                                 WHERE  1=1
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(CONCAT(DATE_FORMAT(NOW(), '%Y-%m'), '-01'))
+                                   AND  ((A.LOCK_FLAG = 1 AND A.CLOSE_DATE > 0) OR A.SUIM_CANCEL_DATE > 0)
+                                   AND  A.DEL_DATE = 0
+                              )
+
+    </delete>
+
+    <delete id="deleteTopContractFile">
+        DELETE  FROM  top_contract_file
+         WHERE  SUIM_RPT_NO IN(
+                                SELECT  A.SUIM_RPT_NO
+                                  FROM  top_contract A
+                                 WHERE  1=1
+                                   AND  A.REG_DATE &lt; UNIX_TIMESTAMP(CONCAT(DATE_FORMAT(NOW(), '%Y-%m'), '-01'))
+                                   AND  ((A.LOCK_FLAG = 1 AND A.CLOSE_DATE > 0) OR A.SUIM_CANCEL_DATE > 0)
+                                   AND  A.DEL_DATE = 0
+                              )
+
+    </delete>
+    
+    <!-- 스케줄러 핸드폰 인증 번호 제거 -->
+	<delete id="deleteMobileAuthSchedule">
+		DELETE FROM top_mbr_mobile_auth
+		WHERE del_date &lt; NOW()
+	</delete>
+
+    <update id="updateTopContractPrivateInfo">
+        UPDATE  top_contract
+           SET  POLICYHOLDER_NM = ''
+               ,POLICYHOLDER_HP = ''
+               ,PLCYNO = ''
+               ,ENTYDSGNNO = ''
+               ,PKGNAME = ''
+               ,AGRMDATE = ''
+               ,CONTRACTORNAME = ''
+               ,CONHNDPHONENO = ''
+               ,CONHOMETELNO = ''
+               ,BD1_A = ''
+               ,BD1_B = ''
+               ,BD1_C = ''
+               ,BD1_D = ''
+               ,BD1_E = ''
+               ,BD1_F = ''
+               ,BD1_G = ''
+               ,BD1_H = ''
+               ,BD1_I = ''
+               ,BD1_N = ''
+               ,BD2_A = ''
+               ,BD2_B = ''
+               ,BD2_C = ''
+               ,BD2_D = ''
+               ,BD2_E = ''
+               ,BD2_F = ''
+               ,BD2_G = ''
+               ,BD2_H = ''
+               ,BD2_I = ''
+               ,BD2_N = ''
+               ,BD3_A = ''
+               ,BD3_B = ''
+               ,BD3_C = ''
+               ,BD3_D = ''
+               ,BD3_E = ''
+               ,BD3_F = ''
+               ,BD3_G = ''
+               ,BD3_H = ''
+               ,BD3_I = ''
+               ,BD3_N = ''
+               ,MEMO_1 = ''
+               ,MEMO_2 = ''
+               ,CLERKNAME = ''
+               ,CLERKDEPTNAME = ''
+               ,CLERKSECTNAME = ''
+               ,CLERKOFCTELNO = ''
+               ,CLERKHNDPHONENO = ''
+               ,B_1 = ''
+               ,C_2 = ''
+               ,C_4 = ''
+               ,C_6 = ''
+               ,C_7 = ''
+               ,C_8 = ''
+               ,C_10 = ''
+               ,D_1 = ''
+               ,D_2 = ''
+               ,D_3 = ''
+               ,D_4 = 0
+               ,D_5 = ''
+               ,D_6 = 0
+               ,D_7 = ''
+               ,D_8 = 0
+               ,D_9 = ''
+               ,D_10 = ''
+               ,D_11 = ''
+               ,D_12 = ''
+               ,D_13 = ''
+               ,D_14 = ''
+               ,D_15 = ''
+               ,D_16 = ''
+               ,D_17 = 0
+               ,D_18 = 0
+               ,D_19 = ''
+               ,D_20 = ''
+               ,D_21 = 0
+               ,DEL_DATE = UNIX_TIMESTAMP(NOW())
+        WHERE  REG_DATE &lt; UNIX_TIMESTAMP(CONCAT(DATE_FORMAT(NOW(), '%Y-%m'), '-01'))
+          AND  ((LOCK_FLAG = 1 AND CLOSE_DATE > 0) OR SUIM_CANCEL_DATE > 0)
+          AND  DEL_DATE = 0
+    </update>
+
+    <!-- 수임 기본 정보 LOCK_FLAG 업데이트 -->
+    <update id="updateTopReptHeadLockFlag">
+        UPDATE  top_rpt_head A
+           SET  A.LOCK_FLAG = 1
+         WHERE  1=1
+           AND  A.LOCK_FLAG = 0
+           AND  ((A.CLOSE_DATE > 0 AND A.SUIM_RPT_STATE = 2) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_RPT_STATE = 3))
+           <!-- AND  ((A.CLOSE_DATE > 0 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_CANCEL_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY)))) -->           
+    </update>
+
+    <!-- 농작물 LOCK_FLAG 업데이트 -->
+    <update id="updateTopPrimeBizReptHeadLockFlag">
+        UPDATE  top_prim_biz_rpt_head A
+           SET  A.LOCK_FLAG = 1
+         WHERE  1=1
+           AND  A.LOCK_FLAG = 0
+           AND  ((A.CLOSE_DATE > 0 AND A.SUIM_RPT_STATE = 2) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_RPT_STATE = 3))
+           <!-- AND  ((A.CLOSE_DATE > 0 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_CANCEL_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY)))) -->
+    </update>
+
+    <!-- 삼성적부 LOCK_FLAG 업데이트 -->
+    <update id="updateTopContractLockFlag">
+        UPDATE  top_contract A
+           SET  A.LOCK_FLAG = 1
+         WHERE  1=1
+           AND  A.LOCK_FLAG = 0
+           AND  ((A.CLOSE_DATE > 0 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_CANCEL_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))))
+    </update>
+
+    <!-- KB 적부 LOCK_FLAG 업데이트 -->
+    <update id="updateTopSuitability10LockFlag">
+        UPDATE  top_suitability_10 A
+           SET  A.LOCK_FLAG = 1
+         WHERE  1=1
+           AND  A.LOCK_FLAG = 0
+           AND  ((A.CLOSE_DATE > 0 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_CANCEL_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))))
+    </update>
+
+    <!-- 한화 적부 LOCK_FLAG 업데이트 -->
+    <update id="updateTopSuitability12LockFlag">
+        UPDATE  top_suitability_12 A
+           SET  A.LOCK_FLAG = 1
+         WHERE  1=1
+           AND  A.LOCK_FLAG = 0
+           AND  ((A.CLOSE_DATE > 0 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_CANCEL_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))))
+    </update>
+
+    <!-- 흥국 적부 LOCK_FLAG 업데이트 -->
+    <update id="updateTopSuitability17LockFlag">
+        UPDATE  top_suitability_17 A
+           SET  A.LOCK_FLAG = 1
+         WHERE  1=1
+           AND  A.LOCK_FLAG = 0
+           AND  ((A.CLOSE_DATE > 0 AND  A.CLOSE_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))) OR (A.SUIM_CANCEL_DATE > 0 AND  A.SUIM_CANCEL_DATE &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 16 DAY))))
+    </update>
+
+
+
+</mapper>

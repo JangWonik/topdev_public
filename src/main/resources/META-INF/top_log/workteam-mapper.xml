@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="WorkTeamMapper">
+
+	<select id="Work_T1" parameterType="java.util.List" resultType="kr.co.toplac.lslog.WorkTeamVO">
+		select team_name, team_id 
+		from top_tm_bsc 
+		where team_statistics1='0'
+		and team_type='1'
+		order by team_order desc, team_id asc
+	</select>
+
+	<select id="Work_T1List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.WorkTeamVO">
+		select 
+		ifnull(per, 0) per, ifnull(rid_sum, 0) rid_sum, ifnull(rid_end, 0) rid_end, ifnull(rid_10m, 0) rid_10m, 
+		ifnull(round((rid_10m/rid_sum)*100,1), 0) rid_10m_ps, ifnull(rid_10p, 0) rid_10p, ifnull(round((rid_10p/rid_sum)*100,1), 0) rid_10p_ps,
+		ifnull(rid_20p, 0) rid_20p, ifnull(round((rid_20p/rid_sum)*100,1), 0) rid_20p_ps, ifnull(rid_30p, 0) rid_30p, 
+		ifnull(round((rid_30p/rid_sum)*100,1), 0) rid_30p_ps, ifnull(rid_60p, 0) rid_60p, 
+		ifnull(round((rid_60p/rid_sum)*100,1), 0) rid_60p_ps, ifnull(rid_90p, 0) rid_90p, 
+		ifnull(round((rid_90p/rid_sum)*100,1), 0) rid_90p_ps, ifnull(rid_120p, 0) rid_120p, 
+		ifnull(round((rid_120p/rid_sum)*100,1), 0) rid_120p_ps,
+		ifnull(rid_sum_p, 0) rid_sum_p,
+		ifnull(rid_sum_r, 0) rid_sum_r,
+		-- 0 as rid_sum_p,
+		-- 0 as rid_sum_r,
+		ifnull(u_cnt, 0) u_cnt 
+		from
+		(select count(suim_rpt_no) per from top_rpt_head 
+		where team_id = #{tmpTI} and suim_rpt_state &lt; '3' and (suim_rpt_type1='1' or suim_rpt_type1='2') 
+		and reg_date >= unix_timestamp(#{todate}) and reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		) a,
+		(select count(suim_rpt_no) rid_sum from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))  
+		and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) b,
+		(select count(suim_rpt_no) rid_end from top_rpt_head 
+		where team_id = #{tmpTI} and suim_rpt_state='2' and close_date >= unix_timestamp(#{todate}) 
+		and close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))  and (suim_rpt_type1='1' or suim_rpt_type1='2')
+		) c,
+		(select count(suim_rpt_no) rid_10m from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 10 day))  
+		and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) d,
+		(select count(suim_rpt_no) rid_10p from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 10 day)) 
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 20 day))
+		and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) e,
+		(select count(suim_rpt_no) rid_20p from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 20 day)) 
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 30 day)) and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) f,
+		(select count(suim_rpt_no) rid_30p from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 30 day))
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 60 day)) and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) g,
+		(select count(suim_rpt_no) rid_60p from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 60 day))
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 90 day)) and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) h,
+		(select count(suim_rpt_no) rid_90p from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 90 day))
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 120 day)) and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) i,
+		(select count(suim_rpt_no) rid_120p from top_rpt_head 
+		where team_id = #{tmpTI} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 120 day)) 
+		and (suim_rpt_type1='1' or suim_rpt_type1='2') and suim_rpt_state &lt; '2'
+		) j,
+		(select count(a.suim_rpt_no) rid_sum_p from top_rpt_head a, top_rpt_body b
+		where a.team_id = #{tmpTI} and a.reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		and (a.suim_rpt_type1='1' or a.suim_rpt_type1='2') and a.suim_rpt_state &lt; '2'
+		and a.suim_rpt_no = b.suim_rpt_no and b.minwon_flag='1'
+		) k,
+		(select count(a.suim_rpt_no) rid_sum_r from top_rpt_head a, top_rpt_body b
+		where a.team_id = #{tmpTI} and a.reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		and (a.suim_rpt_type1='1' or a.suim_rpt_type1='2') and a.suim_rpt_state &lt; '2'
+		and a.suim_rpt_no = b.suim_rpt_no and b.minwon_flag='2'
+		) l,
+		(select 
+		count(no) u_cnt
+		from zetyx_member_table 
+		where team_id= #{tmpTI} and member_state!='1')m;
+	</select>
+
+	<select id="Work_T4" parameterType="java.util.List" resultType="kr.co.toplac.lslog.WorkTeamVO">
+		select team_name, team_id 
+		from top_tm_bsc 
+		where team_statistics4='0'
+		and team_type='4'
+		order by team_order desc, team_id asc
+	</select>
+
+	<select id="Work_T4List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.WorkTeamVO">
+		select 
+		ifnull(per, 0) per, ifnull(rid_sum, 0) rid_sum, ifnull(rid_end, 0) rid_end, ifnull(rid_10m, 0) rid_10m, 
+		ifnull(round((rid_10m/rid_sum)*100,1), 0) rid_10m_ps, ifnull(rid_10p, 0) rid_10p, ifnull(round((rid_10p/rid_sum)*100,1), 0) rid_10p_ps,
+		ifnull(rid_20p, 0) rid_20p, ifnull(round((rid_20p/rid_sum)*100,1), 0) rid_20p_ps, ifnull(rid_30p, 0) rid_30p, 
+		ifnull(round((rid_30p/rid_sum)*100,1), 0) rid_30p_ps, ifnull(rid_60p, 0) rid_60p, 
+		ifnull(round((rid_60p/rid_sum)*100,1), 0) rid_60p_ps, ifnull(rid_90p, 0) rid_90p, 
+		ifnull(round((rid_90p/rid_sum)*100,1), 0) rid_90p_ps, ifnull(rid_120p, 0) rid_120p, 
+		ifnull(round((rid_120p/rid_sum)*100,1), 0) rid_120p_ps,
+		-- ifnull(rid_sum_p, 0) rid_sum_p,
+		-- ifnull(rid_sum_r, 0) rid_sum_r,
+		0 as rid_sum_p,
+		0 as rid_sum_r,
+		ifnull(u_cnt, 0) u_cnt 
+		from
+		(select count(suim_rpt_no) per from top_rpt_head 
+		where team_id = #{tmpTI4} and suim_rpt_state &lt; '3' and (suim_rpt_type1='3' or suim_rpt_type1='4') 
+		and reg_date >= unix_timestamp(#{todate}) and reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day)) 
+		) a,
+		(select count(suim_rpt_no) rid_sum from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))  
+		and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) b,
+		(select count(suim_rpt_no) rid_end from top_rpt_head 
+		where team_id = #{tmpTI4} and suim_rpt_state='2' and close_date >= unix_timestamp(#{todate}) 
+		and close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))  and (suim_rpt_type1='3' or suim_rpt_type1='4')
+		) c,
+		(select count(suim_rpt_no) rid_10m from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 10 day))  
+		and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) d,
+		(select count(suim_rpt_no) rid_10p from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 10 day)) 
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 20 day)) 
+		and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) e,
+		(select count(suim_rpt_no) rid_20p from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 20 day)) 
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 30 day)) and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) f,
+		(select count(suim_rpt_no) rid_30p from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 30 day)) 
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 60 day)) and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) g,
+		(select count(suim_rpt_no) rid_60p from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 60 day)) 
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 90 day)) and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) h,
+		(select count(suim_rpt_no) rid_90p from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 90 day)) 
+		and reg_date >= unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 120 day)) and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) i,
+		(select count(suim_rpt_no) rid_120p from top_rpt_head 
+		where team_id = #{tmpTI4} and reg_date &lt; unix_timestamp(DATE_SUB(DATE_ADD(#{todate}, interval 1 day), interval 120 day)) 
+		and (suim_rpt_type1='3' or suim_rpt_type1='4') and suim_rpt_state &lt; '2'
+		) j,
+		(select count(a.suim_rpt_no) rid_sum_p from top_rpt_head a, top_rpt_body b
+		where a.team_id = #{tmpTI} and a.reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		and (a.suim_rpt_type1='3' or a.suim_rpt_type1='4') and a.suim_rpt_state &lt; '2'
+		and a.suim_rpt_no = b.suim_rpt_no and b.minwon_flag='1'
+		) k,
+		(select count(a.suim_rpt_no) rid_sum_p from top_rpt_head a, top_rpt_body b
+		where a.team_id = #{tmpTI} and a.reg_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		and (a.suim_rpt_type1='3' or a.suim_rpt_type1='4') and a.suim_rpt_state &lt; '2'
+		and a.suim_rpt_no = b.suim_rpt_no and b.minwon_flag='2'
+		) l,
+		(select 
+		count(no) u_cnt
+		from zetyx_member_table 
+		where team_id= #{tmpTI4} and member_state!='1')m;
+	</select>
+
+</mapper>

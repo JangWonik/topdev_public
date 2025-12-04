@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CodeDicInsMapper">
+
+	<update id="updateInvoiceTmpEnd" parameterType="String">
+		UPDATE top_rpt_invoice_tax_tmp SET 
+			end_flag = 1,
+			reg_date = now()
+		WHERE suim_accept_no = #{suim_accept_no}	
+	</update>
+
+	<update id="updateInvoiceJobCon" parameterType="String">
+		UPDATE top_rpt_invoice SET 
+			tax_edit_end = 0
+		WHERE suim_rpt_no = #{suim_rpt_no}	
+	</update>
+	
+	<update id="updateInvoiceJobEnd" parameterType="String">
+		UPDATE top_rpt_invoice SET 
+			tax_edit_end = 1
+		WHERE suim_rpt_no = #{suim_rpt_no}	
+	</update>
+
+	<delete id="delInvoiceTaxTmp" parameterType="String">
+		DELETE FROM top_rpt_invoice_tax
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</delete>
+
+	<insert id="insertInvoiceTaxTmp" parameterType="hashmap">
+		INSERT INTO top_rpt_invoice_tax 
+		(
+			suim_rpt_no
+			, publish_date			
+			, publish_amount			
+			, deposit_date			
+			, deposit_amount
+			, reg_date
+		) VALUES (
+			#{suim_rpt_no}			
+			,#{publish_date}			
+			,#{publish_amount}			
+			,#{deposit_date}			
+			,#{deposit_amount}
+			, now()
+		)
+	</insert>
+
+	<select id="selSuimNoAcc" parameterType="String" resultType="String">
+		SELECT
+			suim_rpt_no
+		FROM top_rpt_head
+		WHERE suim_accept_no = #{suim_accept_no}	
+	</select>
+
+	<select id="selectTopRptInvoiceTaxList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			temp_no,
+			suim_accept_no,
+			publish_date,
+			DATE_FORMAT(publish_date, '%Y-%m-%d') as publish_date_fmt,
+			publish_amount,
+			deposit_date,
+			DATE_FORMAT(deposit_date, '%Y-%m-%d') as deposit_date_fmt,
+			deposit_amount,
+			end_flag,
+			reg_date
+		FROM top_rpt_invoice_tax_tmp
+		WHERE 1=1
+		and end_flag = 0		
+	</select>
+
+	<delete id = "deleteDivPopup" parameterType="kr.co.toplac.sysadm.TopDivPopupVO">
+		DELETE FROM
+			top_div_popup
+		WHERE	
+			popup_no = #{popup_no}
+	</delete>
+
+	<insert id="insertDivPopup" parameterType="kr.co.toplac.sysadm.TopDivPopupVO" >
+		INSERT INTO top_div_popup
+			(
+				subject, contents, sdate, edate, repeat_flag, week_flag, month_flag, is_use, reg_date, reg_ip, popup_height, popup_width
+			)
+		VALUES
+			(
+				#{subject}, #{contents}, #{sdate}, #{edate}, #{repeat_flag}, #{week_flag}, #{month_flag}, #{is_use}, now(), #{reg_ip}, #{popup_height}, #{popup_width}
+			)
+	</insert> 
+	
+	<update id="updateDivPopup" parameterType="kr.co.toplac.sysadm.TopDivPopupVO" >		
+		UPDATE top_div_popup SET
+			subject = #{subject}
+			,contents = #{contents}
+			,sdate = #{sdate}
+			,edate = #{edate}
+			,repeat_flag = #{repeat_flag}
+			,week_flag = #{week_flag}
+			,month_flag = #{month_flag}
+			,is_use = #{is_use}
+			,reg_date = now()
+			,reg_ip = #{reg_ip}
+			,popup_height = #{popup_height}
+			,popup_width = #{popup_width}		
+		WHERE
+			popup_no = #{popup_no}
+	</update> 
+	
+	<select id="selectDivPopup" parameterType="kr.co.toplac.sysadm.TopDivPopupVO" resultType="kr.co.toplac.sysadm.TopDivPopupVO">
+		select 
+			*
+		from top_div_popup
+		where popup_no = #{popup_no}
+	</select>
+	
+	<select id="selectDivPopupListChk" parameterType="kr.co.toplac.sysadm.TopDivPopupVO" resultType="kr.co.toplac.sysadm.TopDivPopupVO">
+		select 
+			*
+		from top_div_popup
+		where now() > sdate 
+			and DATE_ADD(edate, INTERVAL 1 DAY) > now() 
+			and is_use = #{is_use}			
+			and ( week_flag = 0 OR ( repeat_flag = 1 AND week_flag = #{week_flag} ) OR ( repeat_flag = 2 AND month_flag = #{month_flag} ) )				
+		order by reg_date desc;
+	</select>
+	
+	<select id="selectDivPopupList" parameterType="kr.co.toplac.sysadm.TopDivPopupVO" resultType="kr.co.toplac.sysadm.TopDivPopupVO">
+		select 
+			*
+		from top_div_popup
+		order by reg_date desc;
+	</select>
+
+	<select id="tblOneList" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT
+			*
+		FROM
+			sysadm_codedic
+		WHERE
+			tbl_nm = #{name}
+	</select>
+
+	<select id="tblnmlist" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT
+			distinct(tbl_nm)
+		FROM
+			sysadm_codedic
+	</select>
+
+	<select id="codeList" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT
+			*
+		FROM
+			sysadm_codedic
+		WHERE
+			tbl_nm = #{tname} and col_nm = #{cname}
+	</select>
+	
+	<select id="selectCodeList" parameterType="kr.co.toplac.sysadm.SysAdmCodeDicVO" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT  a.tbl_nm
+		       ,a.col_nm
+		       ,a.col_cd
+			   ,a.col_val
+		  FROM  sysadm_codedic a
+		 WHERE  1=1
+		   AND  a.tbl_nm = #{tbl_nm}
+		   AND  a.col_nm = #{col_nm}
+		ORDER BY a.col_cd ASC
+	</select>
+
+	<select id="checkExist" parameterType="kr.co.toplac.sysadm.SysAdmCodeDicVO" resultType="Integer" >
+		SELECT
+			count(*)
+		FROM
+			sysadm_codedic
+		WHERE
+			tbl_nm = #{tbl_nm} and col_nm = #{col_nm} and col_cd = #{col_cd}
+	</select>
+
+	<insert id="addAysAdmCode" parameterType="kr.co.toplac.sysadm.SysAdmCodeDicVO" >
+		INSERT INTO sysadm_codedic
+			(
+				tbl_nm, col_nm, col_cd, col_val
+			)
+		VALUES
+			(
+				#{tbl_nm}, #{col_nm}, #{col_cd}, #{col_val}
+			)
+	</insert>
+
+	<delete id = "deleteSysAdm" parameterType="java.util.HashMap">
+		DELETE FROM
+			sysadm_codedic
+		WHERE
+			tbl_nm = #{tbl_nm} and col_nm = #{col_nm} and col_cd = #{col_cd}
+	</delete>
+
+	<select id="colnmlist" parameterType="String" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT
+			distinct(col_nm)
+		FROM
+			sysadm_codedic
+		WHERE
+			tbl_nm = #{tbl_nm}
+	</select>
+	
+	<!-- 결재자 추출용 task code -->
+	<select id="getColCodeForRptSub" parameterType="String" resultType="String">
+	
+		SELECT
+			col_cd
+		FROM
+			sysadm_codedic
+		WHERE
+			col_val = #{taskVal}
+			and tbl_nm = 'sysadm_aprv_user'
+			and col_nm = 'task_code'
+	</select>
+	
+	<!-- codedic2 select -->
+	<select id="selectCodeList2" parameterType="kr.co.toplac.sysadm.SysAdmCodeDicVO" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT  a.tbl_nm
+		       ,a.col_nm
+		       ,a.col_cd1
+		       ,a.col_cd2
+			   ,a.col_val
+		  FROM  sysadm_codedic2 a
+		 WHERE  1=1
+		   AND  a.tbl_nm = #{tbl_nm}
+		   AND  a.col_nm = #{col_nm}
+		 ORDER BY a.col_cd1, a.col_cd2;
+	</select>
+	
+	<select id="selectCodeValue" parameterType="kr.co.toplac.sysadm.SysAdmCodeDicVO" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT  a.tbl_nm
+		       ,a.col_nm
+		       ,a.col_cd
+			   ,a.col_val
+		  FROM  sysadm_codedic a
+		 WHERE  1=1
+		   AND  a.tbl_nm = #{tbl_nm}
+		   AND  a.col_nm = #{col_nm}
+		   AND  a.col_cd = #{col_cd}
+	</select>	
+	
+	<select id="selectCode2Value" parameterType="kr.co.toplac.sysadm.SysAdmCodeDicVO" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT  a.tbl_nm
+		       ,a.col_nm
+		       ,a.col_cd1
+		       ,a.col_cd2
+			   ,a.col_val
+		  FROM  sysadm_codedic2 a
+		 WHERE  1=1
+		   AND  a.tbl_nm = #{tbl_nm}
+		   AND  a.col_nm = #{col_nm}
+		   AND  a.col_cd1 = #{col_cd1}
+		   ANd  a.col_cd2 = #{col_cd2}
+	</select>	
+	
+	<select id="selectCodeList3" parameterType="kr.co.toplac.sysadm.SysAdmCodeDicVO" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT  a.tbl_nm
+		       ,a.col_nm
+		       ,a.col_cd1
+		       ,a.col_cd2
+			   ,a.col_val
+		  FROM  sysadm_codedic2 a
+		 WHERE  1=1
+		   AND  a.tbl_nm = #{tbl_nm}
+		   AND  a.col_nm = #{col_nm}
+		   AND  a.col_cd1 = #{col_cd1}
+		ORDER BY a.col_cd2 ASC
+	</select>
+	
+	
+</mapper>

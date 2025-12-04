@@ -1,0 +1,35 @@
+		table, td, tr, th{
+			color: 	black;	
+		}
+		.simple1Txt, .simple2Txt, .simple3Txt, .sagoDocTxt, .claimTxt, .assureTxt, .otherInsuTxt, .passTableTxt, .printCtrlTxt, .dtlTxt, .dtlTitleTxt{
+			width:477px; height:20px;
+		    border: 2px solid #b3b3b3;
+    		border-radius: 4px;
+			padding:5px;
+			font-size:13px;
+			color:black;
+      	}
+      	
+      	.passTableDateTxt, .printCtrlDateTxt, .printCtrlEndDateTxt{
+      		width:65px; height:15px;
+/* 		    border: 2px solid #b3b3b3; */
+/*     		border-radius: 4px; */
+/* 			padding:5px; */
+			font-size:13px;
+			color:black;
+      	}
+      	
+      	.simple2TxtArea, .simple3TxtArea, .simple4TxtArea, .claimTxtArea, .inspectPointTxtArea, .passTableTxtArea, .dtlTxtArea {
+	      	OVERFLOW-Y:auto; OVERFLOW-X:hidden; width:477px; padding:2px; word-break:break-all; line-height:120%; height:100px;
+  			border: 2px solid #b3b3b3;
+    		border-radius: 4px;
+   		    font-size: 10pt;
+    		font-family: 굴림,굴림체;
+   		    line-height: 150%;
+   		    color:black;
+      	} 
+      	
+ 		.placeholder {  
+			color:#aaa;	
+		}
+		

@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisTmBscMapper">
+
+	<select id="getMisTmBsc1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisTmBscVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100,1),0) nend_30r
+			, ifnull(round(endea_m,3),0) endea_m, ifnull(round(endea_y,3),0) endea_y
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum_hap, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc WHERE team_type=1 AND team_statistics1=0 AND team_level > 0) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_rpt_head
+						where suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and reg_date >= unix_timestamp(#{viewFromDate})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_rpt_head
+						where suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and reg_date >= unix_timestamp(#{viewFromYear})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+						from top_rpt_head
+						where suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+						from top_rpt_head
+						where suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and close_date >= unix_timestamp(#{viewFromYear})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_p
+						from top_rpt_head
+						where suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_30
+						from top_rpt_head
+						where suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+						, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+						from top_rpt_head g1, top_rpt_invoice g2
+						where g1.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and g1.close_date >= unix_timestamp(#{viewFromDate})
+						and g1.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						and g1.suim_rpt_no = g2.suim_rpt_no
+						group by g1.team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_total) no_settle
+						from top_rpt_head g1, top_rpt_invoice g2
+						where g1.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19) and g1.close_date &gt; 0
+						and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+						group by g1.team_id) h ON tmBsc.team_id = h.team_id
+		ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+	<select id="getMisTmBsc4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisTmBscVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+			, ifnull(round(endea_m,3),0) endea_m, ifnull(round(endea_y,3),0) endea_y
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum_hap, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc WHERE team_type=4 AND team_statistics4=0 AND team_level > 0) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_rpt_head
+						where suim_rpt_type1 in (3,4)
+						and reg_date >= unix_timestamp(#{viewFromDate})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_rpt_head
+						where suim_rpt_type1 in (3,4)
+						and reg_date >= unix_timestamp(#{viewFromYear})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+						from top_rpt_head
+						where suim_rpt_type1 in (3,4)
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+						from top_rpt_head
+						where suim_rpt_type1 in (3,4)
+						and close_date >= unix_timestamp(#{viewFromYear})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_p
+						from top_rpt_head
+						where suim_rpt_type1 in (3,4)
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_30
+						from top_rpt_head
+						where suim_rpt_type1 in (3,4)
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 15 DAY))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+						, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+						from top_rpt_head g1, top_rpt_invoice g2
+						where g1.suim_rpt_type1 in (3,4)
+						and g1.close_date >= unix_timestamp(#{viewFromDate})
+						and g1.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						and g1.suim_rpt_no = g2.suim_rpt_no
+						group by g1.team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_total) no_settle
+						from top_rpt_head g1, top_rpt_invoice g2
+						where g1.suim_rpt_type1 in (3,4) and g1.close_date &gt; 0
+						and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+						group by g1.team_id) h ON tmBsc.team_id = h.team_id
+		ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+	<select id="getMisTmBscPrim1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisTmBscVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+			, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum_hap, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc WHERE team_type=1 AND team_statistics1=0 AND team_level > 0) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and reg_date >= unix_timestamp(#{viewFromDate}) and reg_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and reg_date >= unix_timestamp(#{viewFromYear}) and reg_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and close_date >= unix_timestamp(#{viewFromYear}) and close_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_p
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_30
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+						, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 = 5
+						and g1.close_date >= unix_timestamp(#{viewFromDate}) and g1.close_date &lt; unix_timestamp(#{viewToDate})
+						and g1.suim_rpt_no = g2.suim_rpt_no
+						group by g1.team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_total) no_settle
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 = 5 and g1.close_date &gt; 0
+						and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+						group by g1.team_id) h ON tmBsc.team_id = h.team_id
+		ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+	<select id="getMisTmBscPrim4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisTmBscVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+			, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum_hap, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc WHERE team_type=4 AND team_statistics4=0 AND team_level > 0) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and reg_date >= unix_timestamp(#{viewFromDate}) and reg_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and reg_date >= unix_timestamp(#{viewFromYear}) and reg_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and close_date >= unix_timestamp(#{viewFromYear}) and close_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_p
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_30
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 = 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+						, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 = 5
+						and g1.close_date >= unix_timestamp(#{viewFromDate}) and g1.close_date &lt; unix_timestamp(#{viewToDate})
+						and g1.suim_rpt_no = g2.suim_rpt_no
+						group by g1.team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_total) no_settle
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 = 5 and g1.close_date &gt; 0
+						and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+						group by g1.team_id) h ON tmBsc.team_id = h.team_id
+		ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+	<select id="getMisTmBscPrimContract1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisTmBscVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+			, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum_hap, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc WHERE team_type=1 AND team_statistics1=0) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and reg_date >= unix_timestamp(#{viewFromDate}) and reg_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and reg_date >= unix_timestamp(#{viewFromYear}) and reg_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and close_date >= unix_timestamp(#{viewFromYear}) and close_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_p
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_30
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+						, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 != 5
+						and g1.close_date >= unix_timestamp(#{viewFromDate}) and g1.close_date &lt; unix_timestamp(#{viewToDate})
+						and g1.suim_rpt_no = g2.suim_rpt_no
+						group by g1.team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_total) no_settle
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 != 5 and g1.close_date &gt; 0
+						and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+						group by g1.team_id) h ON tmBsc.team_id = h.team_id
+		ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+	<select id="getMisTmBscPrimContract4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisTmBscVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+			, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum_little
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum_hap, ifnull(no_settle,0) no_settle
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc WHERE team_type=4 AND team_statistics4=0) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and reg_date >= unix_timestamp(#{viewFromDate}) and reg_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and reg_date >= unix_timestamp(#{viewFromYear}) and reg_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and close_date >= unix_timestamp(#{viewFromDate}) and close_date &lt; unix_timestamp(#{viewToDate})
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and close_date >= unix_timestamp(#{viewFromYear}) and close_date &lt; unix_timestamp(#{viewToYear})
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_p
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) nend_30
+						from top_prim_biz_rpt_head
+						where suim_rpt_type1 != 5
+						and suim_rpt_state!='2' and suim_rpt_state!='3'
+						and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+						, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 != 5
+						and g1.close_date >= unix_timestamp(#{viewFromDate}) and g1.close_date &lt; unix_timestamp(#{viewToDate})
+						and g1.suim_rpt_no = g2.suim_rpt_no
+						group by g1.team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select g1.team_id, sum(g2.amt_total) no_settle
+						from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+						where g1.suim_rpt_type1 != 5 and g1.close_date &gt; 0
+						and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+						group by g1.team_id) h ON tmBsc.team_id = h.team_id
+		ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+</mapper>

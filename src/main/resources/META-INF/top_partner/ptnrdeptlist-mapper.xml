@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PtnrDeptListMapper">
+
+	<select id="ptnrDeptList" resultType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+	
+		SELECT @RN:=@RN+1 AS rownum, TB.* 
+		FROM (
+			SELECT
+				b.del_state,
+				a.ptnr_name, 
+				b.ptnr_dept_id,
+				b.ptnr_id,
+				b.ptnr_dept_nm,
+				b.ptnr_dept_office_tel,
+				b.ptnr_dept_office_fax,
+				b.ptnr_dept_office_postcode,
+				b.ptnr_dept_office_addr1,
+				b.ptnr_dept_office_addr2,
+				DATE_FORMAT(FROM_UNIXTIME(b.reg_date), '%Y-%m-%d') reg_date,
+				DATE_FORMAT(FROM_UNIXTIME(b.del_date), '%Y-%m-%d') del_date 
+				
+			FROM 
+				top_ptnr_bsc a, top_ptnr_dept_bsc b
+			WHERE 
+				a.ptnr_id = b.ptnr_id and
+				a.ptnr_id = #{ptnr_id}
+			ORDER BY 
+				b.ptnr_dept_nm desc
+		) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum DESC
+	</select>
+	
+	<select id="ptnrInfo" resultType="kr.co.toplac.topptnr.TopPtnrBscVO" parameterType="String">
+	
+		SELECT @RN:=@RN+1 AS rownum, TB.* 
+		FROM (
+			SELECT
+				ptnr_type,
+				ptnr_name,
+				ptnr_nick,
+				ptnr_id,
+				ptnr_img_big,
+				ptnr_tel,
+				ptnr_url,
+				ptnr_biz_type1,
+				ptnr_biz_type2,
+				ptnr_addr,
+				ptnr_ceo_nm,
+				ptnr_biz_reg_no
+			FROM
+				top_ptnr_bsc
+			WHERE
+				ptnr_id = #{ptnr_id}
+		) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC	
+	</select>
+
+
+</mapper>

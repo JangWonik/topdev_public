@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PopEmpNmlstDtlMapper">
+	
+	
+	<!-- 사원(근무/대기/퇴사 ) 전체 출력 -->
+	<select id="getMember_Dtl" resultType = "kr.co.toplac.topgeneral.EmpNmlstDtlPopVO">
+		select a.user_no
+			  ,a.user_name
+			  ,a.user_id
+			  ,a.handphone
+			  ,a.office_tel
+			  ,a.office_fax
+			  ,a.picture
+			  ,a.email
+			  ,b.team_addr
+			  ,b.team_name
+			  ,getTopTmBscCenterName(b.team_id) center_name
+			  ,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			  ,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			  ,getCodeValue('top_mbr_bsc', 'work_rank',a.work_rank) work_rank
+			  ,getCode2Value('top_mbr_bsc','work_job',if(b.team_type!=4,1,4),a.work_job) work_job
+			  ,getCode2Value('top_mbr_bsc','work_job_code',if(b.team_type!=4,1,4),a.work_job) work_job_code
+			  ,getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+			  ,DATE_FORMAT(FROM_UNIXTIME(join_date), '%Y-%m-%d') join_date
+		  from top_mbr_bsc a, top_tm_bsc b
+		 where user_no = #{user_no} 
+		   and a.team_id_main = b.team_id;
+			
+	</select>
+	
+	<select id="getMember_Dtl_sub" parameterType="String" resultType="AsraMap">
+		SELECT getTopTmBscTeamName(team_id_main) as team_name
+			,getCodeValue('top_mbr_bsc','work_type',work_type) as work_type
+		 FROM top_mbr_bsc_sub		 
+		 WHERE user_no = #{user_no}
+</select>
+	
+</mapper>

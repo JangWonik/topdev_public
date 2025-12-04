@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SaveLogMapper">
+	
+	<insert id="insertTopSearchLog" parameterType="hashMap">
+		INSERT INTO top_search_log (
+			user_no
+			,user_name
+			,user_ip
+			,search_page
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{user_name}
+			,#{user_ip}
+			,#{search_page}
+			,now()
+		)
+		
+	</insert>
+	
+	<select id="selectTopSearchLogTypeBySearchPage" resultType="hashMap">
+		SELECT
+			search_page
+		FROM top_search_log
+		GROUP BY search_page		
+	</select>
+	
+	<!-- 검색 통계 로그목록 불러오기 -->
+	<select id="selectTopSearchLogListCnt" parameterType="hashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) AS nCnt
+		FROM top_search_log a		
+		WHERE 1=1 
+		AND a.reg_date > #{srchSdate}
+		AND a.reg_date &lt; #{srchEdate}
+		<if test='srchUserName != null and srchUserName != ""'>			
+			AND a.user_name like '%${srchUserName}%'	
+		</if>
+		<if test='srchSearchPage != "0"'>
+			AND a.search_page = #{srchSearchPage}
+		</if>
+	</select>
+	
+	<!-- 검색 통계 로그목록 불러오기 -->
+	<select id="selectTopSearchLogList" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			a.skey
+			,a.user_no
+			,a.user_ip
+			,DATE_FORMAT( a.reg_date , '%Y-%m-%d %H:%i:%s' ) AS reg_date
+			,a.user_name AS user_name
+			,a.search_page
+		FROM top_search_log a		
+		WHERE 1=1 
+		AND a.reg_date > #{srchSdate}
+		AND a.reg_date &lt; #{srchEdate}				
+		<if test='srchUserName != null and srchUserName != ""'>			
+			AND a.user_name like '%${srchUserName}%'	
+		</if>
+		<if test='srchSearchPage != "0"'>
+			AND a.search_page = #{srchSearchPage}
+		</if>
+		ORDER BY a.skey DESC
+		LIMIT #{limitPage}, #{sizePerPage}	
+	</select>
+	
+	<select id="sel_log" parameterType="java.util.List" resultType="kr.co.toplac.lslog.SaveLogVO">
+		select 
+		no, year, month
+		from 
+		save_log_team order by year asc, month asc
+	</select>
+
+</mapper>

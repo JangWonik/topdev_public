@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+	PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<typeAliases>
+		<typeAlias type="kr.co.toplac.util.cmm.AsraMap" alias="AsraMap"/>
+	</typeAliases>
+	<mappers>
+		<!-- 로그인/Main -->
+		<mapper resource="META-INF/top_login/toplogin-mapper.xml" />
+		<mapper resource="META-INF/top_main/topmainbrd-mapper.xml" />
+		<mapper resource="META-INF/top_main/mainleftmysuim-mapper.xml" />
+		<mapper resource="META-INF/top_main/mainindexlist-mapper.xml" />
+		<mapper resource="META-INF/search_main/searchmainprimbiz-mapper.xml" />
+		<mapper resource="META-INF/search_main/searchmainsuim-mapper.xml" />
+		<mapper resource="META-INF/search_main/searchmainsuit10-mapper.xml" />
+		<mapper resource="META-INF/search_main/searchmainsuit12-mapper.xml" />
+		<mapper resource="META-INF/search_main/searchmainsuit17-mapper.xml" />
+		<mapper resource="META-INF/search_main/searchmainsuit18-mapper.xml" />
+		<mapper resource="META-INF/search_main/helpsearchlist-mapper.xml" />
+		<mapper resource="META-INF/search_main/aiasearchlist-mapper.xml" />
+		<!-- //로그인/Main -->
+		<!-- MyMenu -->
+		<mapper resource="META-INF/top_individual/myempcertins-mapper.xml" />
+		<mapper resource="META-INF/top_individual/myempcertlist-mapper.xml" />
+		<mapper resource="META-INF/top_individual/myempcertudt-mapper.xml" />
+		<mapper resource="META-INF/top_individual/myinfoudt-mapper.xml" />
+		<mapper resource="META-INF/top_individual/mynositelist-mapper.xml" />
+		<mapper resource="META-INF/top_individual/nositemnglist-mapper.xml" />
+		<mapper resource="META-INF/top_individual/mystatistics-mapper.xml" />
+		<mapper resource="META-INF/util_rpt/mymainleftutil-mapper.xml" />
+		<mapper resource="META-INF/util_rpt/tmmainleftutil-mapper.xml" />
+		<!-- //MyMenu -->
+		<!-- 관리자 -->
+		<mapper resource="META-INF/top_login/toploginlog-mapper.xml"/> 
+		<mapper resource="META-INF/sys_adm/aprvuserins-mapper.xml" />
+		<mapper resource="META-INF/sys_adm/codedicins-mapper.xml" />
+		<mapper resource="META-INF/sys_adm/codedic2ins-mapper.xml" />
+		<mapper resource="META-INF/sys_adm/holidayins-mapper.xml" />
+		<mapper resource="META-INF/sys_adm/pmsloglist-mapper.xml" />
+		
+		<mapper resource="META-INF/sys_adm/suimrptschedule-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/miglsadminutil-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migrptctrlutil-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migrptfileutil-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migprint1util-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migprint9util-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migprint16util-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migprint17util-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migprint1700util-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migprimbizutil-mapper.xml" />
+		<mapper resource="META-INF/sys_adm_migration/migsuitabilityutil-mapper.xml" />
+		<!-- //관리자 -->
+		<!-- 보고서 락 관리 -->
+		<mapper resource="META-INF/sysadm_report/primbizlocklist-mapper.xml"/> 
+		<mapper resource="META-INF/sysadm_report/rptlocklist-mapper.xml"/> 
+		<!-- //보고서 락 관리 -->
+		<!-- 농작물수임대장 -->
+		<mapper resource="META-INF/util_mbr/suimtmmbrpop-mapper.xml"/>
+		<mapper resource="META-INF/util_mbr/suimptnrmbrpop-mapper.xml"/>
+		<mapper resource="META-INF/top_prim_biz/primbizsuimlist-mapper.xml"/> 
+		<mapper resource="META-INF/top_prim_biz/primbizsuimdtl-mapper.xml"/> 
+		<mapper resource="META-INF/top_prim_biz/primbizsuimudt-mapper.xml"/>
+		<mapper resource="META-INF/top_prim_biz/primbizrptlist-mapper.xml"/> 
+		<mapper resource="META-INF/top_prim_biz/primbizrptdtl-mapper.xml"/> 
+		<mapper resource="META-INF/top_prim_biz/primbizrptdtludt-mapper.xml"/> 
+		<mapper resource="META-INF/top_prim_biz/primbizrptdtlstate-mapper.xml"/>
+		<mapper resource="META-INF/util_rpt/editclosedate-mapper.xml"/>
+		<mapper resource="META-INF/util_rpt/insertrptlog-mapper.xml"/>
+		<!-- //농작물수임대장 -->
+		<!-- SMS -->
+		<mapper resource="META-INF/util_sms/groupsms-mapper.xml" />
+		<mapper resource="META-INF/util_sms/simplesms-mapper.xml" />
+		<!-- //SMS -->
+		<!-- 게시판 -->
+		<mapper resource="META-INF/brd_common/boardmemo-mapper.xml" />
+		<mapper resource="META-INF/brd_free/boardfree-mapper.xml" />
+		<mapper resource="META-INF/brd_faq_new/brdfaqnew-mapper.xml" />
+		<mapper resource="META-INF/brd_reference_top/referencetopboard-mapper.xml" />
+		<mapper resource="META-INF/brd_notice_top/noticetopboard-mapper.xml" />
+		<mapper resource="META-INF/brd_notice_ptnr/noticeptnr1board-mapper.xml" />
+		<mapper resource="META-INF/brd_notice_ptnr/noticeptnr4board-mapper.xml" />
+		<mapper resource="META-INF/brd_ref_report/refreportboard-mapper.xml" />
+		<mapper resource="META-INF/brd_reference_ptnr/referenceptnrboard-mapper.xml" />
+		<mapper resource="META-INF/brd_help_desk/helpdeskboard-mapper.xml" />
+		<!-- //게시판 -->
+		<mapper resource="META-INF/top_team/tmmnglist-mapper.xml" />
+		<mapper resource="META-INF/top_team/tmmngdtl-mapper.xml" />
+		<mapper resource="META-INF/top_team/tmstatlist-mapper.xml" />
+		<mapper resource="META-INF/top_team/mbrregins-mapper.xml" />
+		<mapper resource="META-INF/top_team/mbrstatlist-mapper.xml" />
+		<mapper resource="META-INF/top_member/mbrdtl-mapper.xml" />
+		<mapper resource="META-INF/top_member/mbrudt-mapper.xml" />
+		<mapper resource="META-INF/top_team/empcertlist-mapper.xml" />
+		<mapper resource="META-INF/top_team/empcertudt-mapper.xml" />
+		<mapper resource="META-INF/top_team/popmbrauthins-mapper.xml" />
+		<mapper resource="META-INF/top_team/popmbrauthlist-mapper.xml" />
+		<mapper resource="META-INF/top_team/popmbrauth2dtl-mapper.xml" />
+		<!-- 당직관리 -->
+		<mapper resource="META-INF/duty_cost/dutycost-mapper.xml" />	
+		<!-- 직원명부 -->
+		<mapper resource="META-INF/top_general/empnmlsttmlist-mapper.xml" />
+		<mapper resource="META-INF/top_general/empnmlsttmdtl-mapper.xml" />
+		<mapper resource="META-INF/top_general/empnmlstdtlpop-mapper.xml" />
+		<!-- //직원명부 -->
+		<!-- 보험사 관리 -->
+		<mapper resource="META-INF/top_partner/ptnrstatlist-mapper.xml" />
+		<mapper resource="META-INF/top_partner/ptnrmngudt-mapper.xml" />
+		<mapper resource="META-INF/top_partner/ptnrmngins-mapper.xml" />
+		<!-- //보험사 관리 -->
+		<!-- 보험사 부서 관리 -->
+		<mapper resource="META-INF/top_partner/ptnrdeptlist-mapper.xml" />
+		<mapper resource="META-INF/top_partner/ptnrdeptins-mapper.xml" />
+		<mapper resource="META-INF/top_partner/ptnrdeptudt-mapper.xml" />
+		<!-- //보험사 부서 관리 -->
+		<!-- 인사평가 -->
+		<mapper resource="META-INF/top_team/popmbreval-mapper.xml" />
+		<mapper resource="META-INF/top_team/popmbrevallist-mapper.xml" />
+		<!-- //인사평가 -->
+		<!-- 발령 및 진급사항 -->
+		<mapper resource="META-INF/top_team/popmbrappointlist-mapper.xml" />
+		<!-- //발령 및 진급사항 -->
+		<!-- 경력 및 자격사항 -->
+		<mapper resource="META-INF/top_team/popmbrcareerlist-mapper.xml" />
+		<!-- //경력 및 자격사항 -->
+		<!-- 교육사항 및 강의이력 -->
+		<mapper resource="META-INF/top_team/popmbreducationlist-mapper.xml" />
+		<!-- //교육사항 및 강의이력 -->
+		<!-- 가족사항 -->
+		<mapper resource="META-INF/top_team/popmbrfamilylist-mapper.xml" />
+		<!-- //가족사항 -->
+		<!-- 관련업체-->
+		<mapper resource="META-INF/top_general/topptnrlist-mapper.xml" />
+		<mapper resource="META-INF/top_general/topptnrdtl-mapper.xml" />
+		<mapper resource="META-INF/top_general/popptnrmbr-mapper.xml" />
+		<!-- //관련업체 -->
+		<!-- 메모모듈 -->
+		<mapper resource="META-INF/util_memo/memoutility-mapper.xml" />
+		<!-- //메모모듈 -->
+		<!-- 인보이스 -->
+		<mapper resource="META-INF/top_rpt_inv/rptinvlist-mapper.xml"/>
+		<mapper resource="META-INF/top_rpt_inv/rptinvdtl-mapper.xml"/>
+		<mapper resource="META-INF/top_rpt_inv/rptinvloglist-mapper.xml"/>
+		<mapper resource="META-INF/top_rpt_inv/rptinvmemopop-mapper.xml"/>
+		<!-- //인보이스 -->
+		<!-- 인보이스 농작물  -->
+		<mapper resource="META-INF/top_prim_biz_inv/primbizinvlist-mapper.xml"/> 
+		<mapper resource="META-INF/top_prim_biz_inv/primbizinvdtl-mapper.xml"/> 
+		<mapper resource="META-INF/top_prim_biz_inv/primbizinvmemopop-mapper.xml"/>
+		<!-- //인보이스 농작물 -->
+		<!-- 수임대장 -->
+		<mapper resource="META-INF/top_suim/suimbooklist-mapper.xml" />
+		<mapper resource="META-INF/top_suim/suimrptbscdtllog-mapper.xml" />
+		<!-- //수임대장 -->
+		<!-- 수임입력 -->
+		<mapper resource="META-INF/top_suim/suimregins-mapper.xml" />
+		<!-- //수임입력 -->
+		<!-- 수임대장에서 팝업되는 보고서 기본 정보 -->
+		<mapper resource="META-INF/top_suim/suimrptbscdtl-mapper.xml" />
+		<!-- //수임대장에서 팝업되는 보고서 기본 정보 -->
+		
+		<!-- 수임대장에서 팝업되는 보고서 기본 정보 수정 페이지-->
+		<mapper resource="META-INF/top_suim/suimrptbscudt-mapper.xml" />
+		<!-- //수임대장에서 팝업되는 보고서 기본 정보 수정 페이지-->
+		
+		<!-- 사고처리 과정표 입력 -->
+		<mapper resource="META-INF/top_suim/suimrptsagobsc-mapper.xml" />
+		<!-- //사고처리 과정표 입력 -->
+		
+		<!-- 현재 상황 진행 입력 -->
+		<mapper resource="META-INF/top_suim/suimrptnowbsc-mapper.xml" />
+		<!-- //현재 상황 진행 입력 -->
+		
+		<!-- 협조건 기본 매퍼 -->
+		<mapper resource="META-INF/top_suim/suimrpthelpbsc-mapper.xml" />
+		<!-- //협조건 기본 매퍼 -->
+		
+		<!-- 현장,중간 기본 매퍼 -->
+		<mapper resource="META-INF/top_suim/suimrptsitebsc-mapper.xml" />
+		<!-- //현장,중간 기본 매퍼 -->
+		
+		<!-- 인보이스 출력 -->
+		<mapper resource="META-INF/top_suim/suimrptinvbsc-mapper.xml" />
+		<!-- //인보이스 출력 -->
+		
+		<!-- 공동수행자 기본 매퍼 -->
+		<mapper resource="META-INF/top_suim/suimrptcollabo-mapper.xml" />
+		<!-- //공동수행자 기본 매퍼 -->
+		
+		
+		<!-- 세금계산서 기본 매퍼 -->
+		<mapper resource="META-INF/top_tax_inv_dtl/taxinvdtlpop-mapper.xml" />
+		<!-- //세금계산서 기본 매퍼 -->
+		
+		<!-- 인보험 보고서 작성 -->
+		<mapper resource="META-INF/top_suim/suimrptbody-mapper.xml" />
+		<!-- //인보험 보고서 작성 -->
+		
+		<!-- 적부 일괄 입력 -->
+		<mapper resource="META-INF/top_suit/suimsuit-mapper.xml" />
+		<!-- //적부 일괄 입력 -->
+		
+		
+		<!-- 종결 허용 관리 -->
+		<mapper resource="META-INF/sys_adm/setupend-mapper.xml" />
+		<!-- //종결 허용 관리 -->
+		
+		<!-- 적부  -->
+		<mapper resource="META-INF/top_suit/suitlist10-mapper.xml" />
+		<mapper resource="META-INF/top_suit/suitlist18-mapper.xml" />
+		<!-- //적부 -->
+
+		<!-- 적부(흥국) -->
+		<mapper resource="META-INF/top_suit17/suimsuit17-mapper.xml" />
+		<mapper resource="META-INF/top_suit17/suimsuit17dtl-mapper.xml" />
+		<mapper resource="META-INF/top_suit17/suimsuit17state-mapper.xml" />
+		<!-- //적부(흥국) -->
+		
+		<!-- 적부(한화) -->
+		<mapper resource="META-INF/top_suit12/suimsuit12-mapper.xml" />
+		<mapper resource="META-INF/top_suit12/suimsuit12dtl-mapper.xml" />
+		<mapper resource="META-INF/top_suit12/suimsuit12state-mapper.xml" />
+		<!-- //적부(한화) -->
+		
+		<!-- 메인 PRM -->
+		<mapper resource="META-INF/top_main/topprmlink-mapper.xml" />
+		<!-- //메인 PRM -->
+		
+		<!-- 경과 건 삭제 -->
+		<mapper resource="META-INF/sys_adm/delprivateinfo-mapper.xml" />
+		<!-- //경과 건 삭제 -->
+		<!-- log -->
+		<mapper resource="META-INF/top_log/logteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/logmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/logmember2-mapper.xml" />
+		<mapper resource="META-INF/top_log/regig-mapper.xml" />
+		<mapper resource="META-INF/top_log/regigmonth-mapper.xml" />
+		<mapper resource="META-INF/top_log/regigteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/regigmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/regteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/regteamig-mapper.xml" />
+		<mapper resource="META-INF/top_log/regmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/endteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/endmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/endig-mapper.xml" />
+		<mapper resource="META-INF/top_log/endigteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/resultteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/resultmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/resultig-mapper.xml" />
+		<mapper resource="META-INF/top_log/resultigteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/resultigmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/lognscteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/savelog-mapper.xml" />
+		<mapper resource="META-INF/top_log/savelogteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/acceptteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/acceptmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/workteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/contractteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/contractmember-mapper.xml" />
+		<mapper resource="META-INF/top_log/contractmember2-mapper.xml" />
+		<mapper resource="META-INF/top_log/contractunit-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitabilityteam-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitabilitymember-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitabilitymember2-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitabilityunit-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability12team-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability12member-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability12member2-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability12unit-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability17team-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability17member-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability17member2-mapper.xml" />
+		<mapper resource="META-INF/top_log/suitability17unit-mapper.xml" />
+		<mapper resource="META-INF/top_log/logig-mapper.xml" />
+		<mapper resource="META-INF/top_log/searchstate-mapper.xml" />
+		<!-- //log -->
+		<!-- top_statistics -->
+		<mapper resource="META-INF/top_statistics/statisticsindex-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/reportmidlist-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/statisticsnow-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/mistmbsc-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/mistmbscmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/mistmbscmbr2-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misregtm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misregtmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misregtmptnr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misallottm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misallottmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/mistmbscprim-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/mistmbscprimmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/miscontracttm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/miscontracttmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/miscontracttmmbr2-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/miscontractunitmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitabilitytm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitabilitytmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitabilitytmmbr2-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitabilityunitmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitability12tm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitability12tmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitability12tmmbr2-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitability12unitmbr-mapper.xml" /> 
+		<mapper resource="META-INF/top_statistics/missuitability17tm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitability17tmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitability17tmmbr2-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/missuitability17unitmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misregptnr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misregptnrtm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misregptnrtmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misallottm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misallottmmbr-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misendptnr-mapper.xml" />
+		
+		<mapper resource="META-INF/top_statistics/misptnrbsc-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/statisticwork-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/statisticbasic-mapper.xml" />
+
+		<mapper resource="META-INF/top_statistics/misendtm-mapper.xml" />
+		<mapper resource="META-INF/top_statistics/misresultptnr-mapper.xml" />
+		
+		<mapper resource="META-INF/top_statistics/statisticworkload-mapper.xml" />
+		
+		<!-- top_cost_new -->
+		<mapper resource="META-INF/top_cost_new/newcostlist-mapper.xml" />
+		<mapper resource="META-INF/top_cost_new/newcosttmlist-mapper.xml" />
+		<mapper resource="META-INF/top_cost_new/newcostmbrlist-mapper.xml" />
+		<mapper resource="META-INF/top_cost_new/topcoststatistics-mapper.xml" />
+		<mapper resource="META-INF/top_individual/mycostinsnew-mapper.xml" />
+		<!-- //top_cost_new -->
+
+		<!-- 나의 경비내역 -->
+		<mapper resource="META-INF/top_individual/mycostins-mapper.xml" />
+		<mapper resource="META-INF/top_individual/mycostudt-mapper.xml" />
+		<!-- //나의 경비내역 -->
+		
+		<!-- 경비내역 -->
+		<mapper resource="META-INF/top_cost/topcostlist-mapper.xml" />
+		<mapper resource="META-INF/top_cost/topcostteam-mapper.xml" />
+		<mapper resource="META-INF/top_cost/topcostmember-mapper.xml" />
+		<mapper resource="META-INF/top_cost/topcostasign-mapper.xml" />
+		<!-- //경비내역 -->
+		
+		<!-- 나의 연차내역 -->
+		 <mapper resource="META-INF/top_individual/mydayofflist-mapper.xml"/> 
+		<!-- //나의 연차내역 -->
+		 
+		<!-- 연차내역 -->
+		 <mapper resource="META-INF/top_dayoff/topdayofflist-mapper.xml"/> 
+		<!-- //나의 연차내역 -->
+		 
+		<!-- 나의미결내역 -->
+		 <mapper resource="META-INF/top_individual/myreportexcel-mapper.xml"/> 
+		<!-- //나의미결내역 -->
+
+		<!-- 품의서 -->
+		<mapper resource="META-INF/top_individual/mydocins-mapper.xml" />
+		<mapper resource="META-INF/top_individual/mydoclist-mapper.xml" />
+		<mapper resource="META-INF/top_team/popmbrdoclist-mapper.xml" />
+		<mapper resource="META-INF/top_team/popmbrdocins-mapper.xml" />
+		<mapper resource="META-INF/top_team/empdoclist-mapper.xml" />
+		<!-- //품의서 -->
+		
+		<!-- 금액 -->
+		<mapper resource="META-INF/top_individual/boardsallist-mapper.xml" />
+		<mapper resource="META-INF/top_individual/membersalaprv-mapper.xml" />
+		<!-- 금액 -->
+		
+		<!-- zipcode검색 -->
+		<mapper resource="META-INF/util_etc/zipcodesearch-mapper.xml" />
+		<!-- zipcode검색 -->
+		
+		<!-- 4종 단순보고서 -->
+		<mapper resource="META-INF/rpt_in/suimrptprint-mapper.xml" /> <!-- 수임대장 - 보고서 맵퍼 추가, 170215 LDS -->
+		<!-- 4종 단순보고서 -->
+		
+		<!-- 4종 일반보고서 -->
+		<mapper resource="META-INF/top_report/suim-report-mapper.xml" />
+		<!-- 4종 일반보고서 -->
+		
+		<!-- 4종 메리츠보고서 -->
+		<mapper resource="META-INF/top_report/suim-meritz-report-mapper.xml" />
+		<!-- 4종 메리츠보고서 -->
+
+		<!-- 위임취소 프로세스 -->
+		<mapper resource="META-INF/top_suim/suimrptcancel-mapper.xml" />
+		<!-- //위임취소 프로세스-->
+		
+		<!-- 보고서 알림 -->
+		<mapper resource="META-INF/top_rpt_alarm/rptalarm-mapper.xml" /> 
+		<!-- //보고서 알림 -->
+		
+		<!-- 보고서 담당자 변경(이내첩) -->
+		<mapper resource="META-INF/top_rpt_mbrchg/rptmbrchg-mapper.xml" /> 
+		<!-- //보고서 담당자 변경(이내첩) -->
+				
+		<!-- 사내지침 -->
+		<mapper resource="META-INF/brd_guide/brdguide-mapper.xml" /> 
+		<!-- //사내지침 -->				
+		
+		<!-- 이재 조사비 -->
+		<mapper resource="META-INF/top_disaster/disaster-adjust-mapper.xml" />
+		<mapper resource="META-INF/top_disaster/disaster-salary-mapper.xml" />
+		<mapper resource="META-INF/top_disaster/disaster-cost-mapper.xml" />
+		<!-- 이재 조사비 -->
+		
+		<!-- 4종 건설공제 보고서 -->
+		<mapper resource="META-INF/top_report/construction-report-mapper.xml" />
+		<!-- 4종 건설공제 보고서  -->
+		
+		<!-- 강의실 신청 -->
+		<mapper resource="META-INF/top_individual/lectureroom-mapper.xml" />
+		<!--  강의실 신청 -->
+		
+		<!-- 휴가 -->
+		<mapper resource="META-INF/top_vacation/topvacation-mapper.xml" />
+		<!-- //휴가 -->
+		
+		<!-- 경비내역 재개발 - 181004 -->
+		<mapper resource="META-INF/top_cost_2nd/costdetail-mapper.xml" />
+		<mapper resource="META-INF/top_cost_2nd/costlist-mapper.xml" />
+		<mapper resource="META-INF/top_cost_2nd/coststatistics-mapper.xml" />
+		
+		<!-- 손해사정서 교부 - 181123 -->
+		<mapper resource="META-INF/top_suim_reportissue/rptissue-mapper.xml" />
+		
+		<!-- 기타 -->
+		<mapper resource="META-INF/sys_adm/closerptmgmt-mapper.xml" />
+		<mapper resource="META-INF/sys_adm/itmgmt-mapper.xml" />
+		
+		<!-- 동영상 교육관리 및 이용 -->
+		<mapper resource="META-INF/top_lecture/lecture-mapper.xml" />
+		<!-- 동영상 교육관리 및 이용 -->
+		
+		<!-- 교육 QnA게시판 -->
+		<mapper resource="META-INF/brd_lecture/brdlecture-mapper.xml" />
+		<!-- 교육 QnA게시판 -->
+		
+		<!-- 인보험 급여관리 -->
+		<mapper resource="META-INF/top_salary_4/salary4-mapper.xml" />
+		<!-- 인보험 급여관리 -->
+	</mappers>
+
+</configuration>

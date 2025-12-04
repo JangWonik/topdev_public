@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="GroupSMSMapper">
+	<select id="getWorkLevelList" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd, col_val
+		FROM sysadm_codedic
+		WHERE tbl_nm = 'top_mbr_bsc'
+		AND col_nm = 'work_level'
+		ORDER BY col_cd DESC
+	</select>
+
+	<select id="smsEmpSearch" parameterType="java.util.HashMap" resultType = "kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT a.user_no
+				, a.user_name
+				, a.user_id
+				, b.team_name
+				, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state
+      			, replace(a.handphone,'-','') handphone
+      			, a.office_tel
+		FROM top_mbr_bsc a, top_tm_bsc b
+		WHERE a.team_id_loc = b.team_id 
+		AND a.user_state IN (0,9)
+		<choose>
+			<when test="tid == 9991">
+				AND b.team_type != 4
+			</when>
+			<when test="tid == 9994">
+				AND b.team_type = 4
+			</when>
+			
+			<otherwise>
+				<if test="tid != 0 and tid != 9999">
+					<choose>
+						<when test="gid == -1">
+							AND a.team_id_loc IN (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+													= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tid}))
+						</when>
+						<otherwise>
+							AND a.team_id_loc = #{tid}
+						</otherwise>
+					</choose>
+				</if>
+			</otherwise>
+		</choose>
+		<if test="wid != -1">
+			AND a.work_level = #{wid}
+		</if>
+		<if test="srchUserNm != ''">
+			AND a.user_name LIKE CONCAT('%',#{srchUserNm},'%')
+		</if>
+		<choose>
+			<when test="oid == 1">
+				ORDER BY b.team_group_order DESC
+			</when>
+			<when test="oid == 2">
+				ORDER BY a.work_level DESC
+			</when>
+			<when test="oid == 3">
+				ORDER BY a.user_name
+			</when>
+		</choose>
+	</select>
+
+</mapper>

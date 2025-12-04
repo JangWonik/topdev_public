@@ -1,0 +1,4349 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="topVacationMapper">
+
+	<insert id="insertVacationUse" parameterType="HashMap">
+		INSERT INTO top_vacation_use (
+			user_no
+			,annual_set
+			,annual_use
+			,vacation_apply
+			,vacation_use
+			,base_date
+		) values (
+			#{user_no}
+			,#{annual_set}
+			,#{annual_use}
+			,#{vacation_apply}
+			,#{vacation_use}
+			,#{base_date}
+		)	
+	</insert>
+	
+	<update id="updateVacationUse" parameterType="HashMap">
+		UPDATE top_vacation_use SET
+		<if test="annual_set != null">
+			annual_set = #{annual_set}
+		</if>
+		<if test="annual_use != null">
+			,annual_use = #{annual_use}
+		</if>
+		<if test="vacation_apply != null">
+			,vacation_apply = #{vacation_apply}
+		</if>
+		<if test="vacation_use != null">
+			,vacation_use = #{vacation_use}
+		</if>	
+		WHERE
+			user_no = #{user_no}
+		AND	base_date = #{base_date}	
+	</update>	
+	
+	<!-- 사용자가 결재한 휴직목록 갯수 -->
+	<select id="selectLeaveApprovalResultCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_leave_info
+		WHERE 
+			approvaler_01 = #{user_no} 
+			OR approvaler_03 = #{user_no}
+			AND approval_state != 99 					
+	</select>
+	
+	<!-- 사용자가 결재한 목록 휴가갯수 -->
+	<select id="selectApprovalResultCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_vacation_info
+		WHERE 
+			approvaler_01 = #{user_no} 
+			OR approvaler_03 = #{user_no}
+			AND approval_state != 99 					
+	</select>
+	
+	<!-- 1차 2차 결재 대상 목록.. 사용안함-->
+	<select id="selectApprovalResultCnt_20191107" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_vacation_info
+		WHERE 
+		<if test="teamlist1 != ''">
+			(
+				approval_state != 10
+				AND approval_state != 99
+				AND user_team_id IN ( #{teamlist1} )
+			)
+		</if>
+		<if test="teamlist1 != '' and teamlist2 != '' ">
+			OR 
+		</if>		
+		<if test="teamlist2 != ''">
+			(
+				approval_state != 20
+				AND approval_state != 99
+				AND user_team_id IN ( #{teamlist2} )
+			)
+		</if>			
+	</select>
+	
+	<!-- 연차 부여 / 사용 현황 by 검색용 카운트-->	
+	<select id="selectAnnualSetListSearchCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM
+		(
+			SELECT
+				a.user_no as user_no				
+				,getTopMbrBscUserName(a.user_no) AS user_name				
+				,a.base_year AS base_year				
+				,b.user_state AS user_state
+				,b.team_id_main AS team_id				
+			 FROM top_vacation_use a, top_mbr_bsc b
+			 WHERE a.user_no = b.user_no
+			 <if test="srchAnnualYear == 9999">GROUP BY a.user_no</if>
+		 ) GA, top_tm_bsc GB
+		 WHERE GA.team_id = GB.team_id
+		 	<if test="srchUserName != ''">AND GA.user_name LIKE CONCAT('%',#{srchUserName},'%')</if>
+		 	<if test="srchUserState != 99">AND GA.user_state = #{srchUserState} </if>
+		 	<if test="srchAnnualYear != 99 and srchAnnualYear != 9999">AND GA.base_year = #{srchAnnualYear} </if>    
+		 	<if test="srchAnnualTeamId != 0">AND GB.team_id = #{srchAnnualTeamId}</if>
+		 	<if test="sTeamList != ''">AND GB.team_id IN ( ${sTeamList} )</if>
+		  	<if test="srchAnnualTeamType == 1">AND GB.team_type IN(0,1)</if>
+			<if test="srchAnnualTeamType == 4">AND GB.team_type = 4</if>			
+	</select>
+	
+	<!-- 신규 휴가 전체목록 by 검색용 카운트-->	
+	<select id="selectApprovalManagerSearchCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM top_vacation_info a
+		WHERE	1=1 
+		<if test="srchKind != 99">AND a.vacation_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>
+		<if test="srchYear != 99">AND a.sdate  like CONCAT(#{srchYear},'%') </if>		
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>		
+		<choose>
+			<when test="pms34 == 1">AND ( a.approvaler_01 = 99991 or a.approvaler_03 = 99991 )</when>
+			<when test="pms34 == 4">AND ( a.approvaler_01 = 99994 or a.approvaler_03 = 99994 )</when>
+			<when test="pms34 == 5">AND ( a.approvaler_01 = 99991 or a.approvaler_01 = 99994 or a.approvaler_03 = 99991 or a.approvaler_03 = 99994)</when>
+			<otherwise>AND (a.approvaler_01 != 99991 and a.approvaler_01 != 99994 and a.approvaler_03 != 99991 and a.approvaler_03 != 99994)</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 휴직 전체목록 by 관리자 검색용 카운트-->	
+	<select id="selectLeaveApprovalManagerSearchCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM top_leave_info a
+		WHERE	1=1 
+		<if test="srchKind != 99">AND a.leave_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>				
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		<choose>
+			<when test="pms34 == 1">AND a.approvaler_01 = 99991</when>
+			<when test="pms34 == 4">AND a.approvaler_01 = 99994</when>
+			<when test="pms34 == 5">AND ( a.approvaler_01 = 99991 OR a.approvaler_01 = 99994 )</when>
+			<otherwise>AND (a.approvaler_01 != 99991 and a.approvaler_01 != 99994)</otherwise>
+		</choose>		
+	</select>
+	
+	<!-- 휴직 전체목록 by 검색용 카운트-->	
+	<select id="selectLeaveApprovalSearchCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM top_leave_info a, top_mbr_bsc b		
+		WHERE	a.user_no = b.user_no 
+		<if test="srchKind != 99">AND a.leave_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>				
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		<choose>
+			<when test="srchInsaState == 1">
+				AND b.user_state = 1
+			</when>
+			<when test="srchInsaState == 2">
+				AND b.user_state IN (0,9)
+			</when>
+			<when test="srchInsaState == 3">
+				AND b.user_state = 3
+			</when>			
+		</choose>		
+	</select>
+	
+	<!-- 신규 휴가 전체목록 by 검색용 카운트-->	
+	<select id="selectApprovalSearchCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM top_vacation_info a
+		WHERE	1=1 
+		<if test="srchKind != 99">AND a.vacation_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>
+		<if test="srchYear != 99">AND a.sdate  like CONCAT(#{srchYear},'%') </if>		
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		
+		<choose>
+			<when test="srch_sdate != '' and srch_edate !=''">
+				AND a.sdate &lt;= #{srch_edate}
+				AND a.edate >= 	#{srch_sdate}
+			</when>
+			<when test="srch_sdate != ''">
+				AND a.edate >= 	#{srch_sdate}	
+			</when>
+			<when test="srch_edate !=''">
+				AND a.sdate &lt;= #{srch_edate}
+			</when>
+		</choose>		
+	</select>
+	
+	<!-- 휴가상세 목록 -->
+	<select id="selectVacationDetailMonth" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT
+			user_no
+			,getTopMbrBscUserName(user_no) AS user_name
+			,date_format(sdate,'%Y-%m-%d') as sdate
+			,date_format(edate,'%Y-%m-%d') as edate
+			,vacation_interval
+			,vacation_content
+			,vacation_type
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+		FROM top_vacation_info
+		WHERE	user_no = #{user_no}
+		AND sdate like CONCAT(#{vacation_date},'%')
+		AND approval_state = 31
+	</select>
+	
+	<select id="selectUserListTeamType" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			GA.user_no
+			,GA.user_name
+			,GA.user_state
+			,GA.team_id
+			,GA.team_name
+		FROM (
+			SELECT
+				a.user_no
+				,a.user_name
+				,a.work_level
+				,a.join_date
+				,a.user_state
+				,b.team_id
+				,b.team_name
+				,b.team_group_order
+				,b.team_order		
+				,CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order		
+			FROM top_mbr_bsc a, top_tm_bsc b
+			WHERE a.team_id_main = b.team_id
+			<if test="user_state == 0">
+				<!-- AND a.user_state != 1 -->
+			</if>
+			<if test="team_type == 1">AND b.team_type IN(0,1)</if>
+			<if test="team_type == 4">AND b.team_type = 4</if>			
+		)GA
+		ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	</select>
+	
+	<!-- 연차부여/할당내역 by 검색용 -->	
+	<select id="selectAnnualSetListSearch" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationUseBean">
+		SELECT 
+			GA.serial_no AS serial_no
+			,GA.user_no AS user_no
+			,GA.center_name AS center_name
+			,GA.team_name AS team_name
+			,GA.user_name AS user_name
+			,GA.work_level_nm AS work_level_nm
+			,GA.join_date AS join_date
+			,GA.base_year AS base_year 
+			,GA.annual_set AS annual_set
+			,GA.annual_use AS annual_use
+			,GA.team_id AS team_id
+			,GA.user_state AS user_state
+			,GA.new_work_order AS new_work_order
+			,GA.work_level AS work_level
+		FROM
+		(
+			SELECT 
+				a.serial_no AS serial_no
+				,a.user_no AS user_no		
+				,getTopTmBscCenterName(b.team_id_main) AS center_name
+				,getTopTmBscTeamName(b.team_id_main) AS team_name
+				,getTopMbrBscUserName(a.user_no) AS user_name
+				,getCodeValue("top_mbr_bsc", "work_level", b.work_level) AS work_level_nm
+				,FROM_UNIXTIME(b.join_date,'%Y-%m-%d') AS join_date
+				,a.base_year AS base_year
+				,a.annual_set AS annual_set
+				,a.annual_use AS annual_use
+				,b.user_state AS user_state
+				,b.team_id_main AS team_id
+				,b.work_level AS work_level
+				,CASE b.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+			 FROM top_vacation_use a, top_mbr_bsc b
+			 WHERE a.user_no = b.user_no
+			 ORDER BY base_year desc
+		 ) GA, top_tm_bsc GB
+		 WHERE GA.team_id = GB.team_id
+		 	<if test="srchUserName != ''">AND GA.user_name LIKE CONCAT('%',#{srchUserName},'%')</if>
+		 	<if test="srchUserState != 99">AND GA.user_state = #{srchUserState} </if>
+		 	<if test="srchAnnualYear != 99 and srchAnnualYear != 9999">AND GA.base_year = #{srchAnnualYear} </if>  
+		 	<if test="srchAnnualTeamId != 0">AND GB.team_id = #{srchAnnualTeamId}</if>
+		 	<if test="sTeamList != ''">AND GB.team_id IN ( ${sTeamList} )</if>		 	
+		  	<if test="srchAnnualTeamType == 1">AND GB.team_type IN(0,1)</if>
+			<if test="srchAnnualTeamType == 4">AND GB.team_type = 4</if>
+			<if test="srchAnnualYear == 9999">GROUP BY GA.user_no</if>
+		 ORDER BY GB.team_group_order DESC, GB.team_order DESC, GA.work_level DESC, GA.join_date, new_work_order, GA.base_year DESC	
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<!-- 연차부여/할당내역 by 검색용 -->	
+	<select id="selectAnnualSetListSearchExcel" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationUseBean">
+		SELECT 
+			GA.serial_no AS serial_no
+			,GA.user_no AS user_no
+			,GA.center_name AS center_name
+			,GA.team_name AS team_name
+			,GA.user_name AS user_name
+			,GA.work_level_nm AS work_level_nm
+			,GA.join_date AS join_date
+			,GA.base_year AS base_year 
+			,GA.annual_set AS annual_set
+			,GA.annual_use AS annual_use
+			,GA.team_id AS team_id
+			,GA.user_state AS user_state
+			,GA.new_work_order AS new_work_order
+			,GA.work_level AS work_level
+		FROM
+		(
+			SELECT 
+				a.serial_no AS serial_no
+				,a.user_no AS user_no		
+				,getTopTmBscCenterName(b.team_id_main) AS center_name
+				,getTopTmBscTeamName(b.team_id_main) AS team_name
+				,getTopMbrBscUserName(a.user_no) AS user_name
+				,getCodeValue("top_mbr_bsc", "work_level", b.work_level) AS work_level_nm
+				,FROM_UNIXTIME(b.join_date,'%Y-%m-%d') AS join_date
+				,a.base_year AS base_year
+				,a.annual_set AS annual_set
+				,a.annual_use AS annual_use
+				,b.user_state AS user_state
+				,b.team_id_main AS team_id
+				,b.work_level AS work_level
+				,CASE b.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+			 FROM top_vacation_use a, top_mbr_bsc b
+			 WHERE a.user_no = b.user_no
+			 ORDER BY base_year desc
+		 ) GA, top_tm_bsc GB
+		 WHERE GA.team_id = GB.team_id
+		 	<if test="srchUserName != ''">AND GA.user_name LIKE CONCAT('%',#{srchUserName},'%')</if>
+		 	<if test="srchUserState != 99">AND GA.user_state = #{srchUserState} </if>
+		 	<if test="srchAnnualYear != 99 and srchAnnualYear != 9999">AND GA.base_year = #{srchAnnualYear} </if>  
+		 	<if test="srchAnnualTeamId != 0">AND GB.team_id = #{srchAnnualTeamId}</if>
+		 	<if test="sTeamList != ''">AND GB.team_id IN ( ${sTeamList} )</if>		 	
+		  	<if test="srchAnnualTeamType == 1">AND GB.team_type IN(0,1)</if>
+			<if test="srchAnnualTeamType == 4">AND GB.team_type = 4</if>
+			<if test="srchAnnualYear == 9999">GROUP BY GA.user_no</if>
+		 ORDER BY GB.team_group_order DESC, GB.team_order DESC, GA.work_level DESC, GA.join_date, new_work_order, GA.base_year DESC
+	</select>
+	
+	<!-- 신규 휴직 전체목록 by 검색용 -->	
+	<select id="selectLeaveApprovalSearchExcel" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.leave_interval
+			,a.leave_content
+			,a.leave_type
+			,a.approval_state			
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name
+		FROM top_leave_info a, top_mbr_bsc b		
+		WHERE	a.user_no = b.user_no 
+		<if test="srchKind != 99">AND a.leave_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>				
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		<choose>
+			<when test="srchInsaState == 1">
+				AND b.user_state = 1
+			</when>
+			<when test="srchInsaState == 2">
+				AND b.user_state IN (0,9)
+			</when>
+			<when test="srchInsaState == 3">
+				AND b.user_state = 3
+			</when>			
+		</choose>
+		order by a.regdate desc				
+	</select>
+	
+	<!-- 신규 휴가 전체목록 by 검색용 -->	
+	<select id="selectApprovalSearchExcel" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name
+			<!-- ,getTopMbrBscUserName(a.approvaler_now) AS approvaler_now_name -->			
+			,(SELECT IFNULL(annual_set - annual_use,0) from top_vacation_use where user_no = a.user_no order by base_year desc limit 0,1) as annual_set
+			,a.remain_vacation_use
+			,date_format(a.ap_date_03,'%Y-%m-%d') as approve_date
+			,date_format(a.ap_date_01,'%Y-%m-%d') as ap_date_01
+		FROM top_vacation_info a
+		WHERE	1=1 
+		<if test="srchKind != 99">AND a.vacation_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>
+		<if test="srchYear != 99">AND a.sdate  like CONCAT(#{srchYear},'%') </if>		
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		
+		<choose>
+			<when test="srch_sdate != '' and srch_edate !=''">
+				AND a.sdate &lt;= #{srch_edate}
+				AND a.edate >= 	#{srch_sdate}
+			</when>
+			<when test="srch_sdate != ''">
+				AND a.edate >= 	#{srch_sdate}	
+			</when>
+			<when test="srch_edate !=''">
+				AND a.sdate &lt;= #{srch_edate}
+			</when>			
+		</choose>
+		
+		<choose>
+			<when test="srchApDateOrder == 'DESC'">
+				order by a.ap_date_03 desc
+			</when>
+			<when test="srchApDateOrder == 'ASC'">
+				order by a.ap_date_03 asc, a.regdate desc
+			</when>
+			<otherwise>
+				order by a.regdate desc		
+			</otherwise>
+		</choose>						
+	</select>
+	
+	<!-- 신규 휴가 전체목록 by 검색용 -->	
+	<select id="selectApprovalManagerSearch" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+			,a.approvaler_now
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name
+			<!-- ,getTopMbrBscUserName(a.approvaler_now) AS approvaler_now_name -->			
+			,(SELECT IFNULL(annual_set - annual_use,0) from top_vacation_use where user_no = a.user_no order by base_year desc limit 0,1) as annual_set
+		FROM top_vacation_info a
+		WHERE	1=1 
+		<if test="srchKind != 99">AND a.vacation_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>
+		<if test="srchYear != 99">AND a.sdate  like CONCAT(#{srchYear},'%') </if>		
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		<choose>
+			<when test="pms34 == 1">AND ( a.approvaler_01 = 99991 or a.approvaler_03 = 99991 )</when>
+			<when test="pms34 == 4">AND ( a.approvaler_01 = 99994 or a.approvaler_03 = 99994 )</when>
+			<when test="pms34 == 5">AND ( a.approvaler_01 = 99991 or a.approvaler_01 = 99994 or a.approvaler_03 = 99991 or a.approvaler_03 = 99994)</when>
+			<otherwise>AND (a.approvaler_01 != 99991 and a.approvaler_01 != 99994 and a.approvaler_03 != 99991 and a.approvaler_03 != 99994)</otherwise>
+		</choose>
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<!-- 휴직 전체목록 by 관리자 검색용 -->	
+	<select id="selectLeaveApprovalManagerSearch" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.leave_interval
+			,a.leave_content
+			,a.leave_type
+			,a.approval_state			
+			,a.approvaler_now
+			,a.approvaler_01
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name
+		FROM top_leave_info a
+		WHERE	1=1 
+		<if test="srchKind != 99">AND a.leave_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>				
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		<choose>
+			<when test="pms34 == 1">AND a.approvaler_01 = 99991</when>
+			<when test="pms34 == 4">AND a.approvaler_01 = 99994</when>
+			<when test="pms34 == 5">AND ( a.approvaler_01 = 99991 OR a.approvaler_01 = 99994 )</when>
+			<otherwise>AND (a.approvaler_01 != 99991 and a.approvaler_01 != 99994)</otherwise>
+		</choose>		
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 휴직 전체목록 by 검색용 -->	
+	<select id="selectLeaveApprovalSearch" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.leave_interval
+			,a.leave_content
+			,a.leave_type
+			,a.approval_state			
+			,a.approvaler_now
+			,a.approvaler_01
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name
+		FROM top_leave_info a, top_mbr_bsc b		
+		WHERE	a.user_no = b.user_no 
+		<if test="srchKind != 99">AND a.leave_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>				
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		<choose>
+			<when test="srchInsaState == 1">
+				AND b.user_state = 1
+			</when>
+			<when test="srchInsaState == 2">
+				AND b.user_state IN (0,9)
+			</when>
+			<when test="srchInsaState == 3">
+				AND b.user_state = 3
+			</when>			
+		</choose>		
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 신규 휴가 전체목록 by 검색용 -->	
+	<select id="selectApprovalSearch" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate			
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+			,a.approvaler_now
+			,a.approvaler_01
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name
+			<!-- ,getTopMbrBscUserName(a.approvaler_now) AS approvaler_now_name -->			
+			,(SELECT IFNULL(annual_set - annual_use,0) from top_vacation_use where user_no = a.user_no order by base_year desc limit 0,1) as annual_set
+			,a.remain_vacation_use
+			,date_format(a.ap_date_03,'%Y-%m-%d') as approve_date
+			,date_format(a.ap_date_01,'%Y-%m-%d') as ap_date_01
+		FROM top_vacation_info a
+		WHERE	1=1 
+		<if test="srchKind != 99">AND a.vacation_type = #{srchKind}</if>
+		<if test="srchState != 00">AND a.approval_state = #{srchState}</if>
+		<if test="srchYear != 99">AND a.sdate  like CONCAT(#{srchYear},'%') </if>		
+		<if test="srchTeamId != 0">AND a.user_team_id = #{srchTeamId}</if>
+		<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		<if test="srchTeamType == 1">AND a.user_team_type IN(0,1)</if>
+		<if test="srchTeamType == 4">AND a.user_team_type = 4</if>
+		<if test="sTeamList != ''">AND a.user_team_id IN (${sTeamList})</if>
+		
+		<choose>
+			<when test="srch_sdate != '' and srch_edate !=''">
+				AND a.sdate &lt;= #{srch_edate}
+				AND a.edate >= 	#{srch_sdate}
+			</when>
+			<when test="srch_sdate != ''">
+				AND a.edate >= 	#{srch_sdate}	
+			</when>
+			<when test="srch_edate !=''">
+				AND a.sdate &lt;= #{srch_edate}
+			</when>			
+		</choose>
+		
+		<choose>
+			<when test="srchApDateOrder == 'DESC'">
+				order by a.ap_date_03 desc
+			</when>
+			<when test="srchApDateOrder == 'ASC'">
+				order by a.ap_date_03 asc, a.regdate desc
+			</when>
+			<otherwise>
+				order by a.regdate desc		
+			</otherwise>
+		</choose>
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<!-- 사용자가 결재한 휴직 목록 가져오기 -->
+	<select id="selectLeaveApprovalResult" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.leave_interval
+			,a.leave_content
+			,a.leave_type
+			,a.approval_state
+		FROM top_leave_info a
+		WHERE
+			a.approvaler_01 = #{user_no} 
+			OR a.approvaler_03 = #{user_no}
+			AND a.approval_state != 99			
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<!-- 사용자가 결재한 휴가 목록 가져오기 -->
+	<select id="selectApprovalResult" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+			,(SELECT IFNULL(annual_set - annual_use,0) from top_vacation_use where user_no = a.user_no order by base_year desc limit 0,1) as annual_set
+			,a.remain_vacation_use
+			,date_format(a.ap_date_03,'%Y-%m-%d') as approve_date
+		FROM top_vacation_info a
+		WHERE
+			a.approvaler_01 = #{user_no} 
+			OR a.approvaler_03 = #{user_no}
+			AND a.approval_state != 99
+		<!-- order by a.regdate desc -->
+		<choose>
+			<when test="srchApDateOrderTab2 == 'DESC'">
+				order by a.ap_date_03 desc
+			</when>
+			<when test="srchApDateOrderTab2 == 'ASC'">
+				order by a.ap_date_03 asc, a.regdate desc
+			</when>
+			<otherwise>
+				order by a.regdate desc		
+			</otherwise>
+		</choose>		
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<!-- 1차 2차 결재 결과 목록 사용안함-->
+	<select id="selectApprovalResult_20191107" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type) AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state) AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+		FROM top_vacation_info a
+		WHERE 
+		<if test="teamlist1 != ''">
+			(
+				a.approval_state != 10
+				and a.approval_state != 99
+				AND a.user_team_id IN ( #{teamlist1} )
+			)
+		</if>
+		<if test="teamlist1 != '' and teamlist2 != '' ">
+			OR 
+		</if>		
+		<if test="teamlist2 != ''">
+			(
+				a.approval_state != 20
+				and a.approval_state != 99
+				AND a.user_team_id IN ( #{teamlist2} )
+			)
+		</if>
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>	
+	
+	<!-- 결재 대상 갯수 -->
+	<select id="selectApprovalListLeaveCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_leave_info
+		WHERE  approvaler_now = #{user_no}
+		AND approval_state = 10					
+	</select>
+	
+	<!-- 결재 대상 갯수 1단계 결재 방식으로 변경-->
+	<select id="selectApprovalListCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_vacation_info
+		WHERE  approvaler_now = #{user_no}
+		AND approval_state = 30					
+	</select>
+	
+	<!-- 결재 대상 갯수 -->
+	<select id="selectApprovalListCnt_20251021" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_vacation_info
+		WHERE  approvaler_now = #{user_no}
+		AND approval_state = 10					
+	</select>
+	
+	<!-- 1차 2차 결재 대상 목록 -->
+	<select id="selectApprovalListCnt_20191106" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt			
+		FROM top_vacation_info
+		WHERE 
+		<if test="teamlist1 != ''">
+			(
+				approval_state = 10
+				AND user_team_id IN ( #{teamlist1} )
+			)
+		</if>
+		<if test="teamlist1 != '' and teamlist2 != '' ">
+			OR 
+		</if>		
+		<if test="teamlist2 != ''">
+			(
+				approval_state = 20
+				AND user_team_id IN ( #{teamlist2} )
+			)
+		</if>			
+	</select>
+	
+	<!-- 휴직 결재자에 사용자가 있는경우 조회 -->
+	<select id="selectApprovalListLeave" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.leave_interval
+			,a.leave_content
+			,a.leave_type
+			,a.approval_state
+		FROM top_leave_info a
+		WHERE	a.approvaler_now = #{user_no}			
+		AND a.approval_state = 10			
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<select id="selectApprovalList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+			,(SELECT IFNULL(annual_set - annual_use,0) from top_vacation_use where user_no = a.user_no order by base_year desc limit 0,1) as annual_set
+			,a.remain_vacation_use
+		FROM top_vacation_info a
+		WHERE	a.approvaler_now = #{user_no}			
+		AND a.approval_state = 30			
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<!-- 결재자에 사용자가 있는경우 조회 -->
+	<select id="selectApprovalList_20251021" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+			,(SELECT IFNULL(annual_set - annual_use,0) from top_vacation_use where user_no = a.user_no order by base_year desc limit 0,1) as annual_set
+		FROM top_vacation_info a
+		WHERE	a.approvaler_now = #{user_no}			
+		AND a.approval_state = 10			
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<!-- 1차 2차 결재 대상 목록 3결재용.. 안쓴다..-->
+	<select id="selectApprovalList_20191106" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type) AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state) AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file
+		FROM top_vacation_info a
+		WHERE 
+		<if test="teamlist1 != ''">
+			(
+				a.approval_state = 10
+				AND a.user_team_id IN ( #{teamlist1} )
+			)
+		</if>
+		<if test="teamlist1 != '' and teamlist2 != '' ">
+			OR 
+		</if>		
+		<if test="teamlist2 != ''">
+			(
+				a.approval_state = 20
+				AND a.user_team_id IN ( #{teamlist2} )
+			)
+		</if>
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}		
+	</select>
+	
+	<select id="selectApprovalResultLastCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM top_vacation_info 
+		WHERE
+			 approval_state = 31
+			 or approval_state = 32
+	</select>
+	
+	<select id="selectApprovalListLeaveTotalCnt" parameterType="HashMap" resultType="int">
+		SELECT
+			(SUM(GA.ap_2_cnt) + SUM(GA.ap_1_cnt)) AS total_cnt
+		FROM 
+		(
+			SELECT
+				COUNT(*) AS ap_2_cnt
+				,0 AS ap_1_cnt
+			FROM top_leave_info 
+			WHERE 1=1
+			AND approval_state = 30
+		
+			UNION ALL
+			
+			SELECT
+				0 AS ap_2_cnt
+				,COUNT(*) AS ap_1_cnt
+			FROM top_leave_info
+			WHERE 1=1
+			AND approval_state = 10
+			AND approvaler_now = #{user_no}
+		)GA	
+	</select>
+	
+	<select id="selectApprovalListLeaveLastCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM top_leave_info 
+		WHERE
+			 approval_state = 30		
+	</select>
+	
+	<select id="selectApprovalListTotalCnt" parameterType="HashMap" resultType="int">
+		SELECT
+			(SUM(GA.ap_2_cnt) + SUM(GA.ap_1_cnt)) AS total_cnt
+		FROM 
+		(
+			SELECT
+				COUNT(*) AS ap_2_cnt
+				,0 AS ap_1_cnt
+			FROM top_vacation_info 
+			WHERE 1=1
+			AND approval_state = 30
+		
+			UNION ALL
+			
+			SELECT
+				0 AS ap_2_cnt
+				,COUNT(*) AS ap_1_cnt
+			FROM top_vacation_info
+			WHERE 1=1
+			AND approval_state = 10
+			AND approvaler_now = #{user_no}
+		)GA
+	</select>
+	
+	<select id="selectApprovalListLastCnt" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt
+		FROM top_vacation_info 
+		WHERE
+			 approval_state = 30		
+	</select>
+	
+	<select id="selectApprovalResultLast" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type) AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state) AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state 
+			,a.vacation_org_file
+			,a.vacation_enc_file
+		FROM top_vacation_info a 
+		WHERE
+			 a.approval_state = 31
+			 or a.approval_state = 32		
+		order by regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 전체결재자이면서 1차결재자인경우처리 -->
+	<select id="selectApprovalListLeaveTotal" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT
+			GA.serial_no
+			,GA.user_no
+			,GA.center_name
+			,GA.team_name
+			,GA.user_name
+			,GA.leave_type_val
+			,GA.approval_state_val
+			,GA.sdate
+			,GA.edate
+			,GA.regdate
+			,GA.leave_interval
+			,GA.approvaler_01_val
+			,GA.approvaler_02_val
+			,GA.approvaler_03_val
+			,GA.ap_date_01
+			,GA.ap_date_02
+			,GA.ap_date_03
+			,GA.ap_comment_01
+			,GA.ap_comment_02
+			,GA.ap_comment_03
+			,GA.leave_content
+			,GA.leave_type
+			,GA.approval_state
+		FROM 
+		(
+			SELECT
+				a.serial_no
+				,a.user_no
+				,getTopTmBscCenterName(a.user_team_id) AS center_name
+				,getTopTmBscTeamName(a.user_team_id) AS team_name
+				,getTopMbrBscUserName(a.user_no) AS user_name
+				,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+				,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+				,date_format(a.sdate,'%Y-%m-%d') as sdate
+				,date_format(a.edate,'%Y-%m-%d') as edate
+				,date_format(a.regdate,'%Y-%m-%d') as regdate
+				,a.leave_interval
+				,CASE
+					WHEN a.approvaler_01 = 99991 
+					THEN '물보험기획팀'
+					WHEN a.approvaler_01 = 99994
+					THEN '인보험기획팀'
+					ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+				END AS approvaler_01_val			
+				,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val
+				,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+				,IFNULL(a.ap_date_01,'') as ap_date_01
+				,IFNULL(a.ap_date_02,'') as ap_date_02
+				,IFNULL(a.ap_date_03,'') as ap_date_03
+				,a.ap_comment_01
+				,a.ap_comment_02
+				,a.ap_comment_03
+				,a.leave_content
+				,a.leave_type
+				,a.approval_state
+			FROM top_leave_info a 
+			WHERE 1=1
+			AND a.approval_state = 30
+		
+			UNION ALL
+			
+			SELECT				 
+				a.serial_no
+				,a.user_no
+				,getTopTmBscCenterName(a.user_team_id) AS center_name
+				,getTopTmBscTeamName(a.user_team_id) AS team_name
+				,getTopMbrBscUserName(a.user_no) AS user_name
+				,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+				,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+				,date_format(a.sdate,'%Y-%m-%d') as sdate
+				,date_format(a.edate,'%Y-%m-%d') as edate
+				,date_format(a.regdate,'%Y-%m-%d') as regdate
+				,a.leave_interval
+				,CASE
+					WHEN a.approvaler_01 = 99991 
+					THEN '물보험기획팀'
+					WHEN a.approvaler_01 = 99994
+					THEN '인보험기획팀'
+					ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+				END AS approvaler_01_val			
+				,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val
+				,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+				,IFNULL(a.ap_date_01,'') as ap_date_01
+				,IFNULL(a.ap_date_02,'') as ap_date_02
+				,IFNULL(a.ap_date_03,'') as ap_date_03
+				,a.ap_comment_01
+				,a.ap_comment_02
+				,a.ap_comment_03
+				,a.leave_content
+				,a.leave_type
+				,a.approval_state
+			FROM top_leave_info a 
+			WHERE 1=1
+			AND a.approval_state = 10
+			AND a.approvaler_now = #{user_no}
+		)GA
+		ORDER BY GA.regdate DESC
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<select id="selectApprovalListLeaveLast" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.leave_interval
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01_val			
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03
+			,a.leave_content
+			,a.leave_type
+			,a.approval_state			
+		FROM top_leave_info a 
+		WHERE
+			 a.approval_state = 30		
+		order by regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 최종 및 1차결재자 모두 포함된 경우의 목록 -->
+	<select id="selectApprovalListTotal" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT
+			GA.serial_no
+			,GA.user_no
+			,GA.center_name
+			,GA.team_name
+			,GA.user_name
+			,GA.vacation_type_val
+			,GA.approval_state_val
+			,GA.sdate
+			,GA.edate
+			,GA.regdate
+			,GA.vacation_interval
+			,GA.approvaler_01_val
+			,GA.approvaler_02_val
+			,GA.approvaler_03_val
+			,GA.ap_date_01
+			,GA.ap_date_02
+			,GA.ap_date_03
+			,GA.ap_comment_01
+			,GA.ap_comment_02
+			,GA.ap_comment_03
+			,GA.vacation_content
+			,GA.vacation_type
+			,GA.approval_state
+			,GA.vacation_org_file
+			,GA.vacation_enc_file
+			,GA.annual_set
+		FROM 
+		(
+			SELECT
+				a.serial_no
+				,a.user_no
+				,getTopTmBscCenterName(a.user_team_id) AS center_name
+				,getTopTmBscTeamName(a.user_team_id) AS team_name
+				,getTopMbrBscUserName(a.user_no) AS user_name
+				,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+				,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+				,DATE_FORMAT(a.sdate,'%Y-%m-%d') AS sdate
+				,DATE_FORMAT(a.edate,'%Y-%m-%d') AS edate
+				,DATE_FORMAT(a.regdate,'%Y-%m-%d') AS regdate
+				,a.vacation_interval
+				,CASE
+					WHEN a.approvaler_01 = 99991 
+					THEN '물보험기획팀'
+					WHEN a.approvaler_01 = 99994
+					THEN '인보험기획팀'
+					ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+				END AS approvaler_01_val
+				,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val
+				,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+				,IFNULL(a.ap_date_01,'') AS ap_date_01
+				,IFNULL(a.ap_date_02,'') AS ap_date_02
+				,IFNULL(a.ap_date_03,'') AS ap_date_03
+				,a.ap_comment_01
+				,a.ap_comment_02
+				,a.ap_comment_03
+				,a.vacation_content
+				,a.vacation_type
+				,a.approval_state 
+				,a.vacation_org_file
+				,a.vacation_enc_file
+				,(SELECT IFNULL(annual_set - annual_use,0) FROM top_vacation_use WHERE user_no = a.user_no ORDER BY base_year DESC LIMIT 0,1) AS annual_set
+			FROM top_vacation_info a 
+			WHERE 1=1
+			AND a.approval_state = 30
+		
+			UNION ALL
+			
+			SELECT
+				a.serial_no
+				,a.user_no
+				,getTopTmBscCenterName(a.user_team_id) AS center_name
+				,getTopTmBscTeamName(a.user_team_id) AS team_name
+				,getTopMbrBscUserName(a.user_no) AS user_name
+				,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+				,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+				,DATE_FORMAT(a.sdate,'%Y-%m-%d') AS sdate
+				,DATE_FORMAT(a.edate,'%Y-%m-%d') AS edate
+				,DATE_FORMAT(a.regdate,'%Y-%m-%d') AS regdate
+				,a.vacation_interval
+				,CASE
+					WHEN a.approvaler_01 = 99991 
+					THEN '물보험기획팀'
+					WHEN a.approvaler_01 = 99994
+					THEN '인보험기획팀'
+					ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+				END AS approvaler_01_val
+				,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val
+				,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+				,IFNULL(a.ap_date_01,'') AS ap_date_01
+				,IFNULL(a.ap_date_02,'') AS ap_date_02
+				,IFNULL(a.ap_date_03,'') AS ap_date_03
+				,a.ap_comment_01
+				,a.ap_comment_02
+				,a.ap_comment_03
+				,a.vacation_content
+				,a.vacation_type
+				,a.approval_state 
+				,a.vacation_org_file
+				,a.vacation_enc_file
+				,(SELECT IFNULL(annual_set - annual_use,0) FROM top_vacation_use WHERE user_no = a.user_no ORDER BY base_year DESC LIMIT 0,1) AS annual_set
+			FROM top_vacation_info a 
+			WHERE 1=1
+			AND a.approval_state = 10
+			AND a.approvaler_now = #{user_no}
+		)GA
+		ORDER BY GA.regdate DESC
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	
+	<select id="selectApprovalListLast" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT 
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01_val
+			<!-- ,IFNULL(getTopMbrBscUserName(a.approvaler_01),'') AS approvaler_01_val -->
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state 
+			,a.vacation_org_file
+			,a.vacation_enc_file
+			,(SELECT IFNULL(annual_set - annual_use,0) from top_vacation_use where user_no = a.user_no order by base_year desc limit 0,1) as annual_set
+		FROM top_vacation_info a 
+		WHERE
+			 a.approval_state = 30		
+		order by regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>	
+
+	<select id="vacationApprovalList1" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationApprovalBean">			
+			SELECT				
+				b.user_name AS user_name
+				,a.user_id AS user_no
+			FROM ls_admin a, top_mbr_bsc b
+			WHERE a.user_id = b.user_no
+			AND a.ls_admin_vacation1 LIKE CONCAT('%|',#{sTeamId},'|%')							
+	</select>
+	
+	<select id="vacationApprovalList2" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationApprovalBean">			
+			SELECT 
+				b.user_name AS user_name
+				,a.user_id AS user_no
+			FROM ls_admin a, top_mbr_bsc b
+			WHERE a.user_id = b.user_no
+			AND a.ls_admin_vacation2 LIKE CONCAT('%|',#{sTeamId},'|%')							
+	</select>
+	
+	<select id="vacationApprovalList3" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationApprovalBean">			
+			SELECT					
+					b.user_name AS user_name
+					,a.user_no AS user_no
+				FROM top_mbr_pms a, top_mbr_bsc b 
+				WHERE a.user_no = b.user_no 
+				AND a.mbr_pms_28 = #{sTeamtype} 
+				AND a.mbr_pms_28_v = 1							
+	</select>
+	
+	<select id="vacationLastApprovalList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationApprovalBean">			
+			SELECT					
+					b.user_name AS user_name
+					,a.user_no AS user_no
+				FROM top_mbr_pms a, top_mbr_bsc b 
+				WHERE a.user_no = b.user_no
+				AND a.mbr_pms_28_v = 1							
+	</select>
+	
+	<!-- 1차결재해야할 카운트 가져오기 -->
+	<select id="selectApproval1Cnt" parameterType="HashMap" resultType="int">
+		SELECT 
+				count(*) as Cnt
+			FROM top_vacation_info
+			WHERE approval_state = 10
+			AND user_team_id in ( #{teamlist1} )
+	</select>
+	
+	<!-- 2차결재해야할 카운트 가져오기 -->
+	<select id="selectApproval2Cnt" parameterType="HashMap" resultType="int">
+		SELECT 
+				count(*) as Cnt
+			FROM top_vacation_info
+			WHERE approval_state = 20
+			AND user_team_id in ( #{teamlist2} )
+	</select>
+	
+	<!-- 최종결재해야 할 카운트 가져오기 -->
+	<select id="selectApproval3Cnt" parameterType="HashMap" resultType="int">
+		SELECT 
+				count(*) as Cnt
+			FROM top_vacation_info
+			WHERE approval_state = 30			
+	</select>
+	
+	<select id="vacationApprovalCnt1" parameterType="HashMap" resultType="int">
+		SELECT 
+				count(*) as Cnt
+			FROM ls_admin
+			WHERE user_id = #{user_no}
+			AND ls_admin_vacation1 LIKE CONCAT('%|',#{sTeamId},'|%')
+	</select>
+	
+	<select id="vacationApprovalCnt2" parameterType="HashMap" resultType="int">
+		SELECT 
+				count(*) as Cnt
+			FROM ls_admin
+			WHERE user_id = #{user_no}
+			AND ls_admin_vacation2 LIKE CONCAT('%|',#{sTeamId},'|%')
+	</select>
+	
+	<!-- 결재권한이 있는 1종 최종결재자(기존 1,4종 결재권한과 다름) -->
+	<select id="vacationApprovalRealCnt3" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt 
+		FROM top_mbr_pms
+			WHERE user_no = #{user_no}
+		AND mbr_pms_28_v = 1
+	</select>
+	
+	<select id="vacationApprovalCnt3" parameterType="HashMap" resultType="int">
+		SELECT 
+			count(*) as Cnt 
+		FROM top_mbr_pms
+			WHERE user_no = #{user_no}
+		AND mbr_pms_28 = #{sTeamtype}
+	</select>
+	
+	<!-- 최종 결재자 사번 -->
+	<select id="vacationApproval3Info" parameterType="HashMap" resultType="int">
+		SELECT 
+			user_no
+		FROM top_mbr_pms
+		WHERE mbr_pms_28 = #{sTeamtype} 
+		AND mbr_pms_28_v = 1
+	</select>	
+	
+	<!-- 2차 결재자 사번 -->
+	<select id="vacationApproval2Info" parameterType="HashMap" resultType="int">
+		SELECT
+			user_id AS user_no
+		FROM ls_admin
+		WHERE ls_admin_vacation2 LIKE CONCAT('%|',#{sTeamId},'|%') limit 1
+	</select>
+	
+	<!-- 1차 결재자 사번-->
+	<select id="vacationApproval1Info" parameterType="HashMap" resultType="int">
+		SELECT
+			user_id AS user_no
+		FROM ls_admin
+		WHERE ls_admin_vacation1 LIKE CONCAT('%|',#{sTeamId},'|%') limit 1
+	</select>	
+
+	<select id="vacationApprovalList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationApprovalBean">
+		SELECT 
+			ap.approval_level
+			,ap.user_name
+			,ap.user_no
+		FROM
+			(	
+				SELECT 
+					3 AS approval_level
+					,b.user_name AS user_name
+					,a.user_no AS user_no
+				FROM top_mbr_pms a, top_mbr_bsc b 
+				WHERE a.user_no = b.user_no 
+				AND a.mbr_pms_28 = #{sTeamtype} 
+				AND a.mbr_pms_28_v = 1
+				
+			UNION ALL
+					
+				SELECT 
+					2 AS approval_level
+					,b.user_name AS user_name
+					,a.user_id AS user_no
+				FROM ls_admin a, top_mbr_bsc b
+				WHERE a.user_id = b.user_no
+				AND a.ls_admin_vacation2 LIKE CONCAT('%|',#{sTeamId},'|%')
+				
+			UNION ALL
+			
+				SELECT 
+					1 AS approval_level
+					,b.user_name AS user_name
+					,a.user_id AS user_no
+				FROM ls_admin a, top_mbr_bsc b
+				WHERE a.user_id = b.user_no
+				AND a.ls_admin_vacation1 LIKE CONCAT('%|',#{sTeamId},'|%')
+					
+		) ap		 
+		ORDER BY approval_level					
+	</select>
+	
+	<select id="vacationUseBaseYearList" parameterType="HashMap" resultType="integer">
+		select
+			distinct(base_year) as base_year
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+		order by base_year desc 			
+	</select>
+	
+	<select id="vacationUseListLastManager" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationUseBean">
+		SELECT
+			a.user_no
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,a.annual_set
+			,a.annual_use
+			,a.annual_apply
+			,a.vacation_apply
+			,a.vacation_use
+			,a.base_date
+			,DATE_FORMAT(a.annual_start_date,'%Y-%m-%d') AS annual_start_date
+			,DATE_FORMAT(a.annual_end_date,'%Y-%m-%d') AS annual_end_date			
+			,a.base_year
+			,a.reg_date
+			,b.team_id_main as team_id
+			,getTopTmBscTeamName(b.team_id_main) AS team_name
+			,(select team_type from top_tm_bsc where team_id = b.team_id_main) AS team_type
+		FROM
+			top_vacation_use a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND a.user_no = #{user_no}
+		ORDER BY base_year DESC LIMIT 0,1			
+	</select>
+	
+	<select id="vacationUseListLast" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationUseBean">
+		select
+			user_no
+			,annual_set
+			,annual_use
+			,annual_apply
+			,vacation_apply
+			,vacation_use
+			,base_date
+			,DATE_FORMAT(annual_start_date,'%Y-%m-%d') as annual_start_date
+			,DATE_FORMAT(annual_end_date,'%Y-%m-%d') as annual_end_date			
+			,base_year
+			,reg_date
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+		order by base_year desc limit 0,1 			
+	</select>
+	
+	<!-- 연차 재계산시 특정일 이후 발생연차만 재계산해야한다. by top3009 (2022-01-03) -->
+	<select id="selectVacationUseListByUserNoToDate" parameterType="String" resultType="HashMap">
+		select
+			serial_no
+			,user_no
+			,annual_set
+			,annual_use
+			,annual_apply
+			,vacation_apply
+			,vacation_use
+			,base_date
+			,DATE_FORMAT(annual_start_date,'%Y-%m-%d') as annual_start_date
+			,DATE_FORMAT(annual_end_date,'%Y-%m-%d') as annual_end_date			
+			,base_year
+			,reg_date
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+		AND annual_start_date > '2020-11-10'
+		order by base_year		
+	</select>
+	
+	<select id="selectVacationUseListByUserNo" parameterType="String" resultType="HashMap">
+		select
+			serial_no
+			,user_no
+			,annual_set
+			,annual_use
+			,annual_apply
+			,vacation_apply
+			,vacation_use
+			,base_date
+			,DATE_FORMAT(annual_start_date,'%Y-%m-%d') as annual_start_date
+			,DATE_FORMAT(annual_end_date,'%Y-%m-%d') as annual_end_date			
+			,base_year
+			,reg_date
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+		order by base_year		
+	</select>
+	
+	<select id="vacationUseList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationUseBean">
+		select
+			user_no
+			,annual_set
+			,annual_use
+			,annual_apply
+			,vacation_apply
+			,vacation_use
+			,base_date
+			,annual_start_date
+			,annual_end_date
+			,base_year
+			,reg_date
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+			and base_date = #{base_date}			
+	</select>
+	
+	<!-- 연차할당년도 기준으로 값 가져오기 -->
+	<select id="vacationBaseYearUseList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationUseBean">
+		select
+			user_no
+			,annual_set
+			,annual_use
+			,annual_apply
+			,vacation_apply
+			,vacation_use
+			,base_date
+			,annual_start_date
+			,annual_end_date
+			,base_year
+			,reg_date
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+			and base_year = #{base_year}			
+	</select>
+	
+	<!-- 사용자 입사일자 가져오기 -->
+	<select id="selectUserJoinDate" parameterType="HashMap" resultType="String">
+		select
+			from_unixtime(join_date,"%Y-%m-%d") as join_date
+		from
+			top_mbr_bsc
+		where user_no = #{user_no}						
+	</select>
+	
+	<!-- 연차기간 내 가족돌봄 질병 휴직여부 체크 -->
+	<select id="selectLeaveDayFor2001" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			work_sdate
+			,DATE_FORMAT(work_sdate, '%Y-%m-%d') as work_sdate_fmt
+			,work_edate
+			,DATE_FORMAT(work_edate, '%Y-%m-%d') as work_edate_fmt			
+		FROM top_mbr_work
+			WHERE user_no = #{user_no}
+			AND leave_type IN ('2001','4001')
+			AND 
+			(
+				(
+					(work_sdate BETWEEN #{vacation_work_sdate} AND #{vacation_work_edate}) 
+					OR (work_edate BETWEEN #{vacation_work_sdate} AND #{vacation_work_edate})
+				) 
+			OR 
+				(work_sdate &lt;= #{vacation_work_sdate} AND work_edate >= #{vacation_work_edate})
+			)
+	</select>
+	
+	<!-- 연차기간 내 기타휴직여부 체크 -->
+	<select id="selectLeaveDayFor9001" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			work_sdate
+			,DATE_FORMAT(work_sdate, '%Y-%m-%d') as work_sdate_fmt
+			,work_edate
+			,DATE_FORMAT(work_edate, '%Y-%m-%d') as work_edate_fmt			
+		FROM top_mbr_work
+			WHERE user_no = #{user_no}
+			AND leave_type = '9001'
+			AND 
+			(
+				(
+					(work_sdate BETWEEN #{vacation_work_sdate} AND #{vacation_work_edate}) 
+					OR (work_edate BETWEEN #{vacation_work_sdate} AND #{vacation_work_edate})
+				) 
+			OR 
+				(work_sdate &lt;= #{vacation_work_sdate} AND work_edate >= #{vacation_work_edate})
+			)		
+	</select>
+	
+	<select id="selectAnnualSetVacationUseByBaseYear" parameterType="HashMap" resultType="double">
+		select
+			annual_set 
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+			and base_year = #{base_year}		
+	</select>
+	
+	<!-- 연차할당년도 기준으로 갯수 가져오기 -->
+	<select id="vacationBaseYearUseCnt" parameterType="HashMap" resultType="integer">
+		select
+			ifnull(count(*),0) 
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+			and base_year = #{base_year}			
+	</select>
+	
+	<!-- 기존 연차 정보 가져오기 -->
+	<select id="vacationBeforeAnnualSet" parameterType="HashMap" resultType="double">
+		select
+			annual_set
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+			ORDER BY base_year DESC limit 1			
+	</select>
+	
+	<select id="vacationBeforeAnnualSet_20191111" parameterType="HashMap" resultType="double">
+		select
+			annual_set
+		from
+			top_vacation_use
+		where user_no = #{user_no}
+			and base_year = #{base_year}			
+	</select>
+	
+	<update id="vacationUpdateAnnualAll" parameterType="HashMap">
+		UPDATE top_vacation_use
+		   SET annual_set = #{annual_set}
+		   ,annual_use = #{annual_use}		      
+	     WHERE user_no = #{user_no}
+	     and base_year = #{base_year}
+	</update>
+	
+	<!-- 연차할당 수 갱신 -->
+	<update id="vacationUpdateAnnualSet" parameterType="HashMap">
+		UPDATE top_vacation_use
+		   SET annual_set = #{annual_set}		      
+	     WHERE user_no = #{user_no}
+	     and base_year = #{base_year}
+	</update>
+	
+	<!-- 휴직결재상태 코드값 가져오기 -->
+	<select id="selectLeaveApprovalCodeList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			col_cd as approval_code
+			,col_val as approval_val
+		FROM sysadm_codedic 
+		WHERE tbl_nm = 'top_leave_info'
+		AND col_nm = 'approval_state'
+		order by col_cd
+	</select>
+	
+	<!-- 휴가결재상태 코드값 가져오기 -->
+	<select id="selectVacationApprovalCodeList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			col_cd as approval_code
+			,col_val as approval_val
+		FROM sysadm_codedic 
+		WHERE tbl_nm = 'top_vacation_info'
+		AND col_nm = 'approval_state'
+		order by col_cd
+	</select>
+	
+	<!-- 휴직종류 코드값 가져오기 -->
+	<select id="selectLeaveCodeDetailList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			col_cd1 as leave_code
+			,col_cd2 as leave_point
+			,col_val as leave_type
+		FROM sysadm_codedic2 
+		WHERE tbl_nm = 'top_leave_info'
+		AND col_cd2 = 0
+		order by col_cd1
+	</select>
+	
+	<!-- 휴가종류 코드값 가져오기 -->
+	<select id="selectVacationCodeDetailList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			col_cd1 as vacation_code
+			,col_cd2 as vacation_point
+			,col_val as vacation_type
+		FROM sysadm_codedic2 
+		WHERE tbl_nm = 'top_vacation_info'
+		order by col_cd1
+	</select>
+	
+	<!-- 휴직종류 코드값과 상세설명 정보 가져오기 (관리자용)-->
+	<select id="selectLeaveCodeListManager" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			b.col_cd1 AS leave_code
+			,b.col_cd2 AS leave_point
+			,b.col_val AS leave_type
+			,a.col_val AS leave_content
+		FROM 
+			sysadm_codedic a, sysadm_codedic2 b 
+		WHERE a.tbl_nm = b.tbl_nm 
+			AND a.col_nm = b.col_nm 
+			AND a.col_cd = b.col_cd1
+			AND a.tbl_nm = 'top_leave_info'
+		ORDER BY leave_code
+	</select>
+	
+	<!-- 휴직종류 코드값과 상세설명 정보 가져오기 (직원용)-->
+	<select id="selectLeaveCodeList" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			b.col_cd1 AS leave_code
+			,b.col_cd2 AS leave_point
+			,b.col_val AS leave_type
+			,a.col_val AS leave_content
+		FROM 
+			sysadm_codedic a, sysadm_codedic2 b 
+		WHERE a.tbl_nm = b.tbl_nm 
+			AND a.col_nm = b.col_nm 
+			AND a.col_cd = b.col_cd1
+			AND a.tbl_nm = 'top_leave_info'
+			AND b.col_cd2 = 0
+		ORDER BY leave_code
+	</select>
+
+	<!-- 휴가종류 코드값과 상세설명 정보 가져오기 -->
+	<select id="selectVacationCodeList" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			b.col_cd1 AS vacation_code
+			,b.col_cd2 AS vacation_point
+			,b.col_val AS vacation_type
+			,a.col_val AS vacation_content
+		FROM 
+			sysadm_codedic a, sysadm_codedic2 b 
+		WHERE a.tbl_nm = b.tbl_nm 
+			AND a.col_nm = b.col_nm 
+			AND a.col_cd = b.col_cd1
+			AND a.tbl_nm = 'top_vacation_info'
+		ORDER BY vacation_code
+	</select>
+	
+	<!-- 해당 년도 휴가 정보 SELECT-->
+	<select id="selectVacationDayCnt" parameterType="HashMap" resultType="Integer">
+		SELECT vacation_day_cnt
+		  FROM top_mbr_vacation_info
+		 WHERE year = #{year}
+		   AND team_type = #{teamType}
+	</select>
+	
+	<!-- 해당 년도 개인별 휴가 정보 SELECT-->
+	<select id="selectVacationIndividualDayCnt" parameterType="HashMap" resultType="Integer">
+		SELECT vacation_day_cnt
+		  FROM top_mbr_vacation_individual_info
+		 WHERE year = #{year}
+		   AND team_type = #{teamType}
+		   AND user_no = #{userNo}
+	</select>
+	
+	<!-- 휴직사용내역 목록수 -->
+	<select id="selectLeaveInfoListCnt" parameterType="HashMap" resultType="Long">
+		SELECT
+			count(*) as Cnt			
+		FROM top_leave_info
+		WHERE user_no = #{user_no}
+		<if test="searchStartDate != NULL and searchStartDate != '' ">AND regdate >= #{searchStartDate}</if>
+		<if test="searchEndDate != NULL and searchEndDate != '' ">AND regdate &lt;= #{searchEndDate}</if>
+	</select>
+	
+	<!-- 휴가사용내역 목록수 -->
+	<select id="selectVacationInfoListNewCnt" parameterType="HashMap" resultType="Long">
+		SELECT
+			count(*) as Cnt			
+		FROM top_vacation_info
+		WHERE user_no = #{user_no}		
+		<if test="searchStartDate != '' ">AND regdate >= #{searchStartDate}</if>
+		<if test="searchEndDate != '' ">AND regdate &lt;= #{searchEndDate}</if>
+	</select>
+	
+	<!-- 휴직사용 내역 List 작업중 -->
+	<select id="selectLeaveInfoList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			a.serial_no			
+			,a.leave_type
+			,(select col_val from sysadm_codedic2 where tbl_nm = 'top_leave_info' and col_nm = 'leave_type' and col_cd1 = a.leave_type) as leave_type_val
+			,(select col_val from sysadm_codedic where tbl_nm = 'top_leave_info' and col_nm = 'approval_state' and col_cd = a.approval_state) as approval_state_val
+			,a.leave_content
+			,left(a.sdate,10) as sdate
+			,left(a.edate,10) as edate
+			,a.leave_interval
+			,a.approval_state						
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01			
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+		FROM top_leave_info a
+		WHERE a.user_no = #{user_no}
+		<if test="searchStartDate != NULL and searchStartDate != '' ">AND a.regdate >= #{searchStartDate}</if>
+		<if test="searchEndDate != NULL and searchEndDate != '' ">AND a.regdate &lt;= #{searchEndDate}</if>				
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}	
+	</select>
+	
+	<!-- 휴가사용 내역 List -->
+	<select id="selectVacationInfoNewList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			a.serial_no
+			,left(a.sdate,4) as base_year
+			,a.vacation_type
+			,(select col_val from sysadm_codedic2 where tbl_nm = 'top_vacation_info' and col_nm = 'vacation_type' and col_cd1 = a.vacation_type) as vacation_type_val
+			,(select col_val from sysadm_codedic where tbl_nm = 'top_vacation_info' and col_nm = 'vacation_option' and col_cd = a.vacation_option) as vacation_option_val
+			,(select col_val from sysadm_codedic where tbl_nm = 'top_vacation_info' and col_nm = 'approval_state' and col_cd = a.approval_state) as approval_state_val			
+			,a.vacation_content
+			,left(a.sdate,10) as sdate
+			,left(a.edate,10) as edate
+			,a.vacation_interval
+			,a.approval_state
+			,a.vacation_enc_file
+			,a.vacation_org_file
+			,a.vacation_interval
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01			
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03
+			,a.next_use							
+		FROM top_vacation_info a
+		WHERE a.user_no = #{user_no}
+		<if test="searchStartDate != '' ">AND a.regdate >= #{searchStartDate}</if>
+		<if test="searchEndDate != '' ">AND a.regdate &lt;= #{searchEndDate}</if>		
+		order by a.regdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 연차사용기간으로 조회기준 변경 휴가사용 내역 List -->
+	<select id="selectVacationInfoNewListPopup" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			a.serial_no
+			,left(a.sdate,4) as base_year
+			,a.vacation_type
+			,(select col_val from sysadm_codedic2 where col_nm = 'vacation_type' and col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') as vacation_type_val
+			,(select col_val from sysadm_codedic where col_nm = 'vacation_option' and col_cd = a.vacation_option AND tbl_nm = 'top_vacation_info') as vacation_option_val
+			,(select col_val from sysadm_codedic where col_nm = 'approval_state' and col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') as approval_state_val
+			,a.vacation_content
+			,left(a.sdate,10) as sdate
+			,left(a.edate,10) as edate
+			,a.vacation_interval
+			,a.approval_state
+			,a.vacation_enc_file
+			,a.vacation_org_file
+			,a.vacation_interval
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01
+			<!-- ,IFNULL(getTopMbrBscUserName(a.approvaler_01),'') AS approvaler_01 -->
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03		
+			,a.next_use					
+		FROM top_vacation_info a
+		WHERE a.user_no = #{user_no}
+		<if test="searchStartDate != '' ">AND a.sdate >= #{searchStartDate}</if>
+		<if test="searchEndDate != '' ">AND a.sdate &lt;= #{searchEndDate}</if>		
+		order by a.sdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 전년도 선연차 사용 내역 List -->
+	<select id="selectVacationInfoNewListPopupBefore" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			a.serial_no
+			,left(a.sdate,4) as base_year
+			,a.vacation_type
+			,(select col_val from sysadm_codedic2 where col_nm = 'vacation_type' and col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') as vacation_type_val
+			,(select col_val from sysadm_codedic where col_nm = 'vacation_option' and col_cd = a.vacation_option AND tbl_nm = 'top_vacation_info') as vacation_option_val
+			,(select col_val from sysadm_codedic where col_nm = 'approval_state' and col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') as approval_state_val
+			,a.vacation_content
+			,left(a.sdate,10) as sdate
+			,left(a.edate,10) as edate
+			,a.vacation_interval
+			,a.approval_state
+			,a.vacation_enc_file
+			,a.vacation_org_file
+			,a.vacation_interval
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01
+			<!-- ,IFNULL(getTopMbrBscUserName(a.approvaler_01),'') AS approvaler_01 -->
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03		
+			,a.next_use					
+		FROM top_vacation_info a
+		WHERE a.user_no = #{user_no}
+		<if test="beforeStartDate != '' ">AND a.sdate >= #{beforeStartDate}</if>
+		<if test="beforeEndDate != '' ">AND a.sdate &lt;= #{beforeEndDate}</if>
+		AND a.next_use = 1		
+		order by a.sdate desc
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 특정기간 공휴일 포함 전체 연차사용 개수 SELECT-->
+	<select id="selectVacationTotalUseCount" parameterType="HashMap" resultType="Double">
+		SELECT 
+			IFNULL(SUM(use_count),0) AS use_count
+		FROM top_vacation_info 
+		WHERE user_no = #{user_no} 
+		AND approval_state = 31 
+		AND vacation_type IN(100,200)		
+		AND sdate >= #{sdate}
+		AND edate &lt; #{edate}
+	</select>
+	
+	<!-- 특정기간(연차사용기간)내 휴가목록 연휴가 불러오기 -->
+	<select id="selectVacationInfoListByUserNoToDate" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			serial_no
+			,user_no
+			,use_count
+			,sdate
+		FROM top_vacation_info 
+		WHERE user_no = #{user_no} 
+		AND approval_state = 31 
+		AND vacation_type IN(100,200)		
+		AND sdate >= #{annual_start_date}
+		AND sdate &lt; #{annual_end_date}
+		ORDER BY sdate	
+	</select>	
+	
+	<!-- 특정기간 공휴일과 연차를 제외한 휴가 사용수 SELECT-->
+	<select id="selectVacationTotalUseExtraCount" parameterType="HashMap" resultType="Double">
+		SELECT 
+			IFNULL(SUM(use_count),0) AS use_count
+		FROM top_vacation_info 
+		WHERE user_no = #{user_no} 
+		AND approval_state = 31
+		AND vacation_type != 100
+		AND vacation_type != 200 		
+		AND sdate >= #{sdate}
+		AND edate &lt; #{edate}
+	</select>
+	
+	<!-- 특정기간 공휴일제외 연차사용 개수 SELECT-->
+	<select id="selectVacationUseCount" parameterType="HashMap" resultType="Double">
+		SELECT 
+			IFNULL(SUM(use_count),0) AS use_count
+		FROM top_vacation_info 
+		WHERE user_no = #{user_no} 
+		AND approval_state = 31 
+		AND vacation_type IN(100,200) 
+		AND vacation_content != '공휴일 연차대체'
+		AND sdate >= #{sdate}
+		AND edate &lt; #{edate}
+	</select>
+	
+	<!-- 특정기간의 공휴일 연차대체 개수 SELECT-->
+	<select id="selectHoildayUseCount" parameterType="HashMap" resultType="Double">
+		SELECT 
+			IFNULL(SUM(use_count),0) AS use_count
+		FROM top_vacation_info 
+		WHERE user_no = #{user_no} 
+		AND approval_state = 31 
+		AND vacation_type = 100 
+		AND vacation_content = '공휴일 연차대체'
+		AND sdate >= #{sdate}
+		AND edate &lt; #{edate}
+	</select>
+	
+	<!-- 해당 년도 입사일 이후 사용 휴가 개수 SELECT-->
+	<select id="selectVacationInworkUseCnt" parameterType="HashMap" resultType="Double">
+		SELECT SUM(vacation_use_cnt) AS vacation_use_cnt 
+		  FROM top_mbr_vacation
+		 WHERE year = #{year}
+		   AND user_no = #{userNo}
+		   AND vacation_kind in (1,5)
+   		   AND (vacation_state != 91 and vacation_state != 92 and vacation_state != 90)
+   		   AND vacation_start_date > UNIX_TIMESTAMP(#{work_date})
+   		   AND vacation_start_date &lt;= UNIX_TIMESTAMP(#{base_date})
+	</select>	
+	
+	<!-- 해당 년도 입사일 이후 사용 휴가 개수 SELECT-->
+	<select id="selectVacationTotalUseCnt" parameterType="HashMap" resultType="Double">
+		SELECT SUM(vacation_use_cnt) AS vacation_use_cnt 
+		  FROM top_mbr_vacation
+		 WHERE year = #{year}
+		   AND user_no = #{userNo}
+		   AND vacation_kind in (1,5)
+   		   AND (vacation_state != 91 and vacation_state != 92 and vacation_state != 90)   		   
+	</select>
+	
+	<!-- 해당 년도 사용 휴가 개수 SELECT-->
+	<select id="selectVacationUseCnt" parameterType="HashMap" resultType="Double">
+		SELECT SUM(vacation_use_cnt) AS vacation_use_cnt 
+		  FROM top_mbr_vacation
+		 WHERE year = #{year}
+		   AND user_no = #{userNo}
+   		   AND (vacation_state != 91 and vacation_state != 92 and vacation_state != 90)
+	</select>
+	
+	<!-- 1종 휴가 정보 가져오기-->
+	<select id="selectVacationInfoOne" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT
+			*
+		FROM top_vacation_info
+		WHERE serial_no = #{serial_no}	
+	</select>
+	
+	<!-- 휴직 상세정보 가져오기-->
+	<select id="selectLeaveInfoDetail" parameterType="HashMap" resultType="kr.co.toplac.topvaction.LeaveInfoBean">
+		SELECT
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'leave_type' AND col_cd1 = a.leave_type AND tbl_nm = 'top_leave_info') AS leave_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_leave_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.leave_interval
+			,a.leave_content
+			,a.leave_type
+			,a.approval_state						
+			,IFNULL(a.approvaler_01,0) AS approvaler_01
+			,IFNULL(a.approvaler_02,0) AS approvaler_02
+			,IFNULL(a.approvaler_03,0) AS approvaler_03
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01_val			
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val			
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03
+			,a.approvaler_now
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name			
+		FROM top_leave_info a
+		WHERE a.serial_no = #{serial_no}	
+	</select>
+	
+	<!-- 신규 휴가 상세정보 가져오기-->
+	<select id="selectVacationInfoDetail" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT
+			a.serial_no
+			,a.user_no
+			,getTopTmBscCenterName(a.user_team_id) AS center_name
+			,getTopTmBscTeamName(a.user_team_id) AS team_name
+			,getTopMbrBscUserName(a.user_no) AS user_name
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = a.vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'vacation_option' AND col_cd = a.vacation_option AND tbl_nm = 'top_vacation_info') AS vacation_option_val
+			,(SELECT col_val FROM sysadm_codedic WHERE col_nm = 'approval_state' AND col_cd = a.approval_state AND tbl_nm = 'top_vacation_info') AS approval_state_val
+			,date_format(a.sdate,'%Y-%m-%d') as sdate
+			,date_format(a.edate,'%Y-%m-%d') as edate
+			,date_format(a.regdate,'%Y-%m-%d') as regdate
+			,a.vacation_interval
+			,a.vacation_content
+			,a.vacation_type
+			,a.approval_state
+			,a.vacation_org_file
+			,a.vacation_enc_file			
+			,IFNULL(a.approvaler_01,0) AS approvaler_01
+			,IFNULL(a.approvaler_02,0) AS approvaler_02
+			,IFNULL(a.approvaler_03,0) AS approvaler_03
+			,CASE
+				WHEN a.approvaler_01 = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_01 = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_01),'')
+			END AS approvaler_01_val
+			<!-- ,IFNULL(getTopMbrBscUserName(a.approvaler_01),'') AS approvaler_01_val -->
+			,IFNULL(getTopMbrBscUserName(a.approvaler_02),'') AS approvaler_02_val			
+			,IFNULL(getTopMbrBscUserName(a.approvaler_03),'') AS approvaler_03_val
+			,IFNULL(a.ap_date_01,'') as ap_date_01
+			,IFNULL(a.ap_date_02,'') as ap_date_02
+			,IFNULL(a.ap_date_03,'') as ap_date_03
+			,a.ap_comment_01
+			,a.ap_comment_02
+			,a.ap_comment_03
+			,a.approvaler_now
+			,CASE
+				WHEN a.approvaler_now = 99991 
+				THEN '물보험기획팀'
+				WHEN a.approvaler_now = 99994
+				THEN '인보험기획팀'
+				ELSE IFNULL(getTopMbrBscUserName(a.approvaler_now),'')
+			END AS approvaler_now_name
+			<!-- ,getTopMbrBscUserName(a.approvaler_now) AS approvaler_now_name -->
+			,a.remain_vacation_use
+		FROM top_vacation_info a
+		WHERE a.serial_no = #{serial_no}	
+	</select>
+	
+	<!-- 휴가 내역 SELECT -->
+	<select id="selectVacationList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationVo">
+		SELECT a.vacation_no AS vacationNo
+			  ,a.team_type AS teamType
+			  ,a.team_id AS teamId
+			  ,a.user_no AS userNo
+			  ,a.vacation_kind AS vacationKind
+			  ,getCodeValue("top_mbr_vacation", "vacation_kind", a.vacation_kind) AS vacationKindValue
+			  ,a.vacation_comment AS vacationComment
+			  ,a.return_comment returnComment
+			  ,a.year
+			  ,a.vacation_state AS vacationState
+			  ,getCodeValue("top_mbr_vacation", "vacation_state", a.vacation_state) AS vacationStateValue
+			  ,from_unixtime(a.vacation_start_date,"%Y-%m-%d") AS vacationStartDate
+			  ,from_unixtime(a.vacation_start_date,"%m%d") AS startMonthDay
+			  ,from_unixtime(a.vacation_end_date,"%Y-%m-%d") AS vacationEndDate
+			  ,from_unixtime(a.vacation_end_date,"%m%d") AS endMonthDay
+			  ,a.vacation_use_cnt AS vacationUseCnt
+			  ,a.sub_aprv_user_no AS subAprvUserNo
+			  ,getTopMbrBscUserName(a.sub_aprv_user_no) AS subAprvUserNm
+			  ,from_unixtime(a.sub_aprv_date,"%Y-%m-%d") AS subAprvDate
+			  ,a.fin_aprv_user_no AS finAprvUserNo
+			  ,getTopMbrBscUserName(a.fin_aprv_user_no) AS finAprvUserNm
+			  ,from_unixtime(a.fin_aprv_date,"%Y-%m-%d") AS finAprvDate
+			  ,getTopTmBscCenterName(a.team_id) AS centerNm
+  			  ,getTopTmBscTeamName(a.team_id) AS teamNm
+			  ,getTopMbrBscUserName(a.user_no) AS userNm
+			  ,getCodeValue("top_mbr_bsc", "work_level", c.work_level) AS workLevelNm
+			  ,a.vacation_org_file AS vacationOrgFile
+			  ,a.vacation_enc_file AS vacationEncFile
+			  ,a.next_use
+			  ,FROM_UNIXTIME(c.join_date,"%Y-%m-%d") AS joinDate
+			  ,FROM_UNIXTIME(a.reg_date,"%Y-%m-%d") AS regDate
+		  FROM top_mbr_vacation a
+		 INNER JOIN top_tm_bsc b
+		    ON a.team_id = b.team_id
+		 INNER JOIN top_mbr_bsc c
+		    ON a.user_no = c.user_no
+		 WHERE 1=1
+		<choose>
+			<when test="gubun.equals('detail')">
+				AND vacation_no = #{vacationNo}
+			</when>   
+			<otherwise>
+			   	<if test="srchKind != 99">AND vacation_kind = #{srchKind}</if>
+			   	<if test="srchState != 99">AND vacation_state = #{srchState}</if>
+			   	<if test="srchYear != 99">AND year = #{srchYear}</if>
+			   	
+			   	<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+				<if test="gubun.equals('main')">
+					AND a.user_no = #{userNo}
+					AND a.vacation_state in (0,1,2)
+				</if>
+				<if test="gubun.equals('list')">AND a.user_no = #{userNo}</if>
+				<if test="gubun.equals('log')">
+					<if test="pms28 != 0 and pms28 != null">
+						AND a.team_type = #{pms28}
+					</if>					
+				</if>
+				<if test="sAllteam != null">
+					AND a.team_id in (${sAllteam})
+				</if>
+				<if test="srchTeamId != 0 and sAllteam == null">AND a.team_id = #{srchTeamId}</if>				
+			</otherwise>
+		</choose>		
+	 	ORDER BY vacation_no DESC
+	 	<if test="gubun.equals('log') or gubun.equals('list')">
+	 		LIMIT #{limitPage}, #{sizePerPage}					
+ 		</if>
+	</select>
+	
+	<select id="selectVacationListCnt" parameterType="HashMap" resultType="Long">
+		SELECT count(*)
+		  FROM top_mbr_vacation a
+		 INNER JOIN top_tm_bsc b
+		    ON a.team_id = b.team_id
+		 INNER JOIN top_mbr_bsc c
+		    ON a.user_no = c.user_no
+		 WHERE 1=1
+		<choose>
+			<when test="gubun.equals('detail')">
+				AND vacation_no = #{vacationNo}
+			</when>   
+			<otherwise>
+			   	<if test="srchKind != 99">AND vacation_kind = #{srchKind}</if>
+			   	<if test="srchState != 99">AND vacation_state = #{srchState}</if>
+			   	<if test="srchYear != 99">AND year = #{srchYear}</if>			   	
+			   	<if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+				<if test="gubun.equals('main')">
+					AND a.user_no = #{userNo}
+					AND a.vacation_state in (0,1,2)
+				</if>
+				<if test="gubun.equals('list')">AND a.user_no = #{userNo}</if>
+				<if test="gubun.equals('log')">
+					<if test="pms28 != 0 and pms28 != null">
+						AND a.team_type = #{pms28}
+					</if>					
+				</if>
+				<if test="sAllteam != null">
+					AND a.team_id in (${sAllteam})
+				</if>
+				<if test="srchTeamId != 0 and sAllteam == null">AND a.team_id = #{srchTeamId}</if>				
+			</otherwise>
+		</choose>		
+	</select>	
+	
+	
+	<select id="selectVacationAprvList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationVo">
+		SELECT vacation_no AS vacationNo
+			  ,a.team_type AS teamType
+			  ,a.team_id AS teamId
+			  ,a.user_no AS userNo
+			  ,getTopTmBscCenterName(a.team_id) AS centerNm
+			  ,getTopTmBscTeamName(a.team_id) AS teamNm
+			  ,getTopMbrBscUserName(a.user_no) AS userNm
+			  ,getCodeValue("top_mbr_bsc", "work_level", c.work_level) AS workLevelNm
+			  ,FROM_UNIXTIME(c.join_date,"%Y-%m-%d") AS joinDate
+			  ,FROM_UNIXTIME(a.reg_date,"%Y-%m-%d") AS regDate
+			  ,vacation_kind AS vacationKind
+			  ,getCodeValue("top_mbr_vacation", "vacation_kind", vacation_kind) AS vacationKindValue
+			  ,vacation_comment AS vacationComment
+			  ,a.return_comment AS returnComment
+			  ,year
+			  ,vacation_state AS vacationState
+			  ,getCodeValue("top_mbr_vacation", "vacation_state", vacation_state) AS vacationStateValue
+			  ,from_unixtime(vacation_start_date,"%Y-%m-%d") AS vacationStartDate
+			  ,from_unixtime(vacation_start_date,"%m%d") AS startMonthDay
+			  ,from_unixtime(vacation_end_date,"%Y-%m-%d") AS vacationEndDate
+			  ,from_unixtime(vacation_end_date,"%m%d") AS endMonthDay
+			  ,vacation_use_cnt AS vacationUseCnt
+			  ,sub_aprv_user_no AS subAprvUserNo
+			  ,getTopMbrBscUserName(sub_aprv_user_no) AS subAprvUserNm
+			  ,from_unixtime(sub_aprv_date,"%Y-%m-%d") AS subAprvDate
+			  ,fin_aprv_user_no AS finAprvUserNo
+			  ,getTopMbrBscUserName(fin_aprv_user_no) AS finAprvUserNm
+			  ,from_unixtime(fin_aprv_date,"%Y-%m-%d") AS finAprvDate
+		  FROM top_mbr_vacation a
+		 INNER JOIN top_tm_bsc b
+		    ON a.team_id = b.team_id
+		 INNER JOIN top_mbr_bsc c
+		    ON a.user_no = c.user_no
+		 WHERE 1=1
+		   <if test="srchKind != 99">AND vacation_kind = #{srchKind}</if>
+	   	   <if test="srchState != 99">AND vacation_state = #{srchState}</if>
+	   	   <if test="srchYear != 99">AND year = #{srchYear}</if>
+	   	   <if test="srchTeamId != 0">AND a.team_id = #{srchTeamId}</if>
+	   	   <if test="srchUserName != ''">AND a.user_no in (SELECT user_no FROM top_mbr_bsc WHERE user_name LIKE CONCAT('%',#{srchUserName},'%') )</if>
+		   AND ( a.sub_aprv_user_no = #{userNo} AND a.vacation_state = 0)
+		   
+		<if test="pms28 == 1 or pms28 == 4">
+ 			OR (a.team_type = #{pms28} AND a.vacation_state = 1)
+		</if>
+		ORDER BY vacation_no DESC, vacation_state 
+	</select>
+	
+	<select id="selectVacationInsBasicData" parameterType="HashMap" resultType="HashMap">
+		SELECT a.user_name AS userName
+			  ,a.user_no AS userNo
+			  ,b.team_name AS teamName
+			  ,b.team_id AS teamId
+  			  ,b.team_type AS teamType
+			  ,a.work_level AS workLevel
+			  ,getCodeValue('top_mbr_bsc', 'work_level', a.work_level) AS workLevelNm
+			  ,b.team_manager AS teamManager
+			  ,getTopMbrBscUserName(b.team_manager) AS teamManagerNm       
+			  ,IFNULL((SELECT DISTINCT(user_no) FROM top_tm_bsc WHERE team_manager = a.user_no),0) teamManagerYn		  
+			  ,(SELECT team_manager FROM top_tm_bsc WHERE team_level = 0 AND team_group_order = b.team_group_order) centerManager
+			  ,(SELECT getTopMbrBscUserName(team_manager) FROM top_tm_bsc WHERE team_level = 0 AND team_group_order = b.team_group_order) centerManagerNm
+			  ,b.team_addr AS teamAddr
+		  FROM top_mbr_bsc a
+		 INNER JOIN top_tm_bsc b  
+			ON a.team_id_main = b.team_id
+		 WHERE user_no = #{userNo}
+	</select>
+	
+
+	<!-- 해당월 특일정보 SELECT -->
+	<select id="selectEventDayThisMonth" parameterType="HashMap" resultType="HashMap">
+		SELECT year
+			  ,month
+			  ,day
+			  ,substr(type,1,1) type
+			  ,name
+		  FROM vacation_eventday
+		 WHERE year = #{year}
+		   AND month = #{month}
+		   AND substr(type,1,1) != "e"
+	</select>
+	
+	<!-- 해당기간 휴일 갯수 SELECT -->
+	<select id="selectEventDayCnt" parameterType="HashMap" resultType="Integer">
+		SELECT count(*) eventCnt
+	  	  FROM vacation_eventday
+	 	 WHERE #{vacationStartDate} &lt;= CONCAT(year,month,day)
+	 	   AND #{vacationEndDate} >= CONCAT(year,month,day)
+   		   AND FIND_IN_SET("h",type)
+	</select>
+	
+	<!-- 특정일이 공휴일인지 여부를 체크한다. -->
+	<select id="selectEventChk" parameterType="String" resultType="Integer">
+		SELECT count(*) eventCnt
+	  	  FROM vacation_eventday
+	 	 WHERE #{_parameter} = CONCAT(year,month,day)	 	   
+   		   AND FIND_IN_SET("h",type)
+	</select>
+	
+	<!-- 사번으로 입사일자 가져오기 -->
+	<select id="selectJoinDateFmtByUserNo" parameterType="HashMap" resultType="String">
+		SELECT
+			CASE
+				WHEN GA.cnt = 0
+				THEN ''
+				ELSE GA.join_date_fmt
+			END join_date_fmt
+			
+		FROM(
+			SELECT 
+				COUNT(*) AS cnt
+				,FROM_UNIXTIME(join_date,"%Y-%m-%d") AS join_date_fmt
+			FROM top_mbr_bsc
+			WHERE user_no = #{user_no}
+		)GA
+	</select>
+	
+	<!-- 특정일 돌봄 단축 여부 체크해서 근무시간 환산하기 -->
+	<select id="calVacationToCare" parameterType="HashMap" resultType="double">
+		SELECT
+			CASE
+				WHEN (GA.cnt > 0)
+				THEN ROUND(GA.care_worktime / 8, 2)
+				ELSE 1	
+			END AS calVal	
+		FROM
+		(
+			SELECT 
+				COUNT(*) AS cnt
+				,care_worktime 
+			FROM top_mbr_care 
+			WHERE user_no = #{user_no}
+			AND #{chkDate} BETWEEN care_sdate AND care_edate
+		)GA
+	</select>
+	
+	<!-- 기간 포함여부 체크 -->
+	<select id="selectBeforeVacationCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			count(*) as beforeCnt 
+		FROM top_vacation_info 
+		WHERE user_no = #{user_no}
+		AND approval_state IN (10,20,30,31)
+		AND (#{sdate} BETWEEN sdate AND edate OR #{edate} BETWEEN sdate AND edate)		
+	</select>
+	
+	<!-- 기간 포함여부 체크 -->
+	<select id="selectBeforeLeaveCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			count(*) as beforeCnt 
+		FROM top_leave_info 
+		WHERE user_no = #{user_no}
+		AND approval_state IN (10,20,30,31)
+		AND (#{sdate} BETWEEN sdate AND edate OR #{edate} BETWEEN sdate AND edate)		
+	</select>
+	
+	<!-- 휴직 결재 -->
+	<update id="updateLeaveApproval" parameterType="HashMap">
+		UPDATE top_leave_info
+		   SET 
+		   approval_state = #{approval_state}
+		   <choose>
+		   	<when test="approval_state == 30 or approval_state == 12">
+		   		,approvaler_01 = #{approvaler_01}
+		   		,ap_comment_01 = #{ap_comment_01}
+		   		,ap_date_01 = now()
+		   	</when>		   	
+		   	<when test="approval_state == 31 or approval_state == 32">
+		   		,approvaler_03 = #{approvaler_03}
+		   		,ap_comment_03 = #{ap_comment_03}
+		   		,ap_date_03 = now()
+		   	</when>		   	
+		   </choose>
+		   <if test="approvaler_now != null ">
+		   		,approvaler_now = #{approvaler_now}
+		   	</if>
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 휴가 결재 -->
+	<update id="updateVacationNewApproval" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET 
+		   approval_state = #{approval_state}
+		   <choose>
+		   	<when test="approval_state == 30 or approval_state == 12">
+		   		,approvaler_01 = #{approvaler_01}
+		   		,ap_comment_01 = #{ap_comment_01}
+		   		,ap_date_01 = now()
+		   	</when>		   	
+		   	<when test="approval_state == 31 or approval_state == 32">
+		   		,approvaler_03 = #{approvaler_03}
+		   		,ap_comment_03 = #{ap_comment_03}
+		   		,ap_date_03 = now()
+		   	</when>		   	
+		   </choose>
+		   <if test="approvaler_now != null ">
+		   		,approvaler_now = #{approvaler_now}
+		   	</if>
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 휴가 결재 -->
+	<update id="updateVacationNewApproval_20191106" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET 
+		   approval_state = #{approval_state}
+		   <choose>
+		   	<when test="approval_state == 20 or approval_state == 12">
+		   		,approvaler_01 = #{approvaler_01}
+		   		,ap_comment_01 = #{ap_comment_01}
+		   		,ap_date_01 = now()
+		   	</when>
+		   	<when test="approval_state == 30 or approval_state == 22">
+		   		,approvaler_02 = #{approvaler_02}
+		   		,ap_comment_02 = #{ap_comment_02}
+		   		,ap_date_02 = now()
+		   	</when>
+		   	<when test="approval_state == 31 or approval_state == 32">
+		   		,approvaler_03 = #{approvaler_03}
+		   		,ap_comment_03 = #{ap_comment_03}
+		   		,ap_date_03 = now()
+		   	</when>
+		   </choose>
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 팀장 여부 확인 SELECT -->
+	<select id="selectManagerCnt" parameterType="String" resultType="Integer">
+		SELECT COUNT(*)
+		  FROM top_tm_bsc
+		 WHERE team_manager = #{_parameter}
+	</select>	
+	
+	<!-- 휴가 반려 -->
+	<update id="updateVacationReturn" parameterType="HashMap">
+		UPDATE top_mbr_vacation
+		   SET sub_aprv_user_no = #{aprvUserNo}
+		      ,sub_aprv_date = UNIX_TIMESTAMP(now())
+		      ,return_comment = #{returnComment}
+		      <choose>
+		      	<when test="pms28 == 1 or pms28 == 4">
+		      		,fin_aprv_user_no = #{aprvUserNo}
+		      		,fin_aprv_date = UNIX_TIMESTAMP(now())
+		      		,vacation_state = 92
+		      	</when>
+		      	<otherwise>
+		      		,vacation_state = 91
+		      	</otherwise>
+		      </choose>
+		 WHERE vacation_no = #{vacationNo}
+	</update>
+	
+	<!-- 휴가 승인 -->
+	<update id="updateVacationApproval" parameterType="HashMap">
+		UPDATE top_mbr_vacation
+		   SET sub_aprv_user_no = #{aprvUserNo}
+		      ,sub_aprv_date = UNIX_TIMESTAMP(now())
+		      <choose>
+		      	<when test="pms28 == 1 or pms28 == 4">
+		      		,fin_aprv_user_no = #{aprvUserNo}
+		      		,fin_aprv_date = UNIX_TIMESTAMP(now())
+		      		,vacation_state = 2
+		      	</when>
+		      	<otherwise>
+		      		,vacation_state = 1
+		      	</otherwise>
+		      </choose>
+		 WHERE vacation_no = #{vacationNo}
+	</update>
+	
+	<!-- 결재 완료 후 휴가 사용일기준 이후 신청 된 휴가건이 있으면 결재전 연차수 갱신 -->
+	<update id="updateVacationApplyNextVacationByRemainUseCnt" parameterType="HashMap">
+		UPDATE top_vacation_info SET
+			remain_vacation_use = remain_vacation_use - #{vacation_interval}
+		WHERE 1=1
+		AND user_no = #{user_no} 
+		AND sdate > #{vacation_sdate}
+		AND regdate >= #{updateChkDate}
+		AND approval_state != 30
+	</update>
+	
+	<!-- 관리자 결재 취소로 인한 취소건 이후 사용휴가에 대한 결재전 연차수 갱신 -->
+	<update id="updateVacationManagerCancelByRemainUseCnt" parameterType="HashMap">
+		UPDATE top_vacation_info SET
+			remain_vacation_use = remain_vacation_use + #{vacation_interval}
+		WHERE 1=1
+		AND user_no = #{user_no} 
+		AND sdate > #{vacation_sdate}
+		AND regdate >= #{updateChkDate}
+	</update>
+	
+	<!-- 휴가 신청의 결재전 남은 연차수 갱신 (결재 대기상태)-->
+	<update id="updateVacationInfoRemainVacationUseByUserNo" parameterType="HashMap">
+		UPDATE top_vacation_info SET
+			remain_vacation_use = #{remain_vacation_use}
+		WHERE 1=1
+		AND approval_state = 30
+		AND user_no = #{user_no}
+	</update>
+	
+	<!-- 사용하고 남은 마지막 연차수 가져오기 -->
+	<select id="selectVacationUseRemainCountByUserNo" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(annual_set - annual_use,0) AS remain_vacation_use 
+		FROM top_vacation_use 
+		WHERE user_no = #{user_no}
+		ORDER BY base_year DESC LIMIT 0,1
+	</select>
+	
+	<!-- 휴직 최종확인 결재 취소 -->
+	<update id="updateLeaveInfoCancel_03" parameterType="HashMap">
+		UPDATE top_leave_info
+		   SET approval_state = #{approval_state}
+			  ,approvaler_03 = 0
+		      ,ap_date_03 = NULL
+      		  ,ap_comment_03 = NULL
+      		  ,approvaler_now = IFNULL(approvaler_01,0)      		  
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 최종확인 결재 취소 수정 -->
+	<update id="updateVacationInfoCancel_03" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET approval_state = #{approval_state}
+			  ,approvaler_03 = 0
+		      ,ap_date_03 = NULL
+      		  ,ap_comment_03 = NULL
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 최종확인 결재 취소 -->
+	<update id="updateVacationInfoCancel_03_20251028" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET approval_state = #{approval_state}
+			  ,approvaler_03 = 0
+		      ,ap_date_03 = NULL
+      		  ,ap_comment_03 = NULL
+      		  ,approvaler_now = IFNULL(approvaler_01,0)      		  
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 1차 휴직결재 취소 -->
+	<update id="updateLeaveInfoCancel_01" parameterType="HashMap">
+		UPDATE top_leave_info
+		   SET approval_state = #{approval_state}
+			  ,approvaler_01 = 0
+		      ,ap_date_01 = NULL
+      		  ,ap_comment_01 = NULL
+      		  ,approvaler_now = #{approvaler_now}      		  
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 1차 휴가결재 취소 -->
+	<update id="updateVacationInfoCancel_01" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET approval_state = #{approval_state}
+			  ,approvaler_01 = 0
+		      ,ap_date_01 = NULL
+      		  ,ap_comment_01 = NULL
+      		  ,approvaler_now = #{approvaler_now}      		  
+		 WHERE serial_no = #{serial_no}
+	</update>	
+	
+	<!-- 휴가 취소 -->
+	<update id="updateVacationCancel" parameterType="HashMap">
+		UPDATE top_mbr_vacation
+		   SET sub_aprv_user_no = NULL
+		      ,sub_aprv_date = NULL
+      		  ,fin_aprv_user_no = #{aprvUserNo}
+      		  ,fin_aprv_date = UNIX_TIMESTAMP(now())
+      		  ,return_comment = "승인 취소"
+      		  ,vacation_state = 0
+		 WHERE vacation_no = #{vacationNo}
+	</update>
+	
+	<!-- 1종 휴가최종 결재취소에 따른 휴가 사용일 수  감소-->
+	<update id="updateVacationVacationUseMinus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET vacation_use = vacation_use - #{vacation_interval}
+		WHERE user_no = #{user_no}
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<!-- 1종 휴가최종 결재에 따른 휴가 사용일 수  증가-->
+	<update id="updateVacationVacationUsePlus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET vacation_use = vacation_use + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		<if test='reg_date != NULL and reg_date != "" '>
+			AND annual_start_date &lt;= #{reg_date}
+			AND annual_end_date >= #{reg_date}
+		</if>
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<update id="updateVacationVacationUsePlus_20191108" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET vacation_use = vacation_use + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		AND base_date = #{base_date}
+	</update>
+	
+	<!-- 1종 휴가최종 결재취소에 따른 연차 사용일 수  감소-->
+	<update id="updateVacationAnnualUseMinus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET annual_use = annual_use - #{vacation_interval}
+		WHERE user_no = #{user_no}
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<!-- 1종 휴가최종 결재에 따른 연차 사용일 수  증가-->
+	<update id="updateVacationAnnualUsePlus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET annual_use = annual_use + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		<if test='reg_date != NULL and reg_date != "" '>
+			AND annual_start_date &lt;= #{reg_date}
+			AND annual_end_date >= #{reg_date}
+		</if>
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<update id="updateVacationAnnualUsePlus_20191108" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET annual_use = annual_use + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		AND base_date = #{base_date}
+	</update>
+	
+	<!-- 현재 휴직 결재자 수정 -->
+	<update id="updateLeaveApprovalerNow" parameterType="HashMap">
+		UPDATE top_leave_info
+		   SET approvaler_now = #{approvaler_now} 
+		 WHERE serial_no = #{serial_no}	
+	</update>
+	
+	<!-- 현재결재자 수정 -->
+	<update id="updateVacationApprovalerNow" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET approvaler_now = #{approvaler_now} 
+		 WHERE serial_no = #{serial_no}	
+	</update>
+	
+	<!-- 1종 휴가 취소 -->
+	<update id="updateVacationManagerNewCancel" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET approval_state = 99
+		      ,cancel_date = now()
+		      ,approvaler_now = approvaler_01
+		      ,action_manager = #{action_manager}
+		 WHERE serial_no = #{serial_no}	
+	</update>
+	
+	<!-- 관리자 휴직 취소 -->
+	<update id="updateLeaveManagerCancel" parameterType="HashMap">
+		UPDATE top_leave_info
+		   SET approval_state = 99
+		      ,cancel_date = now()
+		      ,action_manager = #{action_manager}
+		 WHERE serial_no = #{serial_no}	
+	</update>
+	
+	<!-- 휴직 취소 -->
+	<update id="updateLeaveCancel" parameterType="HashMap">
+		UPDATE top_leave_info
+		   SET approval_state = 99
+		      ,cancel_date = now()		      
+		 WHERE serial_no = #{serial_no}	
+	</update>
+	
+	<!-- 1종 휴가 취소 -->
+	<update id="updateVacationNewCancel" parameterType="HashMap">
+		UPDATE top_vacation_info
+		   SET approval_state = 99
+		      ,cancel_date = now()
+		 WHERE serial_no = #{serial_no}	
+	</update>
+		
+	<!-- 1종 휴가신청에 따른 연차 신청일 수  감소-->
+	<update id="updateVacationUseAnnualMinus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET annual_apply = annual_apply - #{vacation_interval}
+		WHERE user_no = #{user_no}
+		<if test='reg_date != NULL and reg_date != "" '>
+			AND annual_start_date &lt;= #{reg_date}
+			AND annual_end_date >= #{reg_date}
+		</if>
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<!-- 1종 휴가신청에 따른 연차 신청일 수  증가-->
+	<update id="updateVacationUseAnnualPlus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET annual_apply = annual_apply + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<update id="updateVacationUseAnnualPlus_20191108" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET annual_apply = annual_apply + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		AND base_date = #{base_date}
+	</update>
+	
+	<!-- 1종 휴가신청에 따른 총 휴가 신청일 수  감소-->
+	<update id="updateVacationUseVacationMinus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET vacation_apply = vacation_apply - #{vacation_interval}
+		WHERE user_no = #{user_no}
+		<if test='reg_date != NULL and reg_date != "" '>
+			AND annual_start_date &lt;= #{reg_date}
+			AND annual_end_date >= #{reg_date}
+		</if>
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<!-- 1종 휴가신청에 따른 총 휴가 신청일 수  증가-->
+	<update id="updateVacationUseVacationPlus" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET vacation_apply = vacation_apply + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		ORDER BY base_year DESC limit 1
+	</update>
+	
+	<update id="updateVacationUseVacationPlus_20191108" parameterType="HashMap">
+		UPDATE top_vacation_use
+		SET vacation_apply = vacation_apply + #{vacation_interval}
+		WHERE user_no = #{user_no}
+		AND base_date = #{base_date}
+	</update>
+	
+	<!-- 1,4 종 관리자 휴가 신청 결재없이 바로 결재완료처리-->
+	<insert id="insertVacationInfoManager" parameterType="HashMap" >
+		INSERT INTO top_vacation_info
+		(
+			user_no
+			,user_team_type
+			,user_team_id			
+			,vacation_type
+			,vacation_content
+			,use_count
+			,approval_state
+			,sdate
+			,edate
+			,vacation_interval
+			,approvaler_now
+			,regdate
+			<if test="vacation_type == 700">
+				,vacation_org_file
+				,vacation_enc_file
+			</if>
+			,next_use
+			,approvaler_03
+			,ap_date_03
+			,ap_comment_03
+			,action_manager
+			,remain_vacation_use
+		)
+		VALUES
+		(
+			#{user_no}
+			,#{user_team_type}
+			,#{user_team_id}
+			,#{vacation_type}
+			,#{vacation_content}
+			,#{use_count}
+			,#{approval_state}
+			,#{sdate}
+			,#{edate}
+			,#{vacation_interval}
+			,#{approvaler_now}
+			,now()
+			<if test="vacation_type == 700">
+				,#{vacation_org_file}
+				,#{vacation_enc_file}
+			</if>	
+			,#{next_use}
+			,#{approvaler_03}
+			,now()
+			,#{ap_comment_03}
+			,#{action_manager}
+			,#{remain_vacation_use}
+		)
+	</insert>
+	
+	<!-- 1,4 종 관리자 휴가 신청 -->
+	<insert id="insertVacationInfoManager_20251023" parameterType="HashMap" >
+		INSERT INTO top_vacation_info
+		(
+			user_no
+			,user_team_type
+			,user_team_id			
+			,vacation_type
+			,vacation_content
+			,use_count
+			,approval_state
+			,sdate
+			,edate
+			,vacation_interval
+			,approvaler_now
+			,regdate
+			<if test="vacation_type == 700">
+				,vacation_org_file
+				,vacation_enc_file
+			</if>
+			,next_use
+			,approvaler_01
+			,ap_date_01
+			,ap_comment_01
+			,action_manager
+		)
+		VALUES
+		(
+			#{user_no}
+			,#{user_team_type}
+			,#{user_team_id}
+			,#{vacation_type}
+			,#{vacation_content}
+			,#{use_count}
+			,#{approval_state}
+			,#{sdate}
+			,#{edate}
+			,#{vacation_interval}
+			,#{approvaler_now}
+			,now()
+			<if test="vacation_type == 700">
+				,#{vacation_org_file}
+				,#{vacation_enc_file}
+			</if>	
+			,#{next_use}
+			,#{approvaler_01}
+			,now()
+			,#{ap_comment_01}
+			,#{action_manager}
+		)
+	</insert>
+	
+	<!-- 관리자 휴직신청 -->
+	<insert id="insertLeaveInfoManager" parameterType="HashMap" >
+		INSERT INTO top_leave_info
+		(
+			user_no
+			,user_team_type
+			,user_team_id
+			,leave_type
+			,leave_content
+			,use_count
+			,approval_state
+			,sdate
+			,edate
+			,leave_interval
+			,approvaler_now
+			,regdate
+			,approvaler_01
+			,ap_comment_01
+			,ap_date_01			
+			,action_manager
+		)
+		VALUES
+		(
+			#{user_no}
+			,#{user_team_type}
+			,#{user_team_id}
+			,#{leave_type}
+			,#{leave_content}
+			,#{use_count}
+			,#{approval_state}
+			,#{sdate}
+			,#{edate}
+			,#{leave_interval}
+			,#{approvaler_now}
+			,now()
+			,#{approvaler_01}
+			,#{ap_comment_01}
+			,now()
+			,#{action_manager}
+		)
+	</insert>
+	
+	<!-- 휴직신청 -->
+	<insert id="insertLeaveInfo" parameterType="HashMap" >
+		INSERT INTO top_leave_info
+		(
+			user_no
+			,user_team_type
+			,user_team_id
+			,leave_type
+			,leave_content
+			,use_count
+			,approval_state
+			,sdate
+			,edate
+			,leave_interval
+			,approvaler_now
+			,regdate
+		)
+		VALUES
+		(
+			#{user_no}
+			,#{user_team_type}
+			,#{user_team_id}
+			,#{leave_type}
+			,#{leave_content}
+			,#{use_count}
+			,#{approval_state}
+			,#{sdate}
+			,#{edate}
+			,#{leave_interval}
+			,#{approvaler_now}
+			,now()			
+		)
+	</insert>
+	
+	<!-- 1,4 종휴가 신청 -->
+	<insert id="insertVacationInfo" parameterType="HashMap" >
+		INSERT INTO top_vacation_info
+		(
+			user_no
+			,user_team_type
+			,user_team_id
+			,vacation_type
+			,vacation_option
+			,vacation_content
+			,use_count
+			,approval_state
+			,sdate
+			,edate
+			,vacation_interval
+			,approvaler_now
+			,regdate
+			<if test="vacation_type == 700">
+				,vacation_org_file
+				,vacation_enc_file
+			</if>
+			,next_use
+			,remain_vacation_use
+			<if test="passApproval == 1">
+				,approvaler_03
+				,ap_date_03				
+			</if>
+		)
+		VALUES
+		(
+			#{user_no}
+			,#{user_team_type}
+			,#{user_team_id}
+			,#{vacation_type}
+			,#{vacation_option}
+			,#{vacation_content}
+			,#{use_count}
+			,#{approval_state}
+			,#{sdate}
+			,#{edate}
+			,#{vacation_interval}
+			,#{approvaler_now}
+			,now()
+			<if test="vacation_type == 700">
+				,#{vacation_org_file}
+				,#{vacation_enc_file}
+			</if>	
+			,#{next_use}
+			,#{remain_vacation_use}
+			<if test="passApproval == 1">
+				,#{approvaler_03}
+				,now()				
+			</if>
+		)
+	</insert>
+	
+	
+	<insert id="insertVacation" parameterType="HashMap" >
+		INSERT INTO top_mbr_vacation
+		(
+			 team_type
+			,team_id
+			,user_no
+			,vacation_kind
+			,vacation_comment
+			,year
+			,vacation_state
+			,vacation_start_date
+			,vacation_end_date
+			,vacation_use_cnt
+			,sub_aprv_user_no
+			,reg_date
+			<if test="vacationState == 1">
+				,sub_aprv_date
+			</if>
+		)
+		VALUES
+		<choose>
+			<when test="startDate1 == NULL">
+				(
+					 #{vacationTeamType}
+					,#{teamId}
+					,#{userNo}
+					,#{vacationKind}
+					,#{vacationComment}
+					,#{year}
+					,#{vacationState}
+					,unix_timestamp(#{vacationStartDate})
+					,unix_timestamp(#{vacationEndDate})
+					,#{vacationCnt}
+					,#{subAprvUserNo}
+					,unix_timestamp(now())
+					<if test="vacationState == 1">
+						,unix_timestamp(now())
+					</if>					
+				)			
+			</when>
+			<otherwise>
+				(
+					 #{vacationTeamType}
+					,#{teamId}
+					,#{userNo}
+					,#{vacationKind}
+					,#{vacationComment}
+					,#{year1}
+					,#{vacationState}
+					,unix_timestamp(#{startDate1})
+					,unix_timestamp(#{endDate1})
+					,#{vacationCnt1}
+					,#{subAprvUserNo}
+					,unix_timestamp(now())
+					<if test="vacationState == 1">
+						,unix_timestamp(now())
+					</if>							
+				)
+				,(
+					 #{vacationTeamType}
+					,#{teamId}
+					,#{userNo}
+					,#{vacationKind}
+					,#{vacationComment}
+					,#{year2}
+					,#{vacationState}
+					,unix_timestamp(#{startDate2})
+					,unix_timestamp(#{endDate2})
+					,#{vacationCnt2}
+					,#{subAprvUserNo}
+					,unix_timestamp(now())
+					<if test="vacationState == 1">
+						,unix_timestamp(now())
+					</if>							
+				)			
+			</otherwise>
+		
+		</choose>
+		
+		<selectKey resultType="String" keyProperty="vacationNo" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>			
+		
+	</insert>
+	
+	<update id="updateVacation" parameterType="HashMap">
+		UPDATE top_mbr_vacation
+		   SET vacation_kind = #{vacationKind}
+			  ,vacation_start_date = unix_timestamp(#{vacationStartDate})
+			  ,vacation_end_date = unix_timestamp(#{vacationEndDate})
+			  ,vacation_comment = #{vacationComment}
+			  ,vacation_use_cnt = #{vacationCnt}
+		 WHERE vacation_no = #{vacationNo} 
+	</update>
+	
+	<update id="updateVacationForCancel" parameterType="HashMap">
+		UPDATE top_mbr_vacation
+		   SET vacation_state = #{vacationState}
+		 WHERE vacation_no = #{vacationNo} 
+	</update>	
+	
+
+	<insert id="insertVacationRestDay" parameterType="List">
+		INSERT INTO vacation_eventday
+		(
+			 year
+			,month
+			,day
+			,name
+			,type
+		)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+		(
+			 #{item.year}
+			,#{item.month}
+			,#{item.day}
+			,#{item.name}
+			,#{item.type}		
+		
+		)
+		</foreach>	
+	</insert>	
+	
+	<select id ="selectVacationInfoList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationVo">
+		SELECT a.user_no userNo 
+			  ,b.team_name teamNm
+			  ,a.user_name userNm
+			  ,b.team_type teamType
+			  ,getCodeValue("top_mbr_bsc", "work_level", a.work_level) workLevelNm
+			  ,FROM_UNIXTIME(join_date,"%Y-%m-%d") joinDate
+			  ,(SELECT SUM(vacation_use_cnt) FROM top_mbr_vacation WHERE YEAR = #{year} AND (vacation_state = 0 or vacation_state = 1) AND user_no = a.user_no) vacationReqCnt
+			  ,(SELECT SUM(vacation_use_cnt) FROM top_mbr_vacation WHERE YEAR = #{year} AND (vacation_state = 2) AND user_no = a.user_no) vacationAppvCnt
+		  FROM top_mbr_bsc a
+		 INNER join top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+		 WHERE 1=1
+		   AND a.user_state != 1
+		<if test="pms28 == 4">
+			AND b.team_type = 4
+		</if>   
+	   	<if test="srchTeamId != 0">AND a.team_id_loc = #{srchTeamId}</if>
+	   	<if test="srchUserName != ''">AND a.user_name LIKE CONCAT('%',#{srchUserName},'%')</if>		
+		ORDER BY b.team_group_order DESC, b.team_order DESC, a.work_type, a.work_level DESC
+		LIMIT #{limitPage}, #{sizePerPage}			
+	</select>
+	
+	<select id="selectVacationInfoListCnt" parameterType="HashMap" resultType="Long">
+		SELECT COUNT(*)
+		  FROM top_mbr_bsc a
+		 INNER join top_tm_bsc b
+			ON a.team_id_loc = b.team_id
+		 WHERE 1=1
+		   AND a.user_state != 1
+		<if test="pms28 == 4">
+			AND b.team_type = 4
+		</if>   
+	   	<if test="srchTeamId != 0">AND a.team_id_loc = #{srchTeamId}</if>
+	   	<if test="srchUserName != ''">AND a.user_name LIKE CONCAT('%',#{srchUserName},'%')</if>		
+	</select>
+	
+	<select id="getVacationMonthCal_20220103" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			SUM(IFNULL(a.col_1,0)) AS col_1
+			,SUM(IFNULL(a.col_2,0)) AS col_2
+			,SUM(IFNULL(a.col_3,0)) AS col_3
+			,SUM(IFNULL(a.col_4,0)) AS col_4
+			,SUM(IFNULL(a.col_5,0)) AS col_5
+			,SUM(IFNULL(a.col_6,0)) AS col_6
+			,SUM(IFNULL(a.col_7,0)) AS col_7
+			,SUM(IFNULL(a.col_8,0)) AS col_8
+			,SUM(IFNULL(a.col_9,0)) AS col_9
+			,SUM(IFNULL(a.col_10,0)) AS col_10
+			,SUM(IFNULL(a.col_11,0)) AS col_11
+			,SUM(IFNULL(a.col_12,0)) AS col_12
+		FROM
+			(
+				SELECT 
+					SUM(IFNULL(vacation_interval,0)) AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-01-01')		
+				AND edate &lt; CONCAT(#{sYear},'-02-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,SUM(IFNULL(vacation_interval,0)) AS col_2					
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-02-01')		
+				AND edate &lt; CONCAT(#{sYear},'-03-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2					
+					,SUM(IFNULL(vacation_interval,0)) AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-03-01')		
+				AND edate &lt; CONCAT(#{sYear},'-04-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3					
+					,SUM(IFNULL(vacation_interval,0)) AS col_4					
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-04-01')		
+				AND edate &lt; CONCAT(#{sYear},'-05-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4					
+					,SUM(IFNULL(vacation_interval,0)) AS col_5					
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-05-01')		
+				AND edate &lt; CONCAT(#{sYear},'-06-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5					
+					,SUM(IFNULL(vacation_interval,0)) AS col_6					
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-06-01')		
+				AND edate &lt; CONCAT(#{sYear},'-07-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6					
+					,SUM(IFNULL(vacation_interval,0)) AS col_7					
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-07-01')		
+				AND edate &lt; CONCAT(#{sYear},'-08-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,SUM(IFNULL(vacation_interval,0)) AS col_8					
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-08-01')		
+				AND edate &lt; CONCAT(#{sYear},'-09-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,SUM(IFNULL(vacation_interval,0)) AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-09-01')		
+				AND edate &lt; CONCAT(#{sYear},'-10-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,SUM(IFNULL(vacation_interval,0)) AS col_10					
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-10-01')		
+				AND edate &lt; CONCAT(#{sYear},'-11-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,SUM(IFNULL(vacation_interval,0)) AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-11-01')		
+				AND edate &lt; CONCAT(#{sYear},'-12-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,SUM(IFNULL(vacation_interval,0)) AS col_12					
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-12-01')		
+				AND edate &lt; CONCAT(#{sNextYear},'-01-01')
+			
+			)a
+		
+	</select>
+	
+	<select id="getVacationMonthCal" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			SUM(IFNULL(a.col_1,0)) AS col_1
+			,SUM(IFNULL(a.col_2,0)) AS col_2
+			,SUM(IFNULL(a.col_3,0)) AS col_3
+			,SUM(IFNULL(a.col_4,0)) AS col_4
+			,SUM(IFNULL(a.col_5,0)) AS col_5
+			,SUM(IFNULL(a.col_6,0)) AS col_6
+			,SUM(IFNULL(a.col_7,0)) AS col_7
+			,SUM(IFNULL(a.col_8,0)) AS col_8
+			,SUM(IFNULL(a.col_9,0)) AS col_9
+			,SUM(IFNULL(a.col_10,0)) AS col_10
+			,SUM(IFNULL(a.col_11,0)) AS col_11
+			,SUM(IFNULL(a.col_12,0)) AS col_12
+		FROM
+			(
+				SELECT 
+					SUM(IFNULL(vacation_interval,0)) AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-01-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-02-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,SUM(IFNULL(vacation_interval,0)) AS col_2					
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-02-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-03-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2					
+					,SUM(IFNULL(vacation_interval,0)) AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-03-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-04-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3					
+					,SUM(IFNULL(vacation_interval,0)) AS col_4					
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-04-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-05-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4					
+					,SUM(IFNULL(vacation_interval,0)) AS col_5					
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-05-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-06-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5					
+					,SUM(IFNULL(vacation_interval,0)) AS col_6					
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-06-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-07-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6					
+					,SUM(IFNULL(vacation_interval,0)) AS col_7					
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-07-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-08-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,SUM(IFNULL(vacation_interval,0)) AS col_8					
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-08-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-09-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,SUM(IFNULL(vacation_interval,0)) AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-09-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-10-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,SUM(IFNULL(vacation_interval,0)) AS col_10					
+					,0 AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-10-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-11-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,SUM(IFNULL(vacation_interval,0)) AS col_11
+					,0 AS col_12
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-11-01')		
+				AND sdate &lt; CONCAT(#{sYear},'-12-01')
+				
+				UNION ALL
+				
+				SELECT 
+					0 AS col_1
+					,0 AS col_2
+					,0 AS col_3
+					,0 AS col_4
+					,0 AS col_5
+					,0 AS col_6
+					,0 AS col_7
+					,0 AS col_8
+					,0 AS col_9
+					,0 AS col_10
+					,0 AS col_11
+					,SUM(IFNULL(vacation_interval,0)) AS col_12					
+				FROM
+					top_vacation_info 
+				where user_no = #{user_no}
+				AND (vacation_type = 100 OR vacation_type = 200 OR vacation_type = 210)
+				AND approval_state = 31
+				AND sdate >= CONCAT(#{sYear},'-12-01')		
+				AND sdate &lt; CONCAT(#{sNextYear},'-01-01')
+			
+			)a
+		
+	</select>
+	
+	<select id="SelectVacationLogByRegDate" parameterType="String" resultType="HashMap">
+		SELECT
+			serial_no
+			,user_no
+			,user_name
+			,db_action
+			,annual_set
+			,base_year
+			,annual_set_type
+			,reg_date
+			,date_format(reg_date,'%Y-%m-%d') as reg_date_fmt
+		FROM top_vacation_log
+		WHERE DATE(reg_date) = #{reg_date}
+	</select>
+	
+	<insert id="InsertVacationLog" parameterType="HashMap">
+		INSERT INTO top_vacation_log (
+			user_no
+			,user_name
+			,db_action
+			,annual_set
+			,base_year
+			<if test="annual_set_type != null">
+				,annual_set_type
+			</if>
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{user_name}
+			,#{db_action}
+			,#{annual_set}
+			,#{base_year}
+			<if test="annual_set_type != null">
+				,#{annual_set_type}			
+			</if>
+			,now()
+		)
+	</insert>
+	
+	<insert id="InsertScheduleVacationUse" parameterType="HashMap">
+		INSERT INTO top_vacation_use (
+			user_no
+			,annual_set
+			,annual_use
+			,annual_apply
+			,vacation_apply
+			,vacation_use
+			,base_date
+			,annual_start_date
+			,annual_end_date
+			,base_year
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{annual_set}
+			,#{annual_use}
+			,0
+			,0
+			,#{vacation_use}
+			,#{base_date}
+			,#{annual_start_date}
+			,#{annual_end_date}
+			,#{base_year}
+			,now()			
+		)		
+	
+	</insert>
+	
+	<insert id="testVacationYearInsert" parameterType="HashMap">
+		INSERT INTO top_vacation_use (
+			user_no
+			,annual_set
+			,annual_use
+			,vacation_apply
+			,vacation_use
+			,base_date
+		) values (
+			#{user_no}
+			,#{annual_set}
+			,0
+			,0
+			,0
+			,#{base_date}
+		)
+	</insert>
+	
+	<update id="testVacationYearUpdate" parameterType="HashMap">
+		UPDATE top_vacation_use
+		   SET annual_set = #{annual_set}		      
+	     WHERE user_no = #{user_no}
+	     and base_date = #{base_date}
+	</update>
+	
+	<select id="testVacationYearChk" parameterType="HashMap" resultType="int">
+		select 
+			count(*) as Cnt
+		from top_vacation_use
+		where user_no = #{user_no}
+		and base_date = #{base_date} 
+	</select>
+	
+	<!-- 1종,본사 사용자 목록 가져오기 -->
+	<select id="testVacatioinMemberList1" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT a.user_no
+				, a.user_name	
+				, a.user_id							
+				, CASE
+					WHEN (a.join_date = 0) THEN DATE_FORMAT(NOW(),'%Y-%m-%d')
+					WHEN (a.join_date IS NULL) THEN DATE_FORMAT(NOW(),'%Y-%m-%d')
+					ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+				END AS join_date				
+		FROM	
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE 
+			a.team_id_loc = b.team_id
+			and a.user_state != 1
+			and b.team_type in (0,1)
+			<!-- 스케줄러 테스트 용  -->
+			<!-- and a.user_no = 780 -->
+			<!-- and a.user_no = 1786	 -->		 
+		ORDER BY a.join_date		
+	</select>
+	
+	<!-- 4종 사용자 목록 가져오기 -->
+	<select id="testVacatioinMemberList4" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT a.user_no
+				, a.user_name	
+				, a.user_id							
+				, CASE
+					WHEN (a.join_date = 0) THEN DATE_FORMAT(NOW(),'%Y-%m-%d')
+					WHEN (a.join_date IS NULL) THEN DATE_FORMAT(NOW(),'%Y-%m-%d')
+					ELSE DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d')
+				END AS join_date				
+		FROM	
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE 
+			a.team_id_loc = b.team_id  
+			<!-- and a.user_state in (0,9) -->
+			and a.user_state != 1		
+			and b.team_type = 4
+		ORDER BY a.join_date		
+	</select>
+	
+	<select id="getVacationHistoryMyInfo" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT a.user_no
+				, a.user_name
+				, a.user_id
+				, b.team_name
+				, getTopTmBscCenterName(b.team_id) center_name
+				, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level				
+				, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+				, DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date			    
+			    , CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order								
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		 WHERE 
+		 	a.team_id_loc = b.team_id
+			AND a.user_no = #{user_no}							
+	</select>	
+	
+	<select id="getVacationMemberList" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		select
+			user_no
+			,getTopMbrBscUserName(user_no) AS user_name
+			,date_format(sdate,'%Y-%m-%d') as sdate
+			,date_format(edate,'%Y-%m-%d') as edate
+			,(SELECT col_val FROM sysadm_codedic2 WHERE col_nm = 'vacation_type' AND col_cd1 = vacation_type AND tbl_nm = 'top_vacation_info') AS vacation_type_val
+		from top_vacation_info
+		where approval_state = 31
+		and #{today} >= sdate
+		and #{today} &lt;= edate
+		and user_no in (${member_list})
+	</select>
+	
+	<select id="getVacationTeamMember" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT user_no
+		from top_mbr_bsc 
+		where team_id_loc in (${team_list})
+		and user_state != 1		
+	</select>
+	
+	<select id="getVacationHistoryMember" parameterType="HashMap" resultType="kr.co.toplac.topvaction.VacationInfoBean">
+		SELECT a.user_no
+				, a.user_name
+				, a.user_id
+				, b.team_name
+				, getTopTmBscCenterName(b.team_id) center_name
+				, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level				
+				, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+				, DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date			    
+			    , CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order								
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		 WHERE 
+			a.team_id_loc = b.team_id  
+			<!-- and a.user_state in (0,9) -->
+			and a.user_state != 1
+		<choose>			
+			<when test="authLevel == 0">
+				AND a.user_no = #{user_no}
+			</when>				
+			<when test="srchTeamId != 0">
+				AND b.team_id = #{srchTeamId}			
+			</when>
+			<when test="authLevel == 2">
+				AND b.team_id in (${team_list})
+			</when>			
+		</choose>
+			<if test="srchName != '' ">AND a.user_name LIKE CONCAT('%',#{srchName},'%')</if>			
+		 ORDER BY
+		 	b.team_group_order desc, b.team_order desc, a.work_level desc, a.join_date, new_work_order			
+	</select>	
+	
+	<select id="teamListForSearchVacation" parameterType="HashMap" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT 
+			team_id
+			,team_name
+			,team_level
+			,team_type
+		  FROM top_tm_bsc
+		 WHERE team_level != 2
+		 <if test="authLevel != 3">
+		 	<choose>				
+				<when test="authLevel == 2">
+					AND team_id in (${team_list})
+				</when>				
+		 	</choose>
+		 </if> 
+		 ORDER BY team_group_order desc, team_order desc
+	</select>
+	
+	<select id="teamListForSearch" parameterType="HashMap" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT team_id, team_name, team_level, team_type, team_written
+		  FROM top_tm_bsc
+		 WHERE team_level != 2
+			<if test="srchTeamType == 1">AND team_type IN (0,1)</if>
+			<if test="srchTeamType == 4">AND team_type = 4 </if>
+			<if test="sTeamList != ''">AND team_id IN ( ${sTeamList} )</if>		  
+		 ORDER BY team_group_order desc, team_order desc
+	</select>
+	 
+	<select id="teamListForSearch_20191107" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT team_id, team_name, team_level, team_type
+		  FROM top_tm_bsc
+		 WHERE team_level != 2
+		 <if test="sessTeamType != 4">
+		 	<choose>
+				<when test="sessWorkType == 3">
+					AND team_id = #{sessTeamId}
+				</when>
+				<when test="sessWorkType == 14">		
+					AND team_group_order = (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{sessTeamId})
+				</when>
+		 	</choose>
+		 </if> 
+		 ORDER BY team_group_order desc, team_order desc
+	</select>
+	
+	<update id="updateVacationFile" parameterType="HashMap">
+		UPDATE top_mbr_vacation
+		   SET vacation_org_file = #{vacationOrgFile}
+		      ,vacation_enc_file = #{vacationEncFile}
+	     WHERE vacation_no = #{vacationNo}
+	</update>
+	
+	<update id="updateVacationFileDel" parameterType="HashMap">
+		UPDATE top_mbr_vacation
+		   SET vacation_org_file = ""
+		      ,vacation_enc_file = ""
+	     WHERE vacation_no = #{vacationNo}	
+	</update>
+	
+	<!-- 팀장 사번을 가져온다. -->
+	<select id="selectTeamManagerUserNo" parameterType="String" resultType="String">
+		SELECT b.team_manager as team_manager_no FROM top_mbr_bsc a, top_tm_bsc b WHERE a.team_id_main = b.team_id AND a.user_no = #{user_no} 
+	</select>
+	
+	<!-- 센터장 사번을 가져온다. -->
+	<select id="selectCenterManagerUserNo" parameterType="String" resultType="String">
+		SELECT (SELECT team_manager FROM top_tm_bsc WHERE team_level = 0 AND team_group_order = b.team_group_order) centerManager			  
+		  FROM top_mbr_bsc a
+		 INNER JOIN top_tm_bsc b  
+			ON a.team_id_main = b.team_id
+		 WHERE user_no = #{user_no} 
+	</select>
+	
+	<!-- 부문코드를 가져온다. -->
+	<select id="selectSectorNo" parameterType="String" resultType="String">
+		SELECT (SELECT team_sector FROM top_tm_bsc WHERE team_id = b.team_id) teamSector			  
+		  FROM top_mbr_bsc a
+		 INNER JOIN top_tm_bsc b  
+			ON a.team_id_main = b.team_id
+		 WHERE user_no = #{user_no} 
+	</select>
+	
+	<!-- 부문장 사번을 가져온다. -->
+	<select id="selectSectorManagerUserNo" parameterType="String" resultType="String">
+		SELECT 
+			(SELECT distinct(team_manager) FROM top_tm_bsc WHERE team_name = s.col_val ) sectorManager
+		FROM sysadm_codedic s 
+		WHERE s.tbl_nm = 'top_tm_bsc' AND s.col_nm = 'team_sector' AND s.col_cd = #{sector_no} 
+	</select>
+	
+	<!-- 사용자 이름을 가져온다. -->
+	<select id="selectUserName" parameterType="String" resultType="String">
+		SELECT 
+			user_name
+		FROM top_mbr_bsc 
+		WHERE user_no = #{user_no} 
+	</select>
+	
+	<!-- 팀아이디를 가져온다. -->
+	<select id="selectTeamId" parameterType="String" resultType="String">
+		SELECT 
+			team_id_main
+		FROM top_mbr_bsc 
+		WHERE user_no = #{user_no} 
+	</select>
+	
+	<update id="updateVacationInfoNextUseBy0" parameterType="String">
+		UPDATE top_vacation_info SET next_use = 0 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<update id="updateVacationInfoNextUseBy1" parameterType="String">
+		UPDATE top_vacation_info SET next_use = 1 WHERE serial_no = #{serial_no}
+	</update>	
+	
+	<update id="updateVacationUseBySync" parameterType="HashMap">
+		UPDATE top_vacation_use SET
+			annual_set = #{annual_set}
+			,annual_use = #{annual_use}
+			,vacation_use = #{vacation_use}		
+		WHERE serial_no = #{serial_no}
+	</update>
+	
+	<insert id="insertTopVacationApprovalLog" parameterType="HashMap">
+		INSERT INTO top_vacation_approval_log (			
+			user_no
+			,approvaler
+			,action_flag
+			,approval_state
+			,serial_no
+			,logger_no
+			,regdate
+		) VALUES (
+			#{user_no}
+			,#{approvaler_03}
+			,#{action}
+			,#{approval_state}
+			,#{serial_no}
+			,#{logger_no}
+			,NOW()
+		)
+	</insert>
+	
+	<insert id="insertTopVacationActionLog" parameterType="HashMap">
+		INSERT INTO top_vacation_action_log (
+			user_no
+			,db_action
+			,manager_no
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{db_action}
+			,#{manager_no}
+			,now()
+		)		
+	</insert>
+	
+	<select id="selectApprovalerNowBySerialNo" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(approvaler_now,0) AS approvaler_now
+			,COUNT(*) AS cnt
+		FROM top_vacation_info 
+		WHERE serial_no = #{serial_no}
+	</select>
+	
+</mapper>

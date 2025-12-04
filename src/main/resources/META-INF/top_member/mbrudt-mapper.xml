@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="TopMbrUdtMapper">
+
+	<update id="updateTopMbrBscCertiState" parameterType="Hashmap">
+		UPDATE top_mbr_bsc SET
+			certi_state = #{certi_state}
+		WHERE user_no = #{user_no}
+	</update>
+
+	<!-- 담당 손해사정사 정보 추가 -->
+	<insert id="insertCertiManagerInfo" parameterType="Hashmap">
+		INSERT INTO top_mbr_certi_manager (
+			user_no
+			,ckey
+		) VALUES (
+			#{user_no}
+			,#{ckey}
+		)
+	</insert>
+	
+	<!-- 담당 손해사정사 정보 삭제 -->
+	<delete id="deleteCertiManangerByUserNo" parameterType="Hashmap">
+		DELETE FROM top_mbr_certi_manager 
+		WHERE user_no =#{user_no}
+	</delete>
+
+	<!-- 손해사정이 등록정보 삭제 -->
+	<delete id="deleteCertiInfoMainByUserNo"  parameterType="Hashmap">
+		DELETE FROM top_mbr_certi 
+		WHERE del_flag = 0
+		AND certi_class = 2
+		AND user_no =#{user_no} 	
+	</delete>
+
+	<!-- 보조인등록정보 삭제 -->
+	<delete id="deleteCertiInfoSubByUserNo"  parameterType="Hashmap">
+		DELETE FROM top_mbr_certi 
+		WHERE del_flag = 0
+		AND certi_class = 1
+		AND user_no =#{user_no} 	
+	</delete>
+	
+	<!-- 직원 손해사정사 정보 갱신 -->
+	<update id="updateCertiInfoByUserNo" parameterType="Hashmap">
+		UPDATE top_mbr_certi SET
+			certi_class = #{certi_class}
+			,certi_type = #{certi_type}
+			,certi_number = #{certi_number}
+			,work_phone = #{work_phone}
+			<choose>
+				<when test='certi_date == ""'>
+					,certi_date = null
+				</when>
+				<otherwise>
+					,certi_date = #{certi_date}
+				</otherwise>
+			</choose>
+		WHERE del_flag = 0
+		AND user_no = #{user_no}			
+	</update>
+	
+	<!-- 보조인 정보 수정 -->
+	<update id="updateCertiSubInfo" parameterType="Hashmap">
+		UPDATE top_mbr_certi SET
+			certi_type = #{certi_type}
+			,certi_number = #{certi_number}
+		WHERE ckey = #{ckey}
+	</update>
+	
+	<update id="updateCertiInfo" parameterType="Hashmap">
+		UPDATE top_mbr_certi SET
+			certi_type = #{certi_type}
+			,certi_number = #{certi_number}
+			,work_phone = #{work_phone}			
+			<choose>
+				<when test='certi_date == ""'>
+					,certi_date = null
+				</when>
+				<otherwise>
+					,certi_date = #{certi_date}
+				</otherwise>
+			</choose>
+		WHERE ckey = #{ckey}
+	</update>
+	
+	<!-- 사번으로 자격증 상태값 가져오기 (1:보조인, 4:손해사정사, 6:손해사정사+보조인) -->
+	<select id="selectCertiStateByTopMbrCerti" parameterType="String" resultType="String">
+		SELECT
+		  CASE
+		    WHEN SUM(CASE WHEN certi_class = 1 THEN 1 ELSE 0 END) > 0
+		     AND SUM(CASE WHEN certi_class = 2 THEN 1 ELSE 0 END) = 0 THEN 1
+		    WHEN SUM(CASE WHEN certi_class = 1 THEN 1 ELSE 0 END) = 0
+		     AND SUM(CASE WHEN certi_class = 2 THEN 1 ELSE 0 END) > 0 THEN 4
+		    WHEN SUM(CASE WHEN certi_class = 1 THEN 1 ELSE 0 END) > 0
+		     AND SUM(CASE WHEN certi_class = 2 THEN 1 ELSE 0 END) > 0 THEN 6
+		    ELSE 0
+		  END AS certi_state
+		FROM top_mbr_certi
+		WHERE user_no = #{user_no} 
+		AND del_flag = 0
+	</select>
+
+	<!-- 보조인, 손해사정사 정보 등록 -->
+	<insert id="insertCertiInfo" parameterType="Hashmap">
+		INSERT INTO top_mbr_certi (
+			user_no
+			,certi_class
+			,certi_type
+			,certi_number
+			,del_flag
+			,reg_date
+			,work_phone
+			<if test="certi_date != null">
+				,certi_date
+			</if>			
+		) VALUES (
+			#{user_no}
+			,#{certi_class}
+			,#{certi_type}
+			,#{certi_number}
+			,0
+			,now()
+			,#{work_phone}
+			<if test="certi_date != null">
+				,#{certi_date}
+			</if>			
+		)
+	</insert>
+
+	<!-- 보조인 등록 정보유무 확인 -->
+	<select id="countCertiSubInfo" parameterType="String" resultType="Integer">
+		SELECT 
+			COUNT(*) 
+		FROM top_mbr_certi
+		WHERE certi_class = 1
+		AND user_no = #{user_no}		
+	</select>
+
+	<update id = "mbrdtludt" parameterType="kr.co.toplac.topteam.TopMbrBscVO">
+	 UPDATE top_mbr_bsc
+		SET team_id_main = #{team_id_main}
+		   ,team_id_loc = #{team_id_loc}
+		   ,join_date = unix_timestamp(#{join_date})
+		   ,CTDay = unix_timestamp(#{CTDay})							<!-- 계약일 추가 190708 by top3009 -->
+	 	   ,out_date = unix_timestamp(#{out_date})
+	 	   ,probation_date = unix_timestamp(#{probation_date}) <!-- 면수습일 추가 170406 by lds -->
+	 	   ,home_address = #{home_address}
+	 	   ,home_tel = #{home_tel}
+	 	   ,office_tel = #{office_tel}
+	 	   ,office_fax = #{office_fax}
+	 	   ,handphone = #{handphone}
+	 	   ,comment = #{comment}
+	 	
+	 	   ,work_level = #{work_level} 
+	 	   ,work_type = #{work_type}
+	 	   ,work_job = #{work_job}
+	 	   ,work_rank = #{work_rank}
+	  	   ,user_state = #{user_state}
+		   ,email = #{email}		   
+		   ,person_zone = #{person_zone}
+		   	 	   
+		 	<if test="memo != null">
+				,memo = #{memo}
+			</if>
+			
+			<if test="insa_memo_only != null">
+		 		,insa_memo = #{insa_memo_only}
+			</if>
+
+			<if test="user_state == 1">
+				,user_id = ""
+			</if>
+			<if test="certi_state != null">
+				,certi_state = #{certi_state}
+			</if>
+			
+			<if test="is_pass != null">
+				,is_pass = #{is_pass}
+			</if>
+			<if test="exp_agree != null">
+				,exp_agree = #{exp_agree}
+			</if>
+			<if test="bonus_career_state != null">
+				,bonus_career_state = #{bonus_career_state}
+			</if>
+	  WHERE user_no = #{user_no}
+	</update>	
+	
+	<delete id="deleteTopSubjob" parameterType="HashMap">
+		DELETE 
+		  FROM top_mbr_bsc_sub
+		 WHERE user_no = #{user_no} 
+	</delete>
+	
+	<insert id="insertTopSubjob" parameterType="HashMap">
+		INSERT INTO
+			top_mbr_bsc_sub
+			( 
+				user_no
+				,team_id_main
+				,work_type 
+			)
+		 VALUES
+			 (	
+			 	#{user_no}
+			 	,#{sub_team_id_main}
+			 	,#{sub_work_type}
+			 )		 
+	</insert>
+
+	<insert id = "mbrinslog" parameterType="kr.co.toplac.topteam.TopMbrBscVO">
+		INSERT INTO
+			top_mbr_bsc_log
+		(
+			 user_no
+			,user_state
+			,team_id_main
+			,team_id_loc
+			,work_level
+			,work_type
+			,work_rank
+			,work_job
+			,reg_date
+			,job_memo
+			,log_memo
+			
+		)
+		VALUES
+		(
+			 #{user_no}
+			,#{user_state}
+			,#{team_id_main}
+			,#{team_id_loc}
+			,#{work_level}
+			,#{work_type}
+			,#{work_rank}
+			,#{work_job}
+			,unix_timestamp(now())
+			,#{job_memo}
+			,#{log_memo}
+		)
+	
+	
+	</insert>
+	<!-- 비밀번호 초기화 -->	
+	<update id = "initializePw" parameterType="java.util.HashMap" >
+		UPDATE
+			top_mbr_bsc
+		SET
+			user_pwd = #{tempPw},
+			invalid_pwd_cnt = 0,
+			pwd_date = unix_timestamp(now())
+		WHERE
+			user_no = #{user_no}
+	</update>
+	
+	<!-- 전산 권한 초기화 -->
+    <update id="initializeDataProcessAuthority" parameterType="kr.co.toplac.topteam.TopMbrBscVO">
+        UPDATE  top_mbr_pms
+           SET  MBR_PMS_1 = 0
+               ,MBR_PMS_2 = 0
+               ,MBR_PMS_3 = 0
+               ,MBR_PMS_4 = 0
+               ,MBR_PMS_5 = 0
+               ,MBR_PMS_6 = 0
+               ,MBR_PMS_7 = 0
+               ,MBR_PMS_8 = 0
+               ,MBR_PMS_9 = 0
+               ,MBR_PMS_10 = 0
+               ,MBR_PMS_11 = 0
+               ,MBR_PMS_12 = 0
+               ,MBR_PMS_13 = 0
+               ,MBR_PMS_14 = 0
+               ,MBR_PMS_15 = 0
+               ,MBR_PMS_16 = 0
+               ,MBR_PMS_17 = 0
+               ,MBR_PMS_18 = 0
+               ,MBR_PMS_19 = 0
+               ,MBR_PMS_20 = 0
+               ,MBR_PMS_21 = 0
+               ,MBR_PMS_22 = 0
+               ,MBR_PMS_23 = 0
+         WHERE  USER_NO = #{user_no}
+    </update>
+    <!-- 보고서 편집 권한 초기화 -->
+    <update id="initializeReportAuthority" parameterType="kr.co.toplac.topteam.TopMbrBscVO">
+        UPDATE  ls_admin
+           SET  LS_ADMIN1 = ''
+               ,LS_ADMIN2 = ''
+               ,LS_ADMIN3 = ''
+               ,LS_ADMIN4 = ''
+               ,LS_ADMIN5 = ''
+               ,LS_ADMIN6 = ''
+               ,LS_ADMIN7 = ''
+               ,LS_ADMIN8 = ''
+               ,LS_ADMIN9 = ''
+               ,LS_ADMIN10 = ''
+               ,LS_ADMIN11 = ''
+               ,LS_ADMIN12 = ''
+               ,LS_ADMIN13 = ''
+               ,LS_ADMIN14 = ''
+               ,LS_ADMIN15 = ''
+               ,LS_ADMIN16 = ''
+               ,LS_ADMIN17 = ''
+               ,LS_ADMIN18 = ''
+               ,LS_ADMIN19 = ''
+               ,LS_ADMIN20 = ''
+               ,LS_ADMIN21 = ''
+               ,LS_ADMIN22 = ''
+               ,LS_ADMIN23 = ''
+               ,LS_ADMIN24 = ''
+               ,LS_ADMIN25 = ''
+               ,LS_ADMIN26 = ''
+               ,LS_ADMIN27 = 0
+               ,LS_ADMIN28 = 0
+               ,LS_ADMIN29 = ''
+               ,LS_ADMIN30 = 0
+               ,LS_ADMIN31 = 0
+               ,LS_ADMIN32 = ''
+               ,LS_ADMIN33 = 0
+               ,LS_ADMIN34 = ''
+               ,LS_ADMIN35 = ''
+               ,LS_ADMIN36 = 0
+               ,LS_ADMIN37 = 0
+               ,LS_ADMIN38 = ''
+               ,LS_ADMIN39 = ''
+               ,LS_ADMIN40 = 0
+               ,LS_ADMIN_VOC = ''
+               ,LS_ADMIN_VOC1 = ''
+         WHERE  USER_ID = #{user_no}
+    </update>
+    
+		
+</mapper>

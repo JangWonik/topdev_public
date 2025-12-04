@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SuimPtnrMbrPopMapper">
+
+	<select id="suimPtnrMbrInfoOne" parameterType="HashMap" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">		
+		SELECT a.ptnr_mbr_no
+				,a.ptnr_id
+				,b.ptnr_nick
+				,b.ptnr_name
+				,a.ptnr_dept_id
+				,a.ptnr_tm_nm
+				,a.ptnr_tm2_nm
+				,a.ptnr_mbr_position_nm
+				,a.ptnr_mbr_job_memo
+				,a.ptnr_mbr_work_type
+				,a.ptnr_mbr_nm
+				,a.ptnr_mbr_hp
+				,a.ptnr_mbr_office_tel
+				,a.ptnr_mbr_office_fax
+				,a.ptnr_mbr_office_email
+				,a.ptnr_mbr_office_postcode
+				,a.ptnr_mbr_office_addr1
+				,a.ptnr_mbr_office_addr2
+				,a.ptnr_mbr_work_memo
+				,a.ptnr_tax_nm
+				,a.del_state
+				,c.ptnr_dept_nm
+		FROM top_ptnr_mbr_bsc a, top_ptnr_bsc b, top_ptnr_dept_bsc c				 
+		WHERE 1 = 1
+		AND a.ptnr_id = b.ptnr_id
+		AND a.ptnr_dept_id = c.ptnr_dept_id
+		AND a.del_state = 0
+		AND a.ptnr_mbr_no = #{ptnr_mbr_no}
+	</select>
+
+	<select id="suimPtnrMbrListSearch" parameterType="HashMap" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		SELECT a.ptnr_mbr_no
+				,a.ptnr_id
+				,b.ptnr_nick
+				,b.ptnr_name
+				,a.ptnr_dept_id
+				,a.ptnr_tm_nm
+				,a.ptnr_tm2_nm
+				,a.ptnr_mbr_position_nm
+				,a.ptnr_mbr_job_memo
+				,a.ptnr_mbr_work_type
+				,a.ptnr_mbr_nm
+				,a.ptnr_mbr_hp
+				,a.ptnr_mbr_office_tel
+				,a.ptnr_mbr_office_fax
+				,a.ptnr_mbr_office_email
+				,a.ptnr_mbr_office_postcode
+				,a.ptnr_mbr_office_addr1
+				,a.ptnr_mbr_office_addr2
+				,a.ptnr_mbr_work_memo
+				,a.ptnr_tax_nm
+				,a.del_state
+				,c.ptnr_dept_nm
+		FROM top_ptnr_mbr_bsc a, top_ptnr_bsc b, top_ptnr_dept_bsc c
+		WHERE 1 = 1
+		AND a.ptnr_id = b.ptnr_id
+		AND a.ptnr_dept_id = c.ptnr_dept_id
+		AND a.del_state = 0
+		<if test="srchPtnrId != null and srchPtnrId != 0">
+			AND a.ptnr_id = #{srchPtnrId}
+		</if>
+		<if test='srchPtnrMbrName != null and srchPtnrMbrName != ""'>
+			AND a.ptnr_mbr_nm LIKE CONCAT('%',#{srchPtnrMbrName},'%')
+		</if>
+		<if test='srchPtnrMbrTel != null and srchPtnrMbrTel != ""'>
+			AND (
+				a.ptnr_mbr_office_tel LIKE CONCAT('%',#{srchPtnrMbrTel},'%') 
+				OR a.ptnr_mbr_hp LIKE CONCAT('%',#{srchPtnrMbrTel},'%')
+			)
+		</if>
+		ORDER BY a.ptnr_id, a.ptnr_tm_nm, a.ptnr_mbr_position_nm, a.ptnr_mbr_nm
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<select id="suimPtnrMbrListSearchCnt" parameterType="HashMap" resultType="integer">
+		SELECT 
+			COUNT(*) as nCnt
+		FROM top_ptnr_mbr_bsc a, top_ptnr_bsc b, top_ptnr_dept_bsc c
+		WHERE 1 = 1
+		AND a.ptnr_id = b.ptnr_id
+		AND a.ptnr_dept_id = c.ptnr_dept_id
+		AND a.del_state = 0
+		<if test="srchPtnrId != null and srchPtnrId != 0">
+			AND a.ptnr_id = #{srchPtnrId}
+		</if>
+		<if test='srchPtnrMbrName != null and srchPtnrMbrName != ""'>
+			AND a.ptnr_mbr_nm LIKE CONCAT('%',#{srchPtnrMbrName},'%')
+		</if>
+		<if test='srchPtnrMbrTel != null and srchPtnrMbrTel != ""'>
+			AND (
+				a.ptnr_mbr_office_tel LIKE CONCAT('%',#{srchPtnrMbrTel},'%') 
+				OR a.ptnr_mbr_hp LIKE CONCAT('%',#{srchPtnrMbrTel},'%')
+			)
+		</if>		
+	</select>
+ 
+	<select id="suimPtnrMbrPopSearch" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		SELECT a.ptnr_mbr_no
+				,a.ptnr_id, b.ptnr_nick, b.ptnr_name
+				,a.ptnr_dept_id
+				,a.ptnr_tm_nm
+				,a.ptnr_tm2_nm
+				,a.ptnr_mbr_position_nm
+				,a.ptnr_mbr_job_memo
+				,a.ptnr_mbr_work_type
+				,a.ptnr_mbr_nm
+				,a.ptnr_mbr_hp
+				,a.ptnr_mbr_office_tel
+				,a.ptnr_mbr_office_fax
+				,a.ptnr_mbr_office_email
+				,a.ptnr_mbr_office_postcode
+				,a.ptnr_mbr_office_addr1
+				,a.ptnr_mbr_office_addr2
+				,a.ptnr_mbr_work_memo
+				,a.ptnr_tax_nm
+				,a.del_state
+				,c.ptnr_dept_nm
+		FROM top_ptnr_mbr_bsc a, top_ptnr_bsc b, top_ptnr_dept_bsc c
+		WHERE 1 = 1
+		<if test="ptnrSrc != null and ptnrSrc != 0">
+			<choose>
+				<when test="ptnrGb == -1">
+					AND a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSrc}))
+				</when>
+				<otherwise>
+					AND a.ptnr_id = #{ptnrSrc}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="srcWord != ''">
+			AND (a.ptnr_mbr_nm like '%${srcWordDEC}%'
+			 	 OR a.ptnr_mbr_office_tel like '%${srcWordENC}%'
+			 	 OR a.ptnr_mbr_hp like '%${srcWordENC}%' )
+		</if>
+		AND a.ptnr_id = b.ptnr_id
+		AND a.ptnr_dept_id = c.ptnr_dept_id
+		AND a.del_state = 0
+		ORDER BY a.ptnr_id, a.ptnr_tm_nm, ptnr_mbr_position_nm, ptnr_mbr_nm
+	</select>
+
+	<update id="suimPtnrMbrChg" parameterType="kr.co.toplac.util.mbr.SuimTmMbrPopViewVO" >
+		UPDATE
+			<choose>
+				<when test="gbNo == 1">
+					top_rpt_head
+				</when>
+				<when test="gbNo == 2">
+					top_prim_biz_rpt_head
+				</when>
+				<when test="gbNo == 318">
+					top_contract
+				</when>
+			</choose>
+		SET 
+			 <choose>
+			 	<when test="gbNo == 318">
+					 ptnr_id = #{ptnrNo}
+					,ptnr_mbr_no = #{mbrNo}
+					,ptnr_dept_nm = (SELECT 
+										ptnr_dept_nm
+									   FROM
+									    top_ptnr_dept_bsc
+									 WHERE
+									    ptnr_dept_id = #{deptNo})
+			 	</when>
+				<otherwise>
+					 ptnr_id = #{ptnrNo}
+					,ptnr_dept_id = #{deptNo}
+					,ptnr_mbr_no = #{mbrNo}
+				</otherwise>
+			 </choose>
+		
+		WHERE suim_rpt_no = #{smNo}
+	</update>
+	
+	
+	<select id="selectPtnrMbrSmsInfo" parameterType="String" resultType="AsraMap">
+		SELECT suim_accept_no 
+			  ,getTopPtnrMbrBscPtnrMbrName(ptnr_mbr_no) ptnr_mbr_nm
+			  ,getTopPtnrMbrBscPositionName(ptnr_mbr_no) ptnr_mbr_position_nm
+			  ,beneficiary_nm
+			  ,REPLACE(b.handphone,"-","") handphone
+		  FROM top_rpt_head a
+		 INNER JOIN top_mbr_bsc b
+		    ON a.user_no = b.user_no
+		 WHERE suim_rpt_no = #{_parameter}
+	</select>
+
+
+</mapper>

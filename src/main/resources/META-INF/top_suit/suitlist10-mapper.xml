@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="Suit10Mapper">
+ 	<select id="getSuitList10" resultType="kr.co.toplac.topsuit.SuimSuit_10VO" >
+		
+			SELECT 
+				a.suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				a.suim_rpt_state suimRptState,													<!-- 건 상태-->
+				a.lock_flag lockFlag, 															<!-- 락여부 --> 
+				a.suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				a.suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				a.ptnr_id ptnrId, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(a.ptnr_id) ptnrName,										<!-- 약명 -->
+				a.team_id teamId, getTopTmBscTeamName(a.team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(a.team_id) teamMark,										<!-- 팀마크 -->
+				a.user_no userNo, getTopMbrBscUserName(a.user_no) userName, 					<!-- 담당자 -->
+				a.bd_type bdType, <!-- 건물  getCodeValue('top_suitability_10','bd_type',replace(a.bd_type,'0','')) bdName,  -->
+				a.policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				a.del_date delDate,
+				getDateDiff(a.reg_date)+1 pastDateOld,<!-- 수임부터 경과 일자 -->
+				a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt	
+			FROM top_suitability_10 a
+			WHERE 
+				a.del_date >=0
+			ORDER BY a.suim_rpt_no desc
+			
+			LIMIT #{queryPgNoInt}, 18
+	</select>
+	
+	<!-- 검색 결과 목록 -->
+	<select id="getSuitList10Srced" resultType="kr.co.toplac.topsuit.SuimSuit_10VO" parameterType="java.util.HashMap">
+		
+			SELECT 
+				a.suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				a.suim_rpt_state suimRptState,													<!-- 건 상태-->
+				a.lock_flag lockFlag, 															<!-- 락여부 --> 
+				a.suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				a.suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				a.ptnr_id ptnrId, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(a.ptnr_id) ptnrName,										<!-- 약명 -->
+				a.team_id teamId, getTopTmBscTeamName(a.team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(a.team_id) teamMark,										<!-- 팀마크 -->
+				a.user_no userNo, getTopMbrBscUserName(a.user_no) userName, 					<!-- 담당자 -->
+				a.bd_type bdType, <!-- 건물  getCodeValue('top_suitability_10','bd_type',replace(a.bd_type,'0','')) bdName,  -->
+				a.policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				a.del_date delDate,
+				getDateDiff(a.reg_date)+1 pastDateOld,<!-- 수임부터 경과 일자 -->
+				a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt	
+			FROM top_suitability_10 a
+			WHERE
+				a.del_date >=0
+				<if test="sDay != ''">
+					and a.close_date >= unix_timestamp(#{sDay})				
+				</if>
+				<if test="eDay != ''">
+					and a.close_date &lt; (unix_timestamp(#{eDay})+86400) 				
+				</if>
+				and a.suim_rpt_state = 2
+			ORDER BY a.suim_rpt_no desc
+			
+			LIMIT #{queryPgNoInt}, 18
+	</select>
+	
+	<select id="cntRpt" resultType="Integer">
+	
+		SELECT count(suim_rpt_no)
+		FROM
+			top_suitability_10
+		WHERE
+			del_date >=0
+	</select>
+	
+	<select id="cntRptSrc" resultType="Integer" parameterType="java.util.HashMap">
+	
+		SELECT count(suim_rpt_no)
+		FROM
+			top_suitability_10
+		WHERE
+			del_date >=0
+			<if test="sDay !=''">
+				and close_date >= unix_timestamp(#{sDay})			
+			</if>
+			<if test="eDay != ''">
+				and close_date &lt; (unix_timestamp(#{eDay})+86400) 			
+			</if>
+	</select>
+
+	<select id="getSuitList10Cnt" resultType = "int"> 
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_suitability_10 a
+		WHERE
+			del_date >=0
+	</select>
+	
+	<select id="getSuitList10SrcedCnt" resultType = "int" parameterType="java.util.HashMap"> 
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_suitability_10 a
+		WHERE
+			a.del_date >=0
+			<if test="sDay !=''">
+				and a.close_date >= unix_timestamp(#{sDay})
+			</if>
+			<if test="eDay !=''">
+				and a.close_date &lt; (unix_timestamp(#{eDay})+86400)
+			</if>
+	</select>
+	
+	<select id="getOneOfSuit10" resultType = "kr.co.toplac.topsuit.SuimSuit_10VO"> 
+		SELECT 
+				suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				suim_rpt_state suimRptState,													<!-- 건 상태-->
+				lock_flag lockFlag, 															<!-- 락여부 --> 
+				suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				ptnr_id ptnrId, getTopPtnrBscPtnrNick(ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(ptnr_id) ptnrName,										<!-- 약명 -->
+				team_id teamId, getTopTmBscTeamName(team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(team_id) teamMark,										<!-- 팀마크 -->
+				user_no userNo, getTopMbrBscUserName(user_no) userName, 					<!-- 담당자 -->
+				bd_type bdType, 																<!-- 건물  -->
+				policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				getDateDiff(reg_date)+1 pastDateOld,											<!-- 수임부터 경과 일자 -->
+				suim_cancel_date suimCancelDate,
+				del_date delDate, 
+				if(suim_cancel_date = null || suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt,
+				policyholder_hp policyholderHp,
+				suim_rpt_aprv_date suimRptAprvDate,
+				juckbu_no juckbuNo,
+				DATE_FORMAT(FROM_UNIXTIME(sendDate), '%Y-%m-%d') sendDate,
+				IvstComName ivstComName,
+				plcyNo,
+				entyDsgnNo,
+				pkgName,
+				agrmDate,
+				contractorName,
+				conHndPhoneNo,
+				conHomeTelNo,
+				conOfficeNo,
+				hostName,
+				hostHndPhoneNo,
+				hostHomeTelNo,
+				hostOfficeNo,
+				hostContractor,
+				buildingZipcode,
+				buildingAddr,
+				buildinginfo01,
+				buildinginfo02,
+				buildinginfo03,
+				buildingMemo,
+				clerkName,
+				clerkName2,
+				clerkDeptName,
+				clerkSectName,
+				clerkOfcTelNo,
+				clerkHndPhoneNo,
+				report_1 report1,
+				report_2 report2,
+				report_3 report3,
+				report_4 report4,
+				report_5 report5,
+				report_6 report6,
+				report_7 report7,
+				report_8 report8,
+				report_9 report9,
+				report_10 report10,
+				report_11 report11,
+				b_1 b1,
+				b_2 b2,
+				b_2_code b2Code,
+				b_3 b3,
+				c_1 c1,
+				c_2 c2,
+				c_3 c3,
+				c_4 c4,
+				c_5 c5,
+				c_6 c6,
+				d_1 d1,
+				d_2 d2,
+				d_3 d3,
+				d_4 d4,
+				d_5 d5,
+				d_6 d6,
+				d_7 d7,
+				d_8 d8,
+				d_9 d9,
+				d_10 d10,
+				d_11 d11,
+				d_12 d12,
+				d_13 d13,
+				d_14 d14,
+				d_15 d15,
+				d_16 d16,
+				getTopUserHp(user_no) handphone
+				, getTopRptCloseAuthYN(team_id, #{user_no_session}) closeAuthYN
+				, getTopRptEditYN(team_id, #{user_no_session}) editYN
+				, getTopRptMbrChgYN(team_id, #{user_no_session}) mbrChgYN
+				, getTopRptPtnrMbrChgYN(team_id, #{user_no_session}) ptnrMbrChgYN
+				, getTopSuit10EditYN2(#{suim_rpt_no},team_id, #{user_no_session}) editYN2
+				
+			FROM top_suitability_10
+			WHERE
+				suim_rpt_no = #{suim_rpt_no}
+		
+	</select>
+	
+	<!-- KB 목록 응답전문용 selector -->
+	<select id="getSuit10ListForRs" resultType = "kr.co.toplac.topsuit.SuimSuit_10VO" parameterType="java.util.HashMap"> 
+		
+		SELECT 
+				suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				suim_rpt_state suimRptState,													<!-- 건 상태-->
+				lock_flag lockFlag, 															<!-- 락여부 --> 
+				suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				ptnr_id ptnrId, getTopPtnrBscPtnrNick(ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(ptnr_id) ptnrName,										<!-- 약명 -->
+				team_id teamId, getTopTmBscTeamName(team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(team_id) teamMark,										<!-- 팀마크 -->
+				user_no userNo, getTopMbrBscUserName(user_no) userName, 					<!-- 담당자 -->
+				bd_type bdType, 																<!-- 건물  -->
+				policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				getDateDiff(reg_date)+1 pastDateOld,											<!-- 수임부터 경과 일자 -->
+				suim_cancel_date suimCancelDate,
+				del_date delDate, 
+				if(suim_cancel_date = null || suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt,
+				policyholder_hp policyholderHp,
+				suim_rpt_aprv_date suimRptAprvDate,
+				juckbu_no juckbuNo,
+				DATE_FORMAT(FROM_UNIXTIME(sendDate), '%Y-%m-%d') sendDate,
+				IvstComName ivstComName,
+				plcyNo,
+				entyDsgnNo,
+				pkgName,
+				agrmDate,
+				contractorName,
+				conHndPhoneNo,
+				conHomeTelNo,
+				conOfficeNo,
+				hostName,
+				hostHndPhoneNo,
+				hostHomeTelNo,
+				hostOfficeNo,
+				hostContractor,
+				buildingZipcode,
+				buildingAddr,
+				buildinginfo01,
+				buildinginfo02,
+				buildinginfo03,
+				buildingMemo,
+				clerkName,
+				clerkName2,
+				clerkDeptName,
+				clerkSectName,
+				clerkOfcTelNo,
+				clerkHndPhoneNo,
+				report_1 report1,
+				report_2 report2,
+				report_3 report3,
+				report_4 report4,
+				report_5 report5,
+				report_6 report6,
+				report_7 report7,
+				report_8 report8,
+				report_9 report9,
+				report_10 report10,
+				report_11 report11,
+				b_1 b1,
+				b_2 b2,
+				b_2_code b2Code,
+				b_3 b3,
+				c_1 c1,
+				c_2 c2,
+				c_3 c3,
+				c_4 c4,
+				c_5 c5,
+				c_6 c6,
+				d_1 d1,
+				d_2 d2,
+				d_3 d3,
+				d_4 d4,
+				d_5 d5,
+				d_6 d6,
+				d_7 d7,
+				d_8 d8,
+				d_9 d9,
+				d_10 d10,
+				d_11 d11,
+				d_12 d12,
+				d_13 d13,
+				d_14 d14,
+				d_15 d15,
+				d_16 d16,
+				getTopUserHp(user_no) handphone
+				
+			FROM top_suitability_10
+			WHERE
+				suim_rpt_state = 2
+				and del_date >=0 
+				<if test="sDay != ''">
+					and close_date >= unix_timestamp(#{sDay})
+				</if>
+				<if test="eDay != ''">
+					and close_date &lt; (unix_timestamp(#{eDay})+86400)
+				</if>
+				
+		
+	</select>
+	
+	<update id="suit10lockAfterRsPrint" parameterType="java.util.HashMap" >
+	
+		UPDATE top_suitability_10
+		SET
+			lock_flag = 1
+		WHERE
+			suim_rpt_state = 2 
+			and del_date >=0
+			<if test="sDay != ''">
+				and close_date >= unix_timestamp(#{sDay})
+			</if>
+			<if test="eDay != ''">
+				and close_date &lt; (unix_timestamp(#{eDay})+86400)
+			</if>
+	
+	</update>
+	
+	<!-- KB 조사내용 업데이트 -->
+	<update id="udtJosa10" parameterType="kr.co.toplac.topsuit.SuimSuit_10VO">
+		
+		UPDATE
+			top_suitability_10
+		SET
+			report_1 = #{report1},
+			report_2 = #{report2},
+			report_3 = #{report3},
+			report_4 = #{report4},
+			report_5 = #{report5},
+			report_6 = #{report6},
+			report_7 = #{report7},
+			report_8 = #{report8},
+			report_9 = #{report9},
+			report_10 = #{report10},
+			report_11 = #{report11}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			
+	</update>
+	
+	
+	<!-- KB 보고서 내용 업데이트 -->
+	<update id="udtRpt10" parameterType="kr.co.toplac.topsuit.SuimSuit_10VO">
+		
+		UPDATE
+			top_suitability_10
+		SET
+			b_1 = #{b1},
+			b_2 = #{b2},
+			b_2_code = #{b2Code},
+			b_3 = #{b3},
+			c_1 = #{c1},
+			c_2 = #{c2},
+			c_3 = #{c3},
+			c_4 = #{c4},
+			c_5 = #{c5},
+			c_6 = #{c6},
+			d_1 = #{d1},
+			d_2 = #{d2},
+			d_3 = #{d3},
+			d_4 = #{d4},
+			d_5 = #{d5},
+			d_6 = #{d6},
+			d_7 = #{d7},
+			d_8 = #{d8},
+			d_9 = #{d9},
+			d_10 = #{d10},
+			d_11 = #{d11},
+			d_12 = #{d12},
+			d_13 = #{d13},
+			d_14 = #{d14},
+			d_15 = #{d15},
+			d_16 = #{d16}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			
+	</update>
+	
+	<select id="getSuit10ImgList" parameterType="String" resultType="kr.co.toplac.topsuit.KB.SuimSuit_10_FileVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName
+		FROM
+			top_suitability_10_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		ORDER BY
+			reg_date asc
+	
+	</select>
+	
+	<!-- 차기 적부 보고서 이미지 시리얼 No 가져오기 -->
+	<select id="nextRptSuit10ImgSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_suitability_10_file'
+	
+	</select>
+	
+	
+	<!-- 실사 사진 dummy 파일 올리기 -->
+	<insert id="suimSuit10ImgUploadForKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		
+		INSERT INTO top_suitability_10_file
+		( suim_rpt_no, file_path, file_name, reg_date)
+		VALUES
+		( #{suimRptNo}, #{filePath}, #{fileName}, unix_timestamp(now()))
+		
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+	</insert>
+	
+	<!-- 실사 사진 dummy 컬럼에 실제 Data Update -->
+	<update id="suimSuit10ImgUploadForUpdate" parameterType="java.util.HashMap">
+		UPDATE 
+			top_suitability_10_file
+		SET 
+			  suim_rpt_no = #{suimRptNo}
+			, file_path = #{filePath}			
+			, file_name = #{fileName}	  		
+		WHERE 
+			serial_no = #{nextRptSuit10ImgSerial}
+	</update>
+	
+	<select id="suimSuit10ImgPath" resultType="String">
+		SELECT 
+ 			CONCAT(file_path,file_name) Path
+ 		FROM 
+ 			top_suitability_10_file
+ 		WHERE 
+ 			serial_no=#{serial_no}	
+	</select>
+	
+	<delete id="delSuimSuit10Img" parameterType="String">
+		DELETE FROM
+			top_suitability_10_file
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+		
+	
+	<!-- 보고서 결재 -->
+	<update id = "actionSubmit" parameterType="String">
+	
+		UPDATE 
+			top_suitability_10
+		SET 
+			suim_rpt_state = '1',
+			suim_rpt_aprv_date =  unix_timestamp(now())
+		WHERE 
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 보고서 결재 취소 -->
+	<update id = "actionSubmit_X" parameterType="String">
+	
+		UPDATE 
+			top_suitability_10
+		SET 
+			suim_rpt_state = '0',
+			suim_rpt_aprv_date =  0
+		WHERE 
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 보고서 반려-->
+	<update id = "actionReturnRpt" parameterType="String">
+	
+		UPDATE 
+			top_suitability_10
+		SET 
+			suim_rpt_state = '11'
+		WHERE 
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 반려 취소 -->
+	<update id="actionReturnRpt_X" parameterType="String">
+		
+		UPDATE 
+			top_suitability_10
+		SET	
+			 suim_rpt_state='1'
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+
+	<!-- 종결 번호 구하기 -->
+	<select id="getNextCloseNoForSuit10" parameterType="String" resultType="String"><!-- //notUse-2016.11.02.rjh -->
+		SELECT
+			SUBSTR(suim_close_no,9,4)+1
+ 		FROM
+ 			top_suitability_10
+ 		WHERE
+ 			suim_close_no like CONCAT(#{todayCloseFront},'%')
+ 		ORDER BY suim_close_no desc
+ 		LIMIT 1
+	</select>
+
+	<update id="getNextCloseNoForSuit102" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET suit10_close_seq_no = suit10_close_seq_no + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT suit10_close_seq_no
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+	    </selectKey>
+
+	</update>
+
+	<!-- 종결하기 -->
+	<update id="actionSubmit_E" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_suitability_10
+		SET
+			suim_close_no = #{nextCloseNo},
+			suim_rpt_state = 2,
+			close_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 종결 취소 하기 -->
+	<update id="actionSubmit_E_X" parameterType="String">
+	
+		UPDATE
+			top_suitability_10
+		SET
+			suim_close_no = '',
+			suim_rpt_state = 1,
+			close_date = 0,
+			lock_flag = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	
+	<!-- 위임 취소 하기 -->
+	<update id="actionCancel" parameterType="String">
+	
+		UPDATE
+			top_suitability_10
+		SET
+			suim_rpt_aprv_date = 0,
+			suim_rpt_state = 3,
+			suim_cancel_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 위임 취소 되돌리기 -->
+	<update id="actionCancel_X" parameterType="String">
+	
+		UPDATE
+			top_suitability_10
+		SET
+			suim_rpt_state = 0,
+			suim_cancel_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 보고서 삭제하기 -->
+	<update id="actionDel" parameterType="String">
+	
+		UPDATE
+			top_suitability_10
+		SET
+			del_date = -1
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+ </mapper>

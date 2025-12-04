@@ -1,0 +1,1157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="NoSiteMngListMapper">
+	<select id="getNoSiteMngList2" parameterType="hashmap" resultType="AsraMap">
+		SELECT  GA.TEAM_ID
+		       ,MAX(GA.TEAM_NAME) AS TEAM_NAME
+		       ,MAX(GA.TEAM_LEVEL) AS TEAM_LEVEL
+		       ,MAX(GA.TEAM_TYPE) AS TEAM_TYPE
+		       ,IFNULL(SUM(FIELD_NOT_CNT),0) AS FIELD_NOT_CNT 				<!-- 현장미제출 -->
+		       ,IFNULL(SUM(MIDDLE_NOT_CNT),0) AS MIDDLE_NOT_CNT				<!-- 중간미제출 -->
+		       ,IFNULL(SUM(MIDDLE_CNT),0) AS MIDDLE_CNT						<!-- 진행경과미제출 -->
+		       ,IFNULL(SUM(FIELD_OVER_CNT),0) AS FIELD_OVER_CNT				<!-- 현장초과 -->
+		       ,IFNULL(SUM(MIDDLE_5DAY_NOT_CNT),0) AS MIDDLE_5DAY_NOT_CNT 	<!-- 중간-5일 -->
+		       ,IFNULL(SUM(MIDDLE_5DAY_CNT),0) AS MIDDLE_5DAY_CNT			<!-- 진행경과-5일 -->
+		       ,IFNULL(SUM(SAGO_NOT_CNT),0) AS SAGO_NOT_CNT					<!-- 사고처리과정 -->
+		       ,IFNULL(SUM(PRB_NOT_CNT),0) AS PRB_NOT_CNT					<!-- 문제점 -->
+		       ,IFNULL(SUM(PLN_NOT_CNT),0) AS PLN_NOT_CNT					<!-- 향후처리계획 -->
+		       ,IFNULL(SUM(NOW_NOT_CNT),0) AS NOW_NOT_CNT					<!-- 미결사유 -->
+		  FROM  vn_rpt_team GA
+		LEFT JOIN
+		       (
+		       	  <!-- 현장 미제출 -->
+		          SELECT  A.TEAM_ID
+		                 ,COUNT(*) AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT     
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT           
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT 
+		            FROM  top_rpt_head A
+		                 ,top_tm_bsc B
+		           WHERE  1=1
+		             AND  A.TEAM_ID = B.TEAM_ID
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+		             AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+		             AND A.reg_date > UNIX_TIMESTAMP( #{before_workday} ) 
+          			 <!-- AND  A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+										    FROM ( SELECT holiday_date
+													 FROM sysadm_holiday
+													WHERE holiday_code IN (2,3,4,5,6)
+											 		  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													ORDER BY holiday_date DESC
+													LIMIT 0,3) tmp ) -->		        		             
+		           GROUP BY A.TEAM_ID
+		       	  <!-- //현장 미제출 -->
+		           UNION ALL
+		       	  <!-- 중간 미제출 -->		           
+		          SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,COUNT(*) AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT   
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT       
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT       
+		            FROM  top_rpt_head A
+		                 ,top_tm_bsc B
+		           WHERE  1=1
+		             AND  A.TEAM_ID = B.TEAM_ID
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  A.pendncy_trget_at = 1
+		             AND  A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		           GROUP BY A.TEAM_ID
+		       	  <!-- //중간 미제출 -->		           
+		           UNION ALL
+		       	  <!-- 진행경과 미제출 -->		           
+		          SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,COUNT(*) AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT           
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT    
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT  
+		            FROM  top_rpt_head A
+		                 ,(
+		                    SELECT  A.SUIM_RPT_NO
+		                           ,MAX(A.SITE_DATE) AS SITE_DATE
+		                      FROM  top_rpt_site_interim A
+		                     WHERE  1=1
+		                       AND  A.SITE_DATE > -1
+		                       AND  A.INTERIM_FLAG = 1
+		                    GROUP BY A.SUIM_RPT_NO
+		                  ) B
+		                 ,top_tm_bsc C
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		             AND  A.TEAM_ID = C.TEAM_ID
+		             AND  A.pendncy_trget_at = 1
+		             AND  B.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0, 1, 11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+ 		           GROUP BY A.TEAM_ID
+		       	  <!-- //진행경과 미제출 -->		           
+ 		           UNION ALL
+		       	  <!-- 현장초과 -->		 
+ 		          SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,COUNT(*) AS FIELD_OVER_CNT
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT     
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT           
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT 
+		            FROM  top_rpt_head A
+		                 ,top_tm_bsc B
+		           WHERE  1=1
+		             AND  A.TEAM_ID = B.TEAM_ID
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+		             AND A.reg_date &lt;= UNIX_TIMESTAMP( #{before_workday} )
+          			 <!-- AND  A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+										    FROM ( SELECT holiday_date
+													 FROM sysadm_holiday
+													WHERE holiday_code IN (2,3,4,5,6)
+											 		  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													ORDER BY holiday_date DESC
+													LIMIT 0,3) tmp ) -->		             
+		           GROUP BY A.TEAM_ID
+		       	  <!-- //현장초과-->		    		           
+				   UNION ALL
+		       	  <!-- 중간-5일 -->		   				   
+		          SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,COUNT(*) AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT      
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT    
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT       
+		            FROM  top_rpt_head A
+		                 ,top_tm_bsc B
+		           WHERE  1=1
+		             AND  A.TEAM_ID = B.TEAM_ID
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  A.pendncy_trget_at = 1
+		             AND  A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+		             AND  A.REG_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		          GROUP BY A.TEAM_ID
+		       	  <!-- //중간-5일 -->		          
+				   UNION ALL
+		       	  <!-- 진행경과-5일 -->				   
+		          SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+                         ,COUNT(*) AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT        
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT  
+		            FROM  top_rpt_head A
+		                 ,(
+		                    SELECT  A.SUIM_RPT_NO
+		                           ,MAX(A.SITE_DATE) AS SITE_DATE
+		                      FROM  top_rpt_site_interim A
+		                     WHERE  1=1
+		                       AND  A.SITE_DATE > -1
+		                       AND  A.INTERIM_FLAG = 1
+		                    GROUP BY A.SUIM_RPT_NO
+		                  ) B
+		                 ,top_tm_bsc C
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		             AND  A.TEAM_ID = C.TEAM_ID
+		             AND  A.pendncy_trget_at = 1
+		             AND  B.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+		             AND  B.SITE_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0, 1, 11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+ 		           GROUP BY A.TEAM_ID				          
+		       	  <!-- //진행경과-5일 -->		          
+		           UNION ALL 
+		       	  <!-- 사고처리 -->		           
+				  SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT
+		                 ,COUNT(*) AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT
+		                 ,0 AS PRB_NOT_CNT
+		                 ,0 AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_ctrl B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lt 2610">
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gte 2610">
+										AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.reg_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>				     
+				   GROUP BY team_id
+		       	  <!-- //사고처리 -->				   
+				   UNION ALL
+		       	  <!-- 미결사유 -->				   
+				  SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,COUNT(*) AS NOW_NOT_CNT
+		                 ,0 AS PRB_NOT_CNT
+		                 ,0 AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_now B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lte 2610">
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gt 2610">
+										AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.reg_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND  A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>				     
+				   GROUP BY team_id
+		       	  <!-- //미결사유 -->				   				   
+				   UNION ALL
+		       	  <!-- 문제점 -->	
+				  SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+   		                 ,0 AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT
+		                 ,COUNT(*) AS PRB_NOT_CNT
+		                 ,0 AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_problem B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lte 2610">
+								 		AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gt 2610">
+										AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.prb_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND  A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+    				 AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_problem)		   
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>			     
+				   GROUP BY team_id	
+		       	  <!-- //문제점 -->				   
+				   UNION ALL
+		       	  <!-- 향후처리 -->
+				  SELECT  A.TEAM_ID
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+           		         ,0 AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT
+		                 ,0 AS PRB_NOT_CNT
+		                 ,COUNT(*) AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_plan B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lte 2610">
+								 		AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gt 2610">
+										AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.pln_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND  A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+				     AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_plan)
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>				     
+				   GROUP BY team_id		
+		       	  <!-- //향후처리 -->					
+		        ) GB
+		    ON  GA.TEAM_ID = GB.TEAM_ID
+		 WHERE  1=1
+		   AND GA.TEAM_TYPE = 1
+		   <if test="user_no != 966 and user_no != 215 and user_no != 882 and user_no != 670 and user_no != 975">
+				AND  GA.TEAM_ID IN(
+									SELECT  A.TEAM_ID
+									  FROM  top_tm_bsc A
+									 WHERE  1=1
+									   AND  FIND_IN_SET(A.TEAM_ID, (SELECT REPLACE(LS_ADMIN23,'|',',') FROM ls_admin WHERE USER_ID = #{user_no}))    
+									)           
+		   </if>
+		GROUP BY GA.TEAM_ID
+		ORDER BY GA.TEAM_GROUP_ORDER DESC, GA.TEAM_ORDER DESC, GA.TEAM_ID ASC
+	</select>
+
+	<select id="getNoSiteMngList" resultType="kr.co.toplac.topindividual.NoSiteMngCpstVO">
+        SELECT b.team_type, a.team_id, b.team_name, COUNT(a.suim_rpt_no) miCnt
+                , e.siteCnt, COUNT(a.suim_rpt_no) - IFNULL(e.siteCnt,0) miSiteCnt
+                , h.interimCnt, IFNULL(k.rptCnt2,0) - IFNULL(h.interimCnt,0) miInterimCnt
+        FROM top_rpt_head a
+                LEFT JOIN (SELECT c.team_id, COUNT(DISTINCT d.suim_rpt_no) siteCnt
+                                FROM top_rpt_head c, top_rpt_site_interim d
+                                WHERE c.suim_rpt_state IN (0,1,11) AND c.del_date > -1
+                                AND c.suim_rpt_no = d.suim_rpt_no AND d.site_date > 0
+                                GROUP BY c.team_id) e
+                ON a.team_id = e.team_id
+                LEFT JOIN (SELECT f.team_id, COUNT(DISTINCT g.suim_rpt_no) interimCnt
+                                FROM top_rpt_head f, top_rpt_site_interim g
+                                WHERE f.suim_rpt_state IN (0,1,11) AND f.del_date > -1
+                                AND f.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+                                AND f.suim_rpt_no = g.suim_rpt_no
+                                AND g.interim_flag = 1 AND g.site_date > 0
+                                GROUP BY f.team_id) h
+                ON a.team_id = h.team_id
+                LEFT JOIN (SELECT a.team_id, COUNT(a.suim_rpt_no) rptCnt2
+                                FROM top_rpt_head a
+                                WHERE a.suim_rpt_state IN (0,1,11)
+                                AND a.del_date > -1
+                                AND a.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+                                GROUP BY a.team_id) k
+                ON a.team_id = k.team_id
+            , top_tm_bsc b
+        WHERE a.suim_rpt_state IN (0,1,11)
+        AND a.del_date > -1
+        AND a.team_id = b.team_id
+        GROUP BY a.team_id
+        ORDER BY b.team_order DESC, a.team_id ASC
+	</select>
+
+	<select id="getNoSiteMngListOneInterim2CntByTeam" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(a.suim_rpt_no)
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT d.suim_rpt_no, max(site_date) maxSiteDate
+							FROM top_rpt_head c, top_rpt_site_interim d
+							WHERE c.team_id = #{team_id} AND c.suim_rpt_state IN (0,1,11) AND c.del_date > -1
+							AND c.suim_rpt_no = d.suim_rpt_no
+							AND d.interim_flag = 1 AND d.site_date > 0
+							GROUP BY d.suim_rpt_no) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.team_id = #{team_id}
+		AND a.suim_rpt_state IN (0,1,11)
+		AND a.del_date > -1
+		AND e.suim_rpt_no IS NOT NULL
+		AND e.maxSiteDate  &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+	</select>
+
+
+
+    <select id="getNoSiteMngTmList2" parameterType="hashmap" resultType="AsraMap">
+		SELECT  GA.USER_NO
+		       ,MAX(GA.TEAM_ID_MAIN) AS TEAM_ID
+		       ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_ID = GA.TEAM_ID_MAIN) AS TEAM_NAME
+		       ,MAX(GA.USER_NAME) AS USER_NAME
+		       ,IFNULL(SUM(FIELD_NOT_CNT),0) AS FIELD_NOT_CNT 				<!-- 현장미제출 -->
+		       ,IFNULL(SUM(MIDDLE_NOT_CNT),0) AS MIDDLE_NOT_CNT				<!-- 중간미제출 -->
+		       ,IFNULL(SUM(MIDDLE_CNT),0) AS MIDDLE_CNT						<!-- 진행경과미제출 -->
+		       ,IFNULL(SUM(FIELD_OVER_CNT),0) AS FIELD_OVER_CNT				<!-- 현장초과 -->
+		       ,IFNULL(SUM(MIDDLE_5DAY_NOT_CNT),0) AS MIDDLE_5DAY_NOT_CNT 	<!-- 중간-5일 -->
+		       ,IFNULL(SUM(MIDDLE_5DAY_CNT),0) AS MIDDLE_5DAY_CNT			<!-- 진행경과-5일 -->
+		       ,IFNULL(SUM(SAGO_NOT_CNT),0) AS SAGO_NOT_CNT					<!-- 사고처리과정 -->
+		       ,IFNULL(SUM(PRB_NOT_CNT),0) AS PRB_NOT_CNT					<!-- 문제점 -->
+		       ,IFNULL(SUM(PLN_NOT_CNT),0) AS PLN_NOT_CNT					<!-- 향후처리계획 -->
+		       ,IFNULL(SUM(NOW_NOT_CNT),0) AS NOW_NOT_CNT					<!-- 미결사유 -->
+		  FROM  top_mbr_bsc GA
+		LEFT JOIN
+		       (
+		       	  <!-- 현장 미제출 -->
+		          SELECT  A.USER_NO
+		                 ,COUNT(*) AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT     
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT           
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT 
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+		             AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+          			 AND  A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+										    FROM ( SELECT holiday_date
+													 FROM sysadm_holiday
+													WHERE holiday_code IN (2,3,4,5,6)
+											 		  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													ORDER BY holiday_date DESC
+													LIMIT 0,3) tmp )		        		             
+		           GROUP BY A.USER_NO
+		       	  <!-- //현장 미제출 -->
+		           UNION ALL
+		       	  <!-- 중간 미제출 -->		           
+		          SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,COUNT(*) AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT   
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT       
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT       
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  A.pendncy_trget_at = 1
+		             AND  A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		           GROUP BY A.USER_NO
+		       	  <!-- //중간 미제출 -->		           
+		           UNION ALL
+		       	  <!-- 진행경과 미제출 -->		           
+		          SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,COUNT(*) AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT           
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT    
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT  
+		            FROM  top_rpt_head A
+		                 ,(
+		                    SELECT  A.SUIM_RPT_NO
+		                           ,MAX(A.SITE_DATE) AS SITE_DATE
+		                      FROM  top_rpt_site_interim A
+		                     WHERE  1=1
+		                       AND  A.SITE_DATE > -1
+		                       AND  A.INTERIM_FLAG = 1
+		                    GROUP BY A.SUIM_RPT_NO
+		                  ) B
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		             AND  B.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+		             AND  A.pendncy_trget_at = 1
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0, 1, 11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+ 		           GROUP BY A.USER_NO
+		       	  <!-- //진행경과 미제출 -->		           
+ 		           UNION ALL
+		       	  <!-- 현장초과 -->		 
+ 		          SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,COUNT(*) AS FIELD_OVER_CNT
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT     
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT           
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT 
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+          			 AND  A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+										    FROM ( SELECT holiday_date
+													 FROM sysadm_holiday
+													WHERE holiday_code IN (2,3,4,5,6)
+											 		  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													ORDER BY holiday_date DESC
+													LIMIT 0,3) tmp )		             
+		           GROUP BY A.USER_NO
+		       	  <!-- //현장초과-->		    		           
+				   UNION ALL
+		       	  <!-- 중간-5일 -->		   				   
+		          SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,COUNT(*) AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT      
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT    
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT       
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0,1,11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+		             AND  A.pendncy_trget_at = 1
+		             AND  A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+		             AND  A.REG_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))		             
+		             AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		          GROUP BY A.USER_NO
+		       	  <!-- //중간-5일 -->		          
+				   UNION ALL
+		       	  <!-- 진행경과-5일 -->				   
+		          SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+                         ,COUNT(*) AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT        
+		                 ,0 AS PRB_NOT_CNT		
+		                 ,0 AS PLN_NOT_CNT  
+		            FROM  top_rpt_head A
+		                 ,(
+		                    SELECT  A.SUIM_RPT_NO
+		                           ,MAX(A.SITE_DATE) AS SITE_DATE
+		                      FROM  top_rpt_site_interim A
+		                     WHERE  1=1
+		                       AND  A.SITE_DATE > -1
+		                       AND  A.INTERIM_FLAG = 1
+		                    GROUP BY A.SUIM_RPT_NO
+		                  ) B
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		             AND  A.pendncy_trget_at = 1
+		             AND  B.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+		             AND  B.SITE_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))		 		             
+		             AND  A.DEL_DATE > -1
+		             AND  A.SUIM_RPT_STATE IN(0, 1, 11)
+		             AND  A.SUIM_RPT_TYPE1 != 14
+ 		           GROUP BY A.USER_NO			          
+		       	  <!-- //진행경과-5일 -->		          
+		           UNION ALL 
+		       	  <!-- 사고처리 -->		           
+				  SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT
+		                 ,COUNT(*) AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT
+		                 ,0 AS PRB_NOT_CNT
+		                 ,0 AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_ctrl B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lte 2610">
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gt 2610">
+										AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.reg_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND  A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>				     
+				   GROUP BY A.USER_NO
+		       	  <!-- //사고처리 -->				   
+				   UNION ALL
+		       	  <!-- 미결사유 -->				   
+				  SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+		                 ,0 AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,COUNT(*) AS NOW_NOT_CNT
+		                 ,0 AS PRB_NOT_CNT
+		                 ,0 AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_now B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lte 2610">								 		
+								 		AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gt 2610">
+										AND MAX(B.reg_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.reg_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>				     
+				   GROUP BY A.USER_NO
+		       	  <!-- //미결사유 -->				   				   
+				   UNION ALL
+		       	  <!-- 문제점 -->			
+				  SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+   		                 ,0 AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT
+		                 ,COUNT(*) AS PRB_NOT_CNT
+		                 ,0 AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_problem B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lte 2610">
+								 		AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gt 2610">
+										AND MAX(B.prb_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.prb_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+				     AND A.SUIM_RPT_NO NOT IN (SELECT SUIM_RPT_NO FROM top_rpt_problem)
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>				     
+				   GROUP BY A.USER_NO
+		       	  <!-- //문제점 -->				   
+				   UNION ALL
+		       	  <!-- 향후처리 -->
+				  SELECT  A.USER_NO
+		                 ,0 AS FIELD_NOT_CNT
+		                 ,0 AS MIDDLE_NOT_CNT
+		                 ,0 AS MIDDLE_CNT
+		                 ,0 AS FIELD_OVER_CNT		                 
+		                 ,0 AS MIDDLE_5DAY_NOT_CNT
+           		         ,0 AS MIDDLE_5DAY_CNT
+		                 ,0 AS SAGO_NOT_CNT
+		                 ,0 AS NOW_NOT_CNT
+		                 ,0 AS PRB_NOT_CNT
+		                 ,COUNT(*) AS PLN_NOT_CNT
+					FROM top_rpt_head A
+					LEFT OUTER JOIN (
+				    				 SELECT  A.suim_rpt_no
+									        ,B.serial_no
+									   FROM top_rpt_head A
+									  INNER JOIN top_rpt_plan B
+									     ON A.suim_rpt_no = B.suim_rpt_no
+									  GROUP BY A.suim_rpt_no
+									 HAVING 1=1
+								 <choose>
+								 	<when test="now_day gte 0100 and now_day lt 1110">
+								 		AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m-16'))
+								 	</when>
+								 	<when test="now_day gte 1110 and now_day lte 2610">
+								 		AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-01'))
+									</when>
+									<when test="now_day gt 2610">
+										AND MAX(B.pln_date) >= UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+									</when>
+								 </choose>
+								        AND MAX(B.pln_date) &lt; UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY),'%Y-%m-%d'))
+									) B
+	 				  ON A.suim_rpt_no = B.suim_rpt_no
+				   WHERE 1=1
+				     AND A.suim_rpt_state IN (0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND B.serial_no is null
+				     AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 3 OR A.pendncy_trget_at = 4)
+				     AND A.SUIM_RPT_NO NOT IN (SELECT SUIM_RPT_NO FROM top_rpt_plan)
+			 <choose>
+			 	<when test="now_day gte 0100 and now_day lt 1110">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-1'))
+			 	</when>
+			 	<when test="now_day gte 1110 and now_day lte 1524">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-11'))
+				</when>
+			 	<when test="now_day gte 1600 and now_day lt 2610">
+			 		AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-16'))
+				</when>				
+				<when test="now_day gte 2610">
+					AND A.reg_date &lt; UNIX_TIMESTAMP(DATE_FORMAT(NOW(),'%Y-%m-26'))
+				</when>
+			 </choose>					     
+				   GROUP BY A.USER_NO		
+		       	  <!-- //향후처리 -->					
+		        ) GB
+		    ON  GA.USER_NO = GB.USER_NO
+		 WHERE  1=1
+		   AND  GA.TEAM_ID_MAIN = #{team_id}
+		   AND  GA.USER_STATE !=1
+		GROUP BY GA.USER_NO
+		ORDER BY GA.WORK_TYPE, GA.WORK_LEVEL DESC, GA.USER_NO ASC       
+    </select>
+
+    <select id="getNoSiteMngTmList2_backup170608" parameterType="hashmap" resultType="AsraMap">
+		SELECT  GA.USER_NO
+		       ,MAX(GA.TEAM_ID_MAIN) AS TEAM_ID
+		       ,(SELECT TEAM_NAME FROM top_tm_bsc WHERE TEAM_ID = GA.TEAM_ID_MAIN) AS TEAM_NAME
+		       ,MAX(GA.USER_NAME) AS USER_NAME
+		       ,IFNULL(SUM(FIELD_NOT_CNT),0) AS FIELD_NOT_CNT
+		       ,IFNULL(SUM(MIDDLE_NOT_CNT),0) AS MIDDLE_NOT_CNT
+		       ,IFNULL(SUM(MIDDLE_CNT),0) AS MIDDLE_CNT
+		  FROM  top_mbr_bsc GA
+		LEFT JOIN
+		       (
+		        SELECT  A.USER_NO
+		               ,COUNT(*) AS FIELD_NOT_CNT
+		               ,0 AS MIDDLE_NOT_CNT
+		               ,0 AS MIDDLE_CNT
+		          FROM  top_rpt_head A
+		         WHERE  1=1
+		           AND  A.TEAM_ID = #{team_id}
+		           AND  A.DEL_DATE > -1
+		           AND  A.SUIM_RPT_STATE IN(0,1,11)
+		           AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+		        GROUP BY A.USER_NO
+		        UNION ALL
+		        SELECT  A.USER_NO
+		               ,0 AS FIELD_NOT_CNT
+		               ,COUNT(*) AS MIDDLE_NOT_CNT
+		               ,0 AS MIDDLE_CNT
+		          FROM  top_rpt_head A
+		         WHERE  1=1
+		           AND  A.TEAM_ID = #{team_id}
+		           AND  A.DEL_DATE > -1
+		           AND  A.SUIM_RPT_STATE IN(0,1,11)
+		           AND  A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+		           AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		        GROUP BY A.USER_NO
+		        UNION ALL
+		        SELECT  A.USER_NO
+		               ,0 AS FIELD_NOT_CNT
+		               ,0 AS MIDDLE_NOT_CNT
+		               ,COUNT(*) AS MIDDLE_CNT
+		          FROM  top_rpt_head A
+		               ,(
+		                  SELECT  A.SUIM_RPT_NO
+		                         ,MAX(A.SITE_DATE) AS SITE_DATE
+		                    FROM  top_rpt_site_interim A
+		                   WHERE  1=1
+		                     AND  A.SITE_DATE > 0
+		                     AND  A.INTERIM_FLAG = 1
+		                  GROUP BY A.SUIM_RPT_NO
+		                ) B
+		         WHERE  1=1
+		           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		           AND  A.TEAM_ID = #{team_id}
+		           AND  B.SITE_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+		           AND  A.DEL_DATE > -1
+		           AND  A.SUIM_RPT_STATE IN(0, 1, 11)
+		        GROUP BY A.USER_NO
+		        ) GB
+		    ON  GA.USER_NO = GB.USER_NO
+		 WHERE  1=1
+		   AND  GA.TEAM_ID_MAIN = #{team_id}
+		   AND  GA.USER_STATE !=1
+		GROUP BY GA.USER_NO
+		ORDER BY GA.WORK_TYPE, GA.WORK_LEVEL DESC, GA.USER_NO ASC       
+    </select>
+
+	<select id="getNoSiteMngTmList" resultType="kr.co.toplac.topindividual.NoSiteMngCpstVO">
+		SELECT a.team_id_main team_id, z.team_name, a.user_no, a.user_name, b.miCnt
+				, e.siteCnt, IFNULL(b.miCnt,0) - IFNULL(e.siteCnt,0) miSiteCnt
+				, h.interimCnt, IFNULL(k.rptCnt2,0) - IFNULL(h.interimCnt,0) miInterimCnt
+		FROM top_mbr_bsc a
+				LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) miCnt
+								FROM top_rpt_head
+								WHERE team_id = #{tmNo} AND suim_rpt_state IN (0,1,11) AND del_date > -1
+								GROUP BY user_no) b
+				ON a.user_no = b.user_no
+				LEFT JOIN (SELECT c.user_no, COUNT(DISTINCT d.suim_rpt_no) siteCnt
+								FROM top_rpt_head c, top_rpt_site_interim d
+								WHERE c.suim_rpt_state IN (0,1,11) AND c.del_date > -1
+								AND c.suim_rpt_no = d.suim_rpt_no AND d.site_date > 0
+								GROUP BY c.user_no) e
+				ON a.user_no = e.user_no
+				LEFT JOIN (SELECT f.user_no, COUNT(DISTINCT g.suim_rpt_no) interimCnt
+								FROM top_rpt_head f, top_rpt_site_interim g
+								WHERE f.suim_rpt_state IN (0,1,11) AND f.del_date > -1
+								AND f.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+								AND f.suim_rpt_no = g.suim_rpt_no
+								AND g.interim_flag = 1 AND g.site_date > 0
+								GROUP BY f.user_no) h
+				ON a.user_no = h.user_no
+				LEFT JOIN (SELECT a.user_no, COUNT(a.suim_rpt_no) rptCnt2
+								FROM top_rpt_head a
+								WHERE a.suim_rpt_state IN (0,1,11)
+								AND a.del_date > -1
+								AND a.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+								GROUP BY a.user_no) k
+				ON a.user_no = k.user_no
+			, top_tm_bsc z
+		WHERE a.team_id_main = #{tmNo} AND a.user_state != 1
+		AND a.team_id_main = z.team_id
+		ORDER BY a.work_type, a.work_level DESC, a.user_name ASC
+	</select>
+
+	<select id="getNoSiteMngTmListOneInterim2CntByUser" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(a.suim_rpt_no)
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT d.suim_rpt_no, max(site_date) maxSiteDate
+							FROM top_rpt_head c, top_rpt_site_interim d
+							WHERE c.user_no = #{user_no} AND c.suim_rpt_state IN (0,1,11) AND c.del_date > -1
+							AND c.suim_rpt_no = d.suim_rpt_no
+							AND d.interim_flag = 1 AND d.site_date > 0
+							GROUP BY d.suim_rpt_no) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.user_no = #{user_no}
+		AND a.suim_rpt_state IN (0,1,11)
+		AND a.del_date > -1
+		AND e.suim_rpt_no IS NOT NULL
+		AND e.maxSiteDate  &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+	</select>
+
+	<select id="getNoSiteMngList_170210" resultType="kr.co.toplac.topindividual.NoSiteMngCpstVO">
+		SELECT b.team_type, a.team_id, b.team_name, COUNT(a.suim_rpt_no) miCnt
+				, e.siteCnt, COUNT(a.suim_rpt_no) - IFNULL(e.siteCnt,0) miSiteCnt
+				, h.interimCnt, COUNT(a.suim_rpt_no) - IFNULL(h.interimCnt,0) miInterimCnt, k.interim2Cnt
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT c.team_id, COUNT(DISTINCT d.suim_rpt_no) siteCnt
+								FROM top_rpt_head c, top_rpt_site_interim d
+								WHERE c.suim_rpt_state = 0
+								AND c.suim_rpt_no = d.suim_rpt_no
+								AND d.interim_flag = 0 AND d.site_date > 0
+								GROUP BY c.team_id) e
+				ON a.team_id = e.team_id
+				LEFT JOIN (SELECT f.team_id, COUNT(DISTINCT g.suim_rpt_no) interimCnt
+								FROM top_rpt_head f, top_rpt_site_interim g
+								WHERE f.suim_rpt_state = 0
+								AND f.suim_rpt_no = g.suim_rpt_no
+								AND g.interim_flag = 1 AND g.site_date > 0
+								GROUP BY f.team_id) h
+				ON a.team_id = h.team_id
+				LEFT JOIN (SELECT i.team_id, COUNT(DISTINCT j.suim_rpt_no) interim2Cnt
+								FROM top_rpt_head i, top_rpt_site_interim j
+								WHERE i.suim_rpt_state = 0
+								AND i.suim_rpt_no = j.suim_rpt_no
+								AND j.interim_flag = 1
+								AND (j.site_date > 0 AND j.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))
+								GROUP BY i.team_id) k
+				ON a.team_id = k.team_id
+			, top_tm_bsc b
+		WHERE a.suim_rpt_state = 0
+		AND a.team_id = b.team_id
+		GROUP BY a.team_id
+		ORDER BY b.team_order DESC, a.team_id ASC
+	</select>
+
+	<select id="getNoSiteMngTmList_170210" resultType="kr.co.toplac.topindividual.NoSiteMngCpstVO">
+		SELECT a.team_id_main team_id, z.team_name, a.user_no, a.user_name, b.miCnt
+				, e.siteCnt, b.miCnt - IFNULL(e.siteCnt,0) miSiteCnt
+				, h.interimCnt, b.miCnt - IFNULL(h.interimCnt,0) miInterimCnt, k.interim2Cnt
+		FROM top_mbr_bsc a
+				LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) miCnt
+								FROM top_rpt_head
+								WHERE suim_rpt_state = 0
+								GROUP BY user_no) b
+				ON a.user_no = b.user_no
+				LEFT JOIN (SELECT c.user_no, COUNT(DISTINCT d.suim_rpt_no) siteCnt
+								FROM top_rpt_head c, top_rpt_site_interim d
+								WHERE c.suim_rpt_state = 0
+								AND c.suim_rpt_no = d.suim_rpt_no
+								AND d.interim_flag = 0 AND d.site_date > 0
+								GROUP BY c.user_no) e
+				ON a.user_no = e.user_no
+				LEFT JOIN (SELECT f.user_no, COUNT(DISTINCT g.suim_rpt_no) interimCnt
+								FROM top_rpt_head f, top_rpt_site_interim g
+								WHERE f.suim_rpt_state = 0
+								AND f.suim_rpt_no = g.suim_rpt_no
+								AND g.interim_flag = 1 AND g.site_date > 0
+								GROUP BY f.user_no) h
+				ON a.user_no = h.user_no
+				LEFT JOIN (SELECT i.user_no, COUNT(DISTINCT j.suim_rpt_no) interim2Cnt
+								FROM top_rpt_head i, top_rpt_site_interim j
+								WHERE i.suim_rpt_state = 0
+								AND i.suim_rpt_no = j.suim_rpt_no
+								AND j.interim_flag = 1
+								AND (j.site_date > 0 AND j.site_date &lt; UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 month)))
+								GROUP BY i.user_no) k
+				ON a.user_no = k.user_no
+			, top_tm_bsc z
+		WHERE a.team_id_main = #{tmNo} AND a.user_state != 1
+		AND a.team_id_main = z.team_id
+		ORDER BY a.work_type, a.work_level DESC, a.user_name ASC
+	</select>
+
+	<select id="getKind4MiMngList" resultType="kr.co.toplac.topindividual.NoSiteMngCpstVO">
+		SELECT a.team_id, team.team_name, a.user_no, member.user_name
+				, COUNT(a.suim_rpt_no) miCnt
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT d.suim_rpt_no, SUM(LENGTH(d.now_memo)) now_memo_length
+								FROM top_rpt_head c, top_rpt_now d
+								WHERE c.suim_rpt_state IN (0,1,11) AND c.del_date > -1
+								AND (c.suim_rpt_type1 = 3 OR c.suim_rpt_type1 = 4)
+								AND c.suim_rpt_no = d.suim_rpt_no
+								GROUP BY d.suim_rpt_no) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+			, top_rpt_body b
+			, top_tm_bsc team
+			, top_mbr_bsc member
+		WHERE a.suim_rpt_state IN (0,1,11) AND a.del_date > -1
+		AND (a.suim_rpt_type1 = 3 OR a.suim_rpt_type1 = 4)
+		AND a.reg_date &lt;	(SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							FROM(SELECT holiday_date
+								FROM sysadm_holiday
+								WHERE holiday_code IN (2,3,4,5,6)
+								AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+								ORDER BY holiday_date DESC
+								LIMIT 0,3) tmp)
+		AND (e.now_memo_length is null OR e.now_memo_length &lt; 100)
+		AND a.suim_rpt_no = b.suim_rpt_no
+		AND a.team_id = team.team_id
+		AND a.user_no = member.user_no
+		AND member.user_state != 1
+		GROUP BY a.user_no
+		ORDER BY team.team_order DESC, team.team_id ASC
+	</select>
+
+</mapper>

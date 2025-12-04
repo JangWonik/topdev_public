@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MigRptCtrlUtilMapper">
+
+	<delete id="rptCtrlDeleteAll">
+		DELETE FROM top_rpt_ctrl
+	</delete>
+
+	<select id="forRptCtrlList" resultType = "kr.co.toplac.sysadm.migration.MigrationRptCtrlVO">
+		SELECT a.rid, replace(replace(a.e_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_body a, ls_report b
+		WHERE a.e_1_ch > 0
+		AND a.rid = b.rid
+		AND !(b.report_type2 = 16 and b.report_type in (3,4))
+		ORDER BY a.rid
+	</select>
+
+	<insert id="rptCtrlWrite" parameterType="kr.co.toplac.sysadm.migration.MigrationRptCtrlVO">
+		INSERT INTO top_rpt_ctrl (suim_rpt_no, control_date, control_subject, control_memo, reg_date)
+		VALUES(#{suim_rpt_no}, #{control_date}, #{control_subject}, #{control_memo}, UNIX_TIMESTAMP(NOW()))
+	</insert>
+
+	<update id="rptCtrlUpdateSpaceData1">
+		UPDATE top_rpt_ctrl SET control_date = ''
+		WHERE control_date = '-'
+		OR control_date = '--'
+	</update>
+
+	<update id="rptCtrlUpdateSpaceData2">
+		UPDATE top_rpt_ctrl SET control_subject = ''
+		WHERE control_subject = '-'
+		OR control_subject = '--'
+	</update>
+
+	<update id="rptCtrlUpdateSpaceData3">
+		UPDATE top_rpt_ctrl SET control_memo = ''
+		WHERE control_memo = '-'
+		OR control_memo = '--'
+	</update>
+
+	<delete id="rptCtrlDeleteSpaceData">
+		DELETE FROM top_rpt_ctrl
+		WHERE control_date = ''
+		AND control_subject = ''
+		AND control_memo = ''
+	</delete>
+
+	<update id="rptCtrlUpdateSpaceData4">
+		UPDATE top_rpt_ctrl SET control_date = LEFT(control_date,CHAR_LENGTH(control_date)-1)
+		WHERE RIGHT(control_date,1) = '-'
+	</update>
+
+	<update id="rptCtrlUpdateSpaceData5">
+		UPDATE top_rpt_ctrl SET control_memo = RIGHT(control_memo,CHAR_LENGTH(control_memo)-1)
+		WHERE LEFT(control_memo,1) = '-'
+	</update>
+
+	<update id="rptCtrlUpdateSpaceData6">
+		UPDATE top_rpt_ctrl SET control_subject = LEFT(control_subject,CHAR_LENGTH(control_subject)-1)
+		WHERE RIGHT(control_subject,1) = '-'
+	</update>
+
+	<update id="rptCtrlUpdateSpaceData7">
+		UPDATE top_rpt_ctrl SET control_subject = RIGHT(control_subject,CHAR_LENGTH(control_subject)-1)
+		WHERE LEFT(control_subject,1) = '-'
+	</update>
+
+	<delete id="rptCtrl16DeleteAll">
+		DELETE FROM top_rpt_ctrl
+	</delete>
+
+	<select id="forRptCtrl16List" resultType = "kr.co.toplac.sysadm.migration.MigrationRptCtrlVO">
+		SELECT a.rid, replace(replace(a.e_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_body a, ls_report b
+		WHERE a.e_1_ch > 0
+		AND a.rid = b.rid
+		AND (b.report_type2 = 16 and b.report_type in (3,4))
+		ORDER BY a.rid
+	</select>
+
+	<insert id="rptCtrl16Write" parameterType="kr.co.toplac.sysadm.migration.MigrationRptCtrlVO">
+		INSERT INTO top_rpt_ctrl (suim_rpt_no, control_date, control_memo
+									, control_who, control_relation, control_contact, reg_date)
+		VALUES(#{suim_rpt_no}, #{control_date}, #{control_memo}
+									, #{control_who}, #{control_relation}, #{control_contact}, UNIX_TIMESTAMP(NOW()))
+	</insert>
+
+	<update id="rptCtrl16UpdateSpaceData1">
+		UPDATE top_rpt_ctrl SET control_date = ''
+		WHERE control_date = '-'
+		OR control_date = '--'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData2">
+		UPDATE top_rpt_ctrl SET control_memo = ''
+		WHERE control_memo = '-'
+		OR control_memo = '--'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData3">
+		UPDATE top_rpt_ctrl SET control_who = ''
+		WHERE control_who = '-'
+		OR control_who = '--'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData4">
+		UPDATE top_rpt_ctrl SET control_relation = ''
+		WHERE control_relation = '-'
+		OR control_relation = '--'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData5">
+		UPDATE top_rpt_ctrl SET control_contact = ''
+		WHERE control_contact = '-'
+		OR control_contact = '--'
+	</update>
+
+	<delete id="rptCtrl16DeleteSpaceData">
+		DELETE FROM top_rpt_ctrl
+		WHERE control_date = ''
+		AND control_memo = ''
+		AND control_who = ''
+		AND control_relation = ''
+		AND control_contact = ''
+	</delete>
+
+	<update id="rptCtrl16UpdateSpaceData6">
+		UPDATE top_rpt_ctrl SET control_date = LEFT(control_date,CHAR_LENGTH(control_date)-1)
+		WHERE RIGHT(control_date,1) = '-'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData7">
+		UPDATE top_rpt_ctrl SET control_contact = RIGHT(control_contact,CHAR_LENGTH(control_contact)-1)
+		WHERE LEFT(control_contact,1) = '-'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData81">
+		UPDATE top_rpt_ctrl SET control_memo = LEFT(control_memo,CHAR_LENGTH(control_memo)-1)
+		WHERE RIGHT(control_memo,1) = '-'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData82">
+		UPDATE top_rpt_ctrl SET control_memo = RIGHT(control_memo,CHAR_LENGTH(control_memo)-1)
+		WHERE LEFT(control_memo,1) = '-'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData91">
+		UPDATE top_rpt_ctrl SET control_who = LEFT(control_who,CHAR_LENGTH(control_who)-1)
+		WHERE RIGHT(control_who,1) = '-'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData92">
+		UPDATE top_rpt_ctrl SET control_who = RIGHT(control_who,CHAR_LENGTH(control_who)-1)
+		WHERE LEFT(control_who,1) = '-'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData101">
+		UPDATE top_rpt_ctrl SET control_relation = LEFT(control_relation,CHAR_LENGTH(control_relation)-1)
+		WHERE RIGHT(control_relation,1) = '-'
+	</update>
+
+	<update id="rptCtrl16UpdateSpaceData102">
+		UPDATE top_rpt_ctrl SET control_relation = RIGHT(control_relation,CHAR_LENGTH(control_relation)-1)
+		WHERE LEFT(control_relation,1) = '-'
+	</update>
+
+</mapper>

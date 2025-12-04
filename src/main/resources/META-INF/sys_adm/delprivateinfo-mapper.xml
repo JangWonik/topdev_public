@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="DelPrivateInfoForCloseRpt"> 
+	
+	<update id = "updateRptForCloseOrCancel" parameterType="java.util.HashMap" >
+	
+		UPDATE 
+			top_rpt_head a , top_rpt_body b, top_rpt_invoice c
+		SET
+			a.suim_rpt_type2 = 0,
+			a.del_date = unix_timestamp(now()) ,
+			b.policyholder_ssn = '',
+			b.policyholder_tel = '',
+			b.beneficiary_ssn = '',
+			b.beneficiary_tel = '',
+			b.damaged_tel = '',
+			b.investigate_postcode = '',
+			b.investigate_addr1 = '',
+			b.investigate_addr2 = ''
+		WHERE
+			a.suim_rpt_no = b.suim_rpt_no
+			and a.suim_rpt_no = c.suim_rpt_no
+			and a.del_date = 0 
+			and a.ptnr_id = #{ptnrId}
+			and (DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) > #{delDate}
+				OR	
+				DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) > #{delDate})
+			and ( (a.close_date > 0 and DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(c.deposit_date), '%Y-%m-%d')) > #{delDate} ) );
+	
+			
+	</update>
+	
+	
+	<select id="getDelTargetRpt" parameterType="java.util.HashMap" resultType="String">
+	
+		SELECT
+		 	CONCAT(a.suim_rpt_no,'+',a.suim_rpt_type2) 
+		FROM
+			top_rpt_head a , top_rpt_body b, top_rpt_invoice c
+		WHERE
+			a.suim_rpt_no = b.suim_rpt_no
+			and a.suim_rpt_no = c.suim_rpt_no
+			and a.del_date = 0 
+			and a.ptnr_id = #{ptnrId}
+			and (DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) > #{delDate}
+				OR	
+				DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) > #{delDate})
+			and ( (a.close_date > 0 and DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(c.deposit_date), '%Y-%m-%d')) > #{delDate} ) );
+			
+	</select>
+	
+	<update id="updateRptCtl" parameterType="String" >
+	
+		UPDATE
+			top_rpt_ctrl
+		SET
+			control_date = '',
+			order_no = '' 
+		WHERE
+			suim_rpt_no = #{targetList}
+	</update>
+
+	<delete id ="delPrint" parameterType="java.util.HashMap" >
+	
+		DELETE FROM 
+			#{targetPrint}
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</delete>
+	
+	<select id="getDelSSJuckbuNo" parameterType="String">
+	
+		SELECT
+			suim_rpt_no
+		FROM
+			top_contract
+		WHERE
+			((lock_flag =1 and close_date > 0) or suim_cancel_date > 0 )
+			and reg_date &lt; unix_timestamp(#{firstDay})
+			and del_date = 0
+			
+	
+	</select>
+	
+	<update id = "udtSSjukbu" parameterType="String">
+	
+		UPDATE 
+			top_contract
+		SET 
+			policyholder_nm = '',
+			policyholder_hp = '',
+			ivstComName = '',
+			plcyNo = '',
+			entyDsgnNo = '',
+			pkgName = '',
+			agrmDate = '',
+			contractorName = '',
+			conHndPhoneNo = '',
+			conHomeTelNo = '',
+			bd1_a = '',
+			bd1_b = '',
+			bd1_c = '',
+			bd1_d = '',
+			bd1_e = '',
+			bd1_f = '',
+			bd1_g = '',
+			bd1_h = '',
+			bd1_i = '',
+			bd1_n = '',
+			bd2_a = '',
+			bd2_b = '',
+			bd2_c = '',
+			bd2_d = '',
+			bd2_e = '',
+			bd2_f = '',
+			bd2_g = '',
+			bd2_h = '',
+			bd2_i = '',
+			bd2_n = '',
+			bd3_a = '',
+			bd3_b = '',
+			bd3_c = '',
+			bd3_d = '',
+			bd3_e = '',
+			bd3_f = '',
+			bd3_g = '',
+			bd3_h = '',
+			bd3_i = '',
+			bd3_n = '',
+			memo_1 = '',
+			memo_2 = '',
+			clerkName = '',
+			clerkDeptName = '',
+			clerkSectName = '',
+			clerkOfcTelNo = '',
+			clerkHndPhoneNo = '',
+			b_1='',
+			b_2='',
+			b_3='',
+			c_1='',
+			c_2='',
+			c_3='',
+			c_4='',
+			c_5='',
+			c_6='',
+			c_7='',
+			c_8='',
+			c_9='',
+			c_10='',
+			d_1='',
+			d_2='',
+			d_3='',
+			d_4='',
+			d_5='',
+			d_6='',
+			d_7='',
+			d_8='',
+			d_9='',
+			d_10='',
+			d_11='',
+			d_12='',
+			d_13='',
+			d_14='',
+			d_15='',
+			d_16='',
+			d_17='',
+			d_18='',
+			d_19='',
+			d_20='',
+			d_21='',
+			del_date = unix_timestamp(now())
+			
+		WHERE
+			((lock_flag =1 and close_date > 0) or suim_cancel_date > 0 )
+			and reg_date &lt; unix_timestamp(#{firstDay})
+			and del_date = 0
+	
+	
+	</update>
+	
+	<delete id="delSSfile" parameterType="String">
+	
+		DELETE FROM
+			top_contract_file
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+	
+	<select id="getSSfileList" parameterType="String" resultType="kr.co.toplac.topsuit.SS.SuimSuit_18_FileVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName
+		FROM
+			top_contract_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+	
+	<update id="deljuk" parameterType="java.util.HashMap" >
+	
+		UPDATE
+			<if test="ptnrId == 10">
+				top_suitability_10
+			</if>
+			
+			<if test="ptnrId == 12">
+				top_suitability_12
+			</if>
+			
+		SET
+			<if test="ptnrId == 10">
+				policyholder_nm ='',
+				policyholder_hp ='',
+				plcyNo='',
+				entyDsgnNo='',
+				pkgName='',
+				agrmDate='',
+				contractorName='',
+				conHndPhoneNo='',
+				conHomeTelNo='',
+				conOfficeNo='',
+				hostName='',
+				hostHndPhoneNo='',
+				hostHomeTelNo='',
+				hostOfficeNo='',
+				hostContractor='',
+				buildingZipcode='',
+				buildingAddr='',
+				buildinginfo01='',
+				buildinginfo02='',
+				buildinginfo03='',
+				buildingMemo='',
+				clerkName='',
+				clerkName2='',
+				clerkDeptName='',
+				clerkSectName='',
+				clerkOfcTelNo='',
+				clerkHndPhoneNo='',
+				b_1='',
+				b_2='',
+				b_2_code='',
+				b_3='',
+				c_1='',
+				c_2='',
+				c_3='',
+				c_4='',
+				c_5='',
+				c_6='',
+				d_1='',
+				d_2='',
+				d_3='',
+				d_4='',
+				d_5='',
+				d_6='',
+				d_7='',
+				d_8='',
+				d_9='',
+				d_10='',
+				d_11='',
+				d_12='',
+				d_13='',
+				d_14='',
+				d_15='',
+				d_16='',
+				del_date= unix_timestamp(now())
+			</if>
+			<if test="ptnrId == 12">
+				policyholder_nm ='',
+				policyholder_hp ='',
+				rqTrsOrgcd='',
+				rstRcvOrgcd='',
+				rqRqFlgcd='',
+				rqDlFlgcd='',
+				rqPptyRqdt='',
+				rqPlno='',
+				rqRequSeqno='',
+				rqPlyno='',
+				rqGdcd='',
+				rqGdnm='',
+				rqPprDhOrgcd='',
+				rqPprDhOrgnm='',
+				rqDhOrgcd='',
+				rqDhOrgnm='',
+				rqDhOrgTlno='',
+				rqDhStfno='',
+				rqDhStfnm='',
+				rqDhStfTlno='',
+				rqUdChrOrgno='',
+				rqUdChrOrgnm='',
+				rqUdChrOrgTlno='',
+				rqUdChrOrgFxno='',
+				rqUdChrStfno='',
+				rqUdChrStfnm='',
+				rqCrtNm='',
+				rqCnrdt='',
+				rqCrtHomeTlno='',
+				rqCrtWpcTlno='',
+				rqCrtHndphTlno='',
+				rqBld_Lctno='',
+				rqBld_OjSeqno='',
+				rqBld_BldSeqno='',
+				rqBld_RlOwrNm='',
+				rqBld_CtnAdr='',
+				rqBld_MngmBnnm='',
+				rqBld_BldRnkcd='',
+				rqBld_Plenm='',
+				rqBld_Rofnm='',
+				rqBld_Wllnm='',
+				rqBld_Grod='',
+				rqBld_Undg='',
+				rqBld_Ttare='',
+				rqBld_IsAre='',
+				rqBld_IsTp='',
+				rqBld_BldXpnm='',
+				rqOj_OjSeqno='',
+				rqOj_BldSeqno='',
+				rqOj_OjSign='',
+				rqOj_OjTp='',
+				rqOj_Rnk='',
+				rqOj_Dt_Mtt='',
+				rqOj_Dt_AccptPlc='',
+				rqOj_AccptPlcFlgcd='',
+				rqOj_FldstObjFlgcd='',
+				rqOj_UndgAccptYn='',
+				rstBld_InvpsNm='',
+				rstBld_InvpsCntad='',
+				rstBld_RlOwrNmEtMtt='',
+				rstBld_CtnAdrEtMtt='',
+				rstBld_MngmBnnmEtMtt='',
+				rstBld_BldRnkcdEtMtt='',
+				rstBld_GrodEtMtt='',
+				rstBld_UndgEtMtt='',
+				rstBld_TtareEtMtt='',
+				rstBld_IsAreEtMtt='',
+				rstBld_IsTpEtMtt='',
+				rstBld_EtMtt1='',
+				rstBld_EtMtt2='',
+				rstOj_EtMtt='',
+				del_date = unix_timestamp(now())
+			</if>
+		WHERE
+			((lock_flag =1 and close_date > 0) or suim_cancel_date > 0 )
+			and reg_date &lt; (unix_timestamp(#{date}) + 86400 )
+			and del_date = 0
+	</update>
+	
+	<select id="getKBListForDel" parameterType="java.util.HashMap" resultType="String"> <!-- kr.co.toplac.topsuit.KB.SuimSuit_10_FileVO -->
+	
+		SELECT
+			suim_rpt_no
+		FROM
+			top_suitability_10
+		WHERE
+			((lock_flag =1 and close_date > 0) or suim_cancel_date > 0 )
+			and reg_date &lt; (unix_timestamp(#{date}) + 86400 )
+			and del_date = 0
+	
+	</select>
+	
+	
+	<select id="getKBFileListForDel" parameterType="String" resultType="kr.co.toplac.topsuit.KB.SuimSuit_10_FileVO"> <!--  -->
+	
+		SELECT
+			serial_no serialNo,
+			file_path filePath,
+			file_name fileName
+		FROM
+			top_suitability_10_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+	
+	<select id="getHanFileListForDel" parameterType="String" resultType="kr.co.toplac.topsuit12.SuimSuit12OrgFileVO"> <!--  -->
+	
+		SELECT
+			serial_no serialNo,
+			file_path filePath,
+			file_name fileName
+		FROM
+			top_suitability_12_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+	
+	<delete id="delKBfileData" parameterType="String" >
+	
+		DELETE FROM
+			top_suitability_10_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</delete>
+	
+	<delete id="delHanfileData" parameterType="String" >
+	
+		DELETE FROM
+			top_suitability_12_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</delete>
+	
+	<select id="getHanListForDel" parameterType="java.util.HashMap" resultType="String"> 
+	
+		SELECT
+			suim_rpt_no
+		FROM
+			top_suitability_12
+		WHERE
+			((lock_flag =1 and close_date > 0) or suim_cancel_date > 0 )
+			and reg_date &lt; (unix_timestamp(#{date}) + 86400 )
+			and del_date = 0
+	
+	</select>
+	
+	<delete id="delHanOjData" parameterType="String">
+	
+		DELETE FROM
+			top_suitability_12_oj
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</delete>
+	
+	<delete id="delHanBldData" parameterType="String">
+	
+		DELETE FROM
+			top_suitability_12_bld
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</delete>
+	
+
+</mapper>

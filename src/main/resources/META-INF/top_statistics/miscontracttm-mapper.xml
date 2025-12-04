@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisContractTmMapper">
+
+	<select id="getMisContractTm1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisContractVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(end_m_fail,0) end_m_fail, ifnull(end_y_fail,0) end_y_fail
+			, ifnull(end_m,0) + ifnull(end_m_fail,0) end_sum_m, ifnull(end_y,0) + ifnull(end_y_fail,0) end_sum_y
+			, ifnull(end_mi,0) end_mi
+			, ifnull(price_a,0) price_a, ifnull(price_b,0) price_b
+			, ifnull(price_a,0) + ifnull(price_b,0) price_sum
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=1 AND team_statistics1=0
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_contract
+						where suim_rpt_state!='3'
+						and reg_date >= unix_timestamp(#{viewFromDate})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_contract
+						where suim_rpt_state!='3'
+						and reg_date >= unix_timestamp(#{viewFromYear})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m
+						from top_contract
+						where report_1='01'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y
+						from top_contract
+						where report_1='01'
+						and close_date >= unix_timestamp(#{viewFromYear})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m_fail
+						from top_contract
+						where report_1!='01'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y_fail
+						from top_contract
+						where report_1!='01'
+						and close_date >= unix_timestamp(#{viewFromYear})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_mi
+						from top_contract
+						where suim_rpt_state &lt; 2
+						group by team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) * 30000 price_a
+						from top_contract
+						where report_1='01' and bd_type='1'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) h ON tmBsc.team_id = h.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) * 40000 price_b
+						from top_contract
+						where report_1='01' and bd_type='2'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) i ON tmBsc.team_id = i.team_id
+			ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+	<select id="getMisContractTm4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisContractVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(end_m_fail,0) end_m_fail, ifnull(end_y_fail,0) end_y_fail
+			, ifnull(end_m,0) + ifnull(end_m_fail,0) end_sum_m, ifnull(end_y,0) + ifnull(end_y_fail,0) end_sum_y
+			, ifnull(end_mi,0) end_mi
+			, ifnull(price_a,0) price_a, ifnull(price_b,0) price_b
+			, ifnull(price_a,0) + ifnull(price_b,0) price_sum
+		FROM
+			(SELECT team_order, team_group_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=4 AND team_statistics4=0
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_m
+						from top_contract
+						where suim_rpt_state!='3'
+						and reg_date >= unix_timestamp(#{viewFromDate})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) a ON tmBsc.team_id = a.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) reg_y
+						from top_contract
+						where suim_rpt_state!='3'
+						and reg_date >= unix_timestamp(#{viewFromYear})
+						and reg_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) b ON tmBsc.team_id = b.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m
+						from top_contract
+						where report_1='01'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) c ON tmBsc.team_id = c.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y
+						from top_contract
+						where report_1='01'
+						and close_date >= unix_timestamp(#{viewFromYear})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) d ON tmBsc.team_id = d.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_m_fail
+						from top_contract
+						where report_1!='01'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) e ON tmBsc.team_id = e.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_y_fail
+						from top_contract
+						where report_1!='01'
+						and close_date >= unix_timestamp(#{viewFromYear})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						group by team_id) f ON tmBsc.team_id = f.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) end_mi
+						from top_contract
+						where suim_rpt_state &lt; 2
+						group by team_id) g ON tmBsc.team_id = g.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) * 30000 price_a
+						from top_contract
+						where report_1='01' and bd_type='1'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) h ON tmBsc.team_id = h.team_id
+			LEFT JOIN (select team_id, count(suim_rpt_no) * 40000 price_b
+						from top_contract
+						where report_1='01' and bd_type='2'
+						and close_date >= unix_timestamp(#{viewFromDate})
+						and close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						group by team_id) i ON tmBsc.team_id = i.team_id
+			ORDER BY tmBsc.team_group_order DESC, tmBsc.team_order DESC
+	</select>
+
+</mapper>

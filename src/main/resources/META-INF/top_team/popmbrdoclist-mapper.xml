@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrDocList">
+
+	<select id="getMbrDocList" parameterType="String" resultType="kr.co.toplac.topindividual.TopMbrDocVO">
+		SELECT 
+			serial_no, doc_type, doc_title, doc_state, file_path, file_name, getCodeValue('top_mbr_doc', 'doc_type', doc_type) col_val 
+		  FROM 
+		  	top_mbr_doc
+		 WHERE 
+		 	user_no = #{user_no}
+		   AND 
+		   	doc_state != 9
+	</select>
+	
+	
+	<update id="uptMbrDocDelete" parameterType="int">
+		UPDATE top_mbr_doc
+		   SET doc_state = 9
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<update id="uptMbrDocConfirm" parameterType="String">
+		UPDATE top_mbr_doc
+		   SET doc_state = 1
+		 WHERE serial_no = #{serialNo}
+	</update>
+	
+	<!-- LOG -->
+	<insert id="insMbrDocLogDown" parameterType="java.util.HashMap">
+		INSERT INTO 
+			top_mbr_doc_log
+			(doc_no, doc_state, user_no, state_chg_date)
+		VALUES
+			(#{docNo},'6',#{userNo}, unix_timestamp(now()))
+	</insert>
+	<insert id="insMbrDocLogDelete" parameterType="java.util.HashMap">
+		INSERT INTO 
+			top_mbr_doc_log
+			(doc_no, doc_state, user_no, state_chg_date)
+		VALUES
+			(#{docNo},'9',#{userNo}, unix_timestamp(now()))
+	</insert>
+	
+</mapper>

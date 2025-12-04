@@ -1,0 +1,1293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisPtnrBsc">
+
+	<!-- 물보험 조사자 통계 -->
+	<select id="selectMisPtnrBsc1Main" parameterType="HashMap" resultType="kr.co.toplac.topstatistics.MisPtnrBscVO">
+		SELECT GA.PTNR_NICK
+			  ,GB.PTNR_ID
+			  ,GB.SUIM_M
+			  ,GB.SUIM_Y
+			  ,GB.CLOSE_M
+			  ,GB.CLOSE_Y
+			  ,GB.SUIM_MI
+			  ,GB.REPORT_EA_M
+			  ,GB.REPORT_EA_Y
+		      ,GB.INVO_BASIC
+		      ,GB.INVO_DAILY
+		      ,GB.INVO_TRAFFIC
+		      ,GB.INVO_COUNSEL
+		      ,GB.INVO_ETC
+		      ,GB.INVO_TOTAL
+		  FROM top_ptnr_bsc GA
+		  LEFT JOIN (
+			  			 SELECT PTNR_ID
+			  			       ,SUM(C.SUIM_M) SUIM_M
+			  			       ,SUM(C.SUIM_Y) AS SUIM_Y
+			  			       ,SUM(C.CLOSE_M) AS CLOSE_M
+			  			       ,SUM(C.REPORT_EA_M) AS REPORT_EA_M
+			  			       ,SUM(C.CLOSE_Y) AS CLOSE_Y
+			  			       ,SUM(C.REPORT_EA_Y) AS REPORT_EA_Y
+			  			       ,SUM(C.SUIM_MI) AS SUIM_MI
+			  			       ,SUM(C.INVO_BASIC) AS INVO_BASIC
+			  			       ,SUM(C.INVO_DAILY) AS INVO_DAILY
+			  			       ,SUM(C.INVO_TRAFFIC) AS INVO_TRAFFIC
+			  			       ,SUM(C.INVO_COUNSEL) AS INVO_COUNSEL
+			  			       ,SUM(C.INVO_ETC) AS INVO_ETC
+			  			       ,SUM(C.INVO_TOTAL) AS INVO_TOTAL
+			  			   FROM (
+			  			   		SELECT 0 AS PTNR_ID
+			  			   		      ,0 AS SUIM_M
+			  			   		      ,0 AS SUIM_Y
+			  			   		      ,0 AS CLOSE_M
+			  			   		      ,0 AS REPORT_EA_M
+			  			   		      ,0 AS CLOSE_Y
+			  			   		      ,0 AS REPORT_EA_Y
+			  			   		      ,0 AS SUIM_MI
+			  			   		      ,0 AS INVO_BASIC
+			  			   		      ,0 AS INVO_DAILY
+			  			   		      ,0 AS INVO_TRAFFIC
+			  			   		      ,0 AS INVO_COUNSEL
+			  			   		      ,0 AS INVO_ETC
+			  			   		      ,0 AS INVO_TOTAL
+			  			   		  FROM DUAL
+							<if test='basicYN == "Y"'>
+								<!-- 일반 - 수임현황 - 당월 -->
+			  			   		 UNION ALL
+								SELECT PTNR_ID
+			  			   		      ,COUNT(*) AS SUIM_M  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id   
+								<!-- 일반 - 수임현황 - 년누계 -->		                           	  			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id  			  			   
+								<!-- 일반 - 종결현황, 평가건수 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT ptnr_id
+			  			   		      ,0,0
+			  			   		      ,COUNT(SUIM_RPT_NO) AS CLOSE_M  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND CLOSE_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID    	
+								<!-- 일반 -  종결현황, 평가건수 - 년누계 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 미결현황 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_MI  
+			  			   		      ,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13)
+		                           AND SUIM_RPT_STATE NOT IN(2, 3)
+		                           AND B.TEAM_TYPE != 4		                            
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 인보이스 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0,0
+			  			   		      <!-- ,SUM(B.AMT_BASIC) AS INVO_BASIC -->
+			  			   		      ,SUM((B.AMT_BASIC+getCollaboApprovalAmt(A.SUIM_RPT_NO))) AS INVO_BASIC  
+			  			   		      ,SUM(B.AMT_DAILY) AS INVO_DAILY  
+			  			   		      ,SUM(B.AMT_TRAFFIC) AS INVO_TRAFFIC  
+			  			   		      ,SUM(B.AMT_COUNSEL) AS INVO_COUNSEL
+			  			   		      ,SUM(B.AMT_ETC) AS INVO_ETC
+			  			   		      ,SUM(B.AMT_TOTAL) AS INVO_TOTAL  
+								  FROM top_rpt_head A
+								 INNER JOIN top_rpt_invoice B
+								    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+								 INNER JOIN top_tm_bsc C
+								    ON A.TEAM_ID = C.TEAM_ID								   								    
+								 WHERE 1=1
+			  			   		   AND A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND C.TEAM_TYPE != 4	                            
+		                         GROUP BY PTNR_ID  	
+							</if>		                      
+							    
+							<if test='primYN == "Y"'>
+								<!-- 농작물 - 수임현황 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   		      ,COUNT(*) AS SUIM_M  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4 
+		                         GROUP BY ptnr_id   
+								<!-- 농작물 - 수임현황 - 년누계 -->		                           	  			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id  			  			   
+								<!-- 농작물 - 종결현황, 평가건수 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   		      ,0,0
+			  			   		      ,COUNT(SUIM_RPT_NO) AS CLOSE_M  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+								   AND B.TEAM_TYPE != 4		                           
+		                         GROUP BY PTNR_ID    	
+								<!-- 농작물 -  종결현황, 평가건수 - 년누계 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID  	
+								<!-- 농작물 - 미결현황 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_MI  
+			  			   		      ,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE NOT IN(2, 3)
+		                           AND B.TEAM_TYPE != 4		                            
+		                         GROUP BY PTNR_ID  	
+								<!-- 농작물 - 인보이스 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0,0
+			  			   		      ,SUM(B.AMT_BASIC) AS INVO_BASIC  
+			  			   		      ,SUM(B.AMT_DAILY) AS INVO_DAILY  
+			  			   		      ,SUM(B.AMT_TRAFFIC) AS INVO_TRAFFIC  
+			  			   		      ,SUM(B.AMT_COUNSEL) AS INVO_COUNSEL
+			  			   		      ,SUM(B.AMT_ETC) AS INVO_ETC
+			  			   		      ,SUM(B.AMT_TOTAL) AS INVO_TOTAL  
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_prim_biz_inv B
+								    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+								 INNER JOIN top_tm_bsc C
+								    ON A.TEAM_ID = C.TEAM_ID								   								    
+								 WHERE 1=1
+			  			   		   AND A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND A.SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})	        
+		                           AND C.TEAM_TYPE != 4                    
+		                         GROUP BY PTNR_ID  								
+							</if>		                          
+		  			  	   ) C
+	  			  	   GROUP BY PTNR_ID
+		  ) GB
+			ON GA.ptnr_id = GB.ptnr_id		  	
+		 WHERE ptnr_level='1' 
+		   AND statistics_yn='1' 
+		 ORDER BY GA.statistics_order ASC, GA.ptnr_order DESC, GA.ptnr_id ASC
+	</select>
+	
+	<!-- 물보험 서면심사 팀의 보험사 아이디 목록 가져오기 -->
+	<select id="selectWrittenPtnrIdList" resultType="HashMap">
+		SELECT 
+			written_ptnr_id as ptnr_id
+		FROM top_tm_bsc 
+		WHERE team_written = 1
+		AND written_ptnr_id != 0
+	</select>
+	
+	<!-- 팀 보험사 지정(인사 통계용) 목록 가져오기-->
+	<select id="selectTeamPtnrList" resultType="HashMap">
+		SELECT
+			ptnr_id
+			,ptnr_nick
+			,ptnr_name	
+		FROM top_ptnr_bsc
+		WHERE ptnr_level = 1 
+		   AND statistics_yn = 1
+		   AND del_state = 0
+		 ORDER BY ptnr_order DESC, ptnr_id ASC	
+	</select>
+	
+	<!-- 물보험 심사용 보험사 목록 -->
+	<select id="selectWrittenPtnrInfo" resultType="HashMap">
+		SELECT
+			ptnr_id
+			,ptnr_nick
+			,ptnr_name	
+		FROM top_ptnr_bsc
+		WHERE ptnr_level = 1 
+		   AND statistics_yn = 1 
+		   AND statistics_written_yn = 1
+		   AND del_state = 0
+		 ORDER BY ptnr_order DESC, ptnr_id ASC
+	</select>
+	
+	<!-- 물보험 심사자 통계 -->
+	<select id="selectMisPtnrBsc1Written" parameterType="HashMap" resultType="kr.co.toplac.topstatistics.MisPtnrBscVO">
+		SELECT GA.PTNR_NICK
+			  ,GB.PTNR_ID
+			  ,GB.SUIM_M
+			  ,GB.SUIM_Y
+			  ,GB.CLOSE_M
+			  ,GB.CLOSE_Y
+			  ,GB.SUIM_MI
+			  ,GB.REPORT_EA_M
+			  ,GB.REPORT_EA_Y
+		      ,GB.INVO_BASIC
+		      ,GB.INVO_DAILY
+		      ,GB.INVO_TRAFFIC
+		      ,GB.INVO_COUNSEL
+		      ,GB.INVO_ETC
+		      ,GB.INVO_TOTAL
+		  FROM top_ptnr_bsc GA
+		  LEFT JOIN (
+			  			 SELECT PTNR_ID
+			  			       ,SUM(C.SUIM_M) SUIM_M
+			  			       ,SUM(C.SUIM_Y) AS SUIM_Y
+			  			       ,SUM(C.CLOSE_M) AS CLOSE_M
+			  			       ,SUM(C.REPORT_EA_M) AS REPORT_EA_M
+			  			       ,SUM(C.CLOSE_Y) AS CLOSE_Y
+			  			       ,SUM(C.REPORT_EA_Y) AS REPORT_EA_Y
+			  			       ,SUM(C.SUIM_MI) AS SUIM_MI
+			  			       ,SUM(C.INVO_BASIC) AS INVO_BASIC
+			  			       ,SUM(C.INVO_DAILY) AS INVO_DAILY
+			  			       ,SUM(C.INVO_TRAFFIC) AS INVO_TRAFFIC
+			  			       ,SUM(C.INVO_COUNSEL) AS INVO_COUNSEL
+			  			       ,SUM(C.INVO_ETC) AS INVO_ETC
+			  			       ,SUM(C.INVO_TOTAL) AS INVO_TOTAL
+			  			   FROM (
+			  			   		SELECT 0 AS PTNR_ID
+			  			   		      ,0 AS SUIM_M
+			  			   		      ,0 AS SUIM_Y
+			  			   		      ,0 AS CLOSE_M
+			  			   		      ,0 AS REPORT_EA_M
+			  			   		      ,0 AS CLOSE_Y
+			  			   		      ,0 AS REPORT_EA_Y
+			  			   		      ,0 AS SUIM_MI
+			  			   		      ,0 AS INVO_BASIC
+			  			   		      ,0 AS INVO_DAILY
+			  			   		      ,0 AS INVO_TRAFFIC
+			  			   		      ,0 AS INVO_COUNSEL
+			  			   		      ,0 AS INVO_ETC
+			  			   		      ,0 AS INVO_TOTAL
+			  			   		  FROM DUAL
+							<if test='basicYN == "Y"'>
+								<!-- 일반 - 수임현황 - 당월 -->
+			  			   		 UNION ALL
+								SELECT PTNR_ID
+			  			   		      ,COUNT(*) AS SUIM_M  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id   
+								<!-- 일반 - 수임현황 - 년누계 -->		                           	  			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id  			  			   
+								<!-- 일반 - 종결현황, 평가건수 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT ptnr_id
+			  			   		      ,0,0
+			  			   		      ,COUNT(SUIM_RPT_NO) AS CLOSE_M  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND CLOSE_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID    	
+								<!-- 일반 -  종결현황, 평가건수 - 년누계 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 미결현황 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_MI  
+			  			   		      ,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE NOT IN(2, 3)
+		                           AND B.TEAM_TYPE != 4		                            
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 인보이스 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0,0
+			  			   		      ,SUM(B.AMT_BASIC) AS INVO_BASIC  
+			  			   		      ,SUM(B.AMT_DAILY) AS INVO_DAILY  
+			  			   		      ,SUM(B.AMT_TRAFFIC) AS INVO_TRAFFIC  
+			  			   		      ,SUM(B.AMT_COUNSEL) AS INVO_COUNSEL
+			  			   		      ,SUM(B.AMT_ETC) AS INVO_ETC
+			  			   		      ,SUM(B.AMT_TOTAL) AS INVO_TOTAL  
+								  FROM top_rpt_head A
+								 INNER JOIN top_rpt_invoice B
+								    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+								 INNER JOIN top_tm_bsc C
+								    ON A.TEAM_ID = C.TEAM_ID								   								    
+								 WHERE 1=1
+			  			   		   AND A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND A.SUIM_RPT_TYPE1 IN(14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND C.TEAM_TYPE != 4	                            
+		                         GROUP BY PTNR_ID  	
+							</if>								                          
+		  			  	   ) C
+	  			  	   GROUP BY PTNR_ID
+		  ) GB
+			ON GA.ptnr_id = GB.ptnr_id		  	
+		 WHERE ptnr_level='1' 
+		   AND statistics_yn='1' 
+		   AND statistics_written_yn='1'
+		 ORDER BY GA.statistics_order ASC, GA.ptnr_order DESC, GA.ptnr_id ASC
+	</select>
+
+	<select id="selectMisPtnrBsc1" parameterType="HashMap" resultType="kr.co.toplac.topstatistics.MisPtnrBscVO">
+		SELECT GA.PTNR_NICK
+			  ,GB.PTNR_ID
+			  ,GB.SUIM_M
+			  ,GB.SUIM_Y
+			  ,GB.CLOSE_M
+			  ,GB.CLOSE_Y
+			  ,GB.SUIM_MI
+			  ,GB.REPORT_EA_M
+			  ,GB.REPORT_EA_Y
+		      ,GB.INVO_BASIC
+		      ,GB.INVO_DAILY
+		      ,GB.INVO_TRAFFIC
+		      ,GB.INVO_COUNSEL
+		      ,GB.INVO_ETC
+		      ,GB.INVO_TOTAL
+		  FROM top_ptnr_bsc GA
+		  LEFT JOIN (
+			  			 SELECT PTNR_ID
+			  			       ,SUM(C.SUIM_M) SUIM_M
+			  			       ,SUM(C.SUIM_Y) AS SUIM_Y
+			  			       ,SUM(C.CLOSE_M) AS CLOSE_M
+			  			       ,SUM(C.REPORT_EA_M) AS REPORT_EA_M
+			  			       ,SUM(C.CLOSE_Y) AS CLOSE_Y
+			  			       ,SUM(C.REPORT_EA_Y) AS REPORT_EA_Y
+			  			       ,SUM(C.SUIM_MI) AS SUIM_MI
+			  			       ,SUM(C.INVO_BASIC) AS INVO_BASIC
+			  			       ,SUM(C.INVO_DAILY) AS INVO_DAILY
+			  			       ,SUM(C.INVO_TRAFFIC) AS INVO_TRAFFIC
+			  			       ,SUM(C.INVO_COUNSEL) AS INVO_COUNSEL
+			  			       ,SUM(C.INVO_ETC) AS INVO_ETC
+			  			       ,SUM(C.INVO_TOTAL) AS INVO_TOTAL
+			  			   FROM (
+			  			   		SELECT 0 AS PTNR_ID
+			  			   		      ,0 AS SUIM_M
+			  			   		      ,0 AS SUIM_Y
+			  			   		      ,0 AS CLOSE_M
+			  			   		      ,0 AS REPORT_EA_M
+			  			   		      ,0 AS CLOSE_Y
+			  			   		      ,0 AS REPORT_EA_Y
+			  			   		      ,0 AS SUIM_MI
+			  			   		      ,0 AS INVO_BASIC
+			  			   		      ,0 AS INVO_DAILY
+			  			   		      ,0 AS INVO_TRAFFIC
+			  			   		      ,0 AS INVO_COUNSEL
+			  			   		      ,0 AS INVO_ETC
+			  			   		      ,0 AS INVO_TOTAL
+			  			   		  FROM DUAL
+							<if test='basicYN == "Y"'>
+								<!-- 일반 - 수임현황 - 당월 -->
+			  			   		 UNION ALL
+								SELECT PTNR_ID
+			  			   		      ,COUNT(*) AS SUIM_M  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id   
+								<!-- 일반 - 수임현황 - 년누계 -->		                           	  			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id  			  			   
+								<!-- 일반 - 종결현황, 평가건수 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT ptnr_id
+			  			   		      ,0,0
+			  			   		      ,COUNT(SUIM_RPT_NO) AS CLOSE_M  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND CLOSE_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID    	
+								<!-- 일반 -  종결현황, 평가건수 - 년누계 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 미결현황 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_MI  
+			  			   		      ,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE NOT IN(2, 3)
+		                           AND B.TEAM_TYPE != 4		                            
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 인보이스 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0,0
+			  			   		      ,SUM(B.AMT_BASIC) AS INVO_BASIC  
+			  			   		      ,SUM(B.AMT_DAILY) AS INVO_DAILY  
+			  			   		      ,SUM(B.AMT_TRAFFIC) AS INVO_TRAFFIC  
+			  			   		      ,SUM(B.AMT_COUNSEL) AS INVO_COUNSEL
+			  			   		      ,SUM(B.AMT_ETC) AS INVO_ETC
+			  			   		      ,SUM(B.AMT_TOTAL) AS INVO_TOTAL  
+								  FROM top_rpt_head A
+								 INNER JOIN top_rpt_invoice B
+								    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+								 INNER JOIN top_tm_bsc C
+								    ON A.TEAM_ID = C.TEAM_ID								   								    
+								 WHERE 1=1
+			  			   		   AND A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+		                           AND SUIM_RPT_STATE != 3
+		                           AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND C.TEAM_TYPE != 4	                            
+		                         GROUP BY PTNR_ID  	
+							</if>		                      
+							    
+							<if test='primYN == "Y"'>
+								<!-- 농작물 - 수임현황 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   		      ,COUNT(*) AS SUIM_M  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE != 4 
+		                         GROUP BY ptnr_id   
+								<!-- 농작물 - 수임현황 - 년누계 -->		                           	  			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY ptnr_id  			  			   
+								<!-- 농작물 - 종결현황, 평가건수 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   		      ,0,0
+			  			   		      ,COUNT(SUIM_RPT_NO) AS CLOSE_M  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+								   AND B.TEAM_TYPE != 4		                           
+		                         GROUP BY PTNR_ID    	
+								<!-- 농작물 -  종결현황, 평가건수 - 년누계 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE != 4
+		                         GROUP BY PTNR_ID  	
+								<!-- 농작물 - 미결현황 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_MI  
+			  			   		      ,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE NOT IN(2, 3)
+		                           AND B.TEAM_TYPE != 4		                            
+		                         GROUP BY PTNR_ID  	
+								<!-- 농작물 - 인보이스 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0,0
+			  			   		      ,SUM(B.AMT_BASIC) AS INVO_BASIC  
+			  			   		      ,SUM(B.AMT_DAILY) AS INVO_DAILY  
+			  			   		      ,SUM(B.AMT_TRAFFIC) AS INVO_TRAFFIC  
+			  			   		      ,SUM(B.AMT_COUNSEL) AS INVO_COUNSEL
+			  			   		      ,SUM(B.AMT_ETC) AS INVO_ETC
+			  			   		      ,SUM(B.AMT_TOTAL) AS INVO_TOTAL  
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_prim_biz_inv B
+								    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+								 INNER JOIN top_tm_bsc C
+								    ON A.TEAM_ID = C.TEAM_ID								   								    
+								 WHERE 1=1
+			  			   		   AND A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND A.SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})	        
+		                           AND C.TEAM_TYPE != 4                    
+		                         GROUP BY PTNR_ID  								
+							</if>		                          
+		  			  	   ) C
+	  			  	   GROUP BY PTNR_ID
+		  ) GB
+			ON GA.ptnr_id = GB.ptnr_id		  	
+		 WHERE ptnr_level='1' 
+		   AND statistics_yn='1' 
+		 ORDER BY GA.ptnr_order DESC, GA.ptnr_id ASC
+	</select>
+
+
+	<select id="selectMisPtnrBsc4" parameterType="HashMap" resultType="kr.co.toplac.topstatistics.MisPtnrBscVO">
+		SELECT GA.PTNR_NICK
+			  ,GB.PTNR_ID
+			  ,GB.SUIM_M
+			  ,GB.SUIM_Y
+			  ,GB.CLOSE_M
+			  ,GB.CLOSE_Y
+			  ,GB.SUIM_MI
+			  ,GB.REPORT_EA_M
+			  ,GB.REPORT_EA_Y
+		      ,GB.INVO_BASIC
+		      ,GB.INVO_DAILY
+		      ,GB.INVO_TRAFFIC
+		      ,GB.INVO_COUNSEL
+		      ,GB.INVO_ETC
+		      ,GB.INVO_TOTAL
+		  FROM top_ptnr_bsc GA
+		  LEFT JOIN (
+			  			 SELECT PTNR_ID
+			  			       ,SUM(C.SUIM_M) SUIM_M
+			  			       ,SUM(C.SUIM_Y) AS SUIM_Y
+			  			       ,SUM(C.CLOSE_M) AS CLOSE_M
+			  			       ,SUM(C.REPORT_EA_M) AS REPORT_EA_M
+			  			       ,SUM(C.CLOSE_Y) AS CLOSE_Y
+			  			       ,SUM(C.REPORT_EA_Y) AS REPORT_EA_Y
+			  			       ,SUM(C.SUIM_MI) AS SUIM_MI
+			  			       ,SUM(C.INVO_BASIC) AS INVO_BASIC
+			  			       ,SUM(C.INVO_DAILY) AS INVO_DAILY
+			  			       ,SUM(C.INVO_TRAFFIC) AS INVO_TRAFFIC
+			  			       ,SUM(C.INVO_COUNSEL) AS INVO_COUNSEL
+			  			       ,SUM(C.INVO_ETC) AS INVO_ETC
+			  			       ,SUM(C.INVO_TOTAL) AS INVO_TOTAL
+			  			   FROM (
+			  			   		SELECT 0 AS PTNR_ID
+			  			   		      ,0 AS SUIM_M
+			  			   		      ,0 AS SUIM_Y
+			  			   		      ,0 AS CLOSE_M
+			  			   		      ,0 AS REPORT_EA_M
+			  			   		      ,0 AS CLOSE_Y
+			  			   		      ,0 AS REPORT_EA_Y
+			  			   		      ,0 AS SUIM_MI
+			  			   		      ,0 AS INVO_BASIC
+			  			   		      ,0 AS INVO_DAILY
+			  			   		      ,0 AS INVO_TRAFFIC
+			  			   		      ,0 AS INVO_COUNSEL
+			  			   		      ,0 AS INVO_ETC
+			  			   		      ,0 AS INVO_TOTAL
+			  			   		  FROM DUAL
+							<if test='basicYN == "Y"'>
+								<!-- 일반 - 수임현황 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   		      ,COUNT(*) AS SUIM_M  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN( 3, 4 )
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE = 4
+		                         GROUP BY ptnr_id   
+								<!-- 일반 - 수임현황 - 년누계 -->		                           	  			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								   ON A.TEAM_ID = B.TEAM_ID								   								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN( 3, 4 )
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE = 4
+		                         GROUP BY ptnr_id  			  			   
+								<!-- 일반 - 종결현황, 평가건수 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT ptnr_id
+			  			   		      ,0,0
+			  			   		      ,COUNT(SUIM_RPT_NO) AS CLOSE_M  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID								   								    
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN( 3, 4 )
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND CLOSE_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE = 4
+		                         GROUP BY PTNR_ID    	
+								<!-- 일반 -  종결현황, 평가건수 - 년누계 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID										  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN( 3, 4 )
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE = 4
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 미결현황 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_MI  
+			  			   		      ,0,0,0,0,0,0
+								  FROM top_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID										   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 IN( 3, 4 )
+		                           AND SUIM_RPT_STATE NOT IN(2, 3)
+		                           AND TEAM_TYPE = 4		                            
+		                         GROUP BY PTNR_ID  	
+								<!-- 일반 - 인보이스 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0,0
+			  			   		      ,SUM(B.AMT_BASIC) AS INVO_BASIC  
+			  			   		      ,SUM(B.AMT_DAILY) AS INVO_DAILY  
+			  			   		      ,SUM(B.AMT_TRAFFIC) AS INVO_TRAFFIC  
+			  			   		      ,SUM(B.AMT_COUNSEL) AS INVO_COUNSEL
+			  			   		      ,SUM(B.AMT_ETC) AS INVO_ETC
+			  			   		      ,SUM(B.AMT_TOTAL) AS INVO_TOTAL  
+								  FROM top_rpt_head A
+								 INNER JOIN top_rpt_invoice B
+								    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+								 INNER JOIN top_tm_bsc C
+								    ON A.TEAM_ID = C.TEAM_ID										    
+								 WHERE 1=1
+			  			   		   AND A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND SUIM_RPT_TYPE1 IN( 3, 4 )
+		                           AND SUIM_RPT_STATE != 3
+		                           AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND C.TEAM_TYPE = 4	                            
+		                         GROUP BY PTNR_ID  	
+							</if>		                      
+							    
+							<if test='primYN == "Y"'>
+								<!-- 농작물 - 수임현황 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   		      ,COUNT(*) AS SUIM_M  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID										  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE = 4
+		                         GROUP BY ptnr_id   
+								<!-- 농작물 - 수임현황 - 년누계 -->		                           	  			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,0,0,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID		 								   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND REG_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND REG_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE = 4
+		                          GROUP BY ptnr_id  			  			   
+								<!-- 농작물 - 종결현황, 평가건수 - 당월 -->
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   		      ,0,0
+			  			   		      ,COUNT(SUIM_RPT_NO) AS CLOSE_M  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A 
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID										  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND CLOSE_DATE &lt;  UNIX_TIMESTAMP(#{endDe})
+		                           AND B.TEAM_TYPE = 4
+		                         GROUP BY PTNR_ID    	
+								<!-- 농작물 -  종결현황, 평가건수 - 년누계 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_Y  
+			  			   		      ,SUM(SUIM_RPT_EA) AS REPORT_EA_M
+			  			   		      ,0,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID										   
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnYearDe})
+		                           AND CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endYearDe})
+		                           AND B.TEAM_TYPE = 4
+		                         GROUP BY PTNR_ID  	
+								<!-- 농작물 - 미결현황 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0
+			  			   		      ,COUNT(*) AS SUIM_MI  
+			  			   		      ,0,0,0,0,0,0
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_tm_bsc B
+								    ON A.TEAM_ID = B.TEAM_ID										  
+								 WHERE 1=1
+		                           AND SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE NOT IN(2, 3)
+		                           AND B.TEAM_TYPE = 4		                            
+		                         GROUP BY PTNR_ID  	
+								<!-- 농작물 - 인보이스 -->		                            			   
+			  			   		 UNION ALL
+			  			   		SELECT PTNR_ID
+			  			   			  ,0,0,0,0,0,0,0
+			  			   		      ,SUM(B.AMT_BASIC) AS INVO_BASIC  
+			  			   		      ,SUM(B.AMT_DAILY) AS INVO_DAILY  
+			  			   		      ,SUM(B.AMT_TRAFFIC) AS INVO_TRAFFIC  
+			  			   		      ,SUM(B.AMT_COUNSEL) AS INVO_COUNSEL
+			  			   		      ,SUM(B.AMT_ETC) AS INVO_ETC
+			  			   		      ,SUM(B.AMT_TOTAL) AS INVO_TOTAL  
+								  FROM top_prim_biz_rpt_head A
+								 INNER JOIN top_prim_biz_inv B
+								    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+								 INNER JOIN top_tm_bsc C
+								    ON A.TEAM_ID = C.TEAM_ID										    
+								 WHERE 1=1
+			  			   		   AND A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND A.SUIM_RPT_TYPE1 = 5
+		                           AND SUIM_RPT_STATE != 3
+		                           AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{bgnDe})
+		                           AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+		                           AND C.TEAM_TYPE = 4	                            
+		                         GROUP BY PTNR_ID  								
+							</if>		                          
+		  			  	   ) C
+	  			  	   GROUP BY PTNR_ID
+		  ) GB
+			ON GA.ptnr_id = GB.ptnr_id		  	
+		 WHERE ptnr_level='1' 
+		   AND statistics_yn='1' 
+		 ORDER BY GA.statistics_order ASC, GA.ptnr_order DESC, GA.ptnr_id ASC
+	</select>
+
+
+
+	<select id="getMisPtnrBsc1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisPtnrBscVO">
+		SELECT ptnr_nick, tmPtnr.ptnr_id, suim_m, suim_y, close_m, close_y, suim_mi, report_ea_m, report_ea_y
+		      ,invo_basic, invo_daily, invo_traffic, invo_counsel, invo_etc
+		  FROM
+			(SELECT ptnr_id, ptnr_nick 
+				FROM top_ptnr_bsc 
+	   	  	   WHERE ptnr_level='1' 
+			     AND statistics_yn='1' 
+			   ORDER BY ptnr_order DESC, ptnr_id ASC) tmPtnr
+		  <!-- 수임현황 - 당월 -->
+		  LEFT JOIN (SELECT ptnr_id, count(*) suim_m
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND reg_date >= unix_timestamp(#{viewFromDate}) 
+						AND reg_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day)) 
+						AND suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)
+					  GROUP BY ptnr_id ) a1
+			ON tmPtnr.ptnr_id = a1.ptnr_id
+		  <!-- 수임현황 - 년누계 -->
+		  LEFT JOIN (SELECT ptnr_id, count(*) suim_y
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND reg_date >= unix_timestamp(#{viewFromYear}) 
+						AND reg_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day)) 
+						AND suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a2
+			ON tmPtnr.ptnr_id = a2.ptnr_id			
+		  <!-- 종결현황 - 당월 -->
+		  LEFT JOIN (SELECT ptnr_id, count(*) close_m
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromDate}) 
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a3
+			ON tmPtnr.ptnr_id = a3.ptnr_id		
+		  <!-- 종결현황 - 년누계 -->			
+		  LEFT JOIN (SELECT ptnr_id, count(*) close_y
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromYear})
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day)) 
+						AND suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a4
+			ON tmPtnr.ptnr_id = a4.ptnr_id			
+		  <!-- 미결현황 - 절대건수 -->			
+		  LEFT JOIN (SELECT ptnr_id, count(*) suim_mi
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND suim_rpt_state != '2' 
+					    AND suim_rpt_state != '3'
+						AND suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a5
+			ON tmPtnr.ptnr_id = a5.ptnr_id					
+		  <!-- 종결평가 - 당월 -->			
+		  LEFT JOIN (SELECT ptnr_id, sum(suim_rpt_ea) report_ea_m
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromDate}) 
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a6
+			ON tmPtnr.ptnr_id = a6.ptnr_id		
+		  <!-- 종결평가 - 년누계 -->			
+		  LEFT JOIN (SELECT ptnr_id, sum(suim_rpt_ea) report_ea_y
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromYear}) 
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a7
+			ON tmPtnr.ptnr_id = a7.ptnr_id			
+		  <!-- 인보이스 - 기본료 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_basic) invo_basic
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND a.suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a8
+			ON tmPtnr.ptnr_id = a8.ptnr_id							
+		  <!-- 인보이스 - 일비 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_daily) invo_daily
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND a.suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a9
+			ON tmPtnr.ptnr_id = a9.ptnr_id			
+		  <!-- 인보이스 - 교통비 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_traffic) invo_traffic
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND a.suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a10
+			ON tmPtnr.ptnr_id = a10.ptnr_id	
+		  <!-- 인보이스 - 자문료 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_counsel) invo_counsel
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND a.suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a11
+			ON tmPtnr.ptnr_id = a11.ptnr_id				
+		  <!-- 인보이스 - 기타 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_etc) invo_etc
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND a.suim_rpt_type1 in ("1","2","11","12","13","14")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a12
+			ON tmPtnr.ptnr_id = a12.ptnr_id					
+	</select>
+	
+	
+	<select id="getMisPtnrBsc4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisPtnrBscVO">
+		SELECT ptnr_nick, tmPtnr.ptnr_id, suim_m, suim_y, close_m, close_y, suim_mi, report_ea_m, report_ea_y
+		      ,invo_basic, invo_daily, invo_traffic, invo_counsel, invo_etc
+		  FROM
+			(SELECT ptnr_id, ptnr_nick 
+				FROM top_ptnr_bsc 
+	   	  	   WHERE ptnr_level='1' 
+			     AND statistics_yn='1' 
+			   ORDER BY ptnr_order DESC, ptnr_id ASC) tmPtnr
+		  <!-- 수임현황 - 당월 -->
+		  LEFT JOIN (SELECT ptnr_id, count(*) suim_m
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND reg_date >= unix_timestamp(#{viewFromDate}) 
+						AND reg_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day)) 
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a1
+			ON tmPtnr.ptnr_id = a1.ptnr_id
+		  <!-- 수임현황 - 년누계 -->
+		  LEFT JOIN (SELECT ptnr_id, count(*) suim_y
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND reg_date >= unix_timestamp(#{viewFromYear}) 
+						AND reg_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day)) 
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a2
+			ON tmPtnr.ptnr_id = a2.ptnr_id			
+		  <!-- 종결현황 - 당월 -->
+		  LEFT JOIN (SELECT ptnr_id, count(*) close_m
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromDate}) 
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a3
+			ON tmPtnr.ptnr_id = a3.ptnr_id		
+		  <!-- 종결현황 - 년누계 -->			
+		  LEFT JOIN (SELECT ptnr_id, count(*) close_y
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromYear})
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day)) 
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a4
+			ON tmPtnr.ptnr_id = a4.ptnr_id			
+		  <!-- 미결현황 - 절대건수 -->			
+		  LEFT JOIN (SELECT ptnr_id, count(*) suim_mi
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND suim_rpt_state != '2' 
+					    AND suim_rpt_state != '3'
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a5
+			ON tmPtnr.ptnr_id = a5.ptnr_id					
+		  <!-- 종결평가 - 당월 -->			
+		  LEFT JOIN (SELECT ptnr_id, sum(suim_rpt_ea) report_ea_m
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromDate}) 
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a6
+			ON tmPtnr.ptnr_id = a6.ptnr_id		
+		  <!-- 종결평가 - 년누계 -->			
+		  LEFT JOIN (SELECT ptnr_id, sum(suim_rpt_ea) report_ea_y
+					   FROM top_rpt_head 
+					  WHERE 1=1
+					    AND close_date >= unix_timestamp(#{viewFromYear}) 
+						AND close_date &lt; unix_timestamp(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY ptnr_id ) a7
+			ON tmPtnr.ptnr_id = a7.ptnr_id			
+		  <!-- 인보이스 - 기본료 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_basic) invo_basic
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a8
+			ON tmPtnr.ptnr_id = a8.ptnr_id							
+		  <!-- 인보이스 - 일비 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_daily) invo_daily
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a9
+			ON tmPtnr.ptnr_id = a9.ptnr_id			
+		  <!-- 인보이스 - 교통비 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_traffic) invo_traffic
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a10
+			ON tmPtnr.ptnr_id = a10.ptnr_id	
+		  <!-- 인보이스 - 자문료 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_counsel) invo_counsel
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a11
+			ON tmPtnr.ptnr_id = a11.ptnr_id				
+		  <!-- 인보이스 - 기타 -->			
+		  LEFT JOIN (SELECT a.ptnr_id, sum(b.amt_etc) invo_etc
+					   FROM top_rpt_head a
+					  INNER JOIN top_rpt_invoice b
+					     ON a.suim_rpt_no = b.suim_rpt_no
+					  WHERE 1=1
+					    AND a.close_date >= unix_timestamp(#{viewFromDate}) 
+						AND a.close_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						AND suim_rpt_type1 in ("3","4")
+						AND suim_rpt_state NOT IN (3,31,32,33)						
+					  GROUP BY a.ptnr_id ) a12
+			ON tmPtnr.ptnr_id = a12.ptnr_id					
+	</select>
+</mapper>
+

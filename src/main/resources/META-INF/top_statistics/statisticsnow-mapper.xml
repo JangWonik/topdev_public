@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StatisticsNowMapper">
+
+	<select id="statisticsNowDate" resultType="kr.co.toplac.topstatistics.StatisticsNowVO">
+		SELECT if(DAY(NOW()) &lt; 16
+						,DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 1 month),'%Y-%m-16'),DATE_FORMAT(NOW(),'%Y-%m-16')) now_from
+				   ,if(DAY(NOW()) &lt; 16
+						,DATE_FORMAT(NOW(),'%Y-%m-15'),DATE_FORMAT(DATE_ADD(NOW(),INTERVAL 1 month),'%Y-%m-15')) now_to
+				   ,if(CURDATE() &lt; DATE_FORMAT(NOW(),'%Y-12-16')
+						,DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 1 year),'%Y-12-16'),DATE_FORMAT(NOW(),'%Y-12-16')) year_from
+				   ,if(CURDATE() &lt; DATE_FORMAT(NOW(),'%Y-12-16')
+						,DATE_FORMAT(NOW(),'%Y-12-15'),DATE_FORMAT(DATE_ADD(NOW(),INTERVAL 1 year),'%Y-12-15')) year_to
+				   ,DATE_FORMAT(NOW(),'%Y-%m-%d') today
+	</select>
+
+	<select id="statisticsNowDate2" resultType="kr.co.toplac.topstatistics.StatisticsNowVO">
+		SELECT if(DAY(#{viewFromDate}) &lt; 16
+					,DATE_FORMAT(DATE_SUB(#{viewFromDate},INTERVAL 1 month),'%Y-%m-16')
+					,DATE_FORMAT(#{viewFromDate},'%Y-%m-16')) now_from
+				, if(DAY(#{viewFromDate}) &lt; 16
+					,DATE_FORMAT(#{viewFromDate},'%Y-%m-15')
+					,DATE_FORMAT(DATE_ADD(#{viewFromDate},INTERVAL 1 month),'%Y-%m-15')) now_to
+				, if(DATE_FORMAT(#{viewFromDate},'%Y-%m-%d') &lt; DATE_FORMAT(#{viewFromDate},'%Y-12-16')
+						, DATE_FORMAT(DATE_SUB(#{viewFromDate},INTERVAL 1 year),'%Y-12-16')
+						, DATE_FORMAT(#{viewFromDate},'%Y-12-16')) year_from
+				, if(DATE_FORMAT(#{viewFromDate},'%Y-%m-%d') &lt;= DATE_FORMAT(#{viewFromDate},'%Y-12-15')
+						, DATE_FORMAT(#{viewFromDate},'%Y-12-15')
+						, DATE_FORMAT(DATE_ADD(#{viewFromDate},INTERVAL 1 year),'%Y-12-15')) year_to
+				,DATE_FORMAT(NOW(),'%Y-%m-%d') today		
+	</select>
+
+	<select id="statisticsSuitDate" parameterType="String" resultType="kr.co.toplac.topstatistics.StatisticsNowVO">
+		select DATE_FORMAT(#{tmpNow_to},'%Y-%m-01') now_from
+			, DATE_FORMAT(LAST_DAY(#{tmpNow_to}),'%Y-%m-%d') now_to
+			, DATE_FORMAT(#{tmpNow_to},'%Y-01-01') year_from
+			, DATE_FORMAT(#{tmpNow_to},'%Y-12-01') year_to
+	</select>
+
+	<select id="statisticsSuitDate2" resultType="kr.co.toplac.topstatistics.StatisticsNowVO">
+		select DATE_FORMAT(#{viewFromDate},'%Y-01-01') year_from
+			, DATE_FORMAT(#{viewFromDate},'%Y-12-01') year_to
+	</select>
+
+	<select id="statistics1YearDate" parameterType="String" resultType="kr.co.toplac.topstatistics.StatisticsNowVO">
+		SELECT DATE_FORMAT(#{tmpNow_to},'%Y-%m-%d') monBefore0
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 1 MONTH),'%Y-%m-%d') monBefore1
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 2 MONTH),'%Y-%m-%d') monBefore2
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 3 MONTH),'%Y-%m-%d') monBefore3
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 4 MONTH),'%Y-%m-%d') monBefore4
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 5 MONTH),'%Y-%m-%d') monBefore5
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 6 MONTH),'%Y-%m-%d') monBefore6
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 7 MONTH),'%Y-%m-%d') monBefore7
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 8 MONTH),'%Y-%m-%d') monBefore8
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 9 MONTH),'%Y-%m-%d') monBefore9
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 10 MONTH),'%Y-%m-%d') monBefore10
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 11 MONTH),'%Y-%m-%d') monBefore11
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 12 MONTH),'%Y-%m-%d') monBefore12
+	</select>
+	
+
+	<select id="statistics30DaysDate" parameterType="String" resultType="kr.co.toplac.topstatistics.StatisticsNowVO">
+		SELECT #{tmpNow_to} dayBefore0
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 1 DAY),'%Y-%m-%d') dayBefore1
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 2 DAY),'%Y-%m-%d') dayBefore2
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 3 DAY),'%Y-%m-%d') dayBefore3
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 4 DAY),'%Y-%m-%d') dayBefore4
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 5 DAY),'%Y-%m-%d') dayBefore5
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 6 DAY),'%Y-%m-%d') dayBefore6
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 7 DAY),'%Y-%m-%d') dayBefore7
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 8 DAY),'%Y-%m-%d') dayBefore8
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 9 DAY),'%Y-%m-%d') dayBefore9
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 10 DAY),'%Y-%m-%d') dayBefore10
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 11 DAY),'%Y-%m-%d') dayBefore11
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 12 DAY),'%Y-%m-%d') dayBefore12
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 13 DAY),'%Y-%m-%d') dayBefore13
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 14 DAY),'%Y-%m-%d') dayBefore14
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 15 DAY),'%Y-%m-%d') dayBefore15
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 16 DAY),'%Y-%m-%d') dayBefore16
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 17 DAY),'%Y-%m-%d') dayBefore17
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 18 DAY),'%Y-%m-%d') dayBefore18
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 19 DAY),'%Y-%m-%d') dayBefore19
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 20 DAY),'%Y-%m-%d') dayBefore20
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 21 DAY),'%Y-%m-%d') dayBefore21
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 22 DAY),'%Y-%m-%d') dayBefore22
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 23 DAY),'%Y-%m-%d') dayBefore23
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 24 DAY),'%Y-%m-%d') dayBefore24
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 25 DAY),'%Y-%m-%d') dayBefore25
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 26 DAY),'%Y-%m-%d') dayBefore26
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 27 DAY),'%Y-%m-%d') dayBefore27
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 28 DAY),'%Y-%m-%d') dayBefore28
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 29 DAY),'%Y-%m-%d') dayBefore29
+		, DATE_FORMAT(DATE_SUB(#{tmpNow_to}, INTERVAL 30 DAY),'%Y-%m-%d') dayBefore30
+	</select>
+
+	<select id="statisticsIndexDate" resultType="kr.co.toplac.topstatistics.StatisticsNowVO">
+		SELECT DATE_ADD(#{statisticsIndexToday},INTERVAL 1 day) day1Add
+				, if(DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-%d') &lt; DATE_FORMAT(NOW(),'%Y-%m-16')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 1 month),'%Y-%m-16')
+						, DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-16')) monthFrom
+				, if(DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-%d') &lt;= DATE_FORMAT(NOW(),'%Y-%m-15')
+						, DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-15')
+						, DATE_FORMAT(DATE_ADD(#{statisticsIndexToday},INTERVAL 1 month),'%Y-%m-15')) monthTo
+				, if(DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-%d') &lt; DATE_FORMAT(NOW(),'%Y-%m-16')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 2 month),'%Y-%m-16')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 1 month),'%Y-%m-16')) month1From
+				, if(DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-%d') &lt;= DATE_FORMAT(NOW(),'%Y-%m-15')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 1 month),'%Y-%m-15')
+						, DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-15')) month1To
+				, if(DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-%d') &lt; DATE_FORMAT(NOW(),'%Y-%m-16')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 13 month),'%Y-%m-16')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 12 month),'%Y-%m-16')) year1From
+				, if(DATE_FORMAT(#{statisticsIndexToday},'%Y-%m-%d') &lt;= DATE_FORMAT(NOW(),'%Y-%m-15')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 12 month),'%Y-%m-15')
+						, DATE_FORMAT(DATE_SUB(#{statisticsIndexToday},INTERVAL 11 month),'%Y-%m-15')) year1To
+	</select>
+
+</mapper>

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="MyDayoff">
+	
+	<select id="getMyInfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+	
+		SELECT
+			a.user_no,
+			a.user_name,
+			a.home_address,
+			a.team_id_insa,
+			b.team_name,
+			a.work_level work_level_cd,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+			a.user_no = #{user_no} and
+			a.team_id_insa = b.team_id
+			
+	</select>
+
+	<select id="getMyDayoffList" resultType="kr.co.toplac.topindividual.MyDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			serial_no,       
+			team_id,    
+			user_no,  
+			work_level,
+			dayoff_type,
+			title,
+			DATE_FORMAT(FROM_UNIXTIME(dayoff_start_date), '%Y-%m-%d') dayoff_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(dayoff_end_date), '%Y-%m-%d') dayoff_end_date,
+			days,
+			state,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date,
+			reg_user,      
+			DATE_FORMAT(FROM_UNIXTIME(sub_date), '%Y-%m-%d') sub_date,      
+			sub_user,   
+			DATE_FORMAT(FROM_UNIXTIME(end_date), '%Y-%m-%d') end_date,  
+			end_user,
+			DATE_FORMAT(FROM_UNIXTIME(cancel_date), '%Y-%m-%d') cancel_date,
+			cancel_user,
+			cancel_memo,
+			(SELECT count(holiday_date) FROM sysadm_holiday
+				WHERE holiday_date &lt;= DATE_FORMAT(FROM_UNIXTIME(dayoff_end_date), '%Y-%m-%d')
+				AND holiday_date >= DATE_FORMAT(FROM_UNIXTIME(dayoff_start_date), '%Y-%m-%d')
+				AND holiday_code not in (0,1,7)) dayoff_count
+		from
+			top_dayoff
+		where
+					user_no = #{user_no} 
+					<!-- <if test="toServerYear != null or toServerYear != ''"> -->
+					and (reg_date>=UNIX_TIMESTAMP(concat(#{toServerYear},'-01-01')) 
+					and reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(concat(#{toServerYear},'-01-01'),INTERVAL 1 year)))
+					<!-- </if> -->
+					order by serial_no desc
+				
+	</select>
+	
+	<select id="getMyDayoffCount" resultType="kr.co.toplac.topindividual.MyDayoffVO" parameterType="java.util.HashMap">
+		select a.m dayoffMonth, b.dayoffMonthCnt
+from (select DATE_FORMAT(holiday_date,'%m') m from sysadm_holiday
+						where DATE_FORMAT(holiday_date,'%Y') = #{toServerYear}
+						group by DATE_FORMAT(holiday_date,'%m')) a
+	LEFT JOIN (select DATE_FORMAT(FROM_UNIXTIME(dayoff_start_date),'%m') dayoffMonth, sum(days) dayoffMonthCnt
+						from top_dayoff
+						where 
+						user_no = #{user_no}
+						and DATE_FORMAT(FROM_UNIXTIME(dayoff_start_date),'%Y') = #{toServerYear}
+						group by DATE_FORMAT(FROM_UNIXTIME(dayoff_start_date),'%m')	) b
+	ON a.m = b.dayoffMonth
+		
+				
+	</select>
+	
+	<select id="getMyDayoffInfo" resultType="kr.co.toplac.topindividual.MyDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			a.user_name,       
+			b.team_name,    
+			a.work_level,
+			getCodeValue('top_mbr_bsc', 'work_level', a.work_level) work_level_Nm,  
+			b.team_manager,
+			getTopMbrBscUserName(b.team_manager) team_manager_Nm,
+			b.team_addr
+		from
+			top_mbr_bsc a, top_tm_bsc b
+		where
+					a.team_id_main = b.team_id and
+					user_no = #{user_no} and team_id = #{team_id}
+				
+	</select>
+	
+	<select id="myDayoffSelect" resultType="kr.co.toplac.topindividual.MyDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			*
+		from
+			top_dayoff_info
+		where
+					
+					user_no = #{user_no} and year=#{toServerYear}
+				
+	</select>
+	
+	<select id="myDayoffsel" resultType="kr.co.toplac.topindividual.MyDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			used,    
+			total,
+			(total -used) notUsed
+			
+		from
+			top_dayoff_info
+		where
+					
+					user_no = #{user_no} and year=#{toServerYear}
+				
+	</select>
+	
+	<select id="myDayoffUdtSel" resultType="kr.co.toplac.topindividual.MyDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			dayoff_type,
+			title,
+			DATE_FORMAT(FROM_UNIXTIME(dayoff_start_date), '%Y-%m-%d') dayoff_start_date, 
+			DATE_FORMAT(FROM_UNIXTIME(dayoff_end_date), '%Y-%m-%d') dayoff_end_date
+			
+		from
+			top_dayoff
+		where
+					
+					serial_no = #{serial_no}
+				
+	</select>
+	
+	<insert id = "myDayoffStartInfo" parameterType="java.util.HashMap">
+		INSERT
+			into
+			top_dayoff_info
+		(user_no
+		,year
+		,used
+		,total
+		)
+		values
+		(
+		#{user_no}
+		,#{toServerYear}
+		,'0'
+		,'15'
+		)
+		
+	</insert>
+
+	<select id="calcDayoffCnt" resultType="int" parameterType="java.util.HashMap">
+		SELECT count(holiday_date) result
+		FROM sysadm_holiday
+		WHERE holiday_date &lt;= #{dayoffToDate}
+		AND holiday_date >= #{dayoffFromDate}
+		AND holiday_code not in (0,1,7)
+	</select>
+
+	<select id="getToday" resultType="String">
+		SELECT DATE_FORMAT(NOW(), '%Y-%m-%d') strToday
+	</select>
+	
+	<insert id = "myDayoffInsAdd" parameterType="kr.co.toplac.topindividual.MyDayoffVO" >
+		INSERT INTO top_dayoff
+		(
+			team_id,
+			user_no,
+			work_level,
+			dayoff_type,
+			title,
+			dayoff_start_date,
+			dayoff_end_date,
+			days,
+			state,
+			reg_date,
+			reg_user,
+			sub_user
+		)
+		VALUES
+		(
+			#{team_id}, 
+			#{user_no},
+			#{work_level},
+			#{dayoff_type},
+			#{title},
+			unix_timestamp(#{dayoffFromDate}),
+			unix_timestamp(#{dayoffToDate}),
+			#{dayoffCnt}, 
+			'1',
+			unix_timestamp(now()),
+			#{user_no},
+			#{team_manager}
+			
+		)
+	</insert>
+	
+	<update id = "myDayoffInsInfo" parameterType="kr.co.toplac.topindividual.MyDayoffVO" >
+		UPDATE top_dayoff_info
+		SET
+			<if test="dayoff_type == 1">
+			used = used + #{dayoffCnt} 
+			</if>
+			<if test="dayoff_type != 1">
+			used = used + '0'
+			</if>
+		WHERE
+		 user_no = #{user_no} and year = #{toServerYear}
+	</update>
+	
+	<update id = "myDayoffUdtInfo" parameterType="kr.co.toplac.topindividual.MyDayoffVO" >
+		UPDATE top_dayoff_info
+		SET
+			<if test="dayoff_type == 1">
+			used = used - #{dayOffMiCount} + #{dayoffCnt} 
+			</if>
+			<if test="dayoff_type != 1">
+			used = used - #{dayOffMiCount}
+			</if>
+		WHERE
+		 user_no = #{user_no} and year = #{toServerYear}
+	</update>
+	
+	<update id = "myDayoffUdt" parameterType="kr.co.toplac.topindividual.MyDayoffVO" >
+		UPDATE top_dayoff
+		SET
+			
+			dayoff_type = #{dayoff_type},
+			title = #{title},
+			dayoff_start_date = unix_timestamp(#{dayoffFromDate}),
+			dayoff_end_date = unix_timestamp(#{dayoffToDate}),
+			<if test="dayoff_type == 1">
+			days = days - #{dayOffMiCount} + #{dayoffCnt}
+			</if>
+			<if test="dayoff_type != 1">
+			days = '0'
+			</if>
+		WHERE
+		serial_no = #{serial_no}
+	</update>
+	
+	<select id = "myDayoffUdtSelect" resultType="kr.co.toplac.topindividual.MyDayoffVO" parameterType="kr.co.toplac.topindividual.MyDayoffVO" >
+		SELECT
+		 	days,
+		 	dayoff_type
+		 FROM 
+		 	top_dayoff
+		WHERE
+		serial_no = #{serial_no}
+	</select>
+	
+	<delete id = "myDayoffDel" parameterType="kr.co.toplac.topindividual.MyDayoffVO" >
+		delete 
+		from
+			top_dayoff
+		WHERE 
+		serial_no = #{serial_no}
+	</delete>
+	
+</mapper>

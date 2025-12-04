@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="RptNowBscMapper">
+
+	<select id="getNowList" resultType="kr.co.toplac.topsuim.SuimRptNowBscVO" parameterType="String">
+	
+		SELECT 
+			  suim_rpt_no suimRptNo
+			, serial_no nowNo
+			, now_memo content
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+			, DATE_FORMAT(FROM_UNIXTIME(close_prarn_date), '%Y-%m-%d') AS closePrarnDate
+			
+		FROM
+			top_rpt_now
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		ORDER BY nowNo
+			
+	</select>
+
+	<insert id="rptNowIns" parameterType="kr.co.toplac.topsuim.SuimRptNowBscVO">
+		
+		INSERT INTO top_rpt_now
+		
+		(
+			suim_rpt_no, now_memo, reg_date, close_prarn_date
+		)
+		
+		VALUES
+		
+		(
+			#{suimRptNo}, #{content}, unix_timestamp(#{regDate}), unix_timestamp(#{closePrarnDate})
+		)
+		
+	</insert>
+	
+	<update id="rptNowUdt" parameterType="kr.co.toplac.topsuim.SuimRptNowBscVO">
+	
+		UPDATE
+			top_rpt_now
+		SET
+			 reg_date = unix_timestamp(#{regDate})
+			,now_memo = #{content}
+			,close_prarn_date = unix_timestamp(#{closePrarnDate})
+			
+		WHERE
+			serial_no = #{nowNo}
+	
+	</update>
+	
+	<delete id="rptNowDel" parameterType="String">
+	
+		DELETE FROM
+			top_rpt_now
+		WHERE
+			serial_no = #{nowNo}
+	
+	</delete>
+	
+	
+	<select id="getJustNowNo" parameterType="String" resultType="String">
+	
+		SELECT 
+			max(serial_no)
+		FROM
+			top_rpt_now
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			
+	</select>
+	
+
+</mapper>

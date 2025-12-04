@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PrimBizInvDtlMapper">
+	<!-- 세금계산서 번호 수동등록 -->
+	<update id="updateInvPrimInvoiceNoData" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvDtlViewVO">
+		UPDATE top_prim_biz_inv SET
+			tax_invoice_no = #{taxNo}
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</update>
+
+	<!-- 세금계산서 번호 자동등록 -->
+	<update id="updateInvPrimInvoiceNoAuto" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvDtlViewVO">
+		UPDATE top_prim_biz_inv SET
+			tax_invoice_no = #{rptInvNo}
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</update>
+	
+	<!-- 세금계산서 번호 자동등록 -->
+	<update id="updateInvPrimInvoiceNoAutoSuimNo" parameterType="String">		
+		UPDATE top_prim_biz_inv SET 
+			tax_invoice_no = rpt_invoice_no 
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+
+	<!-- 기존 세금계산서 번호초기화 -->
+	<update id="updateInvPrimInvoiceNoEmpty" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvDtlViewVO">
+		UPDATE top_prim_biz_inv SET
+			tax_invoice_no = ""
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</update>
+
+	<!-- 기존 세금계산서 번호가져오기 -->
+	<select id="selectInvPrimInvoiceNo" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvDtlViewVO" resultType="String">
+		SELECT 
+			IFNULL(tax_invoice_no,"") AS tax_invoice_no 
+		FROM top_prim_biz_inv 
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</select>
+
+	<select id="getPrimBizInvDtl" parameterType="String" resultType="kr.co.toplac.topprimbizinv.TopPrimBizInvCompositeVO">
+		SELECT a.rpt_invoice_no,a.suim_rpt_no
+			 ,IFNULL(a.amt_basic,0) amt_basic,a.amt_basic_dtl
+			 ,IFNULL(a.amt_daily,0) amt_daily,a.amt_daily_dtl
+			 ,IFNULL(a.amt_traffic,0) amt_traffic,a.amt_traffic_dtl
+			 ,IFNULL(a.amt_counsel,0) amt_counsel,a.amt_counsel_dtl
+			 ,IFNULL(a.amt_etc,0) amt_etc,a.amt_etc_dtl
+			 ,IFNULL(a.amt_total,0) amt_total
+			 ,a.rpt_invoice_memo
+			 ,a.tax_invoice_no
+			 ,a.invoice_date,DATE_FORMAT(FROM_UNIXTIME(a.invoice_date), '%Y-%m-%d') invoice_date_fmt
+			 ,a.deposit_date,if(a.deposit_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.deposit_date), '%Y-%m-%d')) deposit_date_fmt
+			 ,a.tax_date,if(a.tax_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%Y-%m-%d')) tax_date_fmt
+			 ,a.edit_amt_cnt,a.edit_date_cnt
+			 ,b.close_date,DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d') close_date_fmt
+			 ,b.ptnr_id,getTopPtnrBscPtnrNick(ptnr_id) ptnr_name
+			 ,b.ptnr_mbr_no,getTopPtnrMbrBscPtnrMbrName(ptnr_mbr_no) ptnr_mbr_name
+			 ,b.ptnr_mbr_no,getTopPtnrMbrBscPtnrTaxName(ptnr_mbr_no) ptnr_tax_nm
+			 ,b.team_id,getTopTmBscTeamName(team_id) team_name
+			 ,b.user_no,getTopMbrBscUserName(user_no) user_name
+			 ,b.policyholder_nm,b.beneficiary_nm
+			 ,b.suim_accept_no,b.suim_close_no
+			 ,c.accident_no,c.policy_no
+		FROM top_prim_biz_inv a , top_prim_biz_rpt_head b, top_prim_biz_rpt_body c
+		WHERE a.rpt_invoice_no = #{rpt_invoice_no}
+	    AND a.suim_rpt_no=b.suim_rpt_no
+	    AND a.suim_rpt_no=c.suim_rpt_no
+	</select>
+
+	<select id="getInvoiceLogList" parameterType="String" resultType="kr.co.toplac.toprptinv.TopRptInvLogVO">
+		SELECT	serial_no
+			,amt_basic,amt_basic_dtl,amt_daily,amt_daily_dtl
+			,amt_etc,amt_etc_dtl,amt_traffic,amt_traffic_dtl
+			,amt_counsel,amt_counsel_dtl,amt_total
+			,rpt_invoice_memo,tax_invoice_no
+			,invoice_date,DATE_FORMAT(FROM_UNIXTIME(invoice_date), '%Y-%m-%d') invoice_date_fmt
+			,deposit_date,if(deposit_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(deposit_date), '%Y-%m-%d')) deposit_date_fmt
+			,tax_date,if(tax_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(tax_date), '%Y-%m-%d')) tax_date_fmt
+			,reg_date,DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			,reg_user_no,getTopMbrBscUserName(reg_user_no) reg_user_nm
+		FROM top_prim_biz_inv_log
+		WHERE rpt_invoice_no = #{rpt_invoice_no}
+		ORDER BY serial_no
+	</select>
+
+	<select id="getPrimBizInvShareList" parameterType="String" resultType="kr.co.toplac.topprimbizinv.TopPrimBizInvShareVO">
+		SELECT 
+			 	serial_no,        
+				rpt_invoice_no,  
+				suim_rpt_no,      
+				share_user_no,   
+				getTopMbrBscUserName(share_user_no) share_user_name, 
+				share_amt_basic,  
+				share_amt_daily,  
+				share_amt_etc,    
+				share_amt_traffic,
+				share_amt_counsel,
+				(share_amt_basic + share_amt_daily + share_amt_etc + share_amt_traffic + share_amt_counsel) share_amt_total,  
+				share_ea         
+		FROM top_prim_biz_inv_share
+		WHERE rpt_invoice_no = #{rpt_invoice_no}
+	</select>
+
+	<select id="getPrimBizInvShareLogList" parameterType="String" resultType="kr.co.toplac.topprimbizinv.TopPrimBizInvShareLogVO">
+		SELECT share_user_no, getTopMbrBscUserName(share_user_no) share_user_nm
+				, share_amt_basic, share_amt_daily, share_amt_etc
+				, share_amt_traffic, share_amt_counsel, share_amt_total
+				, share_ea
+				, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date_fmt
+				, reg_user_no, getTopMbrBscUserName(reg_user_no) reg_user_nm
+				, reg_type, getCodeValue('top_prim_biz_inv_share_log', 'reg_type', reg_type) reg_type_nm
+		FROM top_prim_biz_inv_share_log
+		WHERE rpt_invoice_no = #{rpt_invoice_no}
+		ORDER BY reg_date
+	</select>
+
+	<update id="updateRptInvDtl" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvDtlViewVO">
+		UPDATE top_prim_biz_inv
+		SET
+			<if test="editAmtYn != 0">
+				edit_amt_cnt = edit_amt_cnt + 1,
+			</if>
+			<if test="editDateYn != 0">
+				edit_date_cnt = edit_date_cnt + 1,
+			</if>
+			<choose>
+				<when test="invoiceDate != ''">
+					invoice_date = unix_timestamp(#{invoiceDate}),
+				</when>
+				<otherwise>
+					invoice_date = NULL,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="depositDate != ''">
+					deposit_date = unix_timestamp(#{depositDate}),
+				</when>
+				<otherwise>
+					deposit_date = NULL,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="taxDate != ''">
+					tax_date = unix_timestamp(#{taxDate}),
+				</when>
+				<otherwise>
+					tax_date = NULL,
+				</otherwise>
+			</choose>
+			amt_basic = #{amtBasic},
+			amt_basic_dtl = #{amtBasicText},
+			amt_daily = #{amtDaily},
+			amt_daily_dtl = #{amtDailyText},
+			amt_etc = #{amtEtc},
+			amt_etc_dtl = #{amtEtcText},
+			amt_traffic = #{amtTraffic},
+			amt_traffic_dtl = #{amtTrafficText},
+			amt_counsel = #{amtCounsel},
+			amt_counsel_dtl = #{amtCounselText},
+			amt_total = #{amtTotal},
+			rpt_invoice_memo = #{memo}
+			<!-- tax_invoice_no = #{taxNo} -->
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</update>
+
+	<insert id="insertTopPrimBizInvLog" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvDtlViewVO">
+		INSERT INTO top_prim_biz_inv_log
+			(rpt_invoice_no,suim_rpt_no
+			,amt_basic,amt_basic_dtl,amt_daily,amt_daily_dtl
+			,amt_etc,amt_etc_dtl,amt_traffic,amt_traffic_dtl
+			,amt_counsel,amt_counsel_dtl,amt_total,rpt_invoice_memo
+			,tax_invoice_no,invoice_date,deposit_date,tax_date,reg_date
+			,edit_amt_cnt,edit_date_cnt,reg_user_no)
+		SELECT rpt_invoice_no,suim_rpt_no
+			,amt_basic,amt_basic_dtl,amt_daily,amt_daily_dtl
+			,amt_etc,amt_etc_dtl,amt_traffic,amt_traffic_dtl
+			,amt_counsel,amt_counsel_dtl,amt_total,rpt_invoice_memo
+			,tax_invoice_no,invoice_date,deposit_date,tax_date,UNIX_TIMESTAMP(NOW())
+			,edit_amt_cnt,edit_date_cnt,#{regUserNo}
+		FROM top_prim_biz_inv
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</insert>
+
+	<insert id="insertPrimBizInvShare" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvShareViewVO"
+			useGeneratedKeys="true" keyProperty="formSerialNo">
+		INSERT INTO top_prim_biz_inv_share
+			(rpt_invoice_no, suim_rpt_no, share_user_no
+			, share_amt_basic, share_amt_daily, share_amt_traffic
+			, share_amt_counsel, share_amt_etc
+			, share_ea
+			, share_amt_total)
+		values(
+			#{formRptInvNo}, #{formSuimRptNo}, #{formShareUserNo}, 
+			#{formShareAmtBasic}, #{formShareAmtDaily}, #{formShareAmtTraffic}, 
+			#{formShareAmtCounsel}, #{formShareAmtEtc}, 
+			#{formShareEa},
+			(#{formShareAmtBasic} + #{formShareAmtDaily} + #{formShareAmtTraffic} + #{formShareAmtCounsel} + #{formShareAmtEtc})
+		);
+		<selectKey keyProperty="formSerialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+	<insert id="insertPrimBizInvShareLog" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvShareViewVO">
+		INSERT INTO top_prim_biz_inv_share_log
+			(prim_biz_inv_share_no, rpt_invoice_no, suim_rpt_no, share_user_no
+			, share_amt_basic, share_amt_daily, share_amt_traffic
+			, share_amt_counsel, share_amt_etc, share_ea
+			, share_amt_total
+			, reg_date, reg_user_no, reg_type)
+		values(
+			#{formSerialNo}, #{formRptInvNo}, #{formSuimRptNo}, #{formShareUserNo}, 
+			#{formShareAmtBasic}, #{formShareAmtDaily}, #{formShareAmtTraffic}, 
+			#{formShareAmtCounsel}, #{formShareAmtEtc}, #{formShareEa},
+			#{formShareAmtBasic} + #{formShareAmtDaily} + #{formShareAmtTraffic} + #{formShareAmtCounsel} + #{formShareAmtEtc},
+			UNIX_TIMESTAMP(NOW()), #{formRegUserNo}, #{formRegType}
+		)
+	</insert>
+
+	<update id="updatePrimBizInvShare" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvShareViewVO">
+		UPDATE top_prim_biz_inv_share
+		SET
+			<if test="formShareUserNo != null">
+			share_user_no = #{formShareUserNo},
+			</if>
+			share_amt_basic = #{formShareAmtBasic},
+			share_amt_daily = #{formShareAmtDaily},
+			share_amt_traffic = #{formShareAmtTraffic},
+			share_amt_counsel = #{formShareAmtCounsel},
+			share_amt_etc = #{formShareAmtEtc},
+			share_ea = #{formShareEa},
+			share_amt_total = #{formShareAmtBasic} + #{formShareAmtDaily} + #{formShareAmtTraffic} + #{formShareAmtCounsel} + #{formShareAmtEtc}
+		WHERE serial_no = #{formSerialNo}
+	</update>
+
+	<update id="deletePrimBizInvShare" parameterType="kr.co.toplac.topprimbizinv.TopPrimBizInvShareViewVO">
+		delete 
+		from top_prim_biz_inv_share
+		WHERE serial_no = #{formSerialNo}
+	</update>
+
+</mapper>

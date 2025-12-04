@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ResultIgMapper">
+
+	<select id="sel_Igkind4" parameterType="java.util.List" resultType="kr.co.toplac.lslog.ResultIgVO">
+		select ptnr_id ig_id, ptnr_nick ig_nick
+		from top_ptnr_bsc 
+		where ptnr_level='1'
+		and statistics_yn='1' 
+		order by ptnr_order desc, ptnr_id asc
+	</select>
+
+	<select id="Result_Ig4List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.ResultIgVO">
+		select ifnull(report_result1,0) report_result1, ifnull(report_result2,0) report_result2, 
+		ifnull(report_result3,0) report_result3, ifnull(report_result4,0) report_result4, 
+		ifnull(report_result5,0) report_result5, ifnull(report_result6,0) report_result6, 
+		ifnull(report_result7,0) report_result7, ifnull(report_result8,0) report_result8,
+		ifnull(report_result9,0) report_result9,	
+		ifnull(report_result1 + report_result2 + report_result3 + report_result4 + report_result5 + report_result6 + report_result7 + report_result8 + report_result9, 0) report_result_sum
+		from 
+		(select count(suim_rpt_no) report_result1 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '1'
+		)a,
+		(select count(suim_rpt_no) report_result2 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '2'
+		)b,
+		(select count(suim_rpt_no) report_result3 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '3'
+		)c,
+		(select count(suim_rpt_no) report_result4 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '4'
+		)d,
+		(select count(suim_rpt_no) report_result5 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '5'
+		)e,
+		(select count(suim_rpt_no) report_result6 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '6'
+		)f,
+		(select count(suim_rpt_no) report_result7 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '7'
+		)g,
+		(select count(suim_rpt_no) report_result8 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '8'
+		)h,
+		(select count(suim_rpt_no) report_result9 from top_rpt_head rpt
+		where rpt.ptnr_id = #{tmpIg} and suim_rpt_type1 in (3,4) 
+		and rpt.close_date >= unix_timestamp(#{fromdate})
+		and rpt.close_date &lt; unix_timestamp(DATE_ADD(#{todate}, interval 1 day))
+		AND rpt.suim_rpt_type1_close34 = '9'
+		)i
+	</select>
+
+</mapper>

@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!-- 관리자 기준 소속 직원 실적 계산 스케줄러 시작 -->
+    <bean id="bonusDailyMemberQuarterJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="bonusDailyMemberQuarterJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="bonusDailyMemberQuarterJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="bonusDailyMemberQuarterJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 0시 40분 에 배치 -->
+            <value>0 40 0 ? * *</value>
+            <!-- 테스트용 3분에 한번씩 배치 -->
+			<!-- <value>0 0/3 * ? * *</value> -->
+        </property>
+    </bean>
+    <!-- 관리자 기준 소속 직원 실적 계산 스케줄러 끝 -->
+    
+    <!-- 관리자 성과급 데이터 분기기준 계산 스케줄러 시작 -->
+    <bean id="bonusDailyTeamQuarterJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="bonusDailyTeamQuarterJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="bonusDailyTeamQuarterJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="bonusDailyTeamQuarterJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 0시 30분 에 배치 -->
+            <value>0 30 0 ? * *</value>
+            <!-- 테스트용 3분에 한번씩 배치 -->
+			<!-- <value>0 0/3 * ? * *</value> -->
+        </property>
+    </bean>
+    <!-- 관리자 성과급 데이터 계산 스케줄러 끝 -->
+    
+    <!-- 관리자 성과급 데이터 계산 스케줄러 시작 -->
+    <bean id="bonusDailyTeamJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="bonusDailyTeamJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="bonusDailyTeamJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="bonusDailyTeamJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 0시 20분 에 배치 -->
+            <value>0 20 0 ? * *</value>
+            <!-- 테스트용 30초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->
+        </property>
+    </bean>
+    <!-- 관리자 성과급 데이터 계산 스케줄러 끝 -->
+    
+    <!-- 개인 연간 성과급 데이터 계산 스케줄러 시작 -->
+    <bean id="bonusDailyYearJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="bonusDailyYearJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="bonusDailyYearJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="bonusDailyYearJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 0시 15분 에 배치 -->
+            <value>0 15 0 ? * *</value>
+            <!-- 테스트용 30초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->
+        </property>
+    </bean>
+    <!-- 개인 연간 성과급 데이터 계산 스케줄러 끝 -->
+    
+    <!-- 성과급 데이터 계산 스케줄러 시작 -->
+    <bean id="bonusDailyJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="bonusDailyJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="bonusDailyJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="bonusDailyJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 0시 10분 에 배치 -->
+            <value>0 10 0 ? * *</value>
+            <!-- 테스트용 30초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->
+        </property>
+    </bean>
+    <!-- 성과급 데이터 계산 스케줄러 끝 -->
+    
+    <!-- 현장보고서 통계데이터 적제 스케줄러 시작 -->
+    <bean id="siteDailyJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="siteDailyJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="siteDailyJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="siteDailyJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 23시 58분 에 배치 -->
+            <value>0 58 23 ? * *</value>
+            <!-- 테스트용 30초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->			
+        </property>
+    </bean>
+    <!-- 현장보고서 통계데이터 적제 스케줄러 끝 -->
+    
+    <!-- nilink 녹음파일 동기화 스케줄러 시작 -->
+    <bean id="syncNilinkJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="syncNilinkJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="syncNilinkJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="syncNilinkJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 5시에 배치 -->
+            <value>0 0 5 ? * *</value>
+            <!-- 테스트용 30초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->			
+        </property>
+    </bean>
+    <!-- nilink 녹음파일 동기화 스케줄러 끝 -->
+    
+    <!-- 연차계산 스케줄러 추가 시작 -->
+    <bean id="updateVacationJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="updateVacationJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="vacationJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="updateVacationJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 1시 30분에 배치 -->
+            <value>0 30 1 ? * *</value>
+            <!-- 테스트용 30초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->			
+        </property>
+    </bean>
+    <!-- 연차계산 스케줄러 추가 끝 -->
+    
+    <!-- 이재조사비 계산을 위한 팀별인원카운트 추가 시작 -->
+    <bean id="updateTeamCountJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="updateTeamCountJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="updateTeamCountJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="updateTeamCountJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 오후 19시 10분에 배치 -->
+            <value>0 10 19 ? * *</value>
+            <!--value>0 0/10 * ? * *</value-->
+            <!-- 테스트용 5초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->
+        </property>
+    </bean>    
+    <!-- 이재조사비 계산을 위한 팀별인원카운트 추가 끝 -->
+    
+    <!-- 팀별 장비 계산을 위한 스케줄러 시작 -->
+    <bean id="updateTeamEquipmentJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="updateTeamEquipmentJob"/>
+        <property name="concurrent" value="false"/>   	
+    </bean>
+    <bean id="updateTeamEquipmentJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="updateTeamEquipmentJob"/>
+        <property name="cronExpression">
+        	<!-- 매일 오후 21시 00분에 배치 -->
+            <value>0 0 21 ? * *</value>            
+            <!-- 테스트용 30초에 한번씩 배치 -->
+			<!-- <value>0/30 * * ? * *</value> -->
+        </property>
+    </bean>
+    <!-- 팀별 장비 계산을 위한 스케줄러 끝 -->
+    
+
+    <!-- 일정 기간이 지난 리포트 개인정보 삭제 -->
+    <bean id="deleteReportPersonalInfo" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="deleteReportPersonalInfo"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="deleteReportPersonalInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="deleteReportPersonalInfo"/>
+        <property name="cronExpression">
+            <!-- 매일 오전 6시 10분에 배치 -->
+            <value>0 10 6 ? * *</value>
+            <!-- 테스트용 15초에 한번씩 배치 -->
+            <!-- <value>0/10 * * ? * *</value> -->
+        </property>
+    </bean>
+    
+
+    <!-- 일정 기간이 지난 리포트 Lock Flag 업데이트 -->
+    <bean id="updateLockFlag" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="updateLockFlag"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="updateLockFlagTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="updateLockFlag"/>
+        <property name="cronExpression">
+            <!-- 매일 오전 1시 10분에 배치 -->
+            <value>0 10 1 ? * *</value>
+            <!--value>0 0/5 * ? * *</value-->
+        </property>
+    </bean>
+    
+    
+    <!-- 기준업무량 백분위 계산 -->
+    <bean id="insertWorkloadRank" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="insertWorkloadRank"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    
+    <bean id="insertWorkloadRankTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="insertWorkloadRank"/>
+        <property name="cronExpression">
+            <!-- 매일 0시 30분에 배치 -->
+            <value>0 30 0 ? * *</value>
+            <!--value>0 0/5 * ? * *</value-->
+        </property>
+    </bean>
+    
+    
+   	<!-- New기본통계 미결 현황 계산 -->
+    <bean id="insertRptPendingCnt" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="topSchedule"/>
+        <property name="targetMethod" value="insertRptPendingCnt"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    
+    <bean id="insertRptPendingCntTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="insertRptPendingCnt"/>
+        <property name="cronExpression">
+            <!-- 매달 15일 0시 10분에 배치 -->
+            <!-- <value>0 10 0 15 * ?</value> -->
+            <!-- 매달 15일 23시 10분에 배치로 수정 by top3009 -->
+            <value>0 10 23 15 * ?</value>
+        </property>
+    </bean>
+    
+
+    <bean id="schedulerExecute" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="deleteReportPersonalInfoTrigger"/>
+                <ref bean="updateLockFlagTrigger"/>
+                <ref bean="insertWorkloadRankTrigger"/>
+                <ref bean="insertRptPendingCntTrigger"/>
+                <ref bean="updateTeamCountJobTrigger"/>
+                <ref bean="updateTeamEquipmentJobTrigger"/>
+                <ref bean="vacationJobTrigger"/>                
+                <ref bean="syncNilinkJobTrigger"/>
+                <ref bean="siteDailyJobTrigger"/>
+				<ref bean="bonusDailyJobTrigger"/>
+				<ref bean="bonusDailyYearJobTrigger"/>
+				<ref bean="bonusDailyTeamJobTrigger"/>
+				<ref bean="bonusDailyTeamQuarterJobTrigger"/>
+				<ref bean="bonusDailyMemberQuarterJobTrigger"/>
+            </list>
+        </property>
+    </bean>
+
+</beans>

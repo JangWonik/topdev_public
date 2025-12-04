@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PtnrMngUdtMapper">
+
+	<select id="getPtnrOne" resultType="kr.co.toplac.topptnr.TopPtnrBscVO" parameterType="String">
+	
+		SELECT a.* , b.top_accnt_bank bank_title
+		FROM top_ptnr_bsc a, top_accnt_bsc b
+		WHERE 
+			a.top_accnt_id = b.top_accnt_id and
+			a.ptnr_id = #{id}
+	
+	</select>
+	
+	
+	<select  id="getSmallImgName" parameterType="String"  resultType="String">
+	
+		SELECT
+			ptnr_img_small
+		FROM
+			top_ptnr_bsc
+		WHERE
+			ptnr_id = #{id}
+	
+	</select>
+	
+	<select  id="getBigImgName" parameterType="String" resultType="String">
+	
+		SELECT
+			ptnr_img_big
+		FROM
+			top_ptnr_bsc
+		WHERE
+			ptnr_id = #{id}
+	
+	</select>
+	
+	<update id="sImgUp" parameterType="java.util.HashMap">
+	
+		UPDATE 
+			top_ptnr_bsc
+		SET
+			ptnr_img_small = #{filename}
+		WHERE
+			ptnr_id = #{ptnr_id}  
+	
+	</update>
+	
+	<update id="bImgUp" parameterType="java.util.HashMap">
+	
+		UPDATE 
+			top_ptnr_bsc
+		SET
+			ptnr_img_big = #{filename}
+		WHERE
+			ptnr_id = #{ptnr_id}  
+	
+	</update>
+	
+	
+	<update id = "updateOne" parameterType="kr.co.toplac.topptnr.TopPtnrBscVO">
+	
+		UPDATE
+			top_ptnr_bsc
+		SET 
+			ptnr_type = #{ptnr_type},
+			ptnr_nick = #{ptnr_nick},
+			ptnr_name = #{ptnr_name},
+			ptnr_biz_reg_no = #{ptnr_biz_reg_no},
+			ptnr_ceo_nm = #{ptnr_ceo_nm},
+			ptnr_biz_type1 = #{ptnr_biz_type1},
+			ptnr_biz_type2 = #{ptnr_biz_type2},
+			ptnr_addr1 = #{ptnr_addr1},
+			ptnr_addr = #{ptnr_addr},
+			ptnr_postcode = #{ptnr_postcode},
+			ptnr_tel = #{ptnr_tel},
+			ptnr_homepage = #{ptnr_homepage},
+			ptnr_url = #{ptnr_url},
+			ptnr_sms1 = #{ptnr_sms1},
+			ptnr_sms1_msg = #{ptnr_sms1_msg},
+			ptnr_sms2 = #{ptnr_sms2},
+			ptnr_sms2_msg = #{ptnr_sms2_msg},
+			ptnr_sms3 = #{ptnr_sms3},
+			ptnr_sms3_msg = #{ptnr_sms3_msg},
+			issue_tax_invoice = #{issue_tax_invoice},
+			suitability_yn = #{suitability_yn},
+			suitability_fee1 = #{suitability_fee1},
+			suitability_fee2 = #{suitability_fee2},
+			top_accnt_id = #{top_accnt_id},
+			statistics_yn = #{statistics_yn},
+			statistics_written_yn = #{statistics_written_yn}
+			
+		WHERE
+			ptnr_id = #{ptnr_id}
+	
+	</update>
+	
+	<update id = "delOne" parameterType="String">
+	
+		UPDATE 
+			top_ptnr_bsc
+		SET
+			del_state = 1,
+			del_date = unix_timestamp(now())
+		WHERE
+			ptnr_id = #{ptnr_id}
+	
+	</update>
+
+
+</mapper>

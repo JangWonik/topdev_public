@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="RptLockListMapper">
+
+	<select id="rptLockList" resultType="kr.co.toplac.sysadm.report.RptPrimLockMngCompositeVO">
+		                 SELECT suim_rpt_no, suim_accept_no, suim_close_no ,lock_flag , suim_rpt_state 
+         , suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',suim_rpt_type1) suim_rpt_type1_nm
+         , team_id, getTopTmBscTeamName(team_id) team_name
+         , user_no, getTopMbrBscUserName(user_no) user_name
+         , ptnr_id, getTopPtnrBscPtnrNick(ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+         , ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(ptnr_dept_id) ptnr_dept_nm
+         , ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(ptnr_mbr_no) ptnr_mbr_nm
+         , policyholder_nm, beneficiary_nm, damaged_nm
+         , accident_date, if(accident_date = null || accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(accident_date), '%Y-%m-%d')) accident_date_fmt
+         , reg_date, if(reg_date = null || reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d')) reg_date_fmt
+         , close_date, if(close_date = null || close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d')) close_date_fmt
+         , suim_cancel_date, if(suim_cancel_date = null || suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+         , DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) past_date
+         FROM top_rpt_head
+         where suim_rpt_no IN (SELECT suim_rpt_no FROM top_rpt_head WHERE lock_flag = 0
+                              AND ((close_date > 0 AND DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d')) > 15)
+                                    OR (suim_cancel_date > 0 AND DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) > 15)))
+         ORDER BY suim_rpt_no
+		
+	</select>
+	
+	<select id="rptLockListExcel" resultType="kr.co.toplac.sysadm.report.RptPrimLockMngCompositeVO">
+		SELECT suim_rpt_no, suim_accept_no, suim_close_no ,lock_flag , suim_rpt_state 
+         , suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',suim_rpt_type1) suim_rpt_type1_nm
+         , team_id, getTopTmBscTeamName(team_id) team_name
+         , user_no, getTopMbrBscUserName(user_no) user_name
+         , ptnr_id, getTopPtnrBscPtnrNick(ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+         , ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(ptnr_dept_id) ptnr_dept_nm
+         , ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(ptnr_mbr_no) ptnr_mbr_nm
+         , policyholder_nm, beneficiary_nm, damaged_nm
+         , accident_date, if(accident_date = null || accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(accident_date), '%Y-%m-%d')) accident_date_fmt
+         , reg_date, if(reg_date = null || reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d')) reg_date_fmt
+         , close_date, if(close_date = null || close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d')) close_date_fmt
+         , suim_cancel_date, if(suim_cancel_date = null || suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+         , DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) past_date
+         FROM top_rpt_head
+         where suim_rpt_no IN (SELECT suim_rpt_no FROM top_rpt_head WHERE lock_flag = 0
+                              AND ((close_date > 0 AND DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d')) > 15)
+                                    OR (suim_cancel_date > 0 AND DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) > 15)))
+         ORDER BY suim_rpt_no
+		
+	</select>
+
+	<select id="getPrimbizSuimListCnt" resultType = "int">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_prim_biz_rpt_head a
+	</select>
+	
+	<update id="updateRptLock">
+	
+		update 
+			top_rpt_head
+		set
+			lock_flag = '1'
+		where (
+			(close_date > 0 and DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d')) > 15)
+			or
+			(suim_cancel_date > 0 and DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(suim_cancel_date), '%Y-%m-%d')) > 15)
+			)
+	</update>
+
+</mapper>

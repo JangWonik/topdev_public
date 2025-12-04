@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PrimbizSuimListMapper">
+
+	<select id="getPrimbizSuimList" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptHeadVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag , a.suim_rpt_state , b.rpt_invoice_no
+			, a.suim_rpt_type1, getCodeValue('top_prim_biz_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+			, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+			, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+			, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+			, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+			, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+			, DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) past_date
+			FROM top_prim_biz_rpt_head a, top_prim_biz_inv b
+			where a.suim_rpt_no = b.suim_rpt_no
+			ORDER BY a.suim_rpt_no
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum DESC
+	</select>
+
+</mapper>

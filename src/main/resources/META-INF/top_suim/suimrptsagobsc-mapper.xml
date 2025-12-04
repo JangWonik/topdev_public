@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SagoBscMapper">
+
+	<!-- 사고처리과정표 (16:메리츠, 일반보고서 통합) -->
+	<select id="getSagoAllList" resultType="kr.co.toplac.topsuim.TopRptCtrlAllBean" parameterType="String">
+		SELECT
+			GA.serial_no as serial_no
+			,GA.suim_rpt_no as suim_rpt_no
+			,GA.control_date as control_date
+			,GA.control_subject as control_subject
+			,GA.control_memo as control_memo
+			,GA.control_who as control_who
+			,GA.control_relation as control_relation
+			,GA.control_contact as control_contact
+			,GA.reg_date as reg_date
+		FROM
+			(
+				SELECT
+					serial_no
+					,suim_rpt_no
+					,control_date
+					,control_subject
+					,control_memo
+					,control_who
+					,control_relation
+					,control_contact
+					,reg_date
+				FROM
+					top_rpt_ctrl
+				WHERE suim_rpt_no = #{suim_rpt_no}
+				
+				UNION ALL
+				
+				SELECT
+					serial_no
+					,suim_rpt_no
+					,control_date
+					,""
+					,control_memo
+					,control_who
+					,control_relation
+					,control_contact
+					,reg_date
+				FROM
+					top_rpt_ctrl_16
+				WHERE suim_rpt_no = #{suim_rpt_no}				
+				
+			)GA					
+			
+		ORDER BY GA.control_date, GA.reg_date	
+	
+	</select>
+
+	<select id="getSagoList16Cnt" resultType="integer" parameterType="String">
+		SELECT 
+			COUNT(*) as Cnt
+		FROM top_rpt_ctrl_mid_16
+		WHERE suim_rpt_no = #{suim_rpt_no}			
+	</select>	
+
+	<select id="getSagoList" resultType="kr.co.toplac.topsuim.SuimRptSagoBscVO" parameterType="String">
+	
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no sagoNo
+			, control_subject item
+			, control_memo content
+			, control_date regDate
+			
+		FROM
+			top_rpt_ctrl
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+			ORDER BY control_date, reg_date
+	</select>
+	
+	<!-- 인보험 16: 메리츠용 사고 리스트 -->
+	<select id="getSagoList16" resultType="kr.co.toplac.topsuim.SuimRptSagoBsc16VO" parameterType="String">
+	
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no serialNo
+			, control_memo controlMemo
+			, control_memo controlMemoSpan
+			, control_who controlWho
+			, control_relation controlRelation
+			, control_contact controlContact
+			, control_date controlDate
+			
+		FROM
+			top_rpt_ctrl_16
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+			ORDER BY control_date
+	</select>
+	
+	<!-- 인보험 16: 메리츠용 특이사항 및 민원예방활동, 제출일 정보가져오기 -->
+	<select id="getSagoList16Mid" resultType="kr.co.toplac.topsuim.SuimRptSagoBsc16MidVO" parameterType="String">
+	
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no serialNo
+			, minwon_act_comment as minwonActComment
+			, report_date as reportDate
+			, reg_date as regDate 			
+		FROM
+			top_rpt_ctrl_mid_16
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+			ORDER BY report_date
+	</select>
+
+
+	<insert id="rptSagoIns" parameterType="kr.co.toplac.topsuim.SuimRptSagoBscVO">
+		
+		INSERT INTO top_rpt_ctrl
+		
+		(
+			suim_rpt_no, control_subject, control_memo, control_date, reg_date
+		)
+		
+		VALUES
+		
+		(
+			#{suimRptNo}, #{item}, #{content}, #{regDate}, unix_timestamp(now())
+		)
+		
+	</insert>
+	
+	<!-- 인보험 사고처리 과정표 입력 -->
+	<insert id="rptSagoIns16" parameterType="kr.co.toplac.topsuim.SuimRptSagoBsc16VO">
+		
+		INSERT INTO top_rpt_ctrl_16
+		
+		(
+			suim_rpt_no, control_date, control_memo, control_who, control_relation, control_contact , reg_date
+		)
+		
+		VALUES
+		
+		(
+			#{suimRptNo}, #{controlDate}, #{controlMemo}, #{controlWho}, #{controlRelation}, #{controlContact}, unix_timestamp(now())
+		)
+		
+	</insert>
+	
+	<!-- 인보험 사고처리 중간보고서 민원예방활동 입력 -->
+	<update id="updateRptCtrlMid16" parameterType="HashMap">
+		
+		UPDATE top_rpt_ctrl_mid_16 SET
+			reg_date = now()		
+		<if test="minwonActComment != null">
+			,minwon_act_comment = #{minwonActComment}
+		</if>
+		<if test="reportDate != null and reportDate != ''">
+			, report_date = date_format(#{reportDate},'%Y-%m-%d')		
+		</if>		
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+					
+	</update>
+	
+	<!-- 인보험 사고처리 중간보고서 민원예방활동 입력 -->
+	<insert id="InsertRptCtrlMid16" parameterType="HashMap">
+		
+		INSERT INTO top_rpt_ctrl_mid_16
+		
+		(
+			suim_rpt_no
+			<if test="minwonActComment != null">
+			, minwon_act_comment
+			</if>
+			<if test="reportDate != null and reportDate != ''">
+			, report_date
+			</if>
+			, reg_date
+		)
+		
+		VALUES
+		
+		(
+			#{suimRptNo}
+			<if test="minwonActComment != null">
+			, #{minwonActComment}
+			</if>
+			<if test="reportDate != null and reportDate != ''">
+			, date_format(#{reportDate},'%Y-%m-%d')			
+			</if>
+			, now()
+		)
+		
+	</insert>
+	
+	<!-- 인보험 사고처리 과정표 입력 -->
+	<insert id="InsertRptSagoIns16" parameterType="HashMap">
+		
+		INSERT INTO top_rpt_ctrl_16
+		
+		(
+			suim_rpt_no, control_date, control_memo, control_who, control_relation, control_contact , reg_date
+		)
+		
+		VALUES
+		
+		(
+			#{suimRptNo}, #{controlDate}, #{controlMemo}, #{controlWho}, #{controlRelation}, #{controlContact}, unix_timestamp(now())
+		)
+		
+	</insert>
+	
+	<select id="getLatestSagoNo" parameterType="String" resultType="String">
+	
+		SELECT 
+			max(serial_no)
+		FROM
+			top_rpt_ctrl
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			
+	</select>
+	
+	<!-- 방금 입력된 사고처리 과정표 16 -->
+	<select id="getLatestSago16No" parameterType="String" resultType="String">
+	
+		SELECT 
+			max(serial_no)
+		FROM
+			top_rpt_ctrl_16
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			
+	</select>
+	
+	<select id="getSagoOne" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptSagoBscVO">
+	
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no sagoNo
+			, control_subject item
+			, control_memo content
+			, control_date regDate
+		FROM
+			top_rpt_ctrl
+		WHERE
+			serial_no = #{sagoNo}
+			
+	</select>
+	
+	<update id="rptSagoUdt" parameterType="kr.co.toplac.topsuim.SuimRptSagoBscVO">
+	
+		UPDATE
+			top_rpt_ctrl
+		SET
+			control_subject = #{item},
+			control_memo = #{content},
+			control_date = #{regDate}
+		WHERE
+			serial_no = #{sagoNo}
+	
+	</update>
+	
+	<!-- 사고처리 과정표 인보험 : 16 -->
+	<update id="rptSagoUdt16" parameterType="kr.co.toplac.topsuim.SuimRptSagoBsc16VO">
+	
+		UPDATE
+			top_rpt_ctrl_16
+		SET
+			control_date = #{controlDate},
+			control_memo = #{controlMemo},
+			control_who = #{controlWho},
+			control_relation = #{controlRelation},
+			control_contact = #{controlContact}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- 사고처리 과정표 인보험 : 16, 중간보고서용 (중간보고서용에는 관계정보가 없으므로 해당항목은 업데이트 하지 않는다.) by top3009 -->
+	<update id="rptSagoUdtMid16" parameterType="HashMap">
+	
+		UPDATE
+			top_rpt_ctrl_16
+		SET
+			control_date = #{controlDate},
+			control_memo = #{controlMemo},
+			control_who = #{controlWho},			
+			control_contact = #{controlContact}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<delete id="rptSagoDel" parameterType="String">
+	
+		DELETE FROM
+			top_rpt_ctrl
+		WHERE
+			serial_no = #{sagoNo}
+	
+	</delete>
+	
+	<!-- 사고처리 과정표 인보험 16 삭제 -->
+	<delete id="rptSagoDel16" parameterType="String">
+	
+		DELETE FROM
+			top_rpt_ctrl_16
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+	
+	<select id="getRptOneForSago" resultType="kr.co.toplac.topsuim.SuimRptCompositeVO" parameterType="String">
+		SELECT
+			  a.insurance_nm
+			, b.suim_accept_no
+			, b.team_id
+			, b.user_no
+			, b.ptnr_mbr_no
+			, c.ptnr_mbr_nm
+			, DATE_FORMAT(FROM_UNIXTIME(b.reg_date), '%Y-%m-%d') reg_date 
+			, DATE_FORMAT(FROM_UNIXTIME(b.accident_date), '%Y-%m-%d') accident_date
+			, getTopMbrBscUserName(b.user_no) user_name
+			, b.beneficiary_nm
+		  FROM top_rpt_head b
+		  LEFT JOIN top_ptnr_mbr_bsc c
+		    ON b.ptnr_mbr_no = c.ptnr_mbr_no
+		 INNER JOIN top_rpt_body a
+		    ON a.suim_rpt_no = b.suim_rpt_no	 
+		 WHERE b.suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<select id="getSagoListForPrint" resultType="kr.co.toplac.topsuim.SuimRptSagoBscVO" parameterType="String">
+		SELECT 
+			suim_rpt_no suimRptNo
+			, serial_no sagoNo
+			, control_subject item
+			, control_memo content
+			, control_date regDate
+		FROM
+			top_rpt_ctrl
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		ORDER BY
+			regDate, reg_date
+	</select>
+	
+	<select id="getRptTeamForSago" resultType="kr.co.toplac.topteam.TopTmBscVO" parameterType="String">
+		SELECT
+			 a.team_name
+			,a.team_addr
+			,a.team_fax
+			,a.team_telephone
+			
+		FROM
+			top_tm_bsc a
+		WHERE 
+			a.team_id = #{team_id}
+	</select>
+	
+	<select id="getMbrInfoForSago" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+		SELECT
+			 a.email
+		FROM
+			top_mbr_bsc a
+		WHERE 
+			a.user_no = #{user_no}
+	</select>
+
+</mapper>

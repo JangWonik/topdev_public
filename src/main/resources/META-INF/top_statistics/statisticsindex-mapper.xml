@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StatisticsIndexMapper">
+
+	<select id="team1ListForStatisticsIndex" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.StatisticsIndexViewVO">
+		SELECT team.team_name
+		, IFNULL(nowMbrCnt.cnt,0) now_mbr_cnt
+		, IFNULL(nowRegCnt.cnt,0) now_reg_cnt
+		, IFNULL(nowAprvCnt.cnt,0) now_aprv_cnt
+		, IFNULL(nowClsCnt.cnt,0) now_cls_cnt
+		, IFNULL(monRegCnt.cnt,0) mon_reg_cnt
+		, IFNULL(monClsCnt.cnt,0) mon_cls_cnt
+		, IFNULL(b1mRegCnt.cnt,0) b1m_reg_cnt
+		, IFNULL(b1mClsCnt.cnt,0) b1m_cls_cnt
+		, IFNULL(b1yRegCnt.cnt,0) b1y_reg_cnt
+		, IFNULL(b1yClsCnt.cnt,0) b1y_cls_cnt
+		FROM top_tm_bsc team
+		LEFT JOIN
+			(SELECT team_id_main, count(user_no) cnt
+			FROM top_mbr_bsc
+			WHERE user_state != 1
+			GROUP BY team_id_main) nowMbrCnt
+		ON team.team_id = nowMbrCnt.team_id_main
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{statisticsIndexToday})
+			AND reg_date &lt; unix_timestamp(#{day1Add})
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) nowRegCnt
+		ON team.team_id = nowRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_aprv_date >= unix_timestamp(#{statisticsIndexToday})
+			AND suim_rpt_aprv_date &lt; unix_timestamp(#{day1Add})
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) nowAprvCnt
+		ON team.team_id = nowAprvCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{statisticsIndexToday})
+			AND close_date &lt; unix_timestamp(#{day1Add})
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) nowClsCnt
+		ON team.team_id = nowClsCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{monthFrom})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) monRegCnt
+		ON team.team_id = monRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{monthFrom})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) monClsCnt
+		ON team.team_id = monClsCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{month1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1mRegCnt
+		ON team.team_id = b1mRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{month1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1mClsCnt
+		ON team.team_id = b1mClsCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{year1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1yRegCnt
+		ON team.team_id = b1yRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{year1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1yClsCnt
+		ON team.team_id = b1yClsCnt.team_id
+		WHERE team.team_type = 1
+		AND team.team_statistics1 = 0
+		ORDER BY team.team_group_order DESC, team.team_order DESC
+	</select>
+
+	<select id="team4ListForStatisticsIndex" resultType="kr.co.toplac.topstatistics.StatisticsIndexViewVO">
+		SELECT team.team_name
+		, IFNULL(nowMbrCnt.cnt,0) now_mbr_cnt
+		, IFNULL(nowRegCnt.cnt,0) now_reg_cnt
+		, IFNULL(nowAprvCnt.cnt,0) now_aprv_cnt
+		, IFNULL(nowClsCnt.cnt,0) now_cls_cnt
+		, IFNULL(monRegCnt.cnt,0) mon_reg_cnt
+		, IFNULL(monClsCnt.cnt,0) mon_cls_cnt
+		, IFNULL(b1mRegCnt.cnt,0) b1m_reg_cnt
+		, IFNULL(b1mClsCnt.cnt,0) b1m_cls_cnt
+		, IFNULL(b1yRegCnt.cnt,0) b1y_reg_cnt
+		, IFNULL(b1yClsCnt.cnt,0) b1y_cls_cnt
+		FROM top_tm_bsc team
+		LEFT JOIN
+			(SELECT team_id_main, count(user_no) cnt
+			FROM top_mbr_bsc
+			WHERE user_state != 1
+			GROUP BY team_id_main) nowMbrCnt
+		ON team.team_id = nowMbrCnt.team_id_main
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{statisticsIndexToday})
+			AND reg_date &lt; unix_timestamp(#{day1Add})
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) nowRegCnt
+		ON team.team_id = nowRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_aprv_date >= unix_timestamp(#{statisticsIndexToday})
+			AND suim_rpt_aprv_date &lt; unix_timestamp(#{day1Add})
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) nowAprvCnt
+		ON team.team_id = nowAprvCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{statisticsIndexToday})
+			AND close_date &lt; unix_timestamp(#{day1Add})
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) nowClsCnt
+		ON team.team_id = nowClsCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{monthFrom})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) monRegCnt
+		ON team.team_id = monRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{monthFrom})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) monClsCnt
+		ON team.team_id = monClsCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{month1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1mRegCnt
+		ON team.team_id = b1mRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{month1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1mClsCnt
+		ON team.team_id = b1mClsCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE reg_date >= unix_timestamp(#{year1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1yRegCnt
+		ON team.team_id = b1yRegCnt.team_id
+		LEFT JOIN
+			(SELECT team_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE close_date >= unix_timestamp(#{year1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			AND suim_rpt_state!='3'
+			GROUP BY team_id) b1yClsCnt
+		ON team.team_id = b1yClsCnt.team_id
+		WHERE team.team_type = 4
+		AND team.team_statistics1 = 0
+		ORDER BY team.team_group_order DESC, team.team_order DESC
+	</select>
+
+	<select id="ptnr1ListForStatisticsIndex" resultType="kr.co.toplac.topstatistics.StatisticsIndexViewVO">
+		SELECT ptnr.ptnr_name
+		, IFNULL(nowRegCnt.cnt,0) now_reg_cnt
+		, IFNULL(nowAprvCnt.cnt,0) now_aprv_cnt
+		, IFNULL(nowClsCnt.cnt,0) now_cls_cnt
+		, IFNULL(monRegCnt.cnt,0) mon_reg_cnt
+		, IFNULL(monClsCnt.cnt,0) mon_cls_cnt
+		, IFNULL(b1mRegCnt.cnt,0) b1m_reg_cnt
+		, IFNULL(b1mClsCnt.cnt,0) b1m_cls_cnt
+		, IFNULL(b1yRegCnt.cnt,0) b1y_reg_cnt
+		, IFNULL(b1yClsCnt.cnt,0) b1y_cls_cnt
+		FROM top_ptnr_bsc ptnr
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{statisticsIndexToday})
+			AND reg_date &lt; unix_timestamp(#{day1Add})
+			GROUP BY ptnr_id) nowRegCnt
+		ON ptnr.ptnr_id = nowRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND suim_rpt_aprv_date >= unix_timestamp(#{statisticsIndexToday})
+			AND suim_rpt_aprv_date &lt; unix_timestamp(#{day1Add})
+			GROUP BY ptnr_id) nowAprvCnt
+		ON ptnr.ptnr_id = nowAprvCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{statisticsIndexToday})
+			AND close_date &lt; unix_timestamp(#{day1Add})
+			GROUP BY ptnr_id) nowClsCnt
+		ON ptnr.ptnr_id = nowClsCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{monthFrom})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			GROUP BY ptnr_id) monRegCnt
+		ON ptnr.ptnr_id = monRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{monthFrom})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			GROUP BY ptnr_id) monClsCnt
+		ON ptnr.ptnr_id = monClsCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{month1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1mRegCnt
+		ON ptnr.ptnr_id = b1mRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{month1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1mClsCnt
+		ON ptnr.ptnr_id = b1mClsCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{year1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1yRegCnt
+		ON ptnr.ptnr_id = b1yRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (1,2,11,12,13)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{year1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1yClsCnt
+		ON ptnr.ptnr_id = b1yClsCnt.ptnr_id
+		ORDER BY ptnr.ptnr_group_order DESC, ptnr.ptnr_level, ptnr.ptnr_order DESC
+	</select>
+
+	<select id="ptnr4ListForStatisticsIndex" resultType="kr.co.toplac.topstatistics.StatisticsIndexViewVO">
+		SELECT ptnr.ptnr_name
+		, IFNULL(nowRegCnt.cnt,0) now_reg_cnt
+		, IFNULL(nowAprvCnt.cnt,0) now_aprv_cnt
+		, IFNULL(nowClsCnt.cnt,0) now_cls_cnt
+		, IFNULL(monRegCnt.cnt,0) mon_reg_cnt
+		, IFNULL(monClsCnt.cnt,0) mon_cls_cnt
+		, IFNULL(b1mRegCnt.cnt,0) b1m_reg_cnt
+		, IFNULL(b1mClsCnt.cnt,0) b1m_cls_cnt
+		, IFNULL(b1yRegCnt.cnt,0) b1y_reg_cnt
+		, IFNULL(b1yClsCnt.cnt,0) b1y_cls_cnt
+		FROM top_ptnr_bsc ptnr
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{statisticsIndexToday})
+			AND reg_date &lt; unix_timestamp(#{day1Add})
+			GROUP BY ptnr_id) nowRegCnt
+		ON ptnr.ptnr_id = nowRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND suim_rpt_aprv_date >= unix_timestamp(#{statisticsIndexToday})
+			AND suim_rpt_aprv_date &lt; unix_timestamp(#{day1Add})
+			GROUP BY ptnr_id) nowAprvCnt
+		ON ptnr.ptnr_id = nowAprvCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{statisticsIndexToday})
+			AND close_date &lt; unix_timestamp(#{day1Add})
+			GROUP BY ptnr_id) nowClsCnt
+		ON ptnr.ptnr_id = nowClsCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{monthFrom})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			GROUP BY ptnr_id) monRegCnt
+		ON ptnr.ptnr_id = monRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{monthFrom})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{monthTo},INTERVAL 1 day))
+			GROUP BY ptnr_id) monClsCnt
+		ON ptnr.ptnr_id = monClsCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{month1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1mRegCnt
+		ON ptnr.ptnr_id = b1mRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{month1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{month1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1mClsCnt
+		ON ptnr.ptnr_id = b1mClsCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND reg_date >= unix_timestamp(#{year1From})
+			AND reg_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1yRegCnt
+		ON ptnr.ptnr_id = b1yRegCnt.ptnr_id
+		LEFT JOIN
+			(SELECT ptnr_id, count(suim_rpt_no) cnt
+			FROM top_rpt_head
+			WHERE suim_rpt_type1 in (3,4)
+			AND suim_rpt_state!='3'
+			AND close_date >= unix_timestamp(#{year1From})
+			AND close_date &lt; unix_timestamp(DATE_ADD(#{year1To},INTERVAL 1 day))
+			GROUP BY ptnr_id) b1yClsCnt
+		ON ptnr.ptnr_id = b1yClsCnt.ptnr_id
+		ORDER BY ptnr.ptnr_group_order DESC, ptnr.ptnr_level, ptnr.ptnr_order DESC
+	</select>
+
+</mapper>

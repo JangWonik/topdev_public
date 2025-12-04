@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BoardSalListMapper">
+	<select id="kind1MemList" resultType="kr.co.toplac.topindividual.BoardMemSalVO">
+		SELECT
+			 a.user_no 
+			,a.user_name
+			,b.team_name
+			,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,c.sal_amt
+			,c.sal_state
+		  FROM 
+		  	top_mbr_bsc a
+ 		  LEFT OUTER JOIN (SELECT sal_amt, sal_state, user_no FROM top_mbr_sal where sal_year ='2017') c
+			ON a.user_no = c.user_no , top_tm_bsc b
+		 WHERE a.team_id_loc = b.team_id
+		   AND b.team_type in ('1','0')
+		   AND a.user_state != 1
+		   AND a.work_level != 5
+		 ORDER BY
+		 	b.team_group_order DESC, b.team_order DESC, a.work_type, a.work_level DESC, a.user_no
+	</select>
+	
+	<select id="AprvMemList" resultType="kr.co.toplac.topindividual.BoardMemSalVO">
+		SELECT
+			 a.user_no 
+			,a.user_name
+			,b.team_name
+			,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,c.sal_amt
+			,c.sal_state
+		  FROM 
+		  	top_mbr_bsc a
+ 		  LEFT OUTER JOIN (SELECT sal_amt, sal_state, user_no FROM top_mbr_sal where sal_year ='2017') c
+			ON a.user_no = c.user_no , top_tm_bsc b
+		 WHERE a.team_id_loc = b.team_id
+		   AND b.team_type in ('1','0')
+		   AND a.user_state != 1
+		   AND b.team_id != 999
+   		   AND c.sal_amt is not null
+ 		   AND a.work_level != 5
+		 ORDER BY
+		 	b.team_group_order DESC, b.team_order DESC, a.work_type, a.work_level DESC, a.user_no
+	</select>
+	
+	<select id="unAprvMemList" resultType="kr.co.toplac.topindividual.BoardMemSalVO">
+ 		SELECT
+			 a.user_no 
+			,a.user_name
+			,b.team_name
+			,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,c.sal_amt
+			,c.sal_state
+		  FROM 
+		  	top_mbr_bsc a
+ 		  LEFT OUTER JOIN (SELECT sal_amt, sal_state, user_no FROM top_mbr_sal where sal_year ='2017') c
+			ON a.user_no = c.user_no , top_tm_bsc b
+		 WHERE a.team_id_loc = b.team_id
+		 
+		   AND b.team_type in ('1','0')
+		   AND a.user_state != 1
+		   AND c.sal_amt is null
+   		   AND a.work_level != 5
+		 ORDER BY
+		 	b.team_group_order DESC, b.team_order DESC, a.work_type, a.work_level DESC, a.user_no
+	</select>
+	
+	<select id="internMemList" resultType="kr.co.toplac.topindividual.BoardMemSalVO">
+		SELECT
+			 a.user_no 
+			,a.user_name
+			,b.team_name
+			,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,c.sal_state
+		  FROM 
+		  	top_mbr_bsc a
+ 		  LEFT OUTER JOIN (SELECT sal_state, user_no FROM top_mbr_intern_sal) c
+			ON a.user_no = c.user_no , top_tm_bsc b
+		 WHERE a.team_id_loc = b.team_id
+		   AND b.team_type in ('1','0')
+		   AND a.user_state != 1
+		   AND a.work_level = 5
+		 ORDER BY
+		 	b.team_group_order DESC, b.team_order DESC, a.work_type, a.work_level DESC, a.user_no
+	</select>
+	
+	
+	
+	
+	<select id="kind1MemDetail" parameterType="String" resultType="kr.co.toplac.topindividual.BoardMemSalVO">
+		SELECT
+			 a.user_no 
+			,a.user_name
+			,b.team_name
+			,getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+			,getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+			,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			,a.handphone
+			,a.office_tel
+			,a.email
+			,a.picture
+			,c.sal_amt
+		  FROM 
+		  	top_mbr_bsc a
+		  LEFT OUTER JOIN (SELECT user_no, sal_amt from top_mbr_sal) c
+		    ON a.user_no = c.user_no , top_tm_bsc b
+		 WHERE
+			a.team_id_loc = b.team_id
+		   AND
+			a.user_no=#{user_no}
+		 ORDER BY
+		 	b.team_group_order DESC, b.team_order DESC, a.work_type, a.work_level DESC, a.user_no
+	</select>
+	
+	<select id="kind1PrimSales"  parameterType="java.util.HashMap" resultType="String">
+		SELECT sum(a.share_amt_basic) prim_sales
+		  FROM top_prim_biz_inv_share a, top_prim_biz_rpt_head b
+		 WHERE share_user_no = #{user_no}
+		   AND a.suim_rpt_no = b.suim_rpt_no
+		   AND b.close_date &gt;= UNIX_TIMESTAMP(#{start_date})
+		   AND b.close_date &lt;= UNIX_TIMESTAMP(#{end_date})
+	</select>
+	
+	<select id="kind1Sales"  parameterType="java.util.HashMap" resultType="String">
+		SELECT sum(b.amt_basic)-c.minus + d.plus sales
+		  FROM top_rpt_head a, top_rpt_invoice b,
+				(SELECT sum(ceil(c.amt_basic*b.collabo_pp*0.01)) minus
+				   FROM top_rpt_head a, top_rpt_collabo b, top_rpt_invoice c
+				  WHERE a.user_no = #{user_no}
+					AND a.close_date &gt;= UNIX_TIMESTAMP(#{start_date})
+					AND a.close_date &lt;= UNIX_TIMESTAMP(#{end_date})
+					AND a.suim_rpt_no = b.suim_rpt_no
+					AND c.suim_rpt_no = b.suim_rpt_no) c,
+				(SELECT sum(ceil(c.amt_basic*b.collabo_pp*0.01)) plus
+				   FROM top_rpt_head a, top_rpt_collabo b, top_rpt_invoice c
+				  WHERE b.user_id = #{user_no}
+				    AND a.close_date &gt;= UNIX_TIMESTAMP(#{start_date})
+				    AND a.close_date &lt;= UNIX_TIMESTAMP(#{end_date})
+				    AND a.suim_rpt_no = b.suim_rpt_no
+				    AND c.suim_rpt_no = b.suim_rpt_no) d 
+		 WHERE a.user_no = #{user_no}
+		   AND a.close_date &gt;= UNIX_TIMESTAMP(#{start_date})
+		   AND a.close_date &lt;= UNIX_TIMESTAMP(#{end_date})
+		   AND a.suim_rpt_no = b.suim_rpt_no
+	</select>
+	
+	<insert id="insAprvSalary" parameterType="kr.co.toplac.topindividual.BoardMemSalVO">
+		INSERT INTO
+			top_mbr_sal
+			(user_no, sal_year, sal_amt, sal_state, reg_date, reg_user_no)
+		VALUES
+			(#{user_no}, 2017, #{sal_amt}, 0, unix_timestamp(now()), #{reg_user_no} )
+	</insert>
+	
+	
+	<insert id="insInternSalary" parameterType="kr.co.toplac.topindividual.BoardMemSalVO">
+		INSERT INTO
+			top_mbr_intern_sal
+			(user_no, sal_state, reg_date, reg_user_no)
+		VALUES
+			(#{user_no}, 1, unix_timestamp(now()), #{reg_user_no} )
+	</insert>
+	
+	
+	
+	
+	<update id="udtSalary" parameterType="kr.co.toplac.topindividual.BoardMemSalVO">
+		UPDATE
+		 	top_mbr_sal
+		   SET
+			sal_amt = #{sal_amt}
+		 WHERE
+		 	user_no = #{user_no}
+	</update>	
+	
+	<update id="udtFinalBoardAprv" parameterType="String">
+		UPDATE
+		 	top_mbr_sal
+		   SET
+			sal_state = 1
+		 WHERE
+		 	user_no = #{user_no}
+	</update>
+	
+	<update id="udtFinalBoardAprvAll">
+		UPDATE
+		 	top_mbr_sal
+		   SET
+			sal_state = 1
+		 WHERE
+		 	sal_year = 2017
+		   AND
+		   	sal_state = 0
+	</update>		
+	
+	
+</mapper>

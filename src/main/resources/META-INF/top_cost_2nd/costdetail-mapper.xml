@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CostDetailMapper">
+
+	<select id="selectCostDetailMember" parameterType="String" resultType="HashMap">
+		SELECT A.user_no
+			  ,A.user_name
+			  ,B.team_id
+			  ,B.team_name
+			  ,B.team_type
+		  FROM top_mbr_bsc A
+		 INNER JOIN top_tm_bsc B
+		    ON A.team_id_main = B.team_id
+		 WHERE A.user_no = #{_parameter} 
+	</select>
+	
+	<select id="selectCostDetailContents" parameterType="HashMap" resultType="HashMap" >
+		SELECT cost_no
+			  ,cost_kind
+			  ,cost_item_state
+			  ,team_id
+			  ,user_no
+			  ,cost_occur_date
+			  ,FROM_UNIXTIME(cost_occur_date, '%Y-%m-%d') cost_occur_date_fmt
+			  ,cost_class_no
+			  ,getCodeValue('top_cost_item','cost_class_no',cost_class_no) cost_class_no_nm
+			  ,cost_pay_type
+			  ,getCodeValue('top_cost_item','cost_pay_type',cost_pay_type) cost_pay_type_nm
+			  ,cost_bill_ea
+			  ,cost_pay_amt
+			  ,cost_pay_place
+			  ,cost_involved_com
+			  ,cost_involved_man
+			  ,cost_memo
+			  ,getCodeValue('top_cost_item_2nd','cost_item_state',cost_item_state) cost_item_state_nm
+			  ,cost_distance
+			  ,cost_suim_accept_no
+		  FROM top_cost_item_2nd
+		 WHERE user_no = #{user_no}
+		   AND cost_kind = #{cost_kind}
+		   AND cost_year_month = #{cost_year_month}
+
+		   <if test="cost_class_no != 0 and cost_class_no != NULL">
+			   AND cost_class_no = #{cost_class_no}
+		   </if>
+		 ORDER BY cost_class_no, reg_date
+	</select> 
+	
+	<select id="selectCostDeposit" resultType="HashMap" parameterType="HashMap">
+		SELECT cost_deposit_no
+			  ,team_id
+			  ,user_no
+			  ,cost_year_month
+			  ,cost_deposit_state
+			  ,IFNULL(cost_deposit_basic_amt,0) cost_deposit_basic_amt
+			  ,IFNULL(cost_deposit_add_amt,0) cost_deposit_add_amt
+			  ,IFNULL(cost_deposit_claim_amt,0) cost_deposit_claim_amt
+			  ,cost_deposit_date
+			  ,FROM_UNIXTIME(cost_state_date,"%Y-%m-%d") cost_state_date
+			  ,reg_date
+		  FROM top_cost_deposit_2nd
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}
+	</select>
+	
+	<select id="selectCostItemSum" resultType="Integer" parameterType="HashMap">
+		SELECT IFNULL(SUM(cost_pay_amt),0) sum_cost_pay_amt
+		  FROM top_cost_item_2nd
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}
+		   AND cost_kind = #{cost_kind}
+	</select>
+	
+	<insert id="insertCostDeposit" parameterType="HashMap">
+		INSERT INTO top_cost_deposit_2nd
+		(
+			 team_id
+			,user_no
+			,cost_year_month
+			,cost_deposit_state
+			,cost_deposit_basic_amt
+			,cost_deposit_add_amt
+			,cost_deposit_claim_amt
+			,cost_deposit_date
+			,cost_state_date
+			,reg_date
+		)
+		VALUES
+		(
+			 #{team_id}
+			,#{user_no}
+			,#{cost_year_month}
+			,0
+			,#{cost_deposit_basic_amt}
+			,#{cost_deposit_add_amt}
+			,#{cost_deposit_claim_amt}
+			,0
+			,0
+			,UNIX_TIMESTAMP(now())	
+		)
+	</insert>
+	
+	<update id="updateCostDeposit" parameterType="HashMap">
+		UPDATE top_cost_deposit_2nd
+		   SET cost_deposit_basic_amt = #{cost_deposit_basic_amt}
+		   	  ,cost_deposit_add_amt = #{cost_deposit_add_amt}
+		   	  ,cost_deposit_claim_amt = #{cost_deposit_claim_amt}
+		   	  ,cost_deposit_total_amt = #{cost_deposit_basic_amt} + #{cost_deposit_add_amt} + #{cost_deposit_claim_amt} 
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}
+	</update>
+	
+	
+	<select id="selectRptHelpClinetList" resultType="HashMap" parameterType="HashMap">
+		SELECT a.serial_no
+			  ,a.suim_rpt_no
+			  ,a.help_state
+			  ,getCodeValue("top_rpt_help", "help_state", a.help_state) help_state_val
+			  ,a.traffic_fee
+			  ,a.chart_fee
+			  ,a.price_total
+			  ,a.reg_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+			  ,a.end_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date_fmt
+			  ,a.client_team
+			  ,getTopTmBscTeamName(a.client_team) client_team_nm
+			  ,a.client_id
+			  ,getTopMbrBscUserName(a.client_id) client_id_nm
+			  ,a.accept_team
+			  ,getTopTmBscTeamName(a.accept_team) accept_team_nm
+			  ,a.accept_id
+			  ,getTopMbrBscUserName(a.accept_id) accept_id_nm
+			  ,b.suim_accept_no
+			  ,b.beneficiary_nm
+		  FROM top_rpt_help a
+		 INNER JOIN top_rpt_head b
+		    ON a.suim_rpt_no = b.suim_rpt_no
+		 WHERE a.client_id = #{user_no} 
+		   AND a.help_state ='3'
+		   AND a.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+		   AND a.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+		   <!-- AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDe}, INTERVAL 1 day)) -->	  
+		   AND a.suim_rpt_no = b.suim_rpt_no
+		 ORDER BY end_date DESC
+	</select>
+	
+	<select id="selectRptHelpAcceptList" resultType="HashMap" parameterType="HashMap">
+		SELECT a.serial_no
+			  ,a.suim_rpt_no
+			  ,a.help_state
+			  ,getCodeValue("top_rpt_help", "help_state", a.help_state) help_state_val
+			  ,a.traffic_fee
+			  ,a.chart_fee
+			  ,a.price_total
+			  ,a.reg_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+			  ,a.end_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date_fmt
+			  ,a.client_team
+			  ,getTopTmBscTeamName(a.client_team) client_team_nm
+			  ,a.client_id
+			  ,getTopMbrBscUserName(a.client_id) client_id_nm
+			  ,a.accept_team
+			  ,getTopTmBscTeamName(a.accept_team) accept_team_nm
+			  ,a.accept_id
+			  ,getTopMbrBscUserName(a.accept_id) accept_id_nm
+			  ,b.suim_accept_no
+			  ,b.beneficiary_nm
+		  FROM top_rpt_help a
+		 INNER JOIN top_rpt_head b
+		    ON a.suim_rpt_no = b.suim_rpt_no
+		 WHERE a.accept_id = #{user_no} 
+		   AND a.help_state ='3'
+		   AND a.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+		   AND a.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+		   <!-- AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDe}, INTERVAL 1 day)) -->
+		   AND a.suim_rpt_no = b.suim_rpt_no
+		 ORDER BY end_date DESC
+	</select>
+	
+	
+	<select id="selectCostDetailFileList" resultType="HashMap" parameterType="HashMap" >
+		SELECT serial_no 
+			  ,cost_deposit_no
+			  ,file_path 
+			  ,file_name 
+			  ,DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date
+		  FROM top_cost_file
+		 WHERE cost_deposit_no = #{cost_deposit_no}
+	</select>
+	
+	
+	<insert id="insertCostDetailFile" parameterType="HashMap">
+		INSERT INTO top_cost_file
+		(
+			 cost_deposit_no
+			,file_path
+			,file_name
+			,reg_date 
+		)
+		VALUES
+		(
+			 #{costDepositNo}
+			,#{filePath}
+			,#{fileName}
+			,UNIX_TIMESTAMP(NOW()) 
+		)
+	</insert>
+	
+	<select id="selectCostDetailFile" parameterType="String" resultType="HashMap">
+		SELECT serial_no 
+			  ,cost_deposit_no
+			  ,file_path 
+			  ,file_name 
+			  ,DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date
+		  FROM top_cost_file
+		 WHERE serial_no = #{_parameter}	
+	</select> 
+	
+	<delete id="deleteCostDetailFile" parameterType="HashMap" >
+		DELETE
+		  FROM top_cost_file
+		 WHERE serial_no = #{serialNo}
+	</delete>
+	
+	
+	<insert id = "insertCostItem" parameterType="HashMap" >
+		INSERT INTO top_cost_item_2nd
+		(	
+			 cost_kind
+			,cost_year_month
+			,cost_item_state
+			,cost_class_no
+			,team_id
+			,user_no
+			,cost_occur_date
+			,cost_pay_place
+			,cost_involved_com
+			,cost_involved_man
+			,cost_memo
+			,cost_pay_amt
+			,cost_pay_type
+			,cost_bill_ea
+			
+			,cost_suim_accept_no
+			,cost_distance
+			,reg_date
+		)
+		VALUES 
+		(	
+			 #{cost_kind}
+			,#{cost_year_month}
+			,0
+			,#{cost_class_no}
+			,#{team_id}
+			,#{user_no}
+			,UNIX_TIMESTAMP(#{cost_occur_date})
+			,#{cost_pay_place}
+			,#{cost_involved_com}
+			,#{cost_involved_man}
+			,#{cost_memo}
+			,#{cost_pay_amt}
+			,#{cost_pay_type}
+			,#{cost_bill_ea}
+			
+			,#{cost_suim_accept_no}
+			,#{cost_distance}
+			,UNIX_TIMESTAMP(NOW())
+		)
+	</insert>	
+	
+	<delete id="deleteCostItem" parameterType="HashMap">
+		DELETE 
+		  FROM top_cost_item_2nd
+		 WHERE cost_no = #{cost_no}
+	</delete>
+	
+
+	<update id = "updateCostItem" parameterType="HashMap" >
+		UPDATE top_cost_item_2nd
+		   SET cost_class_no 		= #{cost_class_no} 
+		   	  ,cost_occur_date 		= UNIX_TIMESTAMP(#{cost_occur_date})
+			  ,cost_pay_place 		= #{cost_pay_place} 
+			  ,cost_involved_com 	= #{cost_involved_com}
+			  ,cost_involved_man 	= #{cost_involved_man}
+			  ,cost_memo 			= #{cost_memo}
+			  ,cost_pay_amt 		= #{cost_pay_amt}
+			  ,cost_pay_type 		= #{cost_pay_type}
+			  ,cost_bill_ea 		= #{cost_bill_ea}
+			  ,cost_suim_accept_no 	= #{cost_suim_accept_no}
+			  ,cost_distance 		= #{cost_distance}
+		 WHERE cost_no = #{cost_no}
+	</update>	
+	
+	
+	<select id="selectCostItemInsertDate" resultType="HashMap" parameterType="HashMap">
+		SELECT if( DAY(#{cost_occur_date}) &lt; 16
+				  ,DATE_FORMAT(DATE_SUB(#{cost_occur_date},INTERVAL 1 month),'%Y-%m-16')
+				  ,DATE_FORMAT(#{cost_occur_date},'%Y-%m-16')) now_from
+			  ,if( DAY(#{cost_occur_date}) &lt; 16
+				  ,DATE_FORMAT(#{cost_occur_date},'%Y-%m-16')
+				  ,DATE_FORMAT(DATE_ADD(#{cost_occur_date},INTERVAL 1 month),'%Y-%m-16')) now_to
+	</select>
+
+
+	<select id="selectCostAddValid" parameterType="HashMap" resultType="AsraMap">
+		SELECT COST_DEPOSIT_NO
+		  FROM top_cost_deposit_2nd
+		 WHERE user_no = #{user_no}
+		   AND cost_deposit_state = 4
+		   AND cost_year_month =  if( DAY(#{cost_occur_date}) &lt; 16
+								  ,DATE_FORMAT(#{cost_occur_date},'%y%m')
+				                  ,DATE_FORMAT(DATE_ADD(#{cost_occur_date},INTERVAL 1 month),'%y%m'))
+	</select>
+
+
+
+
+	<select id="selectCostItemValid" parameterType="HashMap" resultType="AsraMap">
+		SELECT cost_kind
+			  ,cost_item_state
+			  ,count(cost_item_state) costItemStateCnt 
+		  FROM top_cost_item_2nd
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month} 
+		   AND cost_item_state != 0
+		 GROUP BY cost_kind, cost_item_state
+	</select>
+	
+	<update id="updateAprvCostTotalAmt" parameterType="HashMap">
+		UPDATE top_cost_deposit_2nd
+		   SET cost_deposit_total_amt = ( cost_deposit_basic_amt + cost_deposit_add_amt + cost_deposit_claim_amt )
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}
+	</update>
+	
+	<update id="updateAprvCostItem" parameterType="HashMap">
+		UPDATE top_cost_item_2nd
+		   SET cost_item_state = #{aprv_state}
+		      ,cost_aprv_user_no = #{cost_aprv_user_no}
+		      ,cost_deposit_date = UNIX_TIMESTAMP(NOW())
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}
+		   <if test="cost_kind != 0 and cost_kind != NULL">
+		       AND cost_kind = #{cost_kind}
+		   </if>		   
+	</update>
+	
+	
+	<update id="updateArpvCostDeposit1st" parameterType="HashMap">
+		UPDATE top_cost_deposit_2nd
+		   SET cost_deposit_state = #{aprv_state}
+		      ,cost_deposit_date = UNIX_TIMESTAMP(NOW())
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}
+	</update>	
+	
+	
+	<insert id="insertCostDepositLog" parameterType="HashMap">
+	    <selectKey resultType="string" keyProperty="costDepositNo" order="BEFORE">
+	        SELECT cost_deposit_no FROM top_cost_deposit_2nd WHERE user_no = #{user_no} AND cost_year_month = #{cost_year_month}        
+	    </selectKey>
+	        
+		INSERT INTO top_cost_deposit_2nd_log
+		(
+			 cost_deposit_no
+			,aprv_state
+			,aprv_user_no
+			,reg_date 		
+		)
+		VALUES
+		(
+			 #{costDepositNo}
+			,#{aprv_state}
+			,#{cost_aprv_user_no}
+			,NOW()
+		)
+	
+	</insert>
+	
+	<select id="selectCostItemStateCheck" parameterType="HashMap" resultType="Integer">
+		SELECT COUNT(*)
+		  FROM top_cost_item_2nd
+		 WHERE USER_No = #{user_no}
+		   AND cost_year_month = #{cost_year_month}
+		   AND cost_item_state = 0
+	</select>
+	
+	<select id="selectCostDetailPrint" parameterType="HashMap" resultType="AsraMap">
+		SELECT COST_NO
+			  ,COST_YEAR_MONTH
+			  ,COST_KIND
+			  ,COST_ITEM_STATE
+			  ,COST_CLASS_NO
+			  ,getCodeValue("top_cost_item", "cost_class_no", COST_CLASS_NO) COST_CLASS_NM
+			  ,TEAM_ID
+			  ,USER_NO
+			  ,FROM_UNIXTIME(COST_OCCUR_DATE, '%Y-%m-%d') COST_OCCUR_DATE
+			  ,COST_PAY_PLACE
+			  ,COST_INVOLVED_COM
+			  ,COST_INVOLVED_MAN
+			  ,COST_MEMO
+			  ,COST_DISTANCE
+			  ,COST_SUIM_ACCEPT_NO
+			  ,COST_PAY_AMT
+			  ,COST_PAY_TYPE
+			  ,COST_BILL_EA
+			  ,COST_APRV_USER_NO
+			  ,DATE_FORMAT(FROM_UNIXTIME(COST_DEPOSIT_DATE), '%Y-%m-%d') COST_DEPOSIT_DATE
+			  ,DATE_FORMAT(FROM_UNIXTIME(REG_DATE), '%Y-%m-%d') REG_DATE
+		  FROM top_cost_item_2nd
+		 WHERE 1=1
+		   AND USER_NO = #{user_no}
+		   AND COST_YEAR_MONTH = #{cost_year_month}
+		 ORDER BY COST_KIND, COST_PAY_TYPE, COST_CLASS_NO, COST_OCCUR_DATE
+	</select>
+	
+</mapper>

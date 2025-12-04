@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="EditCloseDateMapper"> 
+
+	<update id="incEditCloseDate" parameterType="java.util.HashMap" >
+		UPDATE
+			<choose>
+				<when test="gbNo == 1">
+					top_rpt_head
+				</when>
+				<when test="gbNo == 2">
+					top_prim_biz_rpt_head
+				</when>
+			</choose>
+		SET close_date = UNIX_TIMESTAMP(#{editCloseDate})
+		WHERE suim_rpt_no = #{smNo}
+	</update>
+
+</mapper>

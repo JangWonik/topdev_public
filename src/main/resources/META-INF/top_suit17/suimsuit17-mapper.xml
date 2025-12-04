@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimSuit17ListMapper">
+
+	<select id="getSuimSuit17List" resultType="kr.co.toplac.topsuit17.SuimSuit_17VO" parameterType="java.util.HashMap">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT 
+			suim_rpt_no suimRptNo
+			, suim_accept_no suimAcceptNo
+			, suim_close_no suimCloseNo
+			, suim_rpt_state suimRptState
+			, team_id teamId
+			, getTopTmBscTeamName(team_id) teamName, getTopTmBscTeamMark(team_id) teamMark
+			, user_no userNo
+			, getTopMbrBscUserName(user_no) userName
+			, ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(ptnr_id) ptnrNick, getTopPtnrBscPtnrName(ptnr_id) ptnrName
+			, policyholder_nm policyholderNm
+			, policyholder_tel1 policyholderTel1
+			, policyholder_tel2 policyholderTel2
+			, policyholder_hp policyholderHp
+			, reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDateFmt
+			, getDateDiff(reg_date)+1 pastDate
+			, suim_cancel_date cancelDate
+			, suim_rpt_aprv_date suimCancelDate
+			, close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') closeDateFmt
+			, del_date delDate
+			, lock_flag lockFlag
+			, bd_type bdType
+			
+			FROM top_suitability_17
+			WHERE 1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+			ORDER BY suim_rpt_no
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+	
+	<select id="getSuimSuit17ListExcel" resultType="kr.co.toplac.topsuit17.SuimSuit_17VO" parameterType="java.util.HashMap">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT 
+			suim_rpt_no suimRptNo
+			, suim_accept_no suimAcceptNo
+			, suim_close_no suimCloseNo
+			, suim_rpt_state suimRptState
+			, team_id teamId
+			, getTopTmBscTeamName(team_id) teamName, getTopTmBscTeamMark(team_id) teamMark
+			, user_no userNo
+			, getTopMbrBscUserName(user_no) userName
+			, ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(ptnr_id) ptnrNick, getTopPtnrBscPtnrName(ptnr_id) ptnrName
+			, policyholder_nm policyholderNm
+			, policyholder_tel1 policyholderTel1
+			, policyholder_tel2 policyholderTel2
+			, policyholder_hp policyholderHp
+			, reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDateFmt
+			, getDateDiff(reg_date)+1 pastDate
+			, suim_cancel_date cancelDate
+			, suim_rpt_aprv_date suimCancelDate
+			, close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') closeDateFmt
+			, del_date delDate
+			, lock_flag lockFlag
+			, bd_type bdType
+			
+			FROM top_suitability_17
+			WHERE 1=1
+				and suim_rpt_state = '2'
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+			ORDER BY suim_rpt_no
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum DESC
+	</select>
+
+	<select id="getSuimSuit17ListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(suim_rpt_no) cnt
+		FROM top_suitability_17
+		WHERE 1=1
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+	</select>
+	
+	<update id="udtSuimSuit17Lock" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_suitability_17
+		SET	
+			lock_flag = 1          <!-- 운영은 종결 취소 시 이전 종결일을 남겨두고 있음 Tobe 에서는 0으로 업덷이트 -->
+			
+		WHERE
+			1=1
+			and suim_rpt_state = '2'
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+		
+	</update>
+	
+	<select id="getSuimSuit17ListRs" resultType="kr.co.toplac.topsuit17.SuimSuit_17VO" parameterType="java.util.HashMap">
+		
+			SELECT 
+			a.info_a infoA
+		    , CAST(a.report_1 AS UNSIGNED) report1
+		    , a.user_no userNo
+			, a.info_m infoM   
+			, REPLACE(a.re_c, '-', '') reC
+			, b.user_name userName
+			, REPLACE(b.handphone, '-', '') handphone
+			, a.re_f reF     
+			, a.re_g reG     
+			, a.re_h reH     
+			, a.re_i reI     
+			, a.re_j reJ     
+			, a.re_k reK     
+			, a.re_l reL     
+			, a.info_aa infoAa  
+			, a.info_ab infoAb  
+			, a.info_ac infoAc  
+			, a.re_p reP     
+			, a.re_q reQ     
+			, a.re_r reR     
+			, a.info_ae infoAe  
+			, a.re_t reT     
+			, a.re_u reU     
+			, a.re_v reV     
+			, a.re_w reW     
+			, a.re_x reX     
+			, a.re_y reY     
+			, a.re_z reZ     
+			, a.re_aa reAa    
+			, a.re_ab reAb    
+			, a.re_ac reAc    
+			 
+			
+			FROM top_suitability_17 a, top_mbr_bsc b
+			WHERE 1=1
+				and a.user_no = b.user_no
+				and suim_rpt_no
+			<if test="viewFromDate != NULL and viewFromDate != ''">
+				and close_date >= unix_timestamp(#{viewFromDate})
+			</if>
+			<if test="viewToDate != NULL and viewToDate != ''">
+				and close_date &lt; (unix_timestamp(#{viewToDate})+86400)
+			</if>
+			ORDER BY suim_rpt_no asc;
+			
+	</select>
+
+</mapper>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PrimBizRptStateMapper">
+
+	<update id="primBizRptStateChgUnLock" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		lock_flag = 0
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<select id="getPrimBizInvShaCnt" resultType = "int">
+		SELECT COUNT(serial_no)
+		FROM top_prim_biz_inv_share
+		WHERE suim_rpt_no = #{suimRptNo}
+	</select>
+
+	<insert id="insPrimBizInvShaForSubmit" parameterType="java.lang.String">
+		INSERT INTO	top_prim_biz_inv_share
+			(rpt_invoice_no, suim_rpt_no, share_user_no
+			, share_amt_basic, share_amt_daily, share_amt_etc
+			, share_amt_traffic, share_amt_counsel, share_amt_total, share_ea)
+		SELECT a.rpt_invoice_no, a.suim_rpt_no, b.user_no
+			, a.amt_basic, a.amt_daily, a.amt_etc
+			, a.amt_traffic, a.amt_counsel, a.amt_total, b.suim_rpt_ea
+		FROM top_prim_biz_inv a, top_prim_biz_rpt_head b
+		WHERE a.suim_rpt_no = #{suimRptNo}
+		AND a.suim_rpt_no = b.suim_rpt_no
+	</insert>
+
+	<insert id="insPrimBizInvShaLogForSubmit" parameterType="java.util.HashMap">
+		INSERT INTO	top_prim_biz_inv_share_log
+			(prim_biz_inv_share_no, rpt_invoice_no, suim_rpt_no, share_user_no
+			, share_amt_basic, share_amt_daily, share_amt_etc
+			, share_amt_traffic, share_amt_counsel, share_amt_total, share_ea
+			, reg_date, reg_user_no, reg_type)
+		SELECT serial_no, a.rpt_invoice_no, a.suim_rpt_no, a.share_user_no
+			, a.share_amt_basic, a.share_amt_daily, a.share_amt_etc
+			, a.share_amt_traffic, a.share_amt_counsel, a.share_amt_total, a.share_ea
+			, UNIX_TIMESTAMP(NOW()), #{userNo}, #{regType}
+		FROM top_prim_biz_inv_share a
+		WHERE a.suim_rpt_no = #{smNo}
+	</insert>
+
+	<select id="getPrimBizInvAndShaCompare" resultType = "double">
+		SELECT (x.amt_basic - y.share_amt_basic) + (x.amt_daily - y.share_amt_daily)
+			+ (x.amt_etc - y.share_amt_etc) + (x.amt_traffic - y.share_amt_traffic)
+			+ (x.amt_counsel - y.share_amt_counsel) + (x.amt_total - y.share_amt_total)
+			+ (x.suim_rpt_ea - y.share_ea) same_yn
+		FROM
+			(SELECT a.rpt_invoice_no, a.suim_rpt_no
+				, a.amt_basic, a.amt_daily
+				, a.amt_etc , a.amt_traffic
+				, a.amt_counsel, a.amt_total
+				, b.suim_rpt_ea
+			FROM top_prim_biz_inv a, top_prim_biz_rpt_head b
+			WHERE a.suim_rpt_no = #{suimRptNo}
+			AND a.suim_rpt_no = b.suim_rpt_no) x,
+			(SELECT c.rpt_invoice_no, c.suim_rpt_no
+				, IFNULL(SUM(c.share_amt_basic),0) share_amt_basic, IFNULL(SUM(c.share_amt_daily),0) share_amt_daily
+				, IFNULL(SUM(c.share_amt_etc),0) share_amt_etc , IFNULL(SUM(c.share_amt_traffic),0) share_amt_traffic
+				, IFNULL(SUM(c.share_amt_counsel),0) share_amt_counsel, IFNULL(SUM(c.share_amt_total),0) share_amt_total
+				, IFNULL(SUM(c.share_ea),0) share_ea
+			FROM top_prim_biz_inv_share c
+			WHERE c.suim_rpt_no = #{suimRptNo}) y
+	</select>
+
+	<update id="primBizRptStateChgSubmit" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_rpt_state = 1, suim_rpt_aprv_date = UNIX_TIMESTAMP(NOW())
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="primBizRptStateChgSubmitX" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_rpt_state = 0, suim_rpt_aprv_date = NULL
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="primBizRptStateChgReturn" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_rpt_state = 11
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="primBizRptStateChgReturnX" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_rpt_state = 1
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="getPrimBizRptCloseCnt" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET primbiz_close_seq_no = primbiz_close_seq_no + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT primbiz_close_seq_no
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+	    </selectKey>
+
+	</update>
+
+	<update id="primBizRptStateChgClose" parameterType="java.util.HashMap">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_close_no = CONCAT('TFETC',DATE_FORMAT(NOW(),'%y'),'-',#{closeCntStr})
+				, suim_rpt_state = 2, close_date = UNIX_TIMESTAMP(NOW())
+		WHERE	suim_rpt_no = #{smNo}
+	</update>
+
+	<update id="primBizRptStateChgCloseX" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_close_no = NULL
+				, suim_rpt_state = 1, close_date = NULL
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="primBizRptStateChgCancel" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_rpt_state = 3, suim_cancel_date = UNIX_TIMESTAMP(NOW())
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="primBizRptStateChgCancelX" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		suim_rpt_state = 0, suim_cancel_date = NULL
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<update id="primBizRptStateChgDel" parameterType="java.lang.String">
+		UPDATE	top_prim_biz_rpt_head
+		SET		del_date = -1
+		WHERE	suim_rpt_no = #{suimRptNo}
+	</update>
+
+</mapper>

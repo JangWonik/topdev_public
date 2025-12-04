@@ -1,0 +1,33 @@
+<!--
+A:link {color: #000000;text-decoration: none; }
+A:visited {color: #000000;text-decoration: none;}
+A:hover {color:#0000ff;text-decoration: none;}
+A:active {color: #000000;text-decoration: none;}
+
+p {color:#555555; font-size:9pt; line-height:130%; margin-top:0; margin-bottom:0; font-family:±¼¸²,±¼¸²Ã¼;}
+input {border:solid 1 #dcdcdc; background-color:#ffffff; font-size:9pt; ime-mode:active;}
+.oncolor {border:solid 1 #113F7D; background-color:#ffffff; font-size:9pt; ime-mode:active;}
+textarea {border:solid 1 #dcdcdc; background-color:#ffffff; font-size:9pt; ime-mode:active;}
+in_text {border:solid 1 #666666; font-family:±¼¸²,±¼¸²Ã¼; font-size:9pt;}
+
+table {border-collapse:collapse;border-spacing:0; font-size:9pt;}
+.td {border:1px solid #cccccc; padding:3px;}
+.radio{border:0;background-color:transparent;}
+.btn{border:0;background-color:transparent;}
+
+body {
+background-color:#ffffff;
+color:#333333;
+font-family:±¼¸²,±¼¸²Ã¼;
+font-size:9pt;
+margin-left:0;margin-right:0;margin-top:0;margin-bottom:0;
+color: #000000;
+scrollbar-face-color: #FFFFFF;
+scrollbar-shadow-color: #CCCCCC; 
+scrollbar-highlight-color: #F0F0F0; 
+scrollbar-3dlight-color: #CCCCCC;
+scrollbar-darkshadow-color: #CCCCCC; 
+scrollbar-track-color: #F0F0F0; 
+scrollbar-arrow-color: #0083c7;
+}
+-->

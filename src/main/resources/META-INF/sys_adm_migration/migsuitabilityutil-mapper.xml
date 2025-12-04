@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MigSuitabilityUtilMapper">
+
+	<delete id="suitability12OjDeleteAll">
+		DELETE FROM top_suitability_12_oj
+	</delete>
+
+	<select id="migForSuitability12OjList" resultType = "kr.co.toplac.sysadm.migration.MigSuitability12OjVO">
+		SELECT a.rid, a.rqOjCt
+				,replace(a.rqOj_OjSeqno,'|','enterpoint') rqOj_OjSeqno
+				,replace(a.rqOj_BldSeqno,'|','enterpoint') rqOj_BldSeqno
+				,replace(a.rqOj_OjSign,'|','enterpoint') rqOj_OjSign
+				,replace(a.rqOj_OjTp,'|','enterpoint') rqOj_OjTp
+				,replace(a.rqOj_Rnk,'|','enterpoint') rqOj_Rnk
+				,replace(a.rqOj_Dt_Mtt,'|','enterpoint') rqOj_Dt_Mtt
+				,replace(a.rqOj_Dt_AccptPlc,'|','enterpoint') rqOj_Dt_AccptPlc
+				,replace(a.rqOj_AccptPlcFlgcd,'|','enterpoint') rqOj_AccptPlcFlgcd
+				,replace(a.rqOj_FldstObjFlgcd,'|','enterpoint') rqOj_FldstObjFlgcd
+				,replace(a.rqOj_UndgAccptYn,'|','enterpoint') rqOj_UndgAccptYn
+				,replace(a.rstOj_OjTpEqalYn,'|','enterpoint') rstOj_OjTpEqalYn
+				,replace(a.rstOj_RnkEqalYn,'|','enterpoint') rstOj_RnkEqalYn
+				,replace(a.rstOj_Dt_MttEqalYn,'|','enterpoint') rstOj_Dt_MttEqalYn
+				,replace(a.rstOj_Dt_AccptPlcEqalYn,'|','enterpoint') rstOj_Dt_AccptPlcEqalYn
+				,replace(a.rstOj_AccptPlcFlgcdEqalYn,'|','enterpoint') rstOj_AccptPlcFlgcdEqalYn
+				,replace(a.rstOj_FldstObjFlgcdEqalYn,'|','enterpoint') rstOj_FldstObjFlgcdEqalYn
+				,replace(a.rstOj_UndgAccptYnEqalYn,'|','enterpoint') rstOj_UndgAccptYnEqalYn
+				,replace(a.rstOj_EtMtt,'|','enterpoint') rstOj_EtMtt
+		FROM ls_suitability_12 a
+		ORDER BY a.rid
+	</select>
+
+	<insert id="migSuitability12OjWrite" parameterType="kr.co.toplac.sysadm.migration.MigSuitability12OjVO">
+		INSERT INTO top_suitability_12_oj
+				(suim_rpt_no
+				,rqOj_OjSeqno,rqOj_BldSeqno,rqOj_OjSign
+				,rqOj_OjTp,rqOj_Rnk,rqOj_Dt_Mtt
+				,rqOj_Dt_AccptPlc,rqOj_AccptPlcFlgcd,rqOj_FldstObjFlgcd
+				,rqOj_UndgAccptYn,rstOj_OjTpEqalYn,rstOj_RnkEqalYn
+				,rstOj_Dt_MttEqalYn,rstOj_Dt_AccptPlcEqalYn,rstOj_AccptPlcFlgcdEqalYn
+				,rstOj_FldstObjFlgcdEqalYn,rstOj_UndgAccptYnEqalYn,rstOj_EtMtt)
+		VALUES	(#{suim_rpt_no}
+				,#{rqOj_OjSeqno},#{rqOj_BldSeqno},#{rqOj_OjSign}
+				,#{rqOj_OjTp},#{rqOj_Rnk},#{rqOj_Dt_Mtt}
+				,#{rqOj_Dt_AccptPlc},#{rqOj_AccptPlcFlgcd},#{rqOj_FldstObjFlgcd}
+				,#{rqOj_UndgAccptYn},#{rstOj_OjTpEqalYn},#{rstOj_RnkEqalYn}
+				,#{rstOj_Dt_MttEqalYn},#{rstOj_Dt_AccptPlcEqalYn},#{rstOj_AccptPlcFlgcdEqalYn}
+				,#{rstOj_FldstObjFlgcdEqalYn},#{rstOj_UndgAccptYnEqalYn},#{rstOj_EtMtt})
+	</insert>
+
+	<delete id="suitability12BldDeleteAll">
+		DELETE FROM top_suitability_12_bld
+	</delete>
+
+	<select id="migForSuitability12BldList" resultType = "kr.co.toplac.sysadm.migration.MigSuitability12BldVO">
+		SELECT a.rid, a.rqBldCt
+				,replace(a.rqBld_Lctno,'|','enterpoint') rqBld_Lctno
+				,replace(a.rqBld_OjSeqno,'|','enterpoint') rqBld_OjSeqno
+				,replace(a.rqBld_BldSeqno,'|','enterpoint') rqBld_BldSeqno
+				,replace(a.rqBld_RlOwrNm,'|','enterpoint') rqBld_RlOwrNm
+				,replace(a.rqBld_CtnAdr,'|','enterpoint') rqBld_CtnAdr
+				,replace(a.rqBld_MngmBnnm,'|','enterpoint') rqBld_MngmBnnm
+				,replace(a.rqBld_BldRnkcd,'|','enterpoint') rqBld_BldRnkcd
+				,replace(a.rqBld_Plenm,'|','enterpoint') rqBld_Plenm
+				,replace(a.rqBld_Rofnm,'|','enterpoint') rqBld_Rofnm
+				,replace(a.rqBld_Wllnm,'|','enterpoint') rqBld_Wllnm
+				,replace(a.rqBld_Grod,'|','enterpoint') rqBld_Grod
+				,replace(a.rqBld_Undg,'|','enterpoint') rqBld_Undg
+				,replace(a.rqBld_Ttare,'|','enterpoint') rqBld_Ttare
+				,replace(a.rqBld_IsAre,'|','enterpoint') rqBld_IsAre
+				,replace(a.rqBld_IsTp,'|','enterpoint') rqBld_IsTp
+				,replace(a.rqBld_BldXpnm,'|','enterpoint') rqBld_BldXpnm
+				,replace(a.rstBld_Rcndt,'|','enterpoint') rstBld_Rcndt
+				,replace(a.rstBld_InvpsNm,'|','enterpoint') rstBld_InvpsNm
+				,replace(a.rstBld_CrRelpcRel,'|','enterpoint') rstBld_CrRelpcRel
+				,replace(a.rstBld_InvpsCntad,'|','enterpoint') rstBld_InvpsCntad
+				,replace(a.rstBld_RlOwrNm,'|','enterpoint') rstBld_RlOwrNm
+				,replace(a.rstBld_CtnAdr,'|','enterpoint') rstBld_CtnAdr
+				,replace(a.rstBld_MngmBnnm,'|','enterpoint') rstBld_MngmBnnm
+				,replace(a.rstBld_BldRnkcd,'|','enterpoint') rstBld_BldRnkcd
+				,replace(a.rstBld_GrodEqalYn,'|','enterpoint') rstBld_GrodEqalYn
+				,replace(a.rstBld_UndgEqalYn,'|','enterpoint') rstBld_UndgEqalYn
+				,replace(a.rstBld_TtareEqalYn,'|','enterpoint') rstBld_TtareEqalYn
+				,replace(a.rstBld_IsAreEqalYn,'|','enterpoint') rstBld_IsAreEqalYn
+				,replace(a.rstBld_IsTpEqalYn,'|','enterpoint') rstBld_IsTpEqalYn
+				,replace(a.rstBld_RlOwrNmEtMtt,'|','enterpoint') rstBld_RlOwrNmEtMtt
+				,replace(a.rstBld_CtnAdrEtMtt,'|','enterpoint') rstBld_CtnAdrEtMtt
+				,replace(a.rstBld_MngmBnnmEtMtt,'|','enterpoint') rstBld_MngmBnnmEtMtt
+				,replace(a.rstBld_BldRnkcdEtMtt,'|','enterpoint') rstBld_BldRnkcdEtMtt
+				,replace(a.rstBld_GrodEtMtt,'|','enterpoint') rstBld_GrodEtMtt
+				,replace(a.rstBld_UndgEtMtt,'|','enterpoint') rstBld_UndgEtMtt
+				,replace(a.rstBld_TtareEtMtt,'|','enterpoint') rstBld_TtareEtMtt
+				,replace(a.rstBld_IsAreEtMtt,'|','enterpoint') rstBld_IsAreEtMtt
+				,replace(a.rstBld_IsTpEtMtt,'|','enterpoint') rstBld_IsTpEtMtt
+				,replace(a.rstBld_Plenm,'|','enterpoint') rstBld_Plenm
+				,replace(a.rstBld_Rofnm,'|','enterpoint') rstBld_Rofnm
+				,replace(a.rstBld_Wllnm,'|','enterpoint') rstBld_Wllnm
+				,replace(a.rstBld_PanlYn,'|','enterpoint') rstBld_PanlYn
+				,replace(a.rstBld_PanlPst,'|','enterpoint') rstBld_PanlPst
+				,replace(a.rstBld_TntYn,'|','enterpoint') rstBld_TntYn
+				,replace(a.rstBld_TntPst,'|','enterpoint') rstBld_TntPst
+				,replace(a.rstBld_FlrFirZoneYn,'|','enterpoint') rstBld_FlrFirZoneYn
+				,replace(a.rstBld_EtMtt1,'|','enterpoint') rstBld_EtMtt1
+				,replace(a.rstBld_FlrBtpUndg,'|','enterpoint') rstBld_FlrBtpUndg
+				,replace(a.rstBld_FlrBtpFloor1,'|','enterpoint') rstBld_FlrBtpFloor1
+				,replace(a.rstBld_FlrBtpFloor2,'|','enterpoint') rstBld_FlrBtpFloor2
+				,replace(a.rstBld_FlrBtpFloor3,'|','enterpoint') rstBld_FlrBtpFloor3
+				,replace(a.rstBld_SlEqmtDcYn,'|','enterpoint') rstBld_SlEqmtDcYn
+				,replace(a.rstBld_MrkYn,'|','enterpoint') rstBld_MrkYn
+				,replace(a.rstBld_EtMtt2,'|','enterpoint') rstBld_EtMtt2
+		FROM ls_suitability_12 a
+		ORDER BY a.rid
+	</select>
+
+	<insert id="migSuitability12BldWrite" parameterType="kr.co.toplac.sysadm.migration.MigSuitability12BldVO">
+		INSERT INTO top_suitability_12_bld
+				(suim_rpt_no
+				,rqBld_Lctno,rqBld_OjSeqno,rqBld_BldSeqno
+				,rqBld_RlOwrNm,rqBld_CtnAdr,rqBld_MngmBnnm
+				,rqBld_BldRnkcd,rqBld_Plenm,rqBld_Rofnm
+				,rqBld_Wllnm,rqBld_Grod,rqBld_Undg
+				,rqBld_Ttare,rqBld_IsAre,rqBld_IsTp
+				,rqBld_BldXpnm,rstBld_Rcndt,rstBld_InvpsNm
+				,rstBld_CrRelpcRel,rstBld_InvpsCntad,rstBld_RlOwrNm
+				,rstBld_CtnAdr,rstBld_MngmBnnm,rstBld_BldRnkcd
+				,rstBld_GrodEqalYn,rstBld_UndgEqalYn,rstBld_TtareEqalYn
+				,rstBld_IsAreEqalYn,rstBld_IsTpEqalYn,rstBld_RlOwrNmEtMtt
+				,rstBld_CtnAdrEtMtt,rstBld_MngmBnnmEtMtt,rstBld_BldRnkcdEtMtt
+				,rstBld_GrodEtMtt,rstBld_UndgEtMtt,rstBld_TtareEtMtt
+				,rstBld_IsAreEtMtt,rstBld_IsTpEtMtt,rstBld_Plenm
+				,rstBld_Rofnm,rstBld_Wllnm,rstBld_PanlYn
+				,rstBld_PanlPst,rstBld_TntYn,rstBld_TntPst
+				,rstBld_FlrFirZoneYn,rstBld_EtMtt1,rstBld_FlrBtpUndg
+				,rstBld_FlrBtpFloor1,rstBld_FlrBtpFloor2,rstBld_FlrBtpFloor3
+				,rstBld_SlEqmtDcYn,rstBld_MrkYn,rstBld_EtMtt2)
+		VALUES	(#{suim_rpt_no}
+				,#{rqBld_Lctno},#{rqBld_OjSeqno},#{rqBld_BldSeqno}
+				,#{rqBld_RlOwrNm},#{rqBld_CtnAdr},#{rqBld_MngmBnnm}
+				,#{rqBld_BldRnkcd},#{rqBld_Plenm},#{rqBld_Rofnm}
+				,#{rqBld_Wllnm},#{rqBld_Grod},#{rqBld_Undg}
+				,#{rqBld_Ttare},#{rqBld_IsAre},#{rqBld_IsTp}
+				,#{rqBld_BldXpnm},#{rstBld_Rcndt},#{rstBld_InvpsNm}
+				,#{rstBld_CrRelpcRel},#{rstBld_InvpsCntad},#{rstBld_RlOwrNm}
+				,#{rstBld_CtnAdr},#{rstBld_MngmBnnm},#{rstBld_BldRnkcd}
+				,#{rstBld_GrodEqalYn},#{rstBld_UndgEqalYn},#{rstBld_TtareEqalYn}
+				,#{rstBld_IsAreEqalYn},#{rstBld_IsTpEqalYn},#{rstBld_RlOwrNmEtMtt}
+				,#{rstBld_CtnAdrEtMtt},#{rstBld_MngmBnnmEtMtt},#{rstBld_BldRnkcdEtMtt}
+				,#{rstBld_GrodEtMtt},#{rstBld_UndgEtMtt},#{rstBld_TtareEtMtt}
+				,#{rstBld_IsAreEtMtt},#{rstBld_IsTpEtMtt},#{rstBld_Plenm}
+				,#{rstBld_Rofnm},#{rstBld_Wllnm},#{rstBld_PanlYn}
+				,#{rstBld_PanlPst},#{rstBld_TntYn},#{rstBld_TntPst}
+				,#{rstBld_FlrFirZoneYn},#{rstBld_EtMtt1},#{rstBld_FlrBtpUndg}
+				,#{rstBld_FlrBtpFloor1},#{rstBld_FlrBtpFloor2},#{rstBld_FlrBtpFloor3}
+				,#{rstBld_SlEqmtDcYn},#{rstBld_MrkYn},#{rstBld_EtMtt2})
+	</insert>
+
+</mapper>

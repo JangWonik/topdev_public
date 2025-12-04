@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="topCostAsign">
+	
+	<select id="getMyInfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+	
+		SELECT
+			a.user_no,
+			a.user_name,
+			a.home_address,
+			a.team_id_insa,
+			b.team_name,
+			a.work_level work_level_cd,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+			a.user_no = #{user_no} and
+			a.team_id_insa = b.team_id
+			
+	</select>
+
+	<update id="topCostActionSubmit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_aprv_state='1',
+		cost_deposit_amt = cost_pay_amt,
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_deposit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_deposit set 
+		cost_sum_mbr_ins = #{sum_cost_pay_amt}
+		where user_no = #{user_id} 
+		and date_mbr_ins >= UNIX_TIMESTAMP(#{fromdate}) and date_mbr_ins &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_x" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_aprv_state='0',
+		cost_deposit_amt = 0,
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_hq_item" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_aprv_state='2',
+		cost_deposit_amt = cost_pay_amt,
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_hq_deposit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_deposit set 
+		amt_hq_aprv = cost_sum_mbr_ins,
+		user_no_hq_aprv = #{user_no},
+		date_hq_aprv = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and date_mbr_ins >= UNIX_TIMESTAMP(#{fromdate}) and date_mbr_ins &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_hq_x_item" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_aprv_state='1',
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_hq_x_deposit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_deposit set 
+		amt_hq_aprv = 0,
+		user_no_hq_aprv = #{user_no},
+		date_hq_aprv = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_deposit_no = #{cost_deposit_no}
+	
+	</update>
+	
+	<update id="topCostActionSubmit_finance_item" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_aprv_state='3',
+		cost_deposit_amt = cost_pay_amt,
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_finance_deposit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_deposit set 
+		amt_finance_aprv = cost_sum_mbr_ins,
+		user_no_finance_aprv = #{user_no},
+		date_finance_aprv = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and date_mbr_ins >= UNIX_TIMESTAMP(#{fromdate}) and date_mbr_ins &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_finance_x_item" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_aprv_state='2',
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_finance_x_deposit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_deposit set 
+		amt_finance_aprv = 0,
+		user_no_finance_aprv = #{user_no},
+		date_finance_aprv = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_deposit_no = #{cost_deposit_no}
+	
+	</update>
+	
+	<update id="topCostActionSubmit_deposit_item" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_deposit_amt = cost_pay_amt,
+		cost_aprv_state='4',
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_no = #{cost_no}
+	
+	</update>
+	
+	<update id="topCostActionSubmit_deposit_deposit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_deposit set 
+		amt_deposit = #{amt_deposit},
+		user_no_finance_aprv = #{user_no},
+		date_deposit = UNIX_TIMESTAMP(#{date_deposit})
+		where user_no = #{user_id} 
+		and cost_deposit_no = #{cost_deposit_no}
+	
+	</update>
+	
+	<update id="topCostActionSubmit_deposit_x_item" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_item set 
+		cost_aprv_state='3',
+		cost_deposit_amt = cost_pay_amt,
+		cost_aprv_user_no = #{user_no},
+		cost_deposit_date = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate})
+	
+	</update>
+	
+	<update id="topCostActionSubmit_deposit_x_deposit" parameterType="java.util.HashMap">
+		
+		update 
+		top_cost_deposit set 
+		amt_deposit = 0,
+		user_no_finance_aprv = #{user_no},
+		date_deposit = UNIX_TIMESTAMP(now())
+		where user_no = #{user_id} 
+		and cost_deposit_no = #{cost_deposit_no}
+	
+	</update>
+	
+	
+	
+	
+</mapper>

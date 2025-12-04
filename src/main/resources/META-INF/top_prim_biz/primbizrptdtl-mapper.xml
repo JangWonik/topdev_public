@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PrimBizRptDtlMapper">
+
+	<select id="getPrimBizRptDtl" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no,
+			a.suim_rpt_type1,
+			getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1", a.suim_rpt_type1) suim_rpt_type1_nm,
+			a.suim_rpt_state,
+			getCodeValue("top_prim_biz_rpt_head", "suim_rpt_state", a.suim_rpt_state) suim_rpt_state_nm,
+			a.team_id, getTopTmBscTeamName(a.team_id) team_name,
+			a.user_no, z.user_name, z.handphone,
+			a.ptnr_id, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name,
+			<!-- a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_name, -->
+			a.ptnr_dept_id,
+			IFNULL( y.ptnr_tm_nm, '' ) AS ptnr_dept_name,
+			a.ptnr_mbr_no, y.ptnr_mbr_nm, y.ptnr_mbr_hp, y.ptnr_tm2_nm,
+			a.policyholder_nm, a.beneficiary_nm, a.damaged_nm,
+			a.accident_date, DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d') accident_date_fmt,
+			a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt,
+			a.lock_flag,
+			b.moral_flag, getCodeValue("top_prim_biz_rpt_body", "moral_flag", b.moral_flag) moral_flag_nm,
+			b.minwon_flag, getCodeValue("top_prim_biz_rpt_body", "minwon_flag", b.minwon_flag) minwon_flag_nm,
+			b.accident_no, b.policy_no, b.insurance_nm,
+			b.policyholder_tel, b.beneficiary_tel, b.damaged_tel,
+			b.accident_facts,
+			b.amt_estimated_damage,
+			b.commission_estimated,
+			b.investigate_postcode, b.investigate_addr1, b.investigate_addr2
+			, getTopPrimBizRptReadYN2(a.suim_rpt_no, a.team_id, #{present_user_no}) read_yn
+			, getTopPrimBizRptEditYN2(a.suim_rpt_no, a.team_id, #{present_user_no}) edit_yn
+			, getTopRptCloseAuthYN(a.team_id, #{present_user_no}) close_pms_yn
+			, getTopRptCancelApprovalAuthYN(a.team_id, #{present_user_no}) rptCancelApprovalAuthYN			
+			, getTopRptMbrChgYN(a.team_id, #{present_user_no}) mbrChgAuthYN
+			, getTopRptPtnrMbrChgYN(a.team_id, #{present_user_no}) ptnrMbrChgAuthYN
+			, a.suim_rpt_type1_close12
+			, getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1_close12", a.suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+			, a.suim_rpt_ea
+			, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+			, b.amt_claimed, b.amt_settlement, b.amt_insu_payment
+			, b.amt_self_pay, b.amt_reduction
+			, c.rpt_invoice_no
+			, c.amt_basic, c.amt_basic_dtl, c.amt_daily, c.amt_daily_dtl, c.amt_etc, c.amt_etc_dtl
+			, c.amt_traffic, c.amt_traffic_dtl, c.amt_counsel, c.amt_counsel_dtl, c.amt_total
+			, c.invoice_date, IF(c.invoice_date != null or c.invoice_date > 0, DATE_FORMAT(FROM_UNIXTIME(c.invoice_date), '%Y-%m-%d'), '') invoice_date_fmt
+			, c.tax_date, IF(c.tax_date != null or c.tax_date > 0, DATE_FORMAT(FROM_UNIXTIME(c.tax_date), '%Y-%m-%d'), '') tax_date_fmt
+			<!-- 상신 및 상신취소 권한 변경을 위함 170126 by.LDS -->
+			, getTopPrimBizRptEditYN2(#{suim_rpt_no}, a.team_id, #{present_user_no}) editYN2
+			<!-- 종결 후 수정 권한 추가 180103 by.LDS -->
+			, FIND_IN_SET(a.team_id, (select REPLACE(LS_ADMIN22,'|',',') from ls_admin where user_id = #{present_user_no})) endModAuth
+			, a.workload_type workloadType
+			, a.workload_ea workloadEa
+			, getCode2Value('top_rpt_head', CONCAT('workload_type_',#{year}), a.suim_rpt_type1, a.workload_type) workloadTypeVal
+			, IF( IF(IFNULL(a.close_date,0)=0,unix_timestamp("2017-12-16"),a.close_date) >= unix_timestamp("2017-12-16"),1,0) workloadUseAt -- 기준업무량은 17년12월16일부터 적용
+			, a.registrant
+			, IF( a.registrant = 0, '-', getTopMbrBscUserName( a.registrant )) as registrant_nm
+			
+			, IFNULL(a.close_ptnr_dept_nm,'') AS close_ptnr_dept_nm
+			, IFNULL(a.close_ptnr_tm2_nm,'') AS close_ptnr_tm2_nm
+			
+		 FROM top_prim_biz_rpt_head a
+		 LEFT JOIN top_ptnr_mbr_bsc y
+		   ON a.ptnr_mbr_no = y.ptnr_mbr_no
+		INNER JOIN top_prim_biz_rpt_body b
+	       ON a.suim_rpt_no = b.suim_rpt_no
+	    INNER JOIN top_prim_biz_inv c
+	       ON a.suim_rpt_no = c.suim_rpt_no
+		 LEFT OUTER JOIN top_mbr_bsc z
+		   ON a.user_no = z.user_no
+		WHERE a.suim_rpt_no = #{suim_rpt_no}
+	</select>
+
+	<select id="primBizRptType1Close12List" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd, col_val
+		FROM sysadm_codedic
+		WHERE tbl_nm = 'top_prim_biz_rpt_head'
+		AND col_nm = 'suim_rpt_type1_close12'
+		ORDER BY col_cd
+	</select>
+
+	<select id="getPrimBizShareList" parameterType="String" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		select 
+			 	serial_no,        
+				rpt_invoice_no,  
+				suim_rpt_no,      
+				share_user_no,
+				share_team_id,
+				getTopMbrBscUserName(share_user_no) share_user_name, 
+				share_amt_basic,  
+				share_amt_daily,
+				share_amt_etc,    
+				share_amt_traffic,
+				share_amt_counsel,
+				(share_amt_basic + share_amt_daily + share_amt_etc + share_amt_traffic + share_amt_counsel) share_amt_total,  
+				share_ea,
+				share_workload_ea
+		from top_prim_biz_inv_share
+		where 
+		suim_rpt_no = #{suim_rpt_no}
+	</select>
+
+	<!-- 보고서 원본 파일 -->
+	<select id="rptOrgFileList" parameterType="String" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptOrgFileVO">
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+		FROM
+			top_prim_biz_rpt_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	</select>
+
+</mapper>

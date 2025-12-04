@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PtnrDeptUdtMapper">
+
+	<update id = "deptDel" parameterType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+		UPDATE 
+			top_ptnr_dept_bsc
+		SET
+			del_state = 1, del_date = unix_timestamp(now())
+		WHERE
+			ptnr_dept_id = #{ptnr_dept_id}
+	</update>
+	
+	<update id  ="deptUdt" parameterType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+		
+		UPDATE 
+			top_ptnr_dept_bsc
+		SET
+			ptnr_dept_nm = #{ptnr_dept_nm},
+			ptnr_dept_office_tel = #{ptnr_dept_office_tel},
+			ptnr_dept_office_fax = #{ptnr_dept_office_fax},
+			ptnr_dept_office_postcode = #{ptnr_dept_office_postcode},
+			ptnr_dept_office_addr1 = #{ptnr_dept_office_addr1},
+			ptnr_dept_office_addr2 = #{ptnr_dept_office_addr2}
+		WHERE
+			ptnr_dept_id = #{ptnr_dept_id}
+	
+	</update>
+	
+	<update id  ="syncTopPtnrMbrBscByPtnrTmNm" parameterType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+		
+		UPDATE
+			top_ptnr_mbr_bsc
+		SET
+			ptnr_tm_nm = #{ptnr_dept_nm}
+		WHERE
+			ptnr_dept_id = #{ptnr_dept_id}
+		
+	</update>
+
+
+</mapper>

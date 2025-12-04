@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="TopCostList">
+	
+	<select id="getMyInfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+	
+		SELECT
+			a.user_no,
+			a.user_name,
+			a.home_address,
+			a.team_id_main,
+			b.team_name,
+			a.work_level work_level_cd,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+			a.user_no = #{user_no} and
+			a.team_id_main = b.team_id
+			
+	</select>
+
+	<select id="getCostList" resultType="kr.co.toplac.topcost.TopCostCompositeVO" parameterType="java.util.HashMap">
+		
+		select 
+			team.team_id
+			, team.team_type 
+			, team.team_name 
+			, mbrCnt.cnt
+			, item.sum_cost_pay_amt
+			, item.sum_cost_deposit_amt
+			, deposit.sum_cost_sum_mbr_ins
+			, deposit.sum_amt_hq_aprv
+			, deposit.sum_amt_finance_aprv
+			, helpClient.sum_price_total
+			, helpAccept.sum_price_total
+			, deposit.sum_deposit_price
+		from top_tm_bsc team
+		left join
+			(select team_id_main team_id, count(user_no) cnt
+			from top_mbr_bsc
+			
+			group by team_id_main) mbrCnt
+		on team.team_id = mbrCnt.team_id
+		left join
+			(select team_id, sum(cost_pay_amt) sum_cost_pay_amt, sum(cost_deposit_amt) sum_cost_deposit_amt
+			from top_cost_item
+			where (cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate}))
+			group by team_id) item
+		on team.team_id = item.team_id
+		left join
+			(select team_id, sum(cost_sum_mbr_ins) sum_cost_sum_mbr_ins, sum(amt_hq_aprv) sum_amt_hq_aprv
+			, sum(amt_deposit) sum_deposit_price, sum(amt_finance_aprv) sum_amt_finance_aprv
+			from top_cost_deposit
+			where date_mbr_ins >= UNIX_TIMESTAMP(#{fromdate}) and date_mbr_ins &lt; UNIX_TIMESTAMP(#{todate})
+			group by team_id) deposit
+		on team.team_id = deposit.team_id
+		left join
+			(select client_team team_id, sum(price_total) sum_price_total
+			from top_rpt_help
+			where end_date >= UNIX_TIMESTAMP(#{fromdate}) and end_date &lt; UNIX_TIMESTAMP(#{todate})
+			group by client_team) helpClient
+		on team.team_id = helpClient.team_id
+		left join
+			(select accept_team team_id, sum(price_total) sum_price_total
+			from top_rpt_help
+			where end_date >= UNIX_TIMESTAMP(#{fromdate}) and end_date &lt; UNIX_TIMESTAMP(#{todate})
+			group by accept_team) helpAccept
+		on team.team_id = helpAccept.team_id
+		where team.team_level = 1
+		ORDER BY team.team_group_order DESC, team.team_order DESC, team.team_level
+		
+	</select>
+	
+	<select id="getCostListTotal" resultType="kr.co.toplac.topcost.TopCostCompositeVO" parameterType="java.util.HashMap">
+		
+		select mbrCnt.total_cnt
+			, item.total_cost_pay_amt
+			, item.total_cost_deposit_amt
+			, deposit.total_cost_sum_mbr_ins
+			, deposit.total_amt_hq_aprv
+			, deposit.total_amt_finance_aprv
+			, helpClient.total_price_total
+			, helpAccept.total_price_total
+			, deposit.total_deposit_price
+		from 
+		
+			(select count(user_no) total_cnt
+			from top_mbr_bsc
+			where user_state != 1
+			) mbrCnt,
+		
+			(select sum(cost_pay_amt) total_cost_pay_amt, sum(cost_deposit_amt) total_cost_deposit_amt
+			from top_cost_item
+			where (cost_occur_date >= UNIX_TIMESTAMP(#{fromdate}) and cost_occur_date &lt; UNIX_TIMESTAMP(#{todate}))
+			) item,
+		
+			(select sum(cost_sum_mbr_ins) total_cost_sum_mbr_ins, sum(amt_hq_aprv) total_amt_hq_aprv
+			, sum(amt_deposit) total_deposit_price, sum(amt_finance_aprv) total_amt_finance_aprv
+			from top_cost_deposit
+			where date_mbr_ins >= UNIX_TIMESTAMP(#{fromdate}) and date_mbr_ins &lt; UNIX_TIMESTAMP(#{todate})
+			) deposit,
+		
+			(select sum(price_total) total_price_total
+			from top_rpt_help
+			where end_date >= UNIX_TIMESTAMP(#{fromdate}) and end_date &lt; UNIX_TIMESTAMP(#{todate})
+			) helpClient,
+		
+			(select sum(price_total) total_price_total
+			from top_rpt_help
+			where end_date >= UNIX_TIMESTAMP(#{fromdate}) and end_date &lt; UNIX_TIMESTAMP(#{todate})
+			) helpAccept;
+		
+	</select>
+	
+</mapper>

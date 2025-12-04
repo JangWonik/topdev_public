@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TopPrmLink">
+
+	<select id="getPrmList" resultType="kr.co.toplac.sysadm.TopPrmLinkVO">
+		SELECT
+			plno,
+			plname,
+			pllink,
+			user,
+			DATE_FORMAT(FROM_UNIXTIME(regdate), '%Y-%m-%d')
+		FROM
+			sysadm_prmlink
+	</select>
+	
+	<select id="getPrmOne" resultType="kr.co.toplac.sysadm.TopPrmLinkVO" parameterType="String">
+		SELECT
+			plname,
+			pllink
+		FROM
+			sysadm_prmlink
+		WHERE
+			plno = #{plno}
+	</select>
+	
+	<update id="uptPrm" parameterType="kr.co.toplac.sysadm.TopPrmLinkVO" >
+	 
+	 	UPDATE
+	 		sysadm_prmlink
+	 	SET
+	 		plname = #{plname},
+	 		pllink = #{pllink}
+	 	WHERE
+	 		plno = #{plno}
+	 		
+	</update>
+	
+	<insert id="insPrm" parameterType="kr.co.toplac.sysadm.TopPrmLinkVO" useGeneratedKeys="true" keyProperty="plno" keyColumn="plno">
+	
+		INSERT INTO sysadm_prmlink
+		(plname, pllink , regdate, user)
+		VALUES
+		(#{plname} , #{pllink}, unix_timestamp(now()), #{user})
+		
+		<selectKey keyProperty="plno" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+		
+	</insert>
+	
+	<delete id ="prmDel" parameterType="String">
+	
+		DELETE FROM
+			sysadm_prmlink
+		WHERE
+			plno = #{plno}
+	
+	</delete>
+	
+
+</mapper>

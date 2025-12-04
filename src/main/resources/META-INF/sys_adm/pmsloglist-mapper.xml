@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PmsLogListMapper">
+
+	<select id="reportLogListSearch" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+		    b.suim_accept_no AS suim_accept_no
+		    ,c.user_name AS user_name
+		    ,a.log_ip AS log_ip
+		    ,a.action AS action_code
+		    ,FROM_UNIXTIME(a.log_date) AS log_date
+		    ,DATE_FORMAT(FROM_UNIXTIME(a.log_date),'%Y-%m-%d %H:%i' ) AS log_date_fmt
+		    ,CASE
+		        WHEN `action` = 'submit' THEN '결재하기'
+		        WHEN `action` = 'end' THEN '종결하기'
+		        WHEN `action` = 'cancel' THEN '위임취소'
+		        WHEN `action` = 'submit_e_x' THEN '종결취소'
+		        WHEN `action` = 'cancel_requset' THEN '위임취소요청'
+		        WHEN `action` = 'submit_x' THEN '상신취소'
+		        WHEN `action` = 'returnRpt' THEN '반려하기'
+		        WHEN `action` = 'return_x' THEN '반려건재결재'
+		        WHEN `action` = 'un_lock' THEN '잠금해제'
+		        WHEN `action` = 'suim_reg' THEN '수임등록'
+		        WHEN `action` = 'report_del' THEN '보고서삭제'
+		        WHEN `action` = 'suim_update' THEN '보고서수정'
+		        WHEN `action` = 'site_submit' THEN '현장보고서상신'
+		        WHEN `action` = 'site_end' THEN '현장보고서결재'
+		        WHEN `action` = 'site_e_x' THEN '현장보고서결재취소'
+		        WHEN `action` = 'site_submit_x' THEN '현장보고서상신취소'
+		        ELSE ''        
+		    END AS action_text
+		FROM top_rpt_head_log a
+		LEFT JOIN top_rpt_head b
+		ON a.suim_rpt_no = b.suim_rpt_no
+		LEFT JOIN top_mbr_bsc c
+		ON a.log_user_no = c.user_no
+		WHERE 1=1
+		AND a.log_date > UNIX_TIMESTAMP(#{regSdate})
+		AND a.log_date &lt;= UNIX_TIMESTAMP(#{regEdate})
+		<if test='srchSuimRptNo != null and srchSuimRptNo != ""'>
+			AND b.suim_accept_no like CONCAT('%',#{srchSuimRptNo},'%')
+		</if>
+		AND `action` IS NOT NULL	
+	</select>	
+	 
+	<select id="pmsLogList" parameterType="java.util.HashMap" resultType="kr.co.toplac.topteam.TopMbrAuthVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT
+				serial_no,
+				a.user_no,
+				b.user_name,
+				mbr_pms_1,
+				mbr_pms_3,
+				mbr_pms_4,
+				mbr_pms_5,
+				mbr_pms_6,
+				mbr_pms_7,
+				mbr_pms_8,
+				mbr_pms_9,
+				mbr_pms_10,
+				mbr_pms_11,
+				mbr_pms_12,
+				mbr_pms_13,
+				mbr_pms_14,
+				mbr_pms_15,
+				mbr_pms_16,
+				mbr_pms_17,
+				mbr_pms_18,
+				mbr_pms_19,
+				mbr_pms_20,
+				mbr_pms_21,
+				getTopMbrBscUserName(a.reg_user) reg_user,
+				DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date
+			FROM
+				top_mbr_pms_log a, top_mbr_bsc b
+			WHERE
+				a.user_no = b.user_no
+				<if test='toDate != "0"'>
+					AND a.reg_date >= UNIX_TIMESTAMP(#{toDate})
+				</if>
+				<if test='fromDate != "0"'>
+					AND a.reg_date &lt;= UNIX_TIMESTAMP(#{fromDate})
+				</if>
+				
+			ORDER BY reg_date
+		) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY ROWNUM DESC
+	</select>
+
+
+</mapper>

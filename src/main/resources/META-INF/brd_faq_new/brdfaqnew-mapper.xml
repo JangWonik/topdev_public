@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BrdFaqNewMapper">
+
+    <select id="selectList" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FAQ_NO
+               ,A.TITLE
+               ,A.CONTENTS
+               ,GETCODEVALUE('brd_faq','faq_type',A.FAQ_TYPE) AS FAQ_TYPE_DISPLAY
+               ,A.FAQ_TYPE
+               ,A.BEST_AT
+               ,A.USE_AT
+               ,A.REG_USER_NO
+               ,DATE_FORMAT(A.REG_DATE, '%Y-%m-%d %H:%i:%s') AS REG_DATE
+          FROM  brd_faq A
+         WHERE  1=1
+           <if test="faq_type != 99">
+           AND  A.USE_AT = 'Y'
+           </if>
+           <if test="faq_type == 99">
+           AND  A.USE_AT = 'N'
+           </if>
+           <if test="faq_type != -1 and faq_type != 99">
+           AND  A.FAQ_TYPE = #{faq_type}
+           </if>
+           <if test="keyword != null and keyword != ''">
+           AND  (A.TITLE LIKE CONCAT('%',#{keyword},'%') OR A.CONTENTS LIKE CONCAT('%',#{keyword},'%'))
+           </if>
+        ORDER BY A.FAQ_NO DESC
+        LIMIT #{limitPage}, #{sizePerPage}
+    </select>
+
+    <select id="selectListCnt" parameterType="hashmap"  resultType="Long">
+        SELECT  COUNT(*) AS CNT
+          FROM  brd_faq A
+         WHERE  1=1
+           <if test="faq_type != 99">
+           AND  A.USE_AT = 'Y'
+           </if>
+           <if test="faq_type == 99">
+           AND  A.USE_AT = 'N'
+           </if>
+           <if test="faq_type != -1 and faq_type != 99">
+           AND  A.FAQ_TYPE = #{faq_type}
+           </if>
+           <if test="keyword != null and keyword != ''">
+           AND  (A.TITLE LIKE CONCAT('%',#{keyword},'%') OR A.CONTENTS LIKE CONCAT('%',#{keyword},'%'))
+           </if>
+        ORDER BY A.FAQ_NO DESC
+    </select>
+
+    <select id="selectBestList" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FAQ_NO
+               ,A.TITLE
+               ,A.CONTENTS
+               ,A.FAQ_TYPE
+               ,A.BEST_AT
+               ,A.USE_AT
+               ,A.REG_USER_NO
+               ,DATE_FORMAT(A.REG_DATE, '%Y-%m-%d %H:%i:%s') AS REG_DATE
+          FROM  brd_faq A
+         WHERE  1=1
+           AND  A.USE_AT = 'Y'
+           AND  A.BEST_AT = 'Y'
+        ORDER BY A.FAQ_NO DESC
+        LIMIT 5
+    </select>
+
+    <select id="select" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FAQ_NO
+               ,A.TITLE
+               ,A.CONTENTS
+               ,A.FAQ_TYPE
+               ,A.BEST_AT
+               ,A.USE_AT
+               ,A.REG_USER_NO
+               ,DATE_FORMAT(A.REG_DATE, '%Y-%m-%d %H:%i:%s') AS REG_DATE
+          FROM  brd_faq A
+         WHERE  1=1
+           AND  A.FAQ_NO = #{faq_no}
+    </select>
+
+
+	<insert id="insert" parameterType="hashmap">
+        INSERT INTO brd_faq(
+                     TITLE
+                    ,CONTENTS
+                    ,FAQ_TYPE
+                    ,BEST_AT
+                    ,USE_AT
+                    ,REG_USER_NO
+                    ,REG_DATE
+                    ,MODIFY_USER_NO
+                    ,MODIFY_DATE) VALUES(
+                     #{title}
+                    ,#{contents}
+                    ,#{faq_type}
+                    ,#{best_at}
+                    ,#{use_at}
+                    ,#{reg_user_no}
+                    ,NOW()
+                    ,#{reg_user_no}
+                    ,NOW()
+                    )
+        <selectKey resultType="int" keyProperty="faq_no" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="hashmap">
+        UPDATE  brd_faq
+           SET  TITLE = #{title}
+               ,CONTENTS = #{contents}
+               ,FAQ_TYPE = #{faq_type}
+               ,BEST_AT = #{best_at}
+               ,USE_AT = #{use_at}
+               ,MODIFY_USER_NO = #{user_no}
+               ,MODIFY_DATE = NOW()
+         WHERE  FAQ_NO = #{faq_no}
+    </update>
+
+    <delete id="delete" parameterType="hashmap">
+        DELETE FROM brd_faq WHERE FAQ_NO = #{faq_no}
+    </delete>
+
+    <insert id="insertFile" parameterType="hashmap">
+        INSERT INTO brd_faq_file (FAQ_NO, STRE_FILE_PATH, STRE_FILE_NM, ORIGNL_FILE_NM)
+        VALUES (#{faqNo},#{streFilePath},#{streFileNm},#{orignlFileNm})
+    </insert>
+
+    <select id="selectFile" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+               ,A.STRE_FILE_PATH
+               ,A.STRE_FILE_NM
+               ,A.ORIGNL_FILE_NM
+          FROM  brd_faq_file A
+         WHERE  1=1
+           AND  A.FILE_NO = #{file_no}
+    </select>
+
+    <select id="selectFileList" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+               ,A.STRE_FILE_PATH
+               ,A.STRE_FILE_NM
+               ,A.ORIGNL_FILE_NM
+          FROM  brd_faq_file A
+         WHERE  1=1
+           AND  A.FAQ_NO = #{faq_no}
+    </select>
+
+    <delete id="deleteFile" parameterType="hashmap">
+        DELETE FROM brd_faq_file WHERE FILE_NO = #{file_no}
+    </delete>
+    <delete id="deleteFiles" parameterType="hashmap">
+        DELETE FROM brd_faq_file WHERE FAQ_NO = #{faq_no}
+    </delete>
+
+    <select id="selectEvaluateUrl" parameterType="hashmap" resultType="AsraMap">
+        SELECT  USER_NO, USER_NM, URL_TYPE, URL FROM TT_EVALUATE_URL WHERE USER_NO = #{user_no}
+    </select>
+</mapper>

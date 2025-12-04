@@ -1,0 +1,79 @@
+@CHARSET "UTF-8";
+
+@media (max-width: 1300px){
+	
+	/* 공통 */
+	#wrapper{min-width:1080px; max-height:1900px; overflow-x:hidden;}
+	body{height:1800px;}
+	#container{height:100% !important;}
+	.contetns{ width:1080px; }
+	
+	
+	.h_leftbg{ display:none; }	
+	#menuLogoImg{ width:133px; }
+	#header .inner h1 { width:38px; }
+	.header_top .h_schA {padding-left:70px;}
+	#header .inner .hcont .header_top .logArea {right:-20px;}
+			
+	#footer, #footer .inner{width:1080px;}
+	#footer .inner .infolist {margin-left: -400px;}
+	.logfooter, .logfooter .inner{width:1080px;}
+	.logfooter .inner .infolist {margin-left: -400px;}
+	
+	.left_cnt{display:none;}
+	.banner{width:1065px;}
+	.banner ul li {margin-left:80px;}
+	
+	
+	/* 메인화면 */
+	.centercnt_top{width:1080px !important;height:100% !important;}
+	.centercnt_top .nocite{width:528px;}
+	.centercnt_bot{width:1080px !important;height:100% !important;}
+	.center_cnt{height:99%;width:1063px;}
+	.guestcnt{height:1130px !important; }
+	
+	/* 직원명부 */
+	.centercnt_bot1-2{width:1065px !important;height:100% !important;}
+	
+	/* 수임대장 */
+	.center_cnt_1300_bot{width:1080px !important;height:100% !important;}
+	.center_cnt_1300{width:1080px; height:99%;}
+	.guestcnt4{height:1280px !important; }
+	.suimBookTable tr td {height: 45px;}			
+	.suimBookTable tr th:nth-child(-n+2), 
+	.suimBookTable tr td:nth-child(-n+2){
+		display:none;
+	}
+	
+	/* 상세 검색 */
+	.center_cnt_1300_bot_search{width:1080px !important;height:100% !important;}
+	.guestcntSearch{height:1325px !important; }
+	#regDateToSearch, #cancelDateToSearch, #minwonDateToSearch, #closeDateToSearch{ margin-left: 0px; }
+	
+	.srchResultTable tr td {height: 45px;}			
+	.srchResultTable tr th:nth-child(-n+2), 
+	.srchResultTable tr td:nth-child(-n+2),
+	.srchResultTable colgroup col:nth-child(-n+2){
+		display:none;
+	}
+	
+	/* 인사관리 */
+	.centercnt_1300_bot1-2_ds{width:1080px !important;height:100% !important;}
+	.center_cnt_1300_ds{height:99%;}
+	.guestcnt_1300_ds{height:1325px !important; }
+	
+	/* FaQ */
+	.numberlist{width:780px !important;}
+	
+	/* 경비내역 */ 
+	.guestcnt2{height:1280px !important; }
+	.statisticsTable{height:1235px !important;}
+	
+	/* 휴가 */
+	.centercnt_1300_bot1-2_ds{width:1080px !important;height:100% !important;}
+	.guestcnt_1300_ds{height:1325px !important; }	
+	
+	.center_cnt_vacation{width:1080px !important;height:100% !important;overflow-y:hidden;}
+	.guestcnt8{height:1650px !important; }
+	#vacationListTable{width:1040px;}
+}

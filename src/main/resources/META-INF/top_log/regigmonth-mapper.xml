@@ -1,0 +1,701 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="RegIgMonthMapper">
+
+	<select id="day_list" parameterType="java.util.List" resultType="kr.co.toplac.lslog.RegIgMonthVO">
+	    select b.holiday_date reg_date, count(a.suim_rpt_no)
+		from (select holiday_date from sysadm_holiday where holiday_date >= (#{tmpFmonth}) and holiday_date &lt; (#{tmpTmonth})) b
+		left outer join top_rpt_head a on b.holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')
+		and a.reg_date >= unix_timestamp(#{fromdate})
+		and a.reg_date &lt; unix_timestamp(#{todate})
+		group by b.holiday_date
+	</select>
+
+	<select id="R_M1" parameterType="java.util.List" resultType="kr.co.toplac.lslog.RegIgMonthVO">
+		select ptnr_id ig_id, ptnr_nick ig_nick
+		from top_ptnr_bsc 
+		where ptnr_level='1'
+		and statistics_yn='1' 
+		order by ptnr_order desc, ptnr_id asc
+	</select>
+
+	<select id="R_M1List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.RegIgMonthVO">
+		select ifnull(rid1, 0) rid1, ifnull(rid2, 0) rid2, ifnull(rid3, 0) rid3, ifnull(rid4, 0) rid4, ifnull(rid5, 0) rid5, 
+			ifnull(rid6, 0) rid6, ifnull(rid7, 0) rid7, ifnull(rid8, 0) rid8, ifnull(rid9, 0) rid9, ifnull(rid10, 0) rid10, ifnull(rid11, 0) rid11,
+			ifnull(rid12, 0) rid12, ifnull(rid13, 0) rid13, ifnull(rid14, 0) rid14, ifnull(rid15, 0) rid15, ifnull(rid16, 0) rid16, ifnull(rid17, 0) rid17, 
+			ifnull(rid18, 0) rid18, ifnull(rid19, 0) rid19, ifnull(rid20, 0) rid20, ifnull(rid21, 0) rid21, ifnull(rid22, 0) rid22, ifnull(rid23, 0) rid23, 
+			ifnull(rid24, 0) rid24, ifnull(rid25, 0) rid25, ifnull(rid26, 0) rid26, ifnull(rid27, 0) rid27, ifnull(rid28, 0) rid28, ifnull(rid29, 0) rid29, 
+			ifnull(rid30, 0) rid30, ifnull(rid31, 0) rid31,  
+			ifnull(rid1 + rid2 + rid3 + rid4 + rid5 + rid6 + rid7 + rid8 + rid9 + rid10 + rid11 + rid12 + rid13 + rid14 + rid15 + rid16 + 
+			rid17 + rid18 + rid19 + rid20 + rid21 + rid22 + rid23 + rid24 + rid25 + rid26 + rid27 + rid28 + rid29 + rid30, 0) rid_sum 
+		from   
+			(select count(suim_rpt_no) rid1 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(#{tmpFmonth}) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day))
+			) a,
+			(select count(suim_rpt_no) rid2 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day))
+			) b, 
+			(select count(suim_rpt_no) rid3 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day))
+			) c, 
+			(select count(suim_rpt_no) rid4 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day))
+			) d, 
+			(select count(suim_rpt_no) rid5 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day))
+			) e, 
+			(select count(suim_rpt_no) rid6 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day))
+			) f, 
+			(select count(suim_rpt_no) rid7 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day))
+			) g, 
+			(select count(suim_rpt_no) rid8 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day))
+			) h, 
+			(select count(suim_rpt_no) rid9 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day))
+			) i, 
+			(select count(suim_rpt_no) rid10 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day))
+			) j, 
+			(select count(suim_rpt_no) rid11 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day))
+			) k, 
+			(select count(suim_rpt_no) rid12 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day))
+			) l, 
+			(select count(suim_rpt_no) rid13 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day))
+			) m, 
+			(select count(suim_rpt_no) rid14 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day))
+			) n, 
+			(select count(suim_rpt_no) rid15 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day))
+			) o, 
+			(select count(suim_rpt_no) rid16 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 16 day))
+			) p, 
+			(select count(suim_rpt_no) rid17 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 15 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 14 day))
+			) q, 
+			(select count(suim_rpt_no) rid18 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 14 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day))
+			) r, 
+			(select count(suim_rpt_no) rid19 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day))
+			) s, 
+			(select count(suim_rpt_no) rid20 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day))
+			) t, 
+			(select count(suim_rpt_no) rid21 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day))
+			) u, 
+			(select count(suim_rpt_no) rid22 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day))
+			) v, 
+			(select count(suim_rpt_no) rid23 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day))
+			) w, 
+			(select count(suim_rpt_no) rid24 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day))
+			) x, 
+			(select count(suim_rpt_no) rid25 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day))
+			) y, 
+			(select count(suim_rpt_no) rid26 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day))
+			) z, 
+			(select count(suim_rpt_no) rid27 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day))
+			) a1, 
+			(select count(suim_rpt_no) rid28 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day))
+			) a2, 
+			(select count(suim_rpt_no) rid29 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day))
+			) a3, 
+			(select count(suim_rpt_no) rid30 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day))
+			) a4, 
+			(select count(suim_rpt_no) rid31 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day)) and reg_date &lt; unix_timestamp(#{tmpTmonth})
+			) a5
+	</select>
+
+	<select id="E_M1List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.RegIgMonthVO">
+		select ifnull(end1, 0) end1, ifnull(end2, 0) end2, ifnull(end3, 0) end3, ifnull(end4, 0) end4, 
+			ifnull(end5, 0) end5, ifnull(end6, 0) end6, ifnull(end7, 0) end7, ifnull(end8, 0) end8, ifnull(end9, 0) end9, ifnull(end10, 0) end10, 
+			ifnull(end11, 0) end11, ifnull(end12, 0) end12, ifnull(end13, 0) end13, ifnull(end14, 0) end14, ifnull(end15, 0) end15, ifnull(end16, 0) end16, 
+			ifnull(end17, 0) end17, ifnull(end18, 0) end18, ifnull(end19, 0) end19, ifnull(end20, 0) end20, ifnull(end21, 0) end21, ifnull(end22, 0) end22, 
+			ifnull(end23, 0) end23, ifnull(end24, 0) end24, ifnull(end25, 0) end25, ifnull(end26, 0) end26, ifnull(end27, 0) end27, ifnull(end28, 0) end28,  
+			ifnull(end29, 0) end29, ifnull(end30, 0) end30, ifnull(end31, 0) end31,  
+			ifnull(end1 + end2 + end3 + end4 + end5 + end6 + end7 + end8 + end9 + end10 + end11 + end12 + end13 + end14 + end15 + end16 + 
+			end17 + end18 + end19 + end20 + end21 + end22 + end23 + end24 + end25 + end26 + end27 + end28 + end29 + end30 + end31, 0) end_sum 
+		from   
+			(select count(suim_rpt_no) end1 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(#{tmpFmonth}) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day))
+			) a,
+			(select count(suim_rpt_no) end2 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day))
+			) b, 
+			(select count(suim_rpt_no) end3 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day))
+			) c, 
+			(select count(suim_rpt_no) end4 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day))
+			) d, 
+			(select count(suim_rpt_no) end5 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day))
+			) e, 
+			(select count(suim_rpt_no) end6 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day))
+			) f, 
+			(select count(suim_rpt_no) end7 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day))
+			) g, 
+			(select count(suim_rpt_no) end8 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day))
+			) h, 
+			(select count(suim_rpt_no) end9 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day))
+			) i, 
+			(select count(suim_rpt_no) end10 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day))
+			) j, 
+			(select count(suim_rpt_no) end11 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day))
+			) k, 
+			(select count(suim_rpt_no) end12 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day))
+			) l, 
+			(select count(suim_rpt_no) end13 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day))
+			) m, 
+			(select count(suim_rpt_no) end14 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day))
+			) n, 
+			(select count(suim_rpt_no) end15 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day))
+			) o, 
+			(select count(suim_rpt_no) end16 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 16 day))
+			) p, 
+			(select count(suim_rpt_no) end17 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpFmonth}, interval 15 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpFmonth}, interval 14 day))
+			) q, 
+			(select count(suim_rpt_no) end18 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 14 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day))
+			) r, 
+			(select count(suim_rpt_no) end19 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day))
+			) s, 
+			(select count(suim_rpt_no) end20 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day))
+			) t, 
+			(select count(suim_rpt_no) end21 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day))
+			) u, 
+			(select count(suim_rpt_no) end22 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day))
+			) v, 
+			(select count(suim_rpt_no) end23 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day))
+			) w, 
+			(select count(suim_rpt_no) end24 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day))
+			) x, 
+			(select count(suim_rpt_no) end25 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day))
+			) y, 
+			(select count(suim_rpt_no) end26 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day))
+			) z, 
+			(select count(suim_rpt_no) end27 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day))
+			) a1, 
+			(select count(suim_rpt_no) end28 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day))
+			) a2, 
+			(select count(suim_rpt_no) end29 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day))
+			) a3, 
+			(select count(suim_rpt_no) end30 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day))
+			) a4, 
+			(select count(suim_rpt_no) end31 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day)) AND rpt.close_date &lt; unix_timestamp(#{tmpTmonth})
+			) a5
+	</select>
+
+	<select id="R_M4" parameterType="java.util.List" resultType="kr.co.toplac.lslog.RegIgMonthVO">
+		select ptnr_id ig_id, ptnr_nick ig_nick
+		from top_ptnr_bsc 
+		where ptnr_level='1'
+		and statistics_yn='1' 
+		order by ptnr_order desc, ptnr_id asc
+	</select>
+
+	<select id="R_M4List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.RegIgMonthVO">
+		select ifnull(rid1, 0) rid1, ifnull(rid2, 0) rid2, ifnull(rid3, 0) rid3, ifnull(rid4, 0) rid4, ifnull(rid5, 0) rid5, 
+			ifnull(rid6, 0) rid6, ifnull(rid7, 0) rid7, ifnull(rid8, 0) rid8, ifnull(rid9, 0) rid9, ifnull(rid10, 0) rid10, ifnull(rid11, 0) rid11,
+			ifnull(rid12, 0) rid12, ifnull(rid13, 0) rid13, ifnull(rid14, 0) rid14, ifnull(rid15, 0) rid15, ifnull(rid16, 0) rid16, ifnull(rid17, 0) rid17, 
+			ifnull(rid18, 0) rid18, ifnull(rid19, 0) rid19, ifnull(rid20, 0) rid20, ifnull(rid21, 0) rid21, ifnull(rid22, 0) rid22, ifnull(rid23, 0) rid23, 
+			ifnull(rid24, 0) rid24, ifnull(rid25, 0) rid25, ifnull(rid26, 0) rid26, ifnull(rid27, 0) rid27, ifnull(rid28, 0) rid28, ifnull(rid29, 0) rid29, 
+			ifnull(rid30, 0) rid30, ifnull(rid31, 0) rid31,  
+			ifnull(rid1 + rid2 + rid3 + rid4 + rid5 + rid6 + rid7 + rid8 + rid9 + rid10 + rid11 + rid12 + rid13 + rid14 + rid15 + rid16 + 
+			rid17 + rid18 + rid19 + rid20 + rid21 + rid22 + rid23 + rid24 + rid25 + rid26 + rid27 + rid28 + rid29 + rid30, 0) rid_sum 
+		from   
+			(select count(suim_rpt_no) rid1 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(#{tmpFmonth}) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day))
+			) a,
+			(select count(suim_rpt_no) rid2 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day))
+			) b, 
+			(select count(suim_rpt_no) rid3 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day))
+			) c, 
+			(select count(suim_rpt_no) rid4 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day))
+			) d, 
+			(select count(suim_rpt_no) rid5 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day))
+			) e, 
+			(select count(suim_rpt_no) rid6 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day))
+			) f, 
+			(select count(suim_rpt_no) rid7 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day))
+			) g, 
+			(select count(suim_rpt_no) rid8 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day))
+			) h, 
+			(select count(suim_rpt_no) rid9 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day))
+			) i, 
+			(select count(suim_rpt_no) rid10 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day))
+			) j, 
+			(select count(suim_rpt_no) rid11 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day))
+			) k, 
+			(select count(suim_rpt_no) rid12 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day))
+			) l, 
+			(select count(suim_rpt_no) rid13 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day))
+			) m, 
+			(select count(suim_rpt_no) rid14 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day))
+			) n, 
+			(select count(suim_rpt_no) rid15 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day))
+			) o, 
+			(select count(suim_rpt_no) rid16 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day)) and reg_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 16 day))
+			) p, 
+			(select count(suim_rpt_no) rid17 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 15 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 14 day))
+			) q, 
+			(select count(suim_rpt_no) rid18 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 14 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day))
+			) r, 
+			(select count(suim_rpt_no) rid19 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day))
+			) s, 
+			(select count(suim_rpt_no) rid20 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day))
+			) t, 
+			(select count(suim_rpt_no) rid21 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day))
+			) u, 
+			(select count(suim_rpt_no) rid22 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day))
+			) v, 
+			(select count(suim_rpt_no) rid23 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day))
+			) w, 
+			(select count(suim_rpt_no) rid24 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day))
+			) x, 
+			(select count(suim_rpt_no) rid25 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day))
+			) y, 
+			(select count(suim_rpt_no) rid26 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day))
+			) z, 
+			(select count(suim_rpt_no) rid27 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day))
+			) a1, 
+			(select count(suim_rpt_no) rid28 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day))
+			) a2, 
+			(select count(suim_rpt_no) rid29 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day))
+			) a3, 
+			(select count(suim_rpt_no) rid30 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day)) and reg_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day))
+			) a4, 
+			(select count(suim_rpt_no) rid31 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			and reg_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day)) and reg_date &lt; unix_timestamp(#{tmpTmonth})
+			) a5
+	</select>
+
+	<select id="E_M4List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.RegIgMonthVO">
+		select ifnull(end1, 0) end1, ifnull(end2, 0) end2, ifnull(end3, 0) end3, ifnull(end4, 0) end4, 
+			ifnull(end5, 0) end5, ifnull(end6, 0) end6, ifnull(end7, 0) end7, ifnull(end8, 0) end8, ifnull(end9, 0) end9, ifnull(end10, 0) end10, 
+			ifnull(end11, 0) end11, ifnull(end12, 0) end12, ifnull(end13, 0) end13, ifnull(end14, 0) end14, ifnull(end15, 0) end15, ifnull(end16, 0) end16, 
+			ifnull(end17, 0) end17, ifnull(end18, 0) end18, ifnull(end19, 0) end19, ifnull(end20, 0) end20, ifnull(end21, 0) end21, ifnull(end22, 0) end22, 
+			ifnull(end23, 0) end23, ifnull(end24, 0) end24, ifnull(end25, 0) end25, ifnull(end26, 0) end26, ifnull(end27, 0) end27, ifnull(end28, 0) end28,  
+			ifnull(end29, 0) end29, ifnull(end30, 0) end30, ifnull(end31, 0) end31,  
+			ifnull(end1 + end2 + end3 + end4 + end5 + end6 + end7 + end8 + end9 + end10 + end11 + end12 + end13 + end14 + end15 + end16 + 
+			end17 + end18 + end19 + end20 + end21 + end22 + end23 + end24 + end25 + end26 + end27 + end28 + end29 + end30 + end31, 0) end_sum 
+		from   
+			(select count(suim_rpt_no) end1 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(#{tmpFmonth}) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day))
+			) a,
+			(select count(suim_rpt_no) end2 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 1 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day))
+			) b, 
+			(select count(suim_rpt_no) end3 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 2 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day))
+			) c, 
+			(select count(suim_rpt_no) end4 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 3 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day))
+			) d, 
+			(select count(suim_rpt_no) end5 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 4 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day))
+			) e, 
+			(select count(suim_rpt_no) end6 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 5 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day))
+			) f, 
+			(select count(suim_rpt_no) end7 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 6 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day))
+			) g, 
+			(select count(suim_rpt_no) end8 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 7 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day))
+			) h, 
+			(select count(suim_rpt_no) end9 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 8 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day))
+			) i, 
+			(select count(suim_rpt_no) end10 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 9 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day))
+			) j, 
+			(select count(suim_rpt_no) end11 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 10 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day))
+			) k, 
+			(select count(suim_rpt_no) end12 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 11 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day))
+			) l, 
+			(select count(suim_rpt_no) end13 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 12 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day))
+			) m, 
+			(select count(suim_rpt_no) end14 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 13 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day))
+			) n, 
+			(select count(suim_rpt_no) end15 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 14 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day))
+			) o, 
+			(select count(suim_rpt_no) end16 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 15 day)) AND rpt.close_date &lt; unix_timestamp(DATE_ADD(#{tmpFmonth}, interval 16 day))
+			) p, 
+			(select count(suim_rpt_no) end17 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpFmonth}, interval 15 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpFmonth}, interval 14 day))
+			) q, 
+			(select count(suim_rpt_no) end18 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 14 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day))
+			) r, 
+			(select count(suim_rpt_no) end19 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 13 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day))
+			) s, 
+			(select count(suim_rpt_no) end20 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 12 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day))
+			) t, 
+			(select count(suim_rpt_no) end21 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 11 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day))
+			) u, 
+			(select count(suim_rpt_no) end22 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 10 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day))
+			) v, 
+			(select count(suim_rpt_no) end23 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 9 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day))
+			) w, 
+			(select count(suim_rpt_no) end24 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 8 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day))
+			) x, 
+			(select count(suim_rpt_no) end25 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 7 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day))
+			) y, 
+			(select count(suim_rpt_no) end26 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 6 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day))
+			) z, 
+			(select count(suim_rpt_no) end27 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 5 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day))
+			) a1, 
+			(select count(suim_rpt_no) end28 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 4 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day))
+			) a2, 
+			(select count(suim_rpt_no) end29 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 3 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day))
+			) a3, 
+			(select count(suim_rpt_no) end30 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 2 day)) AND rpt.close_date &lt; unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day))
+			) a4, 
+			(select count(suim_rpt_no) end31 
+			FROM top_rpt_head rpt 
+			WHERE rpt.ptnr_id = #{tmpIg4} AND rpt.suim_rpt_state!='3' and suim_rpt_type1 in (3,4)
+			AND rpt.close_date >= unix_timestamp(DATE_SUB(#{tmpTmonth}, interval 1 day)) AND rpt.close_date &lt; unix_timestamp(#{tmpTmonth})
+			) a5
+	</select>
+
+</mapper>

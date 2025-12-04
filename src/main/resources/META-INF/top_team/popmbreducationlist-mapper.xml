@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="PopMbrEducationMapper">
+	
+	<insert id="insMemberEducation" parameterType="kr.co.toplac.topteam.TopMbrEducationVO" >
+		INSERT INTO
+			top_mbr_education
+			(education_gubun,
+			education_name,
+			education_office,
+			education_start_date,
+			education_end_date,
+			education_price,
+			education_etc,
+			user_no)
+			
+		VALUES
+			(
+			 #{education_gubun},
+			 #{education_name},
+			 #{education_office},
+			 unix_timestamp(#{education_start_date}),
+			 unix_timestamp(#{education_end_date}),
+			 #{education_price},
+			 #{education_etc},
+			 #{user_no}
+			)
+	</insert>
+	
+	
+	<update id="udtMemberEducation" parameterType="kr.co.toplac.topteam.TopMbrEducationVO" >
+		UPDATE
+			top_mbr_education
+		SET
+			education_start_date = unix_timestamp(#{education_start_date}),
+			education_end_date = unix_timestamp(#{education_end_date}),
+			education_gubun = #{education_gubun},
+			education_name = #{education_name},
+			education_office = #{education_office},
+			education_price = #{education_price},
+			education_etc = #{education_etc}
+			
+		WHERE
+			education_no = #{education_no}
+		
+	</update>
+	
+	<select id="getMbrEducation" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrEducationVO">
+		select
+			education_no,
+			education_gubun,
+			education_name,
+			education_office,
+			DATE_FORMAT(FROM_UNIXTIME(education_start_date), '%Y-%m-%d') education_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(education_end_date), '%Y-%m-%d') education_end_date,
+			education_price,
+			education_etc,
+			user_no
+		from
+			top_mbr_education
+		where
+			user_no = #{user_no}
+		ORDER BY education_start_date ASC
+			
+	</select>
+	
+	<update id="delMemberEducation" parameterType="kr.co.toplac.topteam.TopMbrEducationVO" >
+		DELETE
+		FROM
+			top_mbr_education
+		WHERE
+			education_no = #{education_no}
+		
+	</update>
+	
+	<insert id="insMemberClass" parameterType="kr.co.toplac.topteam.TopMbrEducationVO" >
+		INSERT INTO
+			top_mbr_class
+			(
+			class_name,
+			class_office,
+			class_start_date,
+			class_end_date,
+			class_time,
+			class_etc,
+			user_no)
+			
+		VALUES
+			(
+			 #{class_name},
+			 #{class_office},
+			 unix_timestamp(#{class_start_date}),
+			 unix_timestamp(#{class_end_date}),
+			 #{class_time},
+			 #{class_etc},
+			 #{user_no}
+			)
+	</insert>
+	
+	<select id="getMbrClass" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrEducationVO">
+		select
+			class_no,
+			class_name,
+			class_office,
+			DATE_FORMAT(FROM_UNIXTIME(class_start_date), '%Y-%m-%d') class_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(class_end_date), '%Y-%m-%d') class_end_date,
+			class_time,
+			class_etc,
+			user_no
+		from
+			top_mbr_class
+		where
+			user_no = #{user_no}
+		ORDER BY class_start_date ASC
+	</select>
+	
+	<select id="getMbrClassTimeSum" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrEducationVO">
+		select
+			sum(class_time) class_time_sum
+		from
+			top_mbr_class
+		where
+			user_no = #{user_no}
+	</select>
+	
+	<update id="udtMemberClass" parameterType="kr.co.toplac.topteam.TopMbrEducationVO" >
+		UPDATE
+			top_mbr_class
+		SET
+			class_start_date = unix_timestamp(#{class_start_date}),
+			class_end_date = unix_timestamp(#{class_end_date}),
+			class_name = #{class_name},
+			class_office = #{class_office},
+			class_time = #{class_time},
+			class_etc = #{class_etc}
+			
+		WHERE
+			class_no = #{class_no}
+		
+	</update>
+	
+	<update id="delMemberClass" parameterType="kr.co.toplac.topteam.TopMbrEducationVO" >
+		DELETE
+		FROM
+			top_mbr_class
+		WHERE
+			class_no = #{class_no}
+		
+	</update>
+	
+<!-- 	<insert id="insMemberLicense" parameterType="kr.co.toplac.topteam.TopMbreducationVO" > -->
+<!-- 		INSERT INTO -->
+<!-- 			top_mbr_license -->
+<!-- 			(license_no, -->
+<!-- 			license_name, -->
+<!-- 			license_acquire_date, -->
+<!-- 			license_register_no, -->
+<!-- 			license_publishing_office, -->
+<!-- 			license_etc, -->
+<!-- 			user_no) -->
+			
+<!-- 		VALUES -->
+<!-- 			( -->
+<!-- 			 #{license_no}, -->
+<!-- 			 #{license_name}, -->
+<!-- 			 unix_timestamp(#{license_acquire_date}), -->
+<!-- 			 #{license_register_no}, -->
+<!-- 			 #{license_publishing_office}, -->
+<!-- 			 #{license_etc}, -->
+<!-- 			 #{user_no} -->
+<!-- 			) -->
+<!-- 	</insert> -->
+	
+<!-- 	<select id="getMbrLicense" parameterType="String" resultType="kr.co.toplac.topteam.TopMbreducationVO"> -->
+<!-- 		select -->
+<!-- 			license_no, -->
+<!-- 			license_name, -->
+<!-- 			DATE_FORMAT(FROM_UNIXTIME(license_acquire_date), '%Y-%m-%d') license_acquire_date, -->
+<!-- 			license_register_no, -->
+<!-- 			license_publishing_office, -->
+<!-- 			license_etc -->
+<!-- 		from -->
+<!-- 			top_mbr_license -->
+<!-- 		where -->
+<!-- 			user_no = #{user_no} -->
+<!-- 		ORDER BY license_no ASC -->
+			
+<!-- 	</select> -->
+	
+<!-- 	<update id="udtMemberLicense" parameterType="kr.co.toplac.topteam.TopMbreducationVO" > -->
+<!-- 		UPDATE -->
+<!-- 			top_mbr_license -->
+<!-- 		SET -->
+<!-- 			license_name = #{license_name}, -->
+<!-- 			license_acquire_date = unix_timestamp(#{license_acquire_date}), -->
+<!-- 			license_register_no = #{license_register_no}, -->
+<!-- 			license_publishing_office = #{license_publishing_office}, -->
+<!-- 			license_etc = #{license_etc} -->
+			
+<!-- 		WHERE -->
+<!-- 			license_no = #{license_no} -->
+		
+<!-- 	</update> -->
+	
+<!-- 	<update id="delMemberLicense" parameterType="kr.co.toplac.topteam.TopMbreducationVO" > -->
+<!-- 		DELETE -->
+<!-- 		FROM -->
+<!-- 			top_mbr_license -->
+<!-- 		WHERE -->
+<!-- 			license_no = #{license_no} -->
+		
+<!-- 	</update> -->
+	
+
+	
+
+</mapper>

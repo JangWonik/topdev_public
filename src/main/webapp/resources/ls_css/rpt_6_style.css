@@ -1,0 +1,41 @@
+<!--
+A:link {color: #000000;text-decoration: none; }
+A:visited {color: #000000;text-decoration: none;}
+A:hover {color:#0000ff;text-decoration: none;}
+A:active {color: #000000;text-decoration: none;}
+
+p{color:#000000; font-size:10pt; line-height:150%; margin-top:0; margin-bottom:0; font-family:굴림,굴림체;}
+.p2{color:#000000; font-size:14pt; line-height:200%; margin-top:0; margin-bottom:0; font-family:굴림,굴림체;}
+input {border:solid 1 #dcdcdc; background-color:#ffffff; font-size:10pt; ime-mode:active;}
+.input2 {border:solid 1 #003399; background-color:#ffffff; font-size:10pt; ime-mode:active;}
+.inputb {border:solid 1 #003399; background-color:#ffffff; font-size:10pt; ime-mode:active;}
+/* textarea {border:solid 1 #dcdcdc; background-color:#ffffff; font-size:10pt; ime-mode:active;} */
+in_text {border:solid 1 #666666; font-family:굴림,굴림체; font-size:10pt;}
+.font_small{color:#999999;font-size:9pt;font-family:돋움,돋움체;line-height:130%;margin-left:0;margin-right:0;margin-top:0;margin-bottom:0;}
+
+table {border-collapse:collapse;border-spacing:0; font-size:10pt;}
+.td {border:1px solid #000000; padding:3px;}
+.td_box {border:1px solid #000000; padding:10px;}
+.td_sample {border:1px solid #cccccc; padding:3px;}
+.radio{border:0;background-color:transparent;}
+.btn{border:0;background-color:transparent;}
+.tdb p {color:#000000; font-size:10pt; line-height:150%; margin-top:0; margin-bottom:0; font-family:굴림,굴림체;}
+.tdb {border:1px solid #000000; padding:3px; color:#000000; font-size:10pt; line-height:150%; margin-top:0; margin-bottom:0; font-family:굴림,굴림체;}
+
+body {
+	
+background-color:#ffffff;
+color:#000000;
+font-family:굴림,굴림체;
+font-size:11pt;
+margin-left:0;margin-right:0;margin-top:0;margin-bottom:0;
+color: #000000;
+scrollbar-face-color: #FFFFFF;
+scrollbar-shadow-color: #CCCCCC; 
+scrollbar-highlight-color: #F0F0F0; 
+scrollbar-3dlight-color: #CCCCCC;
+scrollbar-darkshadow-color: #CCCCCC; 
+scrollbar-track-color: #F0F0F0; 
+scrollbar-arrow-color: #0083c7;
+}
+-->

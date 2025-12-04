@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="LogTeamMapper">
+
+	<select id="teamskind1" parameterType="java.util.List" resultType="kr.co.toplac.lslog.LogTeamVO">
+		select team_id, team_name
+		from top_tm_bsc
+		where team_type='1'
+		and team_statistics1='0'
+		order by team_order desc, team_id asc
+	</select>
+
+	<select id="logkind1" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogTeamVO">
+		select ifnull((z.reg_m + y.reg_m + x.reg_m),0) reg_m, ifnull((z.reg_y + y.reg_y + x.reg_y),0) reg_y, 
+			ifnull((z.end_m + y.end_m + x.end_m),0) end_m, ifnull((z.end_y + y.end_y + x.end_y),0) end_y,
+			ifnull((z.proc_m + y.proc_m + x.proc_m),0) proc_m, ifnull((z.proc_y + y.proc_y + x.proc_y),0) proc_y, 
+			ifnull((z.nend_p + y.nend_p + x.nend_p),0) nend_p, ifnull((z.nend_30r + y.nend_30r + x.nend_30r),0) nend_30r,
+			ifnull((z.endea_m + y.endea_m + x.endea_m),0) endea_m, ifnull((z.endea_y + y.endea_y + x.endea_y),0) endea_y, 
+			ifnull((z.price_assess + y.price_assess + x.price_assess),0) price_assess, ifnull((z.price_time + y.price_time + x.price_time),0) price_time, 
+			ifnull((z.price_sum1 + y.price_sum1 + x.price_sum1),0) price_sum1, ifnull((z.price_traffic + y.price_traffic + x.price_traffic),0) price_traffic,
+			ifnull((z.price_question + y.price_question + x.price_question),0) price_question, 
+			ifnull((z.price_receipt + y.price_receipt + x.price_receipt),0) price_receipt,
+			ifnull((z.price_sum2 + y.price_sum2 + x.price_sum2),0) price_sum2,
+			ifnull((z.price_total + y.price_total + x.price_total),0) price_total
+		from
+	<choose>
+		<when test="baseF != null">
+		(
+			select ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+				, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+				, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+				, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+				, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum1
+				, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+				, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum2, ifnull(price_total,0) price_total
+			from
+			(select count(suim_rpt_no) reg_m
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and reg_date >= unix_timestamp(#{fromdate}) and reg_date &lt; unix_timestamp(#{todate}) and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			) a
+			,(select count(suim_rpt_no) reg_y
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and reg_date >= unix_timestamp(#{fromYear}) and reg_date &lt; unix_timestamp(#{toYear}) and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			) b
+			,(select count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			) c
+			,(select count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and close_date >= unix_timestamp(#{fromYear}) and close_date &lt; unix_timestamp(#{toYear}) and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			) d
+			,(select count(suim_rpt_no) nend_p
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			) e
+			,(select count(suim_rpt_no) nend_30
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY)) and suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+			)f
+			,(select sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+				, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+				from top_rpt_head g1, top_rpt_invoice g2
+				where g1.team_id = #{tmpStr2}
+				and g1.close_date >= unix_timestamp(#{fromdate}) and g1.close_date &lt; unix_timestamp(#{todate}) and g1.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+				and g1.suim_rpt_no = g2.suim_rpt_no
+			) g
+			,(select sum(g2.amt_total) price_total
+				from top_rpt_head g1, top_rpt_invoice g2
+				where g1.team_id = #{tmpStr2} and g1.close_date &gt; 0
+				and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+			) h
+		)z
+		</when>
+		<otherwise>
+		(
+			select 0 reg_m, 0 reg_y, 0 end_m, 0 end_y
+				, 0 proc_m, 0 proc_y
+				, 0 nend_p, 0 nend_30r
+				, 0 endea_m, 0 endea_y
+				, 0 price_assess, 0 price_time, 0 price_sum1
+				, 0 price_traffic, 0 price_question, 0 price_receipt
+				, 0 price_sum2, 0 price_total
+		)z
+		</otherwise>
+	</choose>
+	<choose>
+		<when test="nscF != null">
+		,(
+			select ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+				, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+				, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+				, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+				, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum1
+				, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+				, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum2, ifnull(price_total,0) price_total
+			from
+			(select count(suim_rpt_no) reg_m
+				from 
+				top_prim_biz_rpt_head		
+				where team_id = #{tmpStr}
+				and reg_date >= unix_timestamp(#{fromdate}) and reg_date &lt; unix_timestamp(#{todate}) and (suim_rpt_type1='5')
+			) a
+			,(select count(suim_rpt_no) reg_y
+				from  
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and reg_date >= unix_timestamp(#{fromYear}) and reg_date &lt; unix_timestamp(#{toYear}) and (suim_rpt_type1='5')
+			) b
+			,(select count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and (suim_rpt_type1='5')
+			) c
+			,(select count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and close_date >= unix_timestamp(#{fromYear}) and close_date &lt; unix_timestamp(#{toYear}) and (suim_rpt_type1='5')
+			) d
+			,(select count(suim_rpt_no) nend_p
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and (suim_rpt_type1='5')
+			) e
+			,(select count(suim_rpt_no) nend_30
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY)) and (suim_rpt_type1='5')
+			)f
+			,(select sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+				, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+				from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+				where g1.team_id = #{tmpStr2}
+				and g1.close_date >= unix_timestamp(#{fromdate}) and g1.close_date &lt; unix_timestamp(#{todate}) and (g1.suim_rpt_type1='5')
+				and g1.suim_rpt_no = g2.suim_rpt_no
+			) g
+			,(select sum(g2.amt_total) price_total
+				from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+				where g1.team_id = #{tmpStr2} and g1.close_date &gt; 0
+				and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+			) h
+		)y
+		</when>
+		<otherwise>
+		,(
+			select 0 reg_m, 0 reg_y, 0 end_m, 0 end_y
+				, 0 proc_m, 0 proc_y
+				, 0 nend_p, 0 nend_30r
+				, 0 endea_m, 0 endea_y
+				, 0 price_assess, 0 price_time, 0 price_sum1
+				, 0 price_traffic, 0 price_question, 0 price_receipt
+				, 0 price_sum2, 0 price_total
+		)y
+		</otherwise>
+	</choose>
+	<choose>
+		<when test="contractF != null">
+		,(
+			select ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+				, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+				, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+				, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+				, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum1
+				, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+				, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum2, ifnull(price_total,0) price_total
+			from
+			(select count(suim_rpt_no) reg_m
+				from 
+				top_prim_biz_rpt_head		
+				where team_id = #{tmpStr}
+				and reg_date >= unix_timestamp(#{fromdate}) and reg_date &lt; unix_timestamp(#{todate}) and (suim_rpt_type1!='5')
+			) a
+			,(select count(suim_rpt_no) reg_y
+				from  
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and reg_date >= unix_timestamp(#{fromYear}) and reg_date &lt; unix_timestamp(#{toYear}) and (suim_rpt_type1!='5')
+			) b
+			,(select count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and (suim_rpt_type1!='5')
+			) c
+			,(select count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and close_date >= unix_timestamp(#{fromYear}) and close_date &lt; unix_timestamp(#{toYear}) and (suim_rpt_type1!='5')
+			) d
+			,(select count(suim_rpt_no) nend_p
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and (suim_rpt_type1!='5')
+			) e
+			,(select count(suim_rpt_no) nend_30
+				from 
+				top_prim_biz_rpt_head
+				where team_id = #{tmpStr}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY)) and (suim_rpt_type1!='5')
+			)f
+			,(select sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+				, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+				from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+				where g1.team_id = #{tmpStr2}
+				and g1.close_date >= unix_timestamp(#{fromdate}) and g1.close_date &lt; unix_timestamp(#{todate}) and (g1.suim_rpt_type1!='5')
+				and g1.suim_rpt_no = g2.suim_rpt_no
+			) g
+			,(select sum(g2.amt_total) price_total
+				from top_prim_biz_rpt_head g1, top_prim_biz_inv g2
+				where g1.team_id = #{tmpStr2} and g1.close_date &gt; 0
+				and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+			) h
+		)x
+		</when>
+		<otherwise>
+		,(
+			select 0 reg_m, 0 reg_y, 0 end_m, 0 end_y
+				, 0 proc_m, 0 proc_y
+				, 0 nend_p, 0 nend_30r
+				, 0 endea_m, 0 endea_y
+				, 0 price_assess, 0 price_time, 0 price_sum1
+				, 0 price_traffic, 0 price_question, 0 price_receipt
+				, 0 price_sum2, 0 price_total
+		)x
+		</otherwise>
+	</choose>
+	</select>
+	
+	<select id="teamskind4" parameterType="java.util.List" resultType="kr.co.toplac.lslog.LogTeamVO">
+		select team_id, team_name
+		from top_tm_bsc
+		where team_type='4'
+		and team_statistics1='0'
+		order by team_order desc, team_id asc
+	</select>
+
+	<select id="logkind4" parameterType="java.lang.String" resultType="kr.co.toplac.lslog.LogTeamVO">
+		select ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(round((end_m/reg_m)*100,1),0) proc_m, ifnull(round((end_y/reg_y)*100,1),0) proc_y
+			, ifnull(nend_p,0) nend_p, ifnull(round((nend_30/nend_p)*100),0) nend_30r
+			, ifnull(round(endea_m,1),0) endea_m, ifnull(round(endea_y,1),0) endea_y
+			, ifnull(price_assess,0) price_assess, ifnull(price_time,0) price_time, ifnull(price_assess+price_time,0) price_sum1
+			, ifnull(price_traffic,0) price_traffic, ifnull(price_question,0) price_question, ifnull(price_receipt,0) price_receipt
+			, ifnull(price_assess+price_time+price_traffic+price_question+price_receipt,0) price_sum2, ifnull(price_total,0) price_total
+		from
+			(select count(suim_rpt_no) reg_m
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and reg_date >= unix_timestamp(#{fromdate}) and reg_date &lt; unix_timestamp(#{todate}) and suim_rpt_type1 in (3,4)
+			) a
+			,(select count(suim_rpt_no) reg_y
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and reg_date >= unix_timestamp(#{fromYear}) and reg_date &lt; unix_timestamp(#{toYear}) and suim_rpt_type1 in (3,4)
+			) b
+			,(select count(suim_rpt_no) end_m, sum(suim_rpt_ea) endea_m
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and close_date >= unix_timestamp(#{fromdate}) and close_date &lt; unix_timestamp(#{todate}) and suim_rpt_type1 in (3,4)
+			) c
+			,(select count(suim_rpt_no) end_y, sum(suim_rpt_ea) endea_y
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and close_date >= unix_timestamp(#{fromYear}) and close_date &lt; unix_timestamp(#{toYear}) and suim_rpt_type1 in (3,4)
+			) d
+			,(select count(suim_rpt_no) nend_p
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and (suim_rpt_type1='4')
+			) e
+			,(select count(suim_rpt_no) nend_30
+				from top_rpt_head
+				where team_id = #{tmpStr2}
+				and suim_rpt_state!='2' and suim_rpt_state!='3' and reg_date &lt; unix_timestamp(DATE_SUB(SYSDATE(), INTERVAL 45 DAY)) and suim_rpt_type1 in (3,4)
+			)f
+			,(select sum(g2.amt_basic) price_assess, sum(g2.amt_daily) price_time, sum(g2.amt_traffic) price_traffic
+				, sum(g2.amt_counsel) price_question, sum(g2.amt_etc) price_receipt
+				from top_rpt_head g1, top_rpt_invoice g2
+				where g1.team_id = #{tmpStr2}
+				and g1.close_date >= unix_timestamp(#{fromdate}) and g1.close_date &lt; unix_timestamp(#{todate}) and g1.suim_rpt_type1 in (3,4)
+				and g1.suim_rpt_no = g2.suim_rpt_no
+			) g
+			,(select sum(g2.amt_total) price_total
+				from top_rpt_head g1, top_rpt_invoice g2
+				where g1.team_id = #{tmpStr2} and g1.close_date &gt; 0
+				and g1.suim_rpt_no = g2.suim_rpt_no and g2.deposit_date  &lt; 1
+			) h
+	</select>
+
+</mapper>

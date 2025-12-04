@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MyInfoUdtMapper">
+
+	<select id="myinfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+		SELECT 
+			a.user_no,
+			a.user_name,
+			a.user_id,
+			a.team_id_loc,
+			a.handphone,
+			a.home_tel,
+			a.home_address,
+			a.office_tel,
+			a.email,
+			a.comment,
+			a.picture,
+			a.mms_picture as mmsPicture,
+			a.office_fax,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level,
+			a.email_pwd,
+			c.team_name,
+			c.team_telephone
+		FROM 
+			top_mbr_bsc a 
+		LEFT JOIN	
+		(
+			SELECT team_name, team_id, team_telephone
+			FROM top_tm_bsc  
+		) c
+		ON
+			 a.team_id_loc = c.team_id 
+		WHERE 
+			    a.user_no = #{user_no}
+	</select>
+	
+	<update id="myinfoedite" parameterType="kr.co.toplac.topteam.TopMbrBscVO">
+		UPDATE 
+			top_mbr_bsc
+		SET
+			home_tel = #{home_tel},
+			office_fax = #{office_fax},
+			handphone = #{handphone},
+			office_tel = #{office_tel},
+			comment = #{comment},
+			home_address = #{home_address},
+			email_pwd = #{email_pwd}
+		WHERE
+			user_no = #{user_no}
+	</update>
+
+	<select id="membersign" parameterType="String" resultType="kr.co.toplac.topteam.TopMbrSgnVO">
+		SELECT 
+			serial_no,
+			user_no,
+			user_sign,
+			del_state
+		FROM 
+			top_mbr_sgn a
+		WHERE 
+			user_no = #{user_no} and del_state = 0
+		ORDER BY 
+			serial_no desc limit 1
+	</select>
+
+	<select id="checkMbrForPwdEdite" parameterType="java.util.HashMap" resultType="Integer">
+		SELECT 
+			count(*)
+		FROM 
+			top_mbr_bsc 
+		WHERE 
+			    user_no = #{user_no} 
+			and user_pwd = #{user_pwd}
+	</select>
+	
+	<!-- 변경전 2회까지 동일한 패스워드가 있는지 확인한다. by top3009 -->
+	<select id="checkMbrForOldPwd" parameterType="java.util.HashMap" resultType="Integer">
+		SELECT 
+			count(*)
+		FROM 
+			top_mbr_bsc 
+		WHERE 
+			    user_no = #{user_no} 
+			and (user_pwd_1 = #{user_pwNew} or user_pwd_2 = #{user_pwNew})
+	</select>
+	
+	<update id="myPwEdite" parameterType="java.util.HashMap">
+		UPDATE
+			top_mbr_bsc
+		SET
+			user_pwd = #{user_pwNew},
+			pwd_date = unix_timestamp(now())			
+		WHERE
+			user_no = #{user_no}
+	</update>
+	
+	<select id="selOldUserPwd" parameterType="java.util.HashMap" resultType="HashMap">
+		SELECT 
+			ifnull(user_pwd,'') as user_pwd
+			,ifnull(user_pwd_1,'') as user_pwd_1
+		FROM 
+			top_mbr_bsc 
+		WHERE 
+			    user_no = #{user_no}			
+	</select>
+	
+	<!-- 변경전 2회까지 패스워드 갱신을 위한 수정 -->
+	<update id="myPwEditeNew" parameterType="java.util.HashMap">
+		UPDATE
+			top_mbr_bsc
+		SET
+			user_pwd = #{user_pwNew},
+			user_pwd_1 = #{sUser_pwd_old},
+			user_pwd_2 = #{sUser_pwd_1},
+			pwd_date = unix_timestamp(now())			
+		WHERE
+			user_no = #{user_no}
+	</update>
+	
+	<insert id="insertMbrBscLogForPwd" parameterType="String">
+		INSERT INTO top_mbr_bsc_log
+		(
+			 user_no
+			,user_state
+			,team_id_main
+			,team_id_loc
+			,work_level
+			,work_type
+			,work_rank
+			,work_job
+			,job_memo
+			,log_memo
+			,reg_date
+		)
+		SELECT user_no
+			  ,user_state
+			  ,team_id_main
+			  ,team_id_loc
+			  ,work_level
+			  ,work_type
+			  ,work_rank
+			  ,work_job
+			  ,job_memo
+			  ,"비밀번호변경"
+			  ,UNIX_TIMESTAMP(now())
+		  FROM top_mbr_bsc
+		 WHERE user_no = #{_parameter}	
+	</insert>
+	
+</mapper>

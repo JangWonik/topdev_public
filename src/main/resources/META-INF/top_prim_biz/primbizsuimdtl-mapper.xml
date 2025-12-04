@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PrimBizSuimDtlMapper">
+
+	<select id="getPrimBizSuimDtl" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		
+		select
+		a.suim_rpt_no,           
+		a.suim_accept_no,        
+		a.suim_close_no,         
+		a.suim_rpt_type1,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1", a.suim_rpt_type1) suim_rpt_type1_nm,
+		a.suim_rpt_state,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_state", a.suim_rpt_state) suim_rpt_state_nm,        
+		a.suim_rpt_type1_close12,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1_close12", a.suim_rpt_type1_close12) suim_rpt_type1_close12_nm,
+		a.team_id,
+		getTopTmBscTeamName(a.team_id) team_name,              
+		a.user_no,
+		getTopMbrBscUserName(a.user_no) user_name,              
+		a.ptnr_id,
+		getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name,              
+		a.ptnr_dept_id,
+		getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_name,         
+		a.ptnr_mbr_no,
+		getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_name,           
+		a.ptnr_dept_nm_4edit,    
+		a.ptnr_mbr_nm_4edit,    
+		a.policyholder_nm,       
+		a.beneficiary_nm,        
+		a.damaged_nm,            
+		a.suim_rpt_ea,
+		DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d') accident_date,
+		DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date,       
+		DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d') suim_cancel_date,             
+		DATE_FORMAT(FROM_UNIXTIME(a.lawsuit_date), '%Y-%m-%d') lawsuit_date,     
+		DATE_FORMAT(FROM_UNIXTIME(a.suim_rpt_aprv_date), '%Y-%m-%d') suim_rpt_aprv_date,         
+		DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') close_date,   
+		DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d') del_date,           
+		a.lock_flag,
+		b.moral_flag,
+		getCodeValue("top_prim_biz_rpt_body", "moral_flag", b.moral_flag) moral_flag_nm,            
+		b.minwon_flag,
+		getCodeValue("top_prim_biz_rpt_body", "minwon_flag", b.minwon_flag) minwon_flag_nm,           
+		b.accident_no,           
+		b.policy_no,             
+		b.insurance_nm,          
+		b.policyholder_ssn,      
+		b.policyholder_tel,      
+		b.beneficiary_ssn,       
+		b.beneficiary_tel,       
+		b.damaged_tel,           
+		b.accident_facts,        
+		b.amt_estimated_damage,  
+		b.amt_definite,          
+		b.amt_reduction,         
+		b.commission_estimated,  
+		b.amt_claimed,           
+		b.amt_settlement,        
+		b.amt_self_pay,          
+		b.amt_insu_payment,
+		b.investigate_addr1,
+		b.investigate_addr2,
+		c.rpt_invoice_no,
+		c.amt_basic,       
+		c.amt_basic_dtl,   
+		c.amt_daily,       
+		c.amt_daily_dtl,   
+		c.amt_counsel,     
+		c.amt_counsel_dtl, 
+		c.amt_traffic,     
+		c.amt_traffic_dtl, 
+		c.amt_etc,         
+		c.amt_etc_dtl,     
+		(c.amt_basic + c.amt_daily + c.amt_traffic + c.amt_counsel + c.amt_etc) amt_total,
+		DATE_FORMAT(FROM_UNIXTIME(c.invoice_date), '%Y-%m-%d') invoice_date       
+		
+		from
+		top_prim_biz_rpt_head a, top_prim_biz_rpt_body b, top_prim_biz_inv c
+		where
+		a.suim_rpt_no = b.suim_rpt_no and
+		a.suim_rpt_no = c.suim_rpt_no and
+		a.suim_rpt_no = #{suim_rpt_no}                 
+		
+	</select>
+	
+	<select id="getPrimBizSuimDtlView" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		
+		select
+		a.suim_rpt_no,           
+		a.suim_accept_no,        
+		a.suim_close_no,         
+		a.suim_rpt_type1,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1", a.suim_rpt_type1) suim_rpt_type1_nm,
+		a.suim_rpt_state,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_state", a.suim_rpt_state) suim_rpt_state_nm,        
+		a.suim_rpt_type1_close12,
+		getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1_close12", a.suim_rpt_type1_close12) suim_rpt_type1_close12_nm,
+		a.team_id,
+		getTopTmBscTeamName(a.team_id) team_name,              
+		a.user_no,
+		getTopMbrBscUserName(a.user_no) user_name,              
+		a.ptnr_id,
+		getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name,              
+		a.ptnr_dept_id,
+		getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_name,         
+		a.ptnr_mbr_no,
+		getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_name,           
+		a.ptnr_dept_nm_4edit,    
+		a.ptnr_mbr_nm_4edit,    
+		a.policyholder_nm,       
+		a.beneficiary_nm,        
+		a.damaged_nm,            
+		a.suim_rpt_ea,
+		DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d') accident_date,
+		DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date,       
+		DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d') suim_cancel_date,             
+		DATE_FORMAT(FROM_UNIXTIME(a.lawsuit_date), '%Y-%m-%d') lawsuit_date,     
+		DATE_FORMAT(FROM_UNIXTIME(a.suim_rpt_aprv_date), '%Y-%m-%d') suim_rpt_aprv_date,         
+		DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') close_date,   
+		DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d') del_date,           
+		a.lock_flag,
+		b.moral_flag,
+		getCodeValue("top_prim_biz_rpt_body", "moral_flag", b.moral_flag) moral_flag_nm,            
+		b.minwon_flag,
+		getCodeValue("top_prim_biz_rpt_body", "minwon_flag", b.minwon_flag) minwon_flag_nm,           
+		b.accident_no,           
+		b.policy_no,             
+		b.insurance_nm,          
+		b.policyholder_ssn,      
+		b.policyholder_tel,      
+		b.beneficiary_ssn,       
+		b.beneficiary_tel,       
+		b.damaged_tel,           
+		b.accident_facts,        
+		b.amt_estimated_damage,  
+		b.amt_definite,          
+		b.amt_reduction,         
+		b.commission_estimated,  
+		b.amt_claimed,           
+		b.amt_settlement,        
+		b.amt_self_pay,          
+		b.amt_insu_payment,
+		b.investigate_addr1,
+		b.investigate_addr2,
+		c.rpt_invoice_no,
+		c.amt_basic,       
+		c.amt_basic_dtl,   
+		c.amt_daily,       
+		c.amt_daily_dtl,   
+		c.amt_counsel,     
+		c.amt_counsel_dtl, 
+		c.amt_traffic,     
+		c.amt_traffic_dtl, 
+		c.amt_etc,         
+		c.amt_etc_dtl,     
+		(c.amt_basic + c.amt_daily + c.amt_traffic + c.amt_counsel + c.amt_etc) amt_total,
+		DATE_FORMAT(FROM_UNIXTIME(c.invoice_date), '%Y-%m-%d') invoice_date       
+		
+		from
+		top_prim_biz_rpt_head a, top_prim_biz_rpt_body b, top_prim_biz_inv c
+		where
+		a.suim_rpt_no = b.suim_rpt_no and
+		a.suim_rpt_no = c.suim_rpt_no and
+		a.suim_rpt_no = #{suimRptNo}                 
+		
+	</select>
+	
+	<select id="getPrimBizInvDtlView" parameterType="String" resultType="kr.co.toplac.topprimbizinv.TopPrimBizInvCompositeVO">
+		select a.rpt_invoice_no,a.suim_rpt_no
+			 ,a.amt_basic,a.amt_basic_dtl
+			 ,a.amt_daily,a.amt_daily_dtl
+			 ,a.amt_traffic,a.amt_traffic_dtl
+			 ,a.amt_counsel,a.amt_counsel_dtl
+			 ,a.amt_etc,a.amt_etc_dtl
+			 ,(a.amt_basic + a.amt_daily + a.amt_traffic + a.amt_counsel + a.amt_etc) amt_total
+			 ,a.rpt_invoice_memo
+			 ,a.tax_invoice_no
+			 ,a.invoice_date,DATE_FORMAT(FROM_UNIXTIME(a.invoice_date), '%Y-%m-%d') invoice_date_fmt
+			 ,a.deposit_date,if(a.deposit_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.deposit_date), '%Y-%m-%d')) deposit_date_fmt
+			 ,a.tax_date,if(a.tax_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%Y-%m-%d')) tax_date_fmt
+			 ,a.edit_amt_cnt,a.edit_date_cnt
+			 ,b.close_date,DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d') close_date_fmt
+			 ,b.ptnr_id,getTopPtnrBscPtnrNick(ptnr_id) ptnr_name
+			 ,b.ptnr_mbr_no,getTopPtnrMbrBscPtnrMbrName(ptnr_mbr_no) ptnr_mbr_name
+			 ,b.team_id,getTopTmBscTeamName(team_id) team_name
+			 ,b.user_no,getTopMbrBscUserName(user_no) user_name
+			 ,b.policyholder_nm,b.beneficiary_nm
+			 ,b.suim_accept_no,b.suim_close_no
+			 ,c.accident_no,c.policy_no
+		from top_prim_biz_inv a , top_prim_biz_rpt_head b, top_prim_biz_rpt_body c
+		where a.rpt_invoice_no = #{rpt_invoice_no}
+	    and a.suim_rpt_no=b.suim_rpt_no
+	    and a.suim_rpt_no=c.suim_rpt_no
+	</select>
+	
+	<update id = "rptTopUserChange" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_prim_biz_rpt_head
+		SET
+			user_no = #{topUserNo}
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<select id="getPtnrDeptMbrListForPtnrMbrNoEdite" parameterType="String" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+	
+		SELECT
+			  ptnr_mbr_no
+			, ptnr_mbr_nm ptnr_mbr_name
+		FROM
+			top_ptnr_mbr_bsc
+		WHERE
+			ptnr_dept_id = #{ptnr_dept_id}
+			and del_state != 1
+	
+	</select>
+	
+	<update id = "rptPtnrUserChange" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_prim_biz_rpt_head
+		SET
+			ptnr_mbr_no = #{ptnr_mbr_no}
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<select id="getPrimBizShareList" parameterType="String" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		select 
+			 	serial_no,        
+				rpt_invoice_no,  
+				suim_rpt_no,      
+				share_user_no,   
+				getTopMbrBscUserName(share_user_no) share_user_name, 
+				share_amt_basic,  
+				share_amt_daily,
+				share_amt_etc,    
+				share_amt_traffic,
+				share_amt_counsel,
+				(share_amt_basic + share_amt_daily + share_amt_etc + share_amt_traffic + share_amt_counsel) share_amt_total,  
+				share_ea         
+		from top_prim_biz_inv_share
+		where 
+		suim_rpt_no = #{suim_rpt_no} and rpt_invoice_no = #{rpt_invoice_no}
+	    
+	</select>
+	
+	<!-- 공동 수행자 포함여부 체크 20210914-->
+	<select id="selectCollaboAuthChk" parameterType="hashmap" resultType="Integer">
+		SELECT 
+			COUNT(*) AS nCnt
+		FROM top_prim_biz_inv_share
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+		 	AND share_user_no = #{present_user_no}		 	 
+	</select>
+	
+	<insert id="insertPrimBizShare" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		INSERT INTO top_prim_biz_inv_share
+		(rpt_invoice_no, suim_rpt_no, share_user_no, share_amt_basic, share_amt_daily, share_amt_traffic, share_amt_counsel, share_amt_etc, share_ea, reg_date, share_amt_total)
+		values(
+		#{rpt_invoice_no},
+		#{suim_rpt_no},
+		#{share_user_no}, 
+		#{share_amt_basic}, 
+		#{share_amt_daily}, 
+		#{share_amt_traffic}, 
+		#{share_amt_counsel}, 
+		#{share_amt_etc}, 
+		#{share_ea},
+		UNIX_TIMESTAMP(now()),
+		(#{share_amt_basic} + #{share_amt_daily} + #{share_amt_traffic} + #{share_amt_counsel} + #{share_amt_etc})
+		)
+	</insert>
+	
+	<update id="updatePrimBizShare" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		UPDATE top_prim_biz_inv_share
+		SET
+		<if test="share_user_no != null">
+		share_user_no = #{share_user_no},
+		</if>
+		share_amt_basic = #{share_amt_basic},
+		share_amt_daily = #{share_amt_daily},
+		share_amt_traffic = #{share_amt_traffic},
+		share_amt_counsel = #{share_amt_counsel},
+		share_amt_etc = #{share_amt_etc},
+		share_ea = #{share_ea}
+			
+		WHERE serial_no = #{serial_no}
+	</update>
+	
+	<update id="deletePrimBizShare" parameterType="kr.co.toplac.topprimbiz.TopPrimBizRptCompositeVO">
+		delete 
+		from top_prim_biz_inv_share
+		WHERE serial_no = #{serial_no}
+	</update>
+	
+	<!-- 보고서 원본 파일 -->
+	<select id="rptOrgFileList" parameterType="String" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptOrgFileVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+		FROM
+			top_prim_biz_rpt_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+
+	<select id="getNowResultNo1" parameterType="java.util.HashMap" resultType="String">
+	
+		SELECT 
+			max(suim_close_no) 
+		FROM 
+			top_prim_biz_rpt_head 
+		WHERE 
+			team_id in (6,8,9,10,11,13,24,38,39,40,43,44) 
+			and suim_close_no like '%${searchStr}%'
+			
+	</select>
+	
+	<select id="getNowResultNo2" parameterType="java.util.HashMap" resultType="String">
+	
+		SELECT 
+			max(suim_close_no)
+		FROM 
+			top_prim_biz_rpt_head 
+		WHERE 
+			team_id in (12,14,27) 
+			and suim_close_no like '%${searchStr}%'
+			
+	</select>
+	
+	<select id="getNowResultNo3" parameterType="java.util.HashMap" resultType="String">
+	
+		SELECT 
+			max(suim_close_no)
+		FROM 
+			top_prim_biz_rpt_head 
+		WHERE 
+			team_id = #{team_id} 
+			and suim_close_no like '%${searchStr}%'
+			
+	</select>
+
+</mapper>

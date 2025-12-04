@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="LogMember2Mapper">
+
+	<select id="member2list" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogMember2VO">
+		select a.user_name name, a.user_no user_id, b.team_name
+		from top_mbr_bsc a, top_tm_bsc b
+		where a.team_id_main = #{team_id}
+		and a.team_id_main = b.team_id
+	</select>
+	
+	<select id="memberNlist" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogMember2VO">
+		select a.user_name name, a.user_no user_id, b.team_name
+		from top_mbr_bsc a, top_tm_bsc b
+		where a.team_id_main = #{team_id}
+		and a.team_id_main = b.team_id
+		and a.user_no = #{MselectVal}
+	</select>
+
+	<select id="imemberBase" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogMember2VO">
+				
+		
+			select 1 gubun, rid, report_id, price_assess, price_time, report_ea, p_price_mi_a, p_price_mi_b, report_ea_mi
+					, 0 p_price_pl_a, 0 p_price_pl_b, 0 report_ea_pl
+					, price_assess+price_time-p_price_mi_a-p_price_mi_b sum_little
+					, price_traffic, price_question, price_receipt
+					, price_assess+price_time+price_traffic+price_question+price_receipt sum_hap
+					from (select a.suim_rpt_no rid, a.suim_accept_no report_id, b.amt_basic price_assess, b.amt_daily price_time, a.suim_rpt_ea report_ea
+							, b.amt_traffic price_traffic, b.amt_counsel price_question, b.amt_etc price_receipt
+							, if((a.suim_rpt_type1=3 or a.suim_rpt_type1=4), ifnull(c.sum_pp,0)
+									, if((a.suim_rpt_type1=1 or a.suim_rpt_type1=2)
+											, b.amt_basic*ifnull(c.sum_pp,0)*0.01, 0)) p_price_mi_a
+							, if((a.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19))
+									, amt_daily*ifnull(c.sum_pp,0)*0.01, 0) p_price_mi_b
+							, (ifnull(c.sum_pp,0)*0.01)*a.suim_rpt_ea report_ea_mi
+							from top_rpt_head a
+								left join (select suim_rpt_no, sum(collabo_pp) sum_pp from top_rpt_collabo group by suim_rpt_no) c
+								on a.suim_rpt_no = c.suim_rpt_no
+								, top_rpt_invoice b
+							where a.user_no=#{MselectVal}
+							and a.close_date>=UNIX_TIMESTAMP(#{fromDate}) and a.close_date &lt; UNIX_TIMESTAMP(#{toDate})
+							and a.suim_rpt_no = b.suim_rpt_no
+							order by a.close_date desc, b.rpt_invoice_no desc) c
+
+			union all
+
+				select 2 gubun, rid, report_id, 0 price_assess, 0 price_time, 0 report_ea, 0 p_price_mi_a, 0 p_price_mi_b, 0 report_ea_mi
+				, p_price_pl1_a p_price_pl_a
+				, p_price_pl1_b p_price_pl_b
+				, report_ea_pl2 report_ea_pl
+				, p_price_pl1_a+p_price_pl1_b sum_little
+				, 0 price_traffic, 0 price_question, 0 price_receipt
+				, p_price_pl1_a+p_price_pl1_b sum_hap
+				from (select a.suim_rpt_no rid, b.suim_accept_no report_id, b.close_date
+							, (c.amt_basic*a.collabo_pp*0.01) p_price_pl1_a
+							, (c.amt_daily*a.collabo_pp*0.01) p_price_pl1_b
+							, (b.suim_rpt_ea*a.collabo_pp*0.01) report_ea_pl2
+						from top_rpt_collabo a, top_rpt_head b, top_rpt_invoice c
+						where a.user_id = #{MselectVal}
+						and a.suim_rpt_no = b.suim_rpt_no
+						and b.close_date>=UNIX_TIMESTAMP(#{fromDate}) and b.close_date &lt; UNIX_TIMESTAMP(#{toDate})
+						and b.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						and a.suim_rpt_no = c.suim_rpt_no
+						union all
+						select a.suim_rpt_no, b.suim_accept_no, b.close_date
+							, a.collabo_pp p_price_pl1_a, 0 p_price_pl1_b, 0 report_ea_pl2
+						from top_rpt_collabo a, top_rpt_head b
+						where a.user_id = #{MselectVal}
+						and a.suim_rpt_no = b.suim_rpt_no
+						and b.close_date>=UNIX_TIMESTAMP(#{fromDate}) and b.close_date &lt; UNIX_TIMESTAMP(#{toDate})
+						and b.suim_rpt_type1 in (3,4)
+						order by close_date desc, rid desc) c
+		</select>
+
+		<select id="imemberNsc" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogMember2VO">
+					select 1 gubun, rid, report_id, price_assess, price_time, report_ea   
+						, 0 p_price_mi_a, 0 p_price_mi_b, 0 report_ea_mi
+						, 0 p_price_pl_a, 0 p_price_pl_b, 0 report_ea_pl
+						, price_assess+price_time sum_little
+						, price_traffic, price_question, price_receipt
+						, price_assess+price_time+price_traffic+price_question+price_receipt sum_hap
+					from (select a.suim_rpt_no rid, a.suim_accept_no report_id, b.share_ea report_ea
+								, b.share_amt_basic price_assess, b.share_amt_daily price_time
+								, b.share_amt_etc price_receipt, b.share_amt_traffic price_traffic, b.share_amt_counsel price_question
+							from top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+							where a.team_id = #{team_id}
+							and a.user_no = #{MselectVal}
+							and a.close_date >= UNIX_TIMESTAMP(#{fromdate})
+							and a.close_date &lt; UNIX_TIMESTAMP(#{todate})
+							and a.suim_rpt_type1 = 5
+							and a.suim_rpt_no = b.suim_rpt_no
+							order by a.close_date desc, b.rpt_invoice_no desc) c
+
+					union all
+
+					select 2 gubun, rid, report_id, price_assess, price_time, report_ea   
+						, 0 p_price_mi_a, 0 p_price_mi_b, 0 report_ea_mi
+						, 0 p_price_pl_a, 0 p_price_pl_b, 0 report_ea_pl
+						, price_assess+price_time sum_little
+						, price_traffic, price_question, price_receipt
+						, price_assess+price_time+price_traffic+price_question+price_receipt sum_hap
+					from (select a.suim_rpt_no rid, a.suim_accept_no report_id, b.share_ea report_ea
+								, b.share_amt_basic price_assess, b.share_amt_daily price_time
+								, b.share_amt_etc price_receipt, b.share_amt_traffic price_traffic, b.share_amt_counsel price_question
+							from top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+							where b.share_user_no = #{MselectVal}
+							and b.suim_rpt_no = a.suim_rpt_no
+							and a.user_no != #{MselectVal}
+							and a.close_date >= UNIX_TIMESTAMP(#{fromdate})
+							and a.close_date &lt; UNIX_TIMESTAMP(#{todate})
+							and a.suim_rpt_type1 = 5
+							order by a.close_date desc, b.rpt_invoice_no desc) c
+		</select>
+
+		<select id="imemberContract" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.LogMember2VO">
+					select 1 gubun, rid, report_id, price_assess, price_time, report_ea   
+						, 0 p_price_mi_a, 0 p_price_mi_b, 0 report_ea_mi
+						, 0 p_price_pl_a, 0 p_price_pl_b, 0 report_ea_pl
+						, price_assess+price_time sum_little
+						, price_traffic, price_question, price_receipt
+						, price_assess+price_time+price_traffic+price_question+price_receipt sum_hap
+					from (select a.suim_rpt_no rid, a.suim_accept_no report_id, b.share_ea report_ea
+								, b.share_amt_basic price_assess, b.share_amt_daily price_time
+								, b.share_amt_etc price_receipt, b.share_amt_traffic price_traffic, b.share_amt_counsel price_question
+							from top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+							where a.team_id = #{team_id}
+							and a.user_no = #{MselectVal}
+							and a.close_date >= UNIX_TIMESTAMP(#{fromdate})
+							and a.close_date &lt; UNIX_TIMESTAMP(#{todate})
+							and a.suim_rpt_type1 != 5
+							and a.suim_rpt_no = b.suim_rpt_no
+							order by a.close_date desc, b.rpt_invoice_no desc) c
+
+					union all
+
+					select 2 gubun, rid, report_id, price_assess, price_time, report_ea   
+						, 0 p_price_mi_a, 0 p_price_mi_b, 0 report_ea_mi
+						, 0 p_price_pl_a, 0 p_price_pl_b, 0 report_ea_pl
+						, price_assess+price_time sum_little
+						, price_traffic, price_question, price_receipt
+						, price_assess+price_time+price_traffic+price_question+price_receipt sum_hap
+					from (select a.suim_rpt_no rid, a.suim_accept_no report_id, b.share_ea report_ea
+								, b.share_amt_basic price_assess, b.share_amt_daily price_time
+								, b.share_amt_etc price_receipt, b.share_amt_traffic price_traffic, b.share_amt_counsel price_question
+							from top_prim_biz_rpt_head a, top_prim_biz_inv_share b
+							where b.share_user_no = #{MselectVal}
+							and b.suim_rpt_no = a.suim_rpt_no
+							and a.user_no != #{MselectVal}
+							and a.close_date >= UNIX_TIMESTAMP(#{fromdate})
+							and a.close_date &lt; UNIX_TIMESTAMP(#{todate})
+							and a.suim_rpt_type1 != 5
+							order by a.close_date desc, b.rpt_invoice_no desc) c
+	</select>
+	
+	<select id="mimember" parameterType="java.util.List" resultType="kr.co.toplac.lslog.LogMember2VO">
+			select a.suim_rpt_no rid, a.suim_accept_no report_id, a.close_date end_date, getTopPtnrBscPtnrNick(a.ptnr_id) ig_nick
+				, a.policyholder_nm ig_client, a.beneficiary_nm ig_insured
+				, ifnull(b.amt_basic,0) price_assess_mi, ifnull(b.amt_daily,0) price_time_mi, ifnull(b.amt_etc,0) price_receipt_mi
+				, ifnull(b.amt_traffic,0) price_traffic_mi, ifnull(b.amt_counsel,0) price_question_mi, ifnull(b.amt_total,0) sum_hap_mi
+			from top_rpt_head a, top_rpt_invoice b
+			where a.team_id = #{team_id}
+			and a.user_no = #{MselectVal}
+			and a.close_date > 0
+			and a.suim_rpt_no = b.suim_rpt_no
+			and b.deposit_date &lt; 1
+			order by a.close_date desc
+	</select>
+		
+	<select id="mimemberNsc" parameterType="java.util.List" resultType="kr.co.toplac.lslog.LogMember2VO">
+			select a.suim_rpt_no rid, a.suim_accept_no report_id, a.close_date end_date, getTopPtnrBscPtnrNick(a.ptnr_id) ig_nick
+			, a.policyholder_nm ig_client, a.beneficiary_nm ig_insured
+			, ifnull(b.amt_basic,0) price_assess_mi, ifnull(b.amt_daily,0) price_time_mi, ifnull(b.amt_etc,0) price_receipt_mi
+			, ifnull(b.amt_traffic,0) price_traffic_mi, ifnull(b.amt_counsel,0) price_question_mi, ifnull(b.amt_total,0) sum_hap_mi
+			from top_prim_biz_rpt_head a, top_prim_biz_inv b
+			where a.team_id = #{team_id}
+			and a.user_no = #{MselectVal}
+			and suim_rpt_type1 = 5
+			and a.close_date > 0
+			and a.suim_rpt_no = b.suim_rpt_no
+			and b.deposit_date &lt; 1
+			order by a.close_date desc
+	</select>
+		
+	<select id="mimemberContract" parameterType="java.util.List" resultType="kr.co.toplac.lslog.LogMember2VO">
+			select a.suim_rpt_no rid, a.suim_accept_no report_id, a.close_date end_date, getTopPtnrBscPtnrNick(a.ptnr_id) ig_nick
+			, a.policyholder_nm ig_client, a.beneficiary_nm ig_insured
+			, ifnull(b.amt_basic,0) price_assess_mi, ifnull(b.amt_daily,0) price_time_mi, ifnull(b.amt_etc,0) price_receipt_mi
+			, ifnull(b.amt_traffic,0) price_traffic_mi, ifnull(b.amt_counsel,0) price_question_mi, ifnull(b.amt_total,0) sum_hap_mi
+			from top_prim_biz_rpt_head a, top_prim_biz_inv b
+			where a.team_id = #{team_id}
+			and a.user_no = #{MselectVal}
+			and suim_rpt_type1 != 5
+			and a.close_date > 0
+			and a.suim_rpt_no = b.suim_rpt_no
+			and b.deposit_date &lt; 1
+			order by a.close_date desc
+	</select>
+
+	
+	
+	</mapper>

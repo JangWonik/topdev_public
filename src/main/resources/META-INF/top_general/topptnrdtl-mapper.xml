@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="TopPtnrDtlMapper">
+	
+	<select id="getPtnrDtl" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select ptnr_level, ptnr_type, ptnr_name, ptnr_tel, ptnr_img_small, ptnr_img_big, ptnr_url
+		from top_ptnr_bsc where ptnr_id = #{ptnr_id};
+	</select>
+	
+	<select id="getptnrMbrList" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		SELECT  a.ptnr_mbr_no
+			   ,b.ptnr_nick
+			   ,a.ptnr_id
+			   ,a.ptnr_dept_id
+			   ,c.ptnr_dept_nm ptnr_tm_nm
+			   ,a.ptnr_tm2_nm
+			   ,a.ptnr_mbr_nm
+			   ,a.ptnr_mbr_work_type
+			   ,a.ptnr_mbr_position_nm
+			   ,a.ptnr_mbr_job_memo
+			   ,a.ptnr_mbr_hp
+			   ,a.ptnr_mbr_office_tel
+			   ,a.ptnr_mbr_office_fax
+			   ,a.ptnr_mbr_office_email
+			   ,a.ptnr_mbr_office_postcode
+			   ,a.ptnr_mbr_office_addr1
+			   ,a.ptnr_mbr_office_addr2
+			   ,a.ptnr_mbr_work_memo
+			   ,a.reg_date
+			   ,a.del_state
+			   ,a.del_date
+		 FROM top_ptnr_mbr_bsc a
+		INNER JOIN top_ptnr_bsc b
+		   ON a.ptnr_id = b.ptnr_id
+		 LEFT OUTER JOIN top_ptnr_dept_bsc c
+		   ON a.ptnr_dept_id = c.ptnr_dept_id
+	    WHERE a.ptnr_id = #{ptnr_id}
+	    AND a.del_state = 0
+		ORDER BY a.ptnr_mbr_nm ASC
+	</select>
+	
+</mapper>

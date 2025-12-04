@@ -1,0 +1,1243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="RptInvListMapper">
+
+	<select id="getTaxListCnt" parameterType="kr.co.toplac.toprptinv.TopRptTaxListSearchVO" resultType="integer">
+		SELECT
+			COUNT(GB.suim_accept_no) as cnt
+		FROM
+			(
+				SELECT
+					GA.rpt_type
+					,GA.suim_rpt_no
+					,GA.suim_accept_no
+					,GA.ptnr_id
+					,GA.ptnr_name
+					,GA.user_name
+					,GA.user_no
+					,GA.publish_amount
+					,GA.deposit_amount
+					,SUM(GA.minus_amount) as minus_amount					
+					,GA.tax_edit_end 
+				FROM
+				(
+					SELECT 
+						1 AS rpt_type
+						,a.suim_rpt_no
+						,a.suim_accept_no
+						,a.ptnr_id
+						,getTopPtnrBscPtnrNick(a.ptnr_id) as ptnr_name
+						,getTopMbrBscUserName(a.user_no) as user_name
+						,a.user_no
+						,b.publish_amount
+						,b.deposit_amount
+						,(b.publish_amount - b.deposit_amount) as minus_amount
+						,c.tax_edit_end
+					FROM top_rpt_head a, top_rpt_invoice_tax b, top_rpt_invoice c
+					WHERE a.suim_rpt_no = b.suim_rpt_no
+					AND b.suim_rpt_no = c.suim_rpt_no
+					<if test="tmSearch != 0">
+						AND a.team_id = #{tmSearch}
+					</if>
+					<if test="ptnrSearch != 0">
+						AND a.ptnr_id = #{ptnrSearch}
+					</if>
+					<if test='srchUserNoMain != ""'>
+						AND a.user_no = #{srchUserNoMain}
+					</if>
+					<if test='tax_date_from != ""'>
+						AND b.publish_date >= #{tax_date_from}
+					</if>
+					<if test='tax_date_to != ""'>
+						AND b.publish_date &lt;= #{tax_date_to}
+					</if>
+					<if test='deposit_date_from != ""'>
+						AND b.deposit_date >= #{deposit_date_from}
+					</if>
+					<if test='deposit_date_to != ""'>
+						AND b.deposit_date &lt;= #{deposit_date_to}
+					</if>
+					<if test='close_date_from != ""'>
+						AND a.close_date >= unix_timestamp(#{close_date_from})
+					</if>
+					<if test='close_date_to != ""'>
+						AND a.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_to},INTERVAL 1 day))
+					</if>					
+					
+					UNION ALL
+					
+					SELECT 
+						2 AS rpt_type
+						,d.suim_rpt_no
+						,d.suim_accept_no
+						,d.ptnr_id
+						,getTopPtnrBscPtnrNick(d.ptnr_id) as ptnr_name
+						,getTopMbrBscUserName(d.user_no) as user_name
+						,d.user_no
+						,e.publish_amount
+						,e.deposit_amount
+						,(e.publish_amount - e.deposit_amount) as minus_amount
+						,f.tax_edit_end
+					FROM top_prim_biz_rpt_head d, top_prim_invoice_tax e, top_prim_biz_inv f
+					WHERE d.suim_rpt_no = e.suim_rpt_no
+					AND e.suim_rpt_no = f.suim_rpt_no
+					<if test="tmSearch != 0">
+						AND d.team_id = #{tmSearch}
+					</if>
+					<if test="ptnrSearch != 0">
+						AND d.ptnr_id = #{ptnrSearch}
+					</if>
+					<if test='srchUserNoMain != ""'>
+						AND d.user_no = #{srchUserNoMain}
+					</if>
+					<if test='tax_date_from != ""'>
+						AND e.publish_date >= #{tax_date_from}
+					</if>
+					<if test='tax_date_to != ""'>
+						AND e.publish_date &lt;= #{tax_date_to}
+					</if>
+					<if test='deposit_date_from != ""'>
+						AND e.deposit_date >= #{deposit_date_from}
+					</if>
+					<if test='deposit_date_to != ""'>
+						AND e.deposit_date &lt;= #{deposit_date_to}
+					</if>
+					<if test='close_date_from != ""'>
+						AND d.close_date >= unix_timestamp(#{close_date_from})
+					</if>
+					<if test='close_date_to != ""'>
+						AND d.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_to},INTERVAL 1 day))
+					</if>					
+					
+				)GA
+				WHERE 1=1
+				<if test="rptTypeSearch != 0">
+					AND GA.rpt_type = #{rptTypeSearch} 
+				</if>
+				<if test="taxNoCheck == 'on'">
+					AND GA.minus_amount != 0
+				</if>
+				<if test="endNoCheck == 'on'">
+					AND GA.tax_edit_end = 0
+				</if>
+				GROUP BY GA.suim_accept_no			
+			)GB
+	</select>
+
+	<select id="getTaxList" parameterType="kr.co.toplac.toprptinv.TopRptTaxListSearchVO" resultType="kr.co.toplac.toprptinv.TopRptTaxListViewVO">
+	SELECT
+		GC.rpt_type
+		,GC.suim_rpt_no
+		,GC.suim_accept_no
+		,GC.ptnr_id
+		,GC.ptnr_name
+		,GC.user_name
+		,GC.user_no
+		,GC.center_name
+		,GC.team_name
+		,GC.close_date_fmt
+		,GC.sum_tax_val
+		,GC.sum_deposit_val
+		,GC.sum_minus_val
+		,GC.tax_edit_end
+		,GC.rpt_invoice_no
+		,GC.invoice_deposit_date
+		,GC.invoice_amt_total
+		,GC.publish_date_fmt
+	FROM
+		(
+			SELECT
+				GB.rpt_type
+				,GB.suim_rpt_no
+				,GB.suim_accept_no
+				,GB.ptnr_id
+				,GB.ptnr_name
+				,GB.user_name
+				,GB.user_no
+				,GB.center_name
+				,GB.team_name
+				,GB.close_date_fmt
+				,SUM(GB.publish_amount) AS sum_tax_val
+				,SUM(GB.deposit_amount) AS sum_deposit_val
+				,( SUM(GB.publish_amount) - SUM(GB.deposit_amount) ) AS sum_minus_val
+				,GB.tax_edit_end
+				,GB.rpt_invoice_no
+				,GB.invoice_deposit_date
+				,GB.invoice_amt_total
+				,GB.publish_date_fmt
+			FROM
+				(
+					SELECT
+						GA.rpt_type
+						,GA.suim_rpt_no
+						,GA.suim_accept_no
+						,GA.ptnr_id
+						,GA.ptnr_name
+						,GA.user_name
+						,GA.user_no
+						,GA.center_name
+						,GA.team_name
+						,GA.close_date_fmt
+						,GA.publish_amount
+						,GA.deposit_amount						
+						,GA.tax_edit_end 
+						,GA.rpt_invoice_no
+						,GA.invoice_deposit_date
+						,GA.invoice_amt_total
+						,GA.publish_date_fmt
+					FROM
+					(
+						SELECT 
+							1 AS rpt_type
+							,a.suim_rpt_no
+							,a.suim_accept_no
+							,a.ptnr_id
+							,getTopPtnrBscPtnrNick(a.ptnr_id) as ptnr_name
+							,getTopMbrBscUserName(a.user_no) as user_name
+							,a.user_no
+							,getTopTmBscCenterName(a.team_id) as center_name
+							,getTopTmBscTeamName(a.team_id) as team_name
+							,if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+							,b.publish_amount
+							,b.deposit_amount
+							,c.tax_edit_end
+							,c.rpt_invoice_no
+							,DATE_FORMAT(FROM_UNIXTIME(c.deposit_date), '%Y-%m-%d') invoice_deposit_date
+							,c.amt_total as invoice_amt_total							
+							,DATE_FORMAT(b.publish_date, '%Y-%m-%d') publish_date_fmt							
+						FROM top_rpt_head a, top_rpt_invoice_tax b, top_rpt_invoice c
+						WHERE a.suim_rpt_no = b.suim_rpt_no
+						AND b.suim_rpt_no = c.suim_rpt_no
+						<if test="tmSearch != 0">
+							AND a.team_id = #{tmSearch}
+						</if>
+						<if test="ptnrSearch != 0">
+							AND a.ptnr_id = #{ptnrSearch}
+						</if>
+						<if test='srchUserNoMain != ""'>
+							AND a.user_no = #{srchUserNoMain}
+						</if>
+						<if test='tax_date_from != ""'>
+							AND b.publish_date >= #{tax_date_from}
+						</if>
+						<if test='tax_date_to != ""'>
+							AND b.publish_date &lt;= #{tax_date_to}
+						</if>
+						<if test='deposit_date_from != ""'>
+							AND b.deposit_date >= #{deposit_date_from}
+						</if>
+						<if test='deposit_date_to != ""'>
+							AND b.deposit_date &lt;= #{deposit_date_to}
+						</if>
+						<if test='close_date_from != ""'>
+							AND a.close_date >= unix_timestamp(#{close_date_from})
+						</if>
+						<if test='close_date_to != ""'>
+							AND a.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_to},INTERVAL 1 day))
+						</if>
+						
+						UNION ALL
+						
+						SELECT 
+							2 AS rpt_type
+							,d.suim_rpt_no
+							,d.suim_accept_no
+							,d.ptnr_id
+							,getTopPtnrBscPtnrNick(d.ptnr_id) as ptnr_name
+							,getTopMbrBscUserName(d.user_no) as user_name
+							,d.user_no
+							,getTopTmBscCenterName(d.team_id) as center_name
+							,getTopTmBscTeamName(d.team_id) as team_name
+							,if(d.close_date = null || d.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(d.close_date), '%Y-%m-%d')) close_date_fmt
+							,e.publish_amount
+							,e.deposit_amount
+							,f.tax_edit_end
+							,f.rpt_invoice_no
+							,DATE_FORMAT(FROM_UNIXTIME(f.deposit_date), '%Y-%m-%d') invoice_deposit_date
+							,f.amt_total as invoice_amt_total
+							,DATE_FORMAT(e.publish_date, '%Y-%m-%d') publish_date_fmt
+						FROM top_prim_biz_rpt_head d, top_prim_invoice_tax e, top_prim_biz_inv f
+						WHERE d.suim_rpt_no = e.suim_rpt_no
+						AND e.suim_rpt_no = f.suim_rpt_no
+						<if test="tmSearch != 0">
+							AND d.team_id = #{tmSearch}
+						</if>
+						<if test="ptnrSearch != 0">
+							AND d.ptnr_id = #{ptnrSearch}
+						</if>
+						<if test='srchUserNoMain != ""'>
+							AND d.user_no = #{srchUserNoMain}
+						</if>
+						<if test='tax_date_from != ""'>
+							AND e.publish_date >= #{tax_date_from}
+						</if>
+						<if test='tax_date_to != ""'>
+							AND e.publish_date &lt;= #{tax_date_to}
+						</if>
+						<if test='deposit_date_from != ""'>
+							AND e.deposit_date >= #{deposit_date_from}
+						</if>
+						<if test='deposit_date_to != ""'>
+							AND e.deposit_date &lt;= #{deposit_date_to}
+						</if>
+						<if test='close_date_from != ""'>
+							AND d.close_date >= unix_timestamp(#{close_date_from})
+						</if>
+						<if test='close_date_to != ""'>
+							AND d.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_to},INTERVAL 1 day))
+						</if>
+					)GA
+					WHERE 1=1
+						<if test="rptTypeSearch != 0">
+							AND GA.rpt_type = #{rptTypeSearch} 
+						</if>		
+				)GB
+				WHERE 1=1				
+				GROUP BY GB.suim_accept_no
+		)GC
+		WHERE 1=1
+		<if test="taxNoCheck == 'on'">
+			AND GC.sum_minus_val != 0
+		</if>
+		<if test="endNoCheck == 'on'">
+			AND GC.tax_edit_end = 0
+		</if>			
+		ORDER BY GC.close_date_fmt DESC
+		LIMIT #{queryPgNoInt}, 18				
+	</select>
+	
+	<select id="getTaxListTotal" parameterType="kr.co.toplac.toprptinv.TopRptTaxListSearchVO" resultType="kr.co.toplac.toprptinv.TopRptTaxListViewVO">
+	SELECT
+		GC.rpt_type
+		,GC.suim_rpt_no
+		,GC.suim_accept_no
+		,GC.ptnr_id
+		,GC.ptnr_name
+		,GC.user_name
+		,GC.user_no
+		,GC.center_name
+		,GC.team_name
+		,GC.close_date_fmt
+		,GC.sum_tax_val
+		,GC.sum_deposit_val
+		,GC.sum_minus_val
+		,GC.tax_edit_end
+		,GC.rpt_invoice_no
+		,GC.invoice_deposit_date
+		,GC.invoice_amt_total
+		,GC.publish_date_fmt
+	FROM
+		(
+			SELECT
+				GB.rpt_type
+				,GB.suim_rpt_no
+				,GB.suim_accept_no
+				,GB.ptnr_id
+				,GB.ptnr_name
+				,GB.user_name
+				,GB.user_no
+				,GB.center_name
+				,GB.team_name
+				,GB.close_date_fmt
+				,SUM(GB.publish_amount) AS sum_tax_val
+				,SUM(GB.deposit_amount) AS sum_deposit_val
+				,( SUM(GB.publish_amount) - SUM(GB.deposit_amount) ) AS sum_minus_val				
+				,GB.tax_edit_end
+				,GB.rpt_invoice_no
+				,GB.invoice_deposit_date
+				,GB.invoice_amt_total
+				,GB.publish_date_fmt
+			FROM
+				(
+					SELECT
+						GA.rpt_type
+						,GA.suim_rpt_no
+						,GA.suim_accept_no
+						,GA.ptnr_id
+						,GA.ptnr_name
+						,GA.user_name
+						,GA.user_no
+						,GA.center_name
+						,GA.team_name
+						,GA.close_date_fmt
+						,GA.publish_amount
+						,GA.deposit_amount						
+						,GA.tax_edit_end 
+						,GA.rpt_invoice_no
+						,GA.invoice_deposit_date
+						,GA.invoice_amt_total 
+						,GA.publish_date_fmt
+					FROM
+					(
+						SELECT 
+							1 AS rpt_type
+							,a.suim_rpt_no
+							,a.suim_accept_no
+							,a.ptnr_id
+							,getTopPtnrBscPtnrNick(a.ptnr_id) as ptnr_name
+							,getTopMbrBscUserName(a.user_no) as user_name
+							,a.user_no
+							,getTopTmBscCenterName(a.team_id) as center_name
+							,getTopTmBscTeamName(a.team_id) as team_name
+							,if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+							,b.publish_amount
+							,b.deposit_amount
+							,c.tax_edit_end
+							,c.rpt_invoice_no
+							,DATE_FORMAT(FROM_UNIXTIME(c.deposit_date), '%Y-%m-%d') invoice_deposit_date
+							,c.amt_total as invoice_amt_total
+							,DATE_FORMAT(b.publish_date, '%Y-%m-%d') publish_date_fmt
+						FROM top_rpt_head a, top_rpt_invoice_tax b, top_rpt_invoice c
+						WHERE a.suim_rpt_no = b.suim_rpt_no
+						AND b.suim_rpt_no = c.suim_rpt_no
+						<if test="tmSearch != 0">
+							AND a.team_id = #{tmSearch}
+						</if>
+						<if test="ptnrSearch != 0">
+							AND a.ptnr_id = #{ptnrSearch}
+						</if>
+						<if test='srchUserNoMain != ""'>
+							AND a.user_no = #{srchUserNoMain}
+						</if>
+						<if test='tax_date_from != ""'>
+							AND b.publish_date >= #{tax_date_from}
+						</if>
+						<if test='tax_date_to != ""'>
+							AND b.publish_date &lt;= #{tax_date_to}
+						</if>
+						<if test='deposit_date_from != ""'>
+							AND b.deposit_date >= #{deposit_date_from}
+						</if>
+						<if test='deposit_date_to != ""'>
+							AND b.deposit_date &lt;= #{deposit_date_to}
+						</if>
+						<if test='close_date_from != ""'>
+							AND a.close_date >= unix_timestamp(#{close_date_from})
+						</if>
+						<if test='close_date_to != ""'>
+							AND a.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_to},INTERVAL 1 day))
+						</if>
+						
+						UNION ALL
+						
+						SELECT 
+							2 AS rpt_type
+							,d.suim_rpt_no
+							,d.suim_accept_no
+							,d.ptnr_id
+							,getTopPtnrBscPtnrNick(d.ptnr_id) as ptnr_name
+							,getTopMbrBscUserName(d.user_no) as user_name
+							,d.user_no
+							,getTopTmBscCenterName(d.team_id) as center_name
+							,getTopTmBscTeamName(d.team_id) as team_name
+							,if(d.close_date = null || d.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(d.close_date), '%Y-%m-%d')) close_date_fmt
+							,e.publish_amount
+							,e.deposit_amount
+							,f.tax_edit_end
+							,f.rpt_invoice_no
+							,DATE_FORMAT(FROM_UNIXTIME(f.deposit_date), '%Y-%m-%d') invoice_deposit_date
+							,f.amt_total as invoice_amt_total
+							,DATE_FORMAT(e.publish_date, '%Y-%m-%d') publish_date_fmt
+						FROM top_prim_biz_rpt_head d, top_prim_invoice_tax e, top_prim_biz_inv f
+						WHERE d.suim_rpt_no = e.suim_rpt_no
+						AND e.suim_rpt_no = f.suim_rpt_no
+						<if test="tmSearch != 0">
+							AND d.team_id = #{tmSearch}
+						</if>
+						<if test="ptnrSearch != 0">
+							AND d.ptnr_id = #{ptnrSearch}
+						</if>
+						<if test='srchUserNoMain != ""'>
+							AND d.user_no = #{srchUserNoMain}
+						</if>
+						<if test='tax_date_from != ""'>
+							AND e.publish_date >= #{tax_date_from}
+						</if>
+						<if test='tax_date_to != ""'>
+							AND e.publish_date &lt;= #{tax_date_to}
+						</if>
+						<if test='deposit_date_from != ""'>
+							AND e.deposit_date >= #{deposit_date_from}
+						</if>
+						<if test='deposit_date_to != ""'>
+							AND e.deposit_date &lt;= #{deposit_date_to}
+						</if>
+						<if test='close_date_from != ""'>
+							AND d.close_date >= unix_timestamp(#{close_date_from})
+						</if>
+						<if test='close_date_to != ""'>
+							AND d.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_to},INTERVAL 1 day))
+						</if>
+					)GA
+					WHERE 1=1
+						<if test="rptTypeSearch != 0">
+							AND GA.rpt_type = #{rptTypeSearch} 
+						</if>		
+				)GB
+				WHERE 1=1
+				
+				GROUP BY GB.suim_accept_no
+		)GC
+		WHERE 1=1
+		<if test="taxNoCheck == 'on'">
+			AND GC.sum_minus_val != 0
+		</if>
+		<if test="endNoCheck == 'on'">
+			AND GC.tax_edit_end = 0
+		</if>						
+	</select>
+	
+	<select id="getInvInfoDetail" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			a.rpt_invoice_no
+			,b.suim_rpt_no
+			,b.suim_accept_no
+			,getTopPtnrBscPtnrNick(b.ptnr_id) AS ptnr_name
+			,IF(a.invoice_date = NULL || a.invoice_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.invoice_date), '%Y-%m-%d')) invoice_date_fmt
+			,IF(b.close_date = NULL || b.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d')) close_date_fmt
+			,a.amt_total
+			,a.tax_invoice_no
+		FROM top_rpt_invoice a, top_rpt_head b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		AND a.rpt_invoice_no = #{invoice_no}
+	</select>
+	
+	<select id="getAmtTotalDefVal" parameterType="String" resultType="Double">
+		SELECT
+			IFNULL(SUM(GA.first_amt_total) - SUM(GA.last_amt_total),0) as def_amt_total
+		FROM
+		(
+			(
+				SELECT 
+					amt_total AS first_amt_total
+					,0 AS last_amt_total
+				FROM top_rpt_invoice_log
+				WHERE rpt_invoice_no = #{rpt_invoice_no} 
+				ORDER BY serial_no LIMIT 1
+			)
+			UNION ALL
+			(
+				SELECT 
+					0 AS first_amt_total
+					,amt_total AS last_amt_total
+				FROM top_rpt_invoice_log
+				WHERE rpt_invoice_no = #{rpt_invoice_no}
+				ORDER BY serial_no DESC LIMIT 1
+			)
+		)GA	
+	</select>
+	
+	<select id="getInvTaxPtnrSummaryList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			SUM(GA.publish_amount) AS publish_amount
+			,SUM(GA.deposit_amount) AS deposit_amount
+			,GA.ptnr_id
+			,GA.ptnr_nick
+			,GA.statistics_order
+		FROM
+			(
+				SELECT 
+					invTax.publish_amount
+					,invTax.deposit_amount
+					,topHead.ptnr_id
+					,topPtnr.ptnr_nick
+					,topPtnr.statistics_order	
+				FROM top_rpt_invoice_tax invTax
+				LEFT JOIN top_rpt_head topHead
+				ON invTax.suim_rpt_no = topHead.suim_rpt_no
+				LEFT JOIN top_ptnr_bsc topPtnr
+				ON topHead.ptnr_id = topPtnr.ptnr_id
+				WHERE 1=1
+				AND invTax.publish_date >= #{summary_date_from}
+				AND invTax.publish_date &lt; DATE_ADD(#{summary_date_to},INTERVAL 1 DAY)
+				
+				UNION ALL
+		
+				SELECT 
+					primTax.publish_amount
+					,primTax.deposit_amount
+					,primHead.ptnr_id
+					,topPtnr.ptnr_nick
+					,topPtnr.statistics_order	
+				FROM top_prim_invoice_tax primTax
+				LEFT JOIN top_prim_biz_rpt_head primHead
+				ON primTax.suim_rpt_no = primHead.suim_rpt_no
+				LEFT JOIN top_ptnr_bsc topPtnr
+				ON primHead.ptnr_id = topPtnr.ptnr_id
+				WHERE 1=1
+				AND primTax.publish_date >= #{summary_date_from}
+				AND primTax.publish_date &lt; DATE_ADD(#{summary_date_to},INTERVAL 1 DAY)
+			)GA
+		GROUP BY GA.ptnr_id
+		ORDER BY statistics_order		
+	</select>
+
+	<select id="getInvList" parameterType="kr.co.toplac.toprptinv.TopRptInvListSearchVO" resultType="kr.co.toplac.toprptinv.TopRptInvListViewVO">
+		SELECT rptInv.rpt_invoice_no
+			  ,a.suim_rpt_no
+			  <!-- ,rptInv.amt_basic -->
+			  ,(rptInv.amt_basic+getCollaboApprovalAmt(a.suim_rpt_no)) as amt_basic	  
+			  ,rptInv.amt_daily
+			  ,rptInv.amt_etc
+			  ,rptInv.amt_traffic
+			  ,rptInv.amt_counsel
+			  ,rptInv.amt_total
+			  ,rptInv.rpt_invoice_memo
+			  ,rptInv.invoice_date
+			  ,if(rptInv.invoice_date = null || rptInv.invoice_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(rptInv.invoice_date), '%Y-%m-%d')) invoice_date_fmt
+			  ,rptInv.deposit_date
+			  ,if(rptInv.deposit_date = null || rptInv.deposit_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(rptInv.deposit_date), '%Y-%m-%d')) deposit_date_fmt
+			  ,b.issue_tax_invoice
+			  ,rptInv.tax_invoice_no
+			  ,rptInv.tax_date
+			  ,if(rptInv.tax_date = null || rptInv.tax_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(rptInv.tax_date), '%Y-%m-%d')) tax_date_fmt
+			  ,rptInv.edit_amt_cnt
+			  ,rptInv.edit_date_cnt
+			  ,rptInv.tax_edit_end
+			  ,a.suim_accept_no
+			  ,a.suim_rpt_type1
+			  ,a.speed_type
+			  ,a.team_id, c.team_mark
+			  ,a.user_no, d.user_name user_nm
+			  ,a.ptnr_id, b.ptnr_nick
+			  ,a.ptnr_mbr_no
+			  ,ptnrMbr.ptnr_mbr_nm ptnr_mbr_nm_4edit
+			  ,a.policyholder_nm
+			  ,a.beneficiary_nm
+			  ,a.close_date
+			  ,if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+			  ,a.suim_rpt_ea
+			  ,a.workload_ea
+			  ,e.accident_no			  
+		  FROM top_rpt_head a
+		  LEFT JOIN  top_rpt_body e
+		   ON a.suim_rpt_no = e.suim_rpt_no		  
+		  LEFT JOIN top_ptnr_mbr_bsc ptnrMbr
+			ON ptnrMbr.ptnr_mbr_no = a.ptnr_mbr_no, top_rpt_invoice rptInv, top_ptnr_bsc b, top_tm_bsc c, top_mbr_bsc d
+		WHERE a.close_date > 0
+		<if test="ptnrUserNmSearch != ''">
+			AND ptnrMbr.ptnr_mbr_nm like '%${ptnrUserNmSearch}%'
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="type1Search != 0">
+			<choose>
+				<when test="type1Search == 21">
+					AND a.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+				</when>
+				<when test="type1Search == 22">
+					AND a.suim_rpt_type1 in (3,4)
+				</when>
+				<when test="type1Search == 23">
+					AND a.suim_rpt_type1 in (1,11,12,13,14,15,16,17,18,19)
+				</when>
+				<otherwise>
+					AND a.suim_rpt_type1 = #{type1Search}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="speedCheck == 'on'">
+			AND a.speed_type > 0
+		</if>
+		<if test="invoice_date_From != ''">
+			AND rptInv.invoice_date >= unix_timestamp(#{invoice_date_From})
+		</if>
+		<if test="invoice_date_To != ''">
+			AND rptInv.invoice_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{invoice_date_To},INTERVAL 1 day))
+		</if>
+		<if test="invDateEditCheck == 'on'">
+			AND rptInv.edit_date_cnt > 0
+		</if>
+		<if test="userNmSearch != ''">
+			AND d.user_name like '%${userNmSearch}%'
+		</if>
+		<if test="close_date_From != ''">
+			AND a.close_date >= unix_timestamp(#{close_date_From})
+		</if>
+		<if test="close_date_To != ''">
+			AND a.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_To},INTERVAL 1 day))
+		</if>
+		<if test="benefiNmSearch != ''">
+			AND a.beneficiary_nm like '%${benefiNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.policyholder_nm like '%${policyhNmSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="deposit_date_From != ''">
+			AND rptInv.deposit_date >= unix_timestamp(#{deposit_date_From})
+		</if>
+		<if test="deposit_date_To != ''">
+			AND rptInv.deposit_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{deposit_date_To},INTERVAL 1 day))
+		</if>
+		<if test="totAmtF != ''">
+			AND rptInv.amt_total >= #{totAmtF}
+		</if>
+		<if test="totAmtT != ''">
+			AND rptInv.amt_total &lt;= #{totAmtT}
+		</if>
+		<if test="depositNoCheck == 'on'">
+			AND (rptInv.deposit_date is null OR rptInv.deposit_date &lt; 1)
+		</if>
+		<if test="amtEditCheck == 'on'">
+			AND rptInv.edit_amt_cnt > 0
+		</if>
+		<!-- <if test="taxNoSearch != ''">
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if> -->
+		<if test='taxNoSearch != null and taxNoSearch != ""'>
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if>
+		<if test="taxNoCheck == 'on'">
+			AND (rptInv.tax_invoice_no is null OR rptInv.tax_invoice_no = '')
+		</if>
+		<if test="taxEditEnd == 'on'">
+			AND rptInv.tax_edit_end = 0
+		</if>
+		<if test="tax_date_From != ''">
+			AND rptInv.tax_date >= unix_timestamp(#{tax_date_From})
+		</if>
+		<if test="tax_date_To != ''">
+			AND rptInv.tax_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{tax_date_To},INTERVAL 1 day))
+		</if>
+		<if test="invWorkIng == 'on'">
+			AND rptInv.work_state = 1
+			AND rptInv.work_user_no = #{workUserNo}
+		</if>
+		<if test='accidentNoSearch != null and accidentNoSearch != ""'>
+			AND e.accident_no = #{accidentNoSearch}
+		</if>		
+		AND a.suim_rpt_no = rptInv.suim_rpt_no
+		AND a.ptnr_id = b.ptnr_id
+		AND a.team_id = c.team_id
+		AND a.user_no = d.user_no
+		AND a.suim_rpt_no = e.suim_rpt_no
+		ORDER BY
+			<!-- tax_no_flag, -->
+			<choose>
+				<when test="orderBy == 'close_date'">
+					close_date DESC,
+				</when>
+				<when test="orderBy == 'invoice_date'">
+					invoice_date DESC,
+				</when>
+				<when test="orderBy == 'deposit_date'">
+					deposit_date DESC,
+				</when>
+			</choose>
+			rpt_invoice_no DESC
+		<!-- LIMIT #{queryPgNoInt}, 18 -->
+		LIMIT #{queryPgNoInt}, #{queryPgSizeInt}
+	</select>
+
+	<select id="getInvListCnt" parameterType="kr.co.toplac.toprptinv.TopRptInvListSearchVO" resultType="kr.co.toplac.toprptinv.TopRptInvListViewVO">
+		SELECT count(rptInv.rpt_invoice_no) totCntInt
+			,sum(amt_basic) totAmtBasic
+			,sum(amt_daily) totAmtDaily
+			,sum(amt_etc) totAmtEtc
+			,sum(amt_traffic) totAmtTraffic
+			,sum(amt_counsel) totAmtCounsel
+			,sum(amt_total) totAmtTotal
+		FROM top_rpt_head a
+			LEFT JOIN  top_rpt_body e
+			ON a.suim_rpt_no = e.suim_rpt_no
+			LEFT JOIN top_ptnr_mbr_bsc ptnrMbr
+			ON ptnrMbr.ptnr_mbr_no = a.ptnr_mbr_no
+			, top_rpt_invoice rptInv, top_ptnr_bsc b, top_tm_bsc c, top_mbr_bsc d
+		WHERE a.close_date > 0
+		<if test="ptnrUserNmSearch != ''">
+			AND ptnrMbr.ptnr_mbr_nm like '%${ptnrUserNmSearch}%'
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="type1Search != 0">
+			<choose>
+				<when test="type1Search == 21">
+					AND a.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+				</when>
+				<when test="type1Search == 22">
+					AND a.suim_rpt_type1 in (3,4)
+				</when>
+				<when test="type1Search == 23">
+					AND a.suim_rpt_type1 in (1,11,12,13,14,15,16,17,18,19)
+				</when>
+				<otherwise>
+					AND a.suim_rpt_type1 = #{type1Search}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="speedCheck == 'on'">
+			AND a.speed_type > 0
+		</if>
+		<if test="invoice_date_From != ''">
+			AND rptInv.invoice_date >= unix_timestamp(#{invoice_date_From})
+		</if>
+		<if test="invoice_date_To != ''">
+			AND rptInv.invoice_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{invoice_date_To},INTERVAL 1 day))
+		</if>
+		<if test="invDateEditCheck == 'on'">
+			AND rptInv.edit_date_cnt > 0
+		</if>
+		<if test="userNmSearch != ''">
+			AND d.user_name like '%${userNmSearch}%'
+		</if>
+		<if test="close_date_From != ''">
+			AND a.close_date >= unix_timestamp(#{close_date_From})
+		</if>
+		<if test="close_date_To != ''">
+			AND a.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_To},INTERVAL 1 day))
+		</if>
+		<if test="benefiNmSearch != ''">
+			AND a.beneficiary_nm like '%${benefiNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.policyholder_nm like '%${policyhNmSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="deposit_date_From != ''">
+			AND rptInv.deposit_date >= unix_timestamp(#{deposit_date_From})
+		</if>
+		<if test="deposit_date_To != ''">
+			AND rptInv.deposit_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{deposit_date_To},INTERVAL 1 day))
+		</if>
+		<if test="totAmtF != ''">
+			AND rptInv.amt_total >= #{totAmtF}
+		</if>
+		<if test="totAmtT != ''">
+			AND rptInv.amt_total &lt;= #{totAmtT}
+		</if>
+		<if test="depositNoCheck == 'on'">
+			AND (rptInv.deposit_date is null OR rptInv.deposit_date &lt; 1)
+		</if>
+		<if test="amtEditCheck == 'on'">
+			AND rptInv.edit_amt_cnt > 0
+		</if>
+		<!-- <if test="taxNoSearch != ''">
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if> -->
+		<if test='taxNoSearch != null and taxNoSearch != ""'>		
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if>
+		<if test="taxNoCheck == 'on'">
+			AND (rptInv.tax_invoice_no is null OR rptInv.tax_invoice_no = '')
+		</if>
+		<if test="taxEditEnd == 'on'">
+			AND rptInv.tax_edit_end = 0
+		</if>
+		<if test="tax_date_From != ''">
+			AND rptInv.tax_date >= unix_timestamp(#{tax_date_From})
+		</if>
+		<if test="tax_date_To != ''">
+			AND rptInv.tax_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{tax_date_To},INTERVAL 1 day))
+		</if>		
+		<if test="invWorkIng == 'on'">
+			AND rptInv.work_state = 1
+			AND rptInv.work_user_no = #{workUserNo}
+		</if>
+		<if test='accidentNoSearch != null and accidentNoSearch != ""'>
+			AND e.accident_no = #{accidentNoSearch}
+		</if>
+		AND a.suim_rpt_no = rptInv.suim_rpt_no
+		AND a.ptnr_id = b.ptnr_id
+		AND a.team_id = c.team_id
+		AND a.user_no = d.user_no
+		AND a.suim_rpt_no = e.suim_rpt_no
+	</select>
+
+	<select id="getAmtNotDeposit" parameterType="kr.co.toplac.toprptinv.TopRptInvListSearchVO" resultType="double">
+		SELECT IFNULL(sum(amt_total),0) totAmtNotDeposit
+		FROM top_rpt_head a
+				LEFT JOIN top_ptnr_mbr_bsc ptnrMbr
+				ON ptnrMbr.ptnr_mbr_no = a.ptnr_mbr_no
+			, top_rpt_invoice rptInv, top_ptnr_bsc b, top_tm_bsc c, top_mbr_bsc d
+		WHERE a.close_date > 0
+		<if test="ptnrUserNmSearch != ''">
+			AND ptnrMbr.ptnr_mbr_nm like '%${ptnrUserNmSearch}%'
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="type1Search != 0">
+			<choose>
+				<when test="type1Search == 21">
+					AND a.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+				</when>
+				<when test="type1Search == 22">
+					AND a.suim_rpt_type1 in (3,4)
+				</when>
+				<when test="type1Search == 23">
+					AND a.suim_rpt_type1 in (1,11,12,13,14,15,16,17,18,19)
+				</when>
+				<otherwise>
+					AND a.suim_rpt_type1 = #{type1Search}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="speedCheck == 'on'">
+			AND a.speed_type > 0
+		</if>
+		<if test="invoice_date_From != ''">
+			AND rptInv.invoice_date >= unix_timestamp(#{invoice_date_From})
+		</if>
+		<if test="invoice_date_To != ''">
+			AND rptInv.invoice_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{invoice_date_To},INTERVAL 1 day))
+		</if>
+		<if test="invDateEditCheck == 'on'">
+			AND rptInv.edit_date_cnt > 0
+		</if>
+		<if test="userNmSearch != ''">
+			AND d.user_name like '%${userNmSearch}%'
+		</if>
+		<if test="close_date_From != ''">
+			AND a.close_date >= unix_timestamp(#{close_date_From})
+		</if>
+		<if test="close_date_To != ''">
+			AND a.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_To},INTERVAL 1 day))
+		</if>
+		<if test="benefiNmSearch != ''">
+			AND a.beneficiary_nm like '%${benefiNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.policyholder_nm like '%${policyhNmSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="deposit_date_From != ''">
+			AND rptInv.deposit_date >= unix_timestamp(#{deposit_date_From})
+		</if>
+		<if test="deposit_date_To != ''">
+			AND rptInv.deposit_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{deposit_date_To},INTERVAL 1 day))
+		</if>
+		<if test="totAmtF != ''">
+			AND rptInv.amt_total >= REPLACE(#{totAmtF},',','')
+		</if>
+		<if test="totAmtT != ''">
+			AND rptInv.amt_total &lt;= REPLACE(#{totAmtT},',','')
+		</if>
+<!-- 		<if test="depositNoCheck == 'on'"> -->
+			AND (rptInv.deposit_date is null OR rptInv.deposit_date &lt; 1)
+<!-- 		</if> -->
+		<if test="amtEditCheck == 'on'">
+			AND rptInv.edit_amt_cnt > 0
+		</if>
+		<!-- <if test="taxNoSearch != ''">
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if> -->
+		<if test='taxNoSearch != null and taxNoSearch != ""'>
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if>
+		<if test="taxNoCheck == 'on'">
+			AND (rptInv.tax_invoice_no is null OR rptInv.tax_invoice_no = '')
+		</if>
+		<if test="taxEditEnd == 'on'">
+			AND rptInv.tax_edit_end = 0
+		</if>
+		<if test="tax_date_From != ''">
+			AND rptInv.tax_date >= unix_timestamp(#{tax_date_From})
+		</if>
+		<if test="tax_date_To != ''">
+			AND rptInv.tax_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{tax_date_To},INTERVAL 1 day))
+		</if>		
+		AND a.suim_rpt_no = rptInv.suim_rpt_no
+		AND a.ptnr_id = b.ptnr_id
+		AND a.team_id = c.team_id
+		AND a.user_no = d.user_no
+	</select>
+
+	<select id="ptnrListForSearch" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		SELECT ptnr_id, ptnr_nick, ptnr_level
+		FROM top_ptnr_bsc
+		WHERE del_state = 0
+		ORDER BY ptnr_group_order DESC, ptnr_level
+	</select>
+
+	<select id="suimRptType1ForSearch" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd, col_val
+		FROM sysadm_codedic
+		WHERE tbl_nm = 'top_rpt_head'
+		AND col_nm = 'suim_rpt_type1'
+		ORDER BY col_cd
+	</select>
+
+	<select id="getInvListExcel" parameterType="kr.co.toplac.toprptinv.TopRptInvListSearchVO" resultType="kr.co.toplac.toprptinv.TopRptInvListViewVO">
+		SELECT rptInv.rpt_invoice_no, a.suim_rpt_no
+			<!-- , rptInv.amt_basic -->
+			,(rptInv.amt_basic+getCollaboApprovalAmt(a.suim_rpt_no)) as amt_basic
+			, rptInv.amt_daily, rptInv.amt_etc, rptInv.amt_traffic, rptInv.amt_counsel
+			, rptInv.amt_total
+			, rptInv.rpt_invoice_memo
+			, rptInv.invoice_date, if(rptInv.invoice_date = null || rptInv.invoice_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(rptInv.invoice_date), '%Y-%m-%d')) invoice_date_fmt
+			, rptInv.deposit_date, if(rptInv.deposit_date = null || rptInv.deposit_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(rptInv.deposit_date), '%Y-%m-%d')) deposit_date_fmt
+			, b.issue_tax_invoice, rptInv.tax_invoice_no
+			, rptInv.tax_date, if(rptInv.tax_date = null || rptInv.tax_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(rptInv.tax_date), '%Y-%m-%d')) tax_date_fmt
+			, rptInv.edit_amt_cnt, rptInv.edit_date_cnt
+			, a.suim_accept_no
+			, a.suim_rpt_type1
+			, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, a.suim_rpt_type3
+			, getCodeValue('top_rpt_head','suim_rpt_type3',a.suim_rpt_type3) suim_rpt_type3_nm
+			, a.speed_type
+			, a.team_id, c.team_mark
+			, getTopTmBscCenterName(a.team_id) center_name
+			, a.user_no, d.user_name user_nm
+			, a.ptnr_id, b.ptnr_nick
+			, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+			, a.ptnr_mbr_no
+			, ptnrMbr.ptnr_mbr_nm ptnr_mbr_nm_4edit
+			, a.policyholder_nm
+			, a.beneficiary_nm
+			, a.suim_close_no
+			, f.policy_no
+			, f.insurance_nm
+			, f.accident_no
+			, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date
+			, a.workload_ea
+			, getCollaboApprovalAmt(a.suim_rpt_no) AS amt_approval
+		FROM top_rpt_head a
+				LEFT JOIN top_ptnr_mbr_bsc ptnrMbr
+				ON ptnrMbr.ptnr_mbr_no = a.ptnr_mbr_no
+			, top_rpt_invoice rptInv, top_ptnr_bsc b, top_tm_bsc c, top_mbr_bsc d, top_rpt_body f
+		WHERE a.close_date > 0
+		<if test="ptnrUserNmSearch != ''">
+			AND ptnrMbr.ptnr_mbr_nm like '%${ptnrUserNmSearch}%'
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="type1Search != 0">
+			<choose>
+				<when test="type1Search == 21">
+					AND a.suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+				</when>
+				<when test="type1Search == 22">
+					AND a.suim_rpt_type1 in (3,4)
+				</when>
+				<when test="type1Search == 23">
+					AND a.suim_rpt_type1 in (1,11,12,13,14,15,16,17,18,19)
+				</when>
+				<otherwise>
+					AND a.suim_rpt_type1 = #{type1Search}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="speedCheck == 'on'">
+			AND a.speed_type > 0
+		</if>
+		<if test="invoice_date_From != ''">
+			AND rptInv.invoice_date >= unix_timestamp(#{invoice_date_From})
+		</if>
+		<if test="invoice_date_To != ''">
+			AND rptInv.invoice_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{invoice_date_To},INTERVAL 1 day))
+		</if>
+		<if test="invDateEditCheck == 'on'">
+			AND rptInv.edit_date_cnt > 0
+		</if>
+		<if test="userNmSearch != ''">
+			AND d.user_name like '%${userNmSearch}%'
+		</if>
+		<if test="close_date_From != ''">
+			AND a.close_date >= unix_timestamp(#{close_date_From})
+		</if>
+		<if test="close_date_To != ''">
+			AND a.close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{close_date_To},INTERVAL 1 day))
+		</if>
+		<if test="benefiNmSearch != ''">
+			AND a.beneficiary_nm like '%${benefiNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.policyholder_nm like '%${policyhNmSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="deposit_date_From != ''">
+			AND rptInv.deposit_date >= unix_timestamp(#{deposit_date_From})
+		</if>
+		<if test="deposit_date_To != ''">
+			AND rptInv.deposit_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{deposit_date_To},INTERVAL 1 day))
+		</if>
+		<if test="totAmtF != ''">
+			AND rptInv.amt_total >= REPLACE(#{totAmtF},',','')
+		</if>
+		<if test="totAmtT != ''">
+			AND rptInv.amt_total &lt;= REPLACE(#{totAmtT},',','')
+		</if>
+		<if test="depositNoCheck == 'on'">
+			AND (rptInv.deposit_date is null OR rptInv.deposit_date &lt; 1)
+		</if>
+		<if test="amtEditCheck == 'on'">
+			AND rptInv.edit_amt_cnt > 0
+		</if>
+		<!-- <if test="taxNoSearch != ''">
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if> -->
+		<if test='taxNoSearch != null and taxNoSearch != ""'>
+			AND rptInv.tax_invoice_no like '%${taxNoSearch}%'
+		</if>
+		<if test="taxNoCheck == 'on'">
+			AND (rptInv.tax_invoice_no is null OR rptInv.tax_invoice_no = '')
+		</if>
+		<if test="taxEditEnd == 'on'">
+			AND rptInv.tax_edit_end = 0
+		</if>
+		<if test="tax_date_From != ''">
+			AND rptInv.tax_date >= unix_timestamp(#{tax_date_From})
+		</if>
+		<if test="tax_date_To != ''">
+			AND rptInv.tax_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{tax_date_To},INTERVAL 1 day))
+		</if>
+		<if test='accidentNoSearch != null and accidentNoSearch != ""'>
+			AND f.accident_no = #{accidentNoSearch}
+		</if>
+		AND a.suim_rpt_no = rptInv.suim_rpt_no
+		AND a.suim_rpt_no = f.suim_rpt_no
+		AND a.ptnr_id = b.ptnr_id
+		AND a.team_id = c.team_id
+		AND a.user_no = d.user_no
+		ORDER BY
+			<choose>
+				<when test="orderBy == 'close_date'">
+					close_date DESC,
+				</when>
+				<when test="orderBy == 'invoice_date'">
+					invoice_date DESC,
+				</when>
+				<when test="orderBy == 'deposit_date'">
+					deposit_date DESC,
+				</when>
+			</choose>
+			rpt_invoice_no DESC
+	</select>
+	
+	<insert id="insertSmallDepositManage" parameterType="hashmap">
+		INSERT INTO top_small_deposit_manage (
+			ptnr_id
+			,income_amount
+			,income_date
+			,tax_amount
+			,reg_date
+			,reg_user_no
+			<if test="extra_memo != ''">
+				,extra_memo
+			</if>
+		) VALUES (
+			#{ptnr_id}
+			,#{income_amount}
+			,#{income_date}
+			,#{tax_amount}
+			,now()
+			,#{reg_user_no}
+			<if test="extra_memo != ''">
+				,#{extra_memo}
+			</if>
+		)
+	</insert>
+	
+	<update id="updateSmallDepositManage" parameterType="hashmap">
+		UPDATE top_small_deposit_manage SET
+			ptnr_id = #{ptnr_id}
+			,income_amount = #{income_amount}
+			,income_date = #{income_date}
+			,tax_amount = #{tax_amount}
+			,extra_memo = #{extra_memo}
+			,modify_user_no = #{modify_user_no}
+			,modify_date = now()
+		WHERE dkey = #{dkey} 
+	</update>
+	
+	<update id="deleteSmallDepositManage" parameterType="hashmap">
+		UPDATE top_small_deposit_manage SET
+			del_flag = 1
+			,del_user_no = #{del_user_no}
+			,del_date = now()
+		WHERE dkey = #{dkey}
+	</update>
+
+</mapper>

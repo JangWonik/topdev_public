@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="LectureRoomMapper">
+	<select id="selectLectureRoomInfo" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+				   ,CONVERT(RIGHT(A.LECTURE_ROOM_DATE,2),UNSIGNED) DAY
+				   ,concat(left(LECTURE_ROOM_START_TIME,2),":",right(LECTURE_ROOM_START_TIME,2)) START_TIME
+				   ,concat(left(LECTURE_ROOM_END_TIME,2),":",right(LECTURE_ROOM_END_TIME,2)) END_TIME
+				   ,A.CONTENT
+				   ,A.APPLICATION_DATE
+				   ,A.STATE
+				   ,A.RETURN_REASON
+				   ,A.PARTICIPATION_PERSONNEL
+				   ,A.TEAM_TYPE
+				   ,A.USER_NO
+				   ,B.USER_NAME
+				   ,C.team_name
+				   ,B.work_level
+	     FROM   lecture_room A , top_mbr_bsc B , top_tm_bsc C
+	   WHERE  1 =1 
+	       AND  A.user_no = B.user_no
+	       AND  B.team_id_main = C.team_id
+	       AND  A.LECTURE_ROOM_DATE = #{lecture_room_date}
+   ORDER BY  A.LECTURE_ROOM_START_TIME
+	</select>
+
+	<select id="selectLectureRoom" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.USER_NAME
+		    	   ,A.TEAM_NAME
+				   ,A.WORK_LEVEL
+				   ,getCodeValue('top_mbr_bsc', 'work_level', A.work_level) WORK_LEVEL_NM
+				   ,B.TEAM_MANAGER
+				   ,getTopMbrBscUserName(B.team_manager) TEAM_MANAGER_NM
+	      F	ROM  top_mbr_bsc A, top_tm_bsc B
+	    WHERE  1 = 1
+	      	AND  A.TEAM_ID_MAIN = B.TEAM_ID
+	      	AND  USER_NO = #{user_no} and team_id = #{team_id}
+  	</select>
+	
+	<select id="selectDuplicationCheck" parameterType="hashmap" resultType="int">
+		SELECT  count(A.SERIAL_NO)
+		  FROM  lecture_room A  
+	    WHERE  A.LECTURE_ROOM_DATE = #{lectureRoomDate}
+		    AND  ((#{lectureRoomStartTime} between A.LECTURE_ROOM_START_TIME AND A.LECTURE_ROOM_END_TIME) 
+					or (#{lectureRoomEndTime} between A.LECTURE_ROOM_START_TIME AND A.LECTURE_ROOM_END_TIME))  
+		    AND  #{lectureRoomStartTime} != A.LECTURE_ROOM_END_TIME	
+		    AND  #{lectureRoomEndTime} != A.LECTURE_ROOM_START_TIME
+		    AND A.state !=2
+	</select>
+	
+	<insert id="insertLectureRoom" parameterType="hashmap">
+		INSERT INTO lecture_room
+					 (LECTURE_ROOM_DATE
+					 ,LECTURE_ROOM_START_TIME
+					 ,LECTURE_ROOM_END_TIME
+					 ,USER_NO
+					 ,CONTENT
+					 ,APPLICATION_DATE
+					 ,PARTICIPATION_PERSONNEL
+					 ,TEAM_TYPE) VALUES(
+                     #{lectureRoomDate}
+                    ,#{lectureRoomStartTime}
+                    ,#{lectureRoomEndTime}
+                    ,#{user_no}
+                    ,#{contents}
+                    ,date_format(NOW(),'%Y-%m-%d')
+                    ,#{participation_personnel}
+                    ,#{team_type}
+					 )
+	</insert>
+
+	<select id="getLectureRoomApplicantInfo" parameterType="hashmap" resultType="AsraMap">
+		SELECT
+			A.USER_NAME,
+			A.USER_NO,        
+			B.TEAM_NAME,    
+			A.WORK_LEVEL,
+			getCodeValue('TOP_MBR_BSC', 'WORK_LEVEL', A.WORK_LEVEL) WORK_LEVEL_NM,  
+			B.TEAM_MANAGER,
+			getTopMbrBscUserName(B.TEAM_MANAGER) TEAM_MANAGER_NM,
+			B.TEAM_ADDR,
+			B.TEAM_TYPE
+		from
+			top_mbr_bsc A, top_tm_bsc B
+		where
+			A.TEAM_ID_MAIN = B.TEAM_ID and
+			USER_NO = #{user_no} and TEAM_ID = #{team_id}
+
+	</select>
+
+    <select id="selectListCnt" parameterType="hashmap"  resultType="Long">
+        SELECT  COUNT(A.serial_no) AS CNT
+          FROM  lecture_room A
+        WHERE  1 = 1
+       <if test="state == 0">
+       AND  A.STATE = 0
+       </if>
+       <if test="state == 1">
+       AND  A.STATE = 1
+       </if>
+       <if test="state == 2">
+       AND  A.STATE = 2
+       </if>        
+        ORDER BY A.SERIAL_NO DESC
+    </select>
+    
+	<select id="selectList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+				   ,A.LECTURE_ROOM_DATE
+				   ,concat(left(LECTURE_ROOM_START_TIME,2),":",right(LECTURE_ROOM_START_TIME,2)) START_TIME
+				   ,concat(left(LECTURE_ROOM_END_TIME,2),":",right(LECTURE_ROOM_END_TIME,2)) END_TIME
+				   ,A.CONTENT
+				   ,A.APPLICATION_DATE
+				   ,A.STATE
+				   ,A.RETURN_REASON
+				   ,A.PARTICIPATION_PERSONNEL
+				   ,A.USER_NO
+				   ,B.work_level
+				   ,C.team_name		
+				   ,getCodeValue('TOP_MBR_BSC', 'WORK_LEVEL', B.WORK_LEVEL) WORK_LEVEL_NM
+				   ,B.user_name	   
+	     FROM   lecture_room A, top_mbr_bsc B , top_tm_bsc C
+	   WHERE  1 =1 
+	       AND  A.user_no = B.user_no
+	       AND  B.team_id_main = C.team_id
+	       <if test="state == 0">
+	       AND  A.STATE = 0
+	       </if>
+	       <if test="state == 1">
+	       AND  A.STATE = 1
+	       </if>
+	       <if test="state == 2">
+	       AND  A.STATE = 2
+	       </if>
+        ORDER BY A.SERIAL_NO DESC
+        LIMIT #{limitPage}, #{sizePerPage}	     
+	</select>    
+	
+	<select id="selectLectureRoomList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+				   ,CONVERT(RIGHT(A.LECTURE_ROOM_DATE,2),UNSIGNED) DAY
+				   ,concat(left(LECTURE_ROOM_START_TIME,2),":",right(LECTURE_ROOM_START_TIME,2)) START_TIME
+				   ,concat(left(LECTURE_ROOM_END_TIME,2),":",right(LECTURE_ROOM_END_TIME,2)) END_TIME
+				   ,A.CONTENT
+				   ,A.APPLICATION_DATE
+				   ,A.STATE
+				   ,A.RETURN_REASON
+				   ,A.PARTICIPATION_PERSONNEL
+				   ,A.TEAM_TYPE
+				   ,A.USER_NO
+				   ,B.USER_NAME
+				   ,C.team_name
+				   ,B.work_level
+	     FROM   lecture_room A , top_mbr_bsc B , top_tm_bsc C
+	   WHERE  1 =1 
+	       AND  A.user_no = B.user_no
+	       AND  B.team_id_main = C.team_id
+	       AND  A.LECTURE_ROOM_DATE like CONCAT('%',#{lecture_room_date},'%')
+	   ORDER  BY  A.LECTURE_ROOM_START_TIME
+	</select>
+	
+	<update id="updateLectureRoomApprove" parameterType="hashmap">
+		UPDATE  lecture_room 
+		      SET  state = 1
+		 WHERE  SERIAL_NO = #{serial_no}
+	</update>
+	
+	<update id="updateReturnReason" parameterType="hashmap">
+		UPDATE  lecture_room
+		      SET  RETURN_REASON = #{return_reason}
+		            ,STATE = 2
+		 WHERE  SERIAL_NO = #{serial_no}
+	</update>
+	
+	<select id="myLectureRoomApplicationList" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+				   ,CONVERT(RIGHT(A.LECTURE_ROOM_DATE,2),UNSIGNED) DAY
+				   ,A.LECTURE_ROOM_DATE
+				   ,concat(left(LECTURE_ROOM_START_TIME,2),":",right(LECTURE_ROOM_START_TIME,2)) START_TIME
+				   ,concat(left(LECTURE_ROOM_END_TIME,2),":",right(LECTURE_ROOM_END_TIME,2)) END_TIME
+				   ,A.CONTENT
+				   ,A.APPLICATION_DATE
+				   ,A.STATE
+				   ,A.RETURN_REASON
+				   ,A.PARTICIPATION_PERSONNEL
+				   ,A.TEAM_TYPE
+				   ,A.USER_NO
+	     FROM   lecture_room A 
+	   WHERE  1 =1 
+	       AND  A.USER_NO = #{user_no}
+	   ORDER BY A.APPLICATION_DATE DESC	       
+	</select>
+	
+	<select id="myLectureRoomReturnReason" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+				   ,A.RETURN_REASON
+				   ,A.USER_NO
+	     FROM   lecture_room A 
+	   WHERE  1 =1 
+	       AND  A.USER_NO = #{user_no}
+	       AND  A.SERIAL_NO = #{serial_no}
+	</select>
+	
+	<select id="selectLectureRoomApplicationInfo" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+				   ,A.LECTURE_ROOM_DATE DAY
+				   ,left(A.LECTURE_ROOM_START_TIME,2) START_HOUR
+				   ,right(A.LECTURE_ROOM_START_TIME,2) START_MINUTE
+				   ,left(A.LECTURE_ROOM_END_TIME,2) END_HOUR
+					,right(A.LECTURE_ROOM_END_TIME,2) END_MINUTE
+				   ,A.CONTENT
+				   ,A.PARTICIPATION_PERSONNEL
+				   ,B.USER_NAME
+				   ,C.TEAM_NAME
+				   ,B.WORK_LEVEL
+				   ,C.team_type
+				   ,getCodeValue('TOP_MBR_BSC', 'WORK_LEVEL', B.WORK_LEVEL) WORK_LEVEL_NM
+	     FROM   lecture_room A , top_mbr_bsc B , top_tm_bsc C
+	   WHERE  1 =1 
+	       AND  A.USER_NO = B.USER_NO
+	       AND  B.TEAM_ID_MAIN = C.TEAM_ID
+	       AND  A.SERIAL_NO = #{serial_no}
+	</select>
+	
+	<update id="updateLectureRoomApplication" parameterType="hashmap">
+		UPDATE  lecture_room 
+		      SET  CONTENT = #{contents}
+		      		,PARTICIPATION_PERSONNEL = #{participation_personnel}
+		      		,LECTURE_ROOM_DATE = #{lectureRoomDate}
+		      		,LECTURE_ROOM_START_TIME = #{lectureRoomStartTime}
+		      		,LECTURE_ROOM_END_TIME = #{lectureRoomEndTime}
+		 WHERE  SERIAL_NO = #{serial_no}
+	</update>
+	
+	<delete id="deleteLectureRoomApplication" parameterType="hashmap">
+		DELETE  FROM  lecture_room WHERE SERIAL_NO = #{serial_no}
+	</delete>
+	
+	<update id="updateApproveCancel" parameterType="hashmap">
+		UPDATE  lecture_room
+		      SET  STATE = 0
+		      		,RETURN_REASON = NULL
+		 WHERE  SERIAL_NO = #{serial_no}
+	</update>
+	
+	<select id="selectLectureRoomState1" parameterType="hashmap" resultType="AsraMap">
+		SELECT  A.SERIAL_NO
+				   ,CONVERT(RIGHT(A.LECTURE_ROOM_DATE,2),UNSIGNED) DAY
+				   ,concat(left(LECTURE_ROOM_START_TIME,2),":",right(LECTURE_ROOM_START_TIME,2)) START_TIME
+				   ,concat(left(LECTURE_ROOM_END_TIME,2),":",right(LECTURE_ROOM_END_TIME,2)) END_TIME
+				   ,A.CONTENT
+				   ,A.APPLICATION_DATE
+				   ,A.STATE
+				   ,A.RETURN_REASON
+				   ,A.PARTICIPATION_PERSONNEL
+				   ,A.TEAM_TYPE
+				   ,A.USER_NO
+				   ,B.USER_NAME
+				   ,C.team_name
+				   ,B.work_level
+	     FROM   lecture_room A , top_mbr_bsc B , top_tm_bsc C
+	   WHERE  1 =1 
+	       AND  A.user_no = B.user_no
+	       AND  B.team_id_main = C.team_id
+	       AND  A.LECTURE_ROOM_DATE = #{lecture_room_date}
+	       AND  A.STATE = 1
+   ORDER BY  A.LECTURE_ROOM_START_TIME
+	</select>	
+	
+</mapper>

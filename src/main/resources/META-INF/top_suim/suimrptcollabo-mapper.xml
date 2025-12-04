@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+   
+<mapper namespace="SuimRptCollaboMapper">
+	
+	<select id="getCollaboListForRptDtl" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptCollaboVO">
+	
+		SELECT
+			serial_no serialNo
+			,user_id userId
+			,getTopMbrBscUserName(user_id) userName
+			,collabo_pp collaboPp
+		FROM
+			top_rpt_collabo
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+			and del_state != 1
+	
+	</select>
+	
+	<insert id= "insCollabo" parameterType="kr.co.toplac.topsuim.SuimRptCollaboVO">
+	
+		INSERT INTO top_rpt_collabo
+		(
+			suim_rpt_no, user_id, collabo_pp, reg_date, del_state , share_team_id
+		)
+		VALUES
+		(
+			#{suimRptNo}, #{userId}, #{collaboPp}, unix_timestamp(now()), 0, #{shareTeamId}
+		)
+	
+	</insert>
+	
+	
+	<delete id="delCollabo" parameterType="String">
+		DELETE
+		 FROM 
+			top_rpt_collabo
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<select id="getNextCollaboSerial" resultType="String">
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_collabo'
+	</select>
+	
+	<!-- 공동 수행자 포함여부 체크 20210914-->
+	<select id="selectCollaboAuthChk" parameterType="hashmap" resultType="Integer">
+		SELECT 
+			COUNT(*) AS nCnt
+		FROM top_rpt_collabo
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+		 	AND user_id = #{user_no_session}
+		 	AND del_state = 0 
+	</select>
+	
+	<insert id="insertCollaboApproval" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		INSERT INTO top_rpt_collabo
+		(
+			 suim_rpt_no
+			,user_id			
+			,collabo_price
+			,collabo_price_type						
+			,reg_date
+			,del_state
+			,share_team_id
+			,approval_flag
+		)
+		VALUES
+		(
+			 #{suimRptNo}
+			,#{approvalUserNo}
+			,#{approvalPrice}
+			,1			
+			,UNIX_TIMESTAMP(now())
+			,0
+			,#{approvalTeamId}
+			,#{approvalUseFlag}
+		)		
+	</insert>
+	
+	<update id="updateCollaboApproval" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		UPDATE top_rpt_collabo SET
+			user_id = #{approvalUserNo}
+			,collabo_price = #{approvalPrice}
+			,share_team_id = #{approvalTeamId}
+			,reg_date = UNIX_TIMESTAMP(now())
+		WHERE suim_rpt_no = #{suimRptNo}
+			AND del_state = 0
+			AND approval_flag = 1			
+	</update>
+	
+	<update id="updateTopInvoiceTotalAmtByRptInvoiceNo" parameterType="hashMap">
+		UPDATE top_rpt_invoice SET
+			amt_total = #{cal_amt_total}		
+		WHERE rpt_invoice_no = #{rpt_invoice_no}
+	</update>
+	
+	<select id="selectCollaboApprovalInfoBySerialNo" parameterType="String" resultType="hashMap">
+		SELECT
+			GA.suim_rpt_no
+			,GA.rpt_invoice_no
+			,IF(GA.cal_amt_total &lt;= 0,0,GA.cal_amt_total) AS cal_amt_total
+		FROM
+		(
+			SELECT 
+				a.suim_rpt_no
+				,a.collabo_price 
+				,b.rpt_invoice_no
+				,b.amt_total
+				,(amt_total - a.collabo_price) AS cal_amt_total
+			FROM top_rpt_collabo a	
+			LEFT JOIN top_rpt_invoice b
+			ON a.suim_rpt_no = b.suim_rpt_no
+			WHERE a.serial_no = #{serial_no}
+			AND a.approval_flag = 1
+		)GA		
+	</select>
+	
+	<delete id="deleteCollaboApprovalInfo" parameterType="String">
+		DELETE FROM top_rpt_collabo WHERE serial_no = #{serial_no}
+	</delete>
+	
+	<select id="selectCollaboApprovalCnt"  parameterType="String" resultType="Integer" >
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_rpt_collabo
+		WHERE suim_rpt_no = #{suimRptNo}
+		   AND del_state = 0
+		   AND approval_flag = 1
+	</select>
+	
+	<select id="selectCollaboApprovalSerialNo"  parameterType="String" resultType="String" >
+		SELECT
+			serial_no serialNo
+		FROM top_rpt_collabo
+		WHERE suim_rpt_no = #{suimRptNo}
+		   AND del_state = 0
+		   AND approval_flag = 1
+	</select>
+	
+	<delete id="deleteCollaboApprovalDupSerialNo" parameterType="hashmap">
+		DELETE FROM top_rpt_collabo
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		   AND del_state = 0
+		   AND approval_flag = 1
+		   AND serial_no &lt; #{serial_no}
+		
+	</delete>
+	
+	<select id="selectCollaboApprovalMaxSerialNo"  parameterType="String" resultType="String" >
+		SELECT
+			MAX(serial_no) AS maxSerialNo
+		FROM top_rpt_collabo
+		WHERE suim_rpt_no = #{suimRptNo}
+		   AND del_state = 0
+		   AND approval_flag = 1
+	</select>
+	
+	<!-- 공동 수행 - 결재수수료 항목 추가로 인한 수정 -->
+	<select id="selectCollaboApproval"  parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptCollaboVO" >
+		SELECT serial_no serialNo
+			  ,suim_rpt_no SuimRptNo
+			  ,user_id approvalUserNo
+			  ,getTopMbrBscUserName(user_id) approvalUserName
+			  ,written_cnt writtenCnt
+			  ,written_basic writtenBasic
+			  ,collabo_pp collaboPp
+			  ,collabo_price collaboPrice
+			  ,collabo_price_type collaboPriceType
+			  ,collabo_daily collaboDaily
+			  ,collabo_daily_type collaboDailyType
+			  ,collabo_traffic collaboTraffic
+			  ,share_team_id approvalTeamId
+			  ,getTopTmBscTeamName(share_team_id) approvalTeamName			  
+			  ,approval_flag approvalFlag			  
+		  FROM top_rpt_collabo
+		 WHERE suim_rpt_no = #{suimRptNo}
+		   AND del_state = 0
+		   AND approval_flag = 1
+	</select>
+	
+	<!-- 공동 수행 - 결재수수료 항목 추가로 인한 수정 -->
+	<select id="selectCollaboNew"  parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptCollaboVO" >
+		SELECT serial_no serialNo
+			  ,suim_rpt_no SuimRptNo
+			  ,user_id userId
+			  ,getTopMbrBscUserName(user_id) userName
+			  ,written_cnt writtenCnt
+			  ,written_basic writtenBasic
+			  ,collabo_pp collaboPp
+			  ,collabo_price collaboPrice
+			  ,collabo_price_type collaboPriceType
+			  ,collabo_daily collaboDaily
+			  ,collabo_daily_type collaboDailyType
+			  ,collabo_traffic collaboTraffic
+			  ,approval_flag approvalFlag
+		  FROM top_rpt_collabo
+		 WHERE suim_rpt_no = #{suimRptNo}
+		   AND del_state = 0
+		   AND approval_flag = 0
+	</select>
+	
+	<!-- 공동 수행 - 기능추가 20210923 -->
+	<select id="selectCollaboNew_20231228"  parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptCollaboVO" >
+		SELECT serial_no serialNo
+			  ,suim_rpt_no SuimRptNo
+			  ,user_id userId
+			  ,getTopMbrBscUserName(user_id) userName
+			  ,written_cnt writtenCnt
+			  ,written_basic writtenBasic
+			  ,collabo_pp collaboPp
+			  ,collabo_price collaboPrice
+			  ,collabo_price_type collaboPriceType
+			  ,collabo_daily collaboDaily
+			  ,collabo_daily_type collaboDailyType
+			  ,collabo_traffic collaboTraffic
+		  FROM top_rpt_collabo
+		 WHERE suim_rpt_no = #{suimRptNo}
+		   AND del_state = 0
+	</select>
+	
+	<!-- 공동 수행 - 신규개발 180409 -->
+	<select id="selectCollaboNew_20210923"  parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptCollaboVO" >
+		SELECT serial_no serialNo
+			  ,suim_rpt_no SuimRptNo
+			  ,user_id userId
+			  ,getTopMbrBscUserName(user_id) userName
+			  ,written_cnt writtenCnt
+			  ,written_basic writtenBasic
+			  ,collabo_pp collaboPp
+			  ,collabo_daily collaboDaily
+			  ,collabo_daily_type collaboDailyType
+			  ,collabo_traffic collaboTraffic
+		  FROM top_rpt_collabo
+		 WHERE suim_rpt_no = #{suimRptNo}
+		   AND del_state = 0
+	</select>
+		
+	<insert id="insertCollaboNew" parameterType="kr.co.toplac.topsuim.SuimRptCollaboVO">
+		INSERT INTO top_rpt_collabo
+		(
+			 suim_rpt_no
+			,user_id
+			,written_cnt
+			,written_basic
+			,collabo_pp
+			,collabo_price
+			,collabo_price_type
+			,collabo_daily
+			,collabo_daily_type
+			,collabo_traffic
+			,reg_date
+			,del_state
+			,share_team_id
+		)
+		VALUES
+		(
+			 #{suimRptNo}
+			,#{userId}
+			,#{writtenCnt}
+			,#{writtenBasic}
+			,#{collaboPp}
+			,#{collaboPrice}
+			,#{collaboPriceType}
+			,#{collaboDaily}
+			,#{collaboDailyType}
+			,#{collaboTraffic}
+			,UNIX_TIMESTAMP(now())
+			,0
+			,#{shareTeamId}
+		)
+	</insert>
+	
+	<insert id="insertCollaboNew_20210923" parameterType="kr.co.toplac.topsuim.SuimRptCollaboVO">
+		INSERT INTO top_rpt_collabo
+		(
+			 suim_rpt_no
+			,user_id
+			,written_cnt
+			,written_basic
+			,collabo_pp
+			,collabo_daily
+			,collabo_daily_type
+			,collabo_traffic
+			,reg_date
+			,del_state
+			,share_team_id
+		)
+		VALUES
+		(
+			 #{suimRptNo}
+			,#{userId}
+			,#{writtenCnt}
+			,#{writtenBasic}
+			,#{collaboPp}
+			,#{collaboDaily}
+			,#{collaboDailyType}
+			,#{collaboTraffic}
+			,UNIX_TIMESTAMP(now())
+			,0
+			,#{shareTeamId}
+		)
+	</insert>
+	
+	<select id="selectCollaboForValid" parameterType="String" resultType="HashMap">
+		SELECT SUM(amtBasic) AS amtBasic
+				,SUM(amtDaily) AS amtDaily
+				,SUM(amtTraffic) AS amtTraffic
+				,SUM(collaboBasic) AS collaboBasic
+				,SUM(collaboDaily) AS collaboDaily
+				,SUM(collaboTraffic) AS collaboTraffic
+		  FROM
+				(
+					SELECT 0 AS amtBasic
+							,0 AS amtDaily
+							,0 AS amtTraffic
+							,0 AS collaboBasic
+							,0 AS collaboDaily
+							,0 AS collaboTraffic 
+					  FROM DUAL
+					 UNION ALL
+					SELECT B.AMT_BASIC amtBasic
+							,B.AMT_DAILY amtDaily
+							,B.AMT_TRAFFIC amtTraffic
+							<!-- ,CAST(SUM(A.COLLABO_PP * B.amt_basic * 0.01) AS DECIMAL) collaboBasic -->							
+							,CAST(SUM(IF(A.collabo_price_type = 0, A.collabo_price * B.amt_basic * 0.01, A.collabo_price)) AS DECIMAL) collaboBasic
+							,CAST(SUM(IF(A.collabo_daily_type = 0, A.collabo_daily * B.amt_daily * 0.01, A.collabo_daily)) AS DECIMAL) collaboDaily
+							,CAST(SUM(A.collabo_traffic) AS DECIMAL) collaboTraffic
+					  FROM top_rpt_invoice B
+ 					  LEFT OUTER JOIN top_rpt_collabo A
+						ON A.suim_rpt_no = B.suim_rpt_no
+					 WHERE B.SUIM_RPT_NO = #{_parameter}   
+					 GROUP BY A.SUIM_RPT_NO
+				 ) a
+	</select>
+	
+	<select id="selectCollaboForValid_20210923" parameterType="String" resultType="HashMap">
+		SELECT SUM(amtBasic) AS amtBasic
+				,SUM(amtDaily) AS amtDaily
+				,SUM(amtTraffic) AS amtTraffic
+				,SUM(collaboBasic) AS collaboBasic
+				,SUM(collaboDaily) AS collaboDaily
+				,SUM(collaboTraffic) AS collaboTraffic
+		  FROM
+				(
+					SELECT 0 AS amtBasic
+							,0 AS amtDaily
+							,0 AS amtTraffic
+							,0 AS collaboBasic
+							,0 AS collaboDaily
+							,0 AS collaboTraffic 
+					  FROM DUAL
+					 UNION ALL
+					SELECT B.AMT_BASIC amtBasic
+							,B.AMT_DAILY amtDaily
+							,B.AMT_TRAFFIC amtTraffic
+							,CAST(SUM(A.COLLABO_PP * B.amt_basic * 0.01) AS DECIMAL) collaboBasic
+							,CAST(SUM(IF(A.collabo_daily_type = 0, A.collabo_daily * B.amt_daily * 0.01, A.collabo_daily)) AS DECIMAL) collaboDaily
+							,CAST(SUM(A.collabo_traffic) AS DECIMAL) collaboTraffic
+					  FROM top_rpt_invoice B
+ 					  LEFT OUTER JOIN top_rpt_collabo A
+						ON A.suim_rpt_no = B.suim_rpt_no
+					 WHERE B.SUIM_RPT_NO = #{_parameter}   
+					 GROUP BY A.SUIM_RPT_NO
+				 ) a
+	</select>
+	
+	<delete id="deleteCollaboNew" parameterType="String">
+		DELETE
+		  FROM top_rpt_collabo
+		 WHERE serial_no = #{_parameter}
+	</delete>
+	
+
+</mapper>

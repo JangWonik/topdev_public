@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="EmpCertList">
+	
+	<select  id="CertList" resultType="kr.co.toplac.topteam.TopCertVO">
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT
+					a.serial_no,
+					a.user_no,
+					b.user_name,
+					a.team_id_loc,
+					a.work_level work_level_cd,
+					getTopTmBscCenterName(c.team_id) center_name,
+					c.team_name,
+					a.issue_reason,
+					a.issue_state,
+					DATE_FORMAT(FROM_UNIXTIME(a.expiry_date), '%Y-%m-%d') expiry_date,
+					DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %h:%m:%s') reg_date,
+					getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level,
+					a.state_chg_date
+				FROM
+					top_emp_cert a, top_mbr_bsc b, top_tm_bsc c
+				WHERE
+					a.user_no = b.user_no and
+					b.team_id_loc = c.team_id
+				
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY ROWNUM DESC
+			LIMIT #{queryPgNoInt}, 14
+	</select>
+	
+	<select id="CertListCnt" resultType = "int">
+				SELECT count(a.serial_no) cnt
+				FROM
+					top_emp_cert a, top_mbr_bsc b, top_tm_bsc c
+				WHERE
+					a.user_no = b.user_no and
+					b.team_id_loc = c.team_id
+	</select>
+	
+	<select  id="searchCertList" parameterType="java.util.HashMap" resultType="kr.co.toplac.topteam.TopCertVO">
+		
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT
+					a.serial_no,
+					a.user_no,
+					b.user_name,
+					a.team_id_loc,
+					a.work_level work_level_cd,
+					c.team_name,
+					getTopTmBscCenterName(c.team_id) center_name,
+					a.issue_reason,
+					a.issue_state,
+					DATE_FORMAT(FROM_UNIXTIME(a.expiry_date), '%Y-%m-%d') expiry_date,
+					DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d, %h:%m:%s') reg_date,
+					getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level,
+					a.state_chg_date
+				FROM
+					top_emp_cert a, top_mbr_bsc b, top_tm_bsc c
+				WHERE
+					a.user_no = b.user_no and
+					b.team_id_loc = c.team_id
+					
+					<choose>
+						<when test="issue_state == 10">
+							and a.issue_state in (0,1,2,3)
+						</when>
+						<otherwise>
+							and a.issue_state = #{issue_state}
+						</otherwise>
+					</choose>
+					
+					<if test="tid != 0">
+						<choose>
+							<when test="gid == -1">
+								and b.team_id_loc in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+														= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tid}))
+							</when>
+							<otherwise>
+								and b.team_id_loc = #{tid}
+							</otherwise>
+						</choose>
+					</if>
+					
+					<if test="searchStr != ''">
+						and b.user_name like '%${searchStr}%'
+					</if>
+					
+			) AS TB,
+			(SELECT @RN:=0) AS R
+			ORDER BY rownum DESC
+	
+	</select>
+	
+	<select id="teamListForSearch" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT
+			team_id, team_name, team_level, team_type
+		FROM
+			top_tm_bsc
+		ORDER BY 
+			team_group_order desc, team_order desc
+	</select>
+	
+</mapper>

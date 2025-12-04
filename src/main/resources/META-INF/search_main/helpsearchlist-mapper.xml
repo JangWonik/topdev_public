@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="HelpSearchListMapper">
+
+	<select id="helpStateForSearch" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT col_cd, col_val
+		FROM sysadm_codedic
+		WHERE tbl_nm = 'top_rpt_help'
+		AND col_nm = 'help_state'
+		ORDER BY col_cd
+	</select>
+
+	<select id="getHelpSearchList" resultType="kr.co.toplac.topsuim.SuimRptHelpBscVO" >
+		SELECT a.suim_rpt_no suimRptNo
+			, a.serial_no serialNo
+			, getTopTmBscTeamName(a.client_team) clientTm
+			, getTopTmBscTeamName(a.accept_team) acceptTm
+			, a.accept_team acceptTmId
+			, getTopMbrBscUserName(a.client_id) clientMbr
+			, getTopMbrBscUserName(a.accept_id) acceptMbr
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDate
+			, DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') endDate  
+			, getCodeValue('top_rpt_help','help_state',a.help_state) helpState 
+			, a.help_memo helpMemo 
+			, a.help_result helpResult
+			, a.traffic_fee trafficFee 
+			, a.chart_fee chartFee 
+			, a.price_total priceTotal 
+			, b.suim_accept_no acceptNo
+			, b.beneficiary_nm beneficiaryNm
+<!-- 			, getTopRptEditYN(a.client_team, #{user_no_session}) -->
+<!-- 				+ getTopRptEditYN(a.accept_team, #{user_no_session}) editYN -->
+		FROM top_rpt_help a, top_rpt_head b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		<if test="stateSearch >= 0">
+			AND a.help_state = #{stateSearch}
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="endDateFromSearch != ''">
+			AND a.end_date >= unix_timestamp(#{endDateFromSearch})
+		</if>
+		<if test="endDateToSearch != ''">
+			AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearchClient != 0">
+			<choose>
+				<when test="tmGubunClient == -1">
+					and a.client_team in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearchClient}))
+				</when>
+				<otherwise>
+					and a.client_team = #{tmSearchClient}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="clientNmSearch != ''">
+			AND a.client_id in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${clientNmSearch}%'))
+		</if>
+		<if test="tmSearchAccept != 0">
+			<choose>
+				<when test="tmGubunAccept == -1">
+					and a.accept_team in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearchAccept}))
+				</when>
+				<otherwise>
+					and a.accept_team = #{tmSearchAccept}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="acceptNmSearch != ''">
+			AND a.accept_id in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${acceptNmSearch}%'))
+		</if>
+		ORDER BY a.serial_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+
+	<select id="getHelpSearchListCnt" resultType = "int">
+		SELECT count(a.serial_no) cnt
+		FROM top_rpt_help a, top_rpt_head b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		<if test="stateSearch >= 0">
+			AND a.help_state = #{stateSearch}
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+			
+		</if>
+		<if test="endDateFromSearch != ''">
+			AND a.end_date >= unix_timestamp(#{endDateFromSearch})
+		</if>
+		<if test="endDateToSearch != ''">
+			AND a.end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearchClient != 0">
+			<choose>
+				<when test="tmGubunClient == -1">
+					and a.client_team in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearchClient}))
+				</when>
+				<otherwise>
+					and a.client_team = #{tmSearchClient}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="clientNmSearch != ''">
+			AND a.client_id in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${clientNmSearch}%'))
+		</if>
+		<if test="tmSearchAccept != 0">
+			<choose>
+				<when test="tmGubunAccept == -1">
+					and a.accept_team in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearchAccept}))
+				</when>
+				<otherwise>
+					and a.accept_team = #{tmSearchAccept}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="acceptNmSearch != ''">
+			AND a.accept_id in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${acceptNmSearch}%'))
+		</if>
+	</select>
+
+</mapper>

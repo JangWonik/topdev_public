@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BoardNoticePtnr1Mapper">
+
+	<select id="ptnrBoardlist" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		SELECT a.ptnr_id, a.ptnr_type, a.ptnr_level, a.ptnr_group_order, a.ptnr_order, a.ptnr_nick, a.ptnr_name
+		, (SELECT count(ptnr_group_order) FROM top_ptnr_bsc WHERE ptnr_group_order = a.ptnr_group_order AND del_state != 1) ptnr_group_order_cnt
+		, (SELECT count(board_no) FROM brd_notice_ptnr1 WHERE ptnr_id = a.ptnr_id) ptnr_notice_cnt
+		FROM top_ptnr_bsc a
+		WHERE a.del_state != 1
+		ORDER BY a.ptnr_group_order DESC, a.ptnr_level, a.ptnr_order DESC
+	</select>
+
+	<select id="boardList" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.user_no, b.user_name user_nm
+			, ptnr_id, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+			, a.title, a.contents, a.reg_ip
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, a.view_cnt
+			, (select count(board_file_no) from brd_notice_ptnr1_file where board_no = a.board_no) file_cnt
+		FROM brd_notice_ptnr1 a, top_mbr_bsc b
+		WHERE a.ptnr_id = #{insu}
+		AND a.user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="boardListCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_notice_ptnr1 a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+	</select>
+	
+	<select id="insuTemplateCategoryMaxCnt4" resultType="int">
+		SELECT 
+			IFNULL(MAX(col_cd),0) AS idx
+		FROM sysadm_codedic 
+		WHERE tbl_nm = 'top_insu_template4' AND col_nm = 'category_id'
+		ORDER BY col_cd DESC
+	</select>
+	
+	<!-- (인)보험자료실 관리 -->
+	<select id="insuTemplateListCnt4" parameterType="hashmap" resultType="int">
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_insu_template4
+		WHERE 1=1
+		<if test="srchTeamType != 5">
+			and team_type = #{srchTeamType}
+		</if>
+		<if test="srchCategoryType != 0">
+			and category_id = #{srchCategoryType}
+		</if>
+		<if test="srchFileName != ''">
+			and template_org_file like '%${srchFileName}%'
+		</if>
+	</select>
+	
+	<!-- 교육동영상정보 -->
+	<select id="eduClassInfo" parameterType="String" resultType="hashmap">
+		SELECT
+			a.ekey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.category_id
+			,getCodeValue('top_edu_class','category_id',a.category_id) as category_name
+			,a.teacher_name
+			,a.file_path
+			,a.file_name
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,is_del
+		FROM top_edu_class a
+		WHERE 1=1
+		AND ekey = #{ekey}
+		AND is_del = 0
+	</select>
+	
+	<!-- 교육동영상목록 -->	
+	<select id="eduClassList" parameterType="hashmap" resultType="kr.co.toplac.brd.noticeptnr.EduClassBean">	
+		SELECT
+			a.ekey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.category_id
+			,getCodeValue('top_edu_class','category_id',a.category_id) as category_name
+			,a.teacher_name
+			,a.file_path
+			,a.file_name
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,a.is_del
+			,a.report_name
+			,a.report_path
+		FROM top_edu_class a
+		WHERE 1=1
+		<if test="srchTeamType != 5">
+			and a.team_type = #{srchTeamType}
+		</if>
+		<if test="srchCategoryType != ''">
+			and a.category_id = #{srchCategoryType}
+		</if>		
+		<if test="srchFileName != ''">
+			and a.file_name like '%${srchFileName}%' 
+		</if>
+		<if test="srchTeacherName != ''">
+			and a.teacher_name like '%${srchTeacherName}%'
+		</if>
+		ORDER BY a.category_id, a.reg_date desc
+	</select>
+	
+	
+	<!-- 교육동영상관리 -->
+	<select id="eduClassListCnt" parameterType="hashmap" resultType="int">
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_edu_class
+		WHERE 1=1
+		<if test="srchTeamType != 5">
+			and team_type = #{srchTeamType}
+		</if>
+		<if test="srchCategoryType != ''">
+			and category_id = #{srchCategoryType}
+		</if>
+		<if test="srchFileName != ''">
+			and file_name like '%${srchFileName}%' 
+		</if>
+		<if test="srchTeacherName != ''">
+			and teacher_name like '%${srchTeacherName}%'
+		</if>
+	</select>
+	
+	<!-- 보험사 템플릿 관리 -->
+	<select id="insuTemplateListCnt" parameterType="hashmap" resultType="int">
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_insu_template
+		WHERE 1=1
+		<if test="srchTeamType != 5">
+			and team_type = #{srchTeamType}
+		</if>
+		<if test="srchCategoryType != 0">
+			and category_id = #{srchCategoryType}
+		</if>		
+		<if test="srchPtnrType != 0">
+			and ptnr_id = #{srchPtnrType}
+		</if>
+	</select>
+	
+	<delete id="deleteInsuTemplateInfo4" parameterType="hashmap">
+		DELETE FROM top_insu_template4 WHERE tkey = #{tkey}
+	</delete>
+	
+	<delete id="deleteInsuTemplateInfo" parameterType="hashmap">
+		DELETE FROM top_insu_template WHERE tkey = #{tkey}
+	</delete>
+	
+	<delete id="delTemplate4Category" parameterType="hashmap">
+		DELETE FROM sysadm_codedic 
+		WHERE tbl_nm = 'top_insu_template4' 
+		AND col_nm = 'category_id' 
+		AND col_cd = #{category_id}
+	</delete>
+	
+	<select id="getCategoryList4Cnt" parameterType="hashmap" resultType="int">
+		SELECT 
+			COUNT(*) AS CNT
+		FROM top_insu_template4 
+		WHERE category_id = #{category_id}
+	</select>
+	
+	<select id="getInsuTemplateInfo4"  parameterType="hashmap" resultType="kr.co.toplac.brd.noticeptnr.InsuTemplateBean">
+		SELECT
+			a.tkey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.category_id
+			,getCodeValue('top_insu_template4','category_id',a.category_id) as category_name
+			,a.file_path
+			,a.template_enc_file
+			,a.template_org_file
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt		
+		FROM top_insu_template4 a
+		WHERE 1=1
+			and a.tkey = #{tkey}		
+	</select>
+	
+	<select id="getInsuTemplateInfo"  parameterType="hashmap" resultType="kr.co.toplac.brd.noticeptnr.InsuTemplateBean">
+		SELECT
+			a.tkey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.ptnr_id
+			,getTopPtnrBscPtnrNick(a.ptnr_id) as ptnr_name
+			,a.category_id
+			,getCodeValue('top_insu_template','category_id',a.category_id) as category_name
+			,a.file_path
+			,a.template_enc_file
+			,a.template_org_file
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt		
+		FROM top_insu_template a
+		WHERE 1=1
+			and a.tkey = #{tkey}		
+	</select>
+	
+	<select id="getEduClassInfo"  parameterType="hashmap" resultType="kr.co.toplac.brd.noticeptnr.EduClassBean">
+		SELECT
+			a.ekey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.category_id
+			,getCodeValue('top_edu_class','category_id',a.category_id) as category_name
+			,a.teacher_name
+			,a.file_path
+			,a.file_name
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,a.is_del		
+			,a.report_name
+			,a.report_path
+		FROM top_edu_class a
+		WHERE 1=1
+			and a.ekey = #{ekey}		
+	</select>
+	
+	<select id="insuTemplateCategoryList4" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			col_cd
+			,col_val
+		FROM sysadm_codedic 
+		WHERE tbl_nm = 'top_insu_template4' AND col_nm = 'category_id'
+		ORDER BY col_cd DESC
+	</select>
+	
+	<select id="insuTemplateList4" parameterType="hashmap" resultType="kr.co.toplac.brd.noticeptnr.InsuTemplateBean">
+		SELECT
+			a.tkey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.category_id
+			,getCodeValue('top_insu_template4','category_id',a.category_id) as category_name
+			,a.file_path
+			,a.template_enc_file
+			,a.template_org_file
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt		
+		FROM top_insu_template4 a
+		WHERE 1=1
+		<if test="srchTeamType != 5">
+			and a.team_type = #{srchTeamType}
+		</if>
+		<if test="srchCategoryType != 0">
+			and a.category_id = #{srchCategoryType}
+		</if>
+		<if test="srchFileName != ''">
+			and a.template_org_file like '%${srchFileName}%'
+		</if>
+		ORDER BY a.category_id, a.reg_date desc
+	</select>
+	
+	<select id="insuTemplateList" parameterType="hashmap" resultType="kr.co.toplac.brd.noticeptnr.InsuTemplateBean">
+		SELECT
+			a.tkey
+			,a.user_no
+			,getTopMbrBscUserName(a.user_no) as user_name
+			,a.team_type
+			,a.ptnr_id
+			,getTopPtnrBscPtnrNick(a.ptnr_id) as ptnr_name
+			,a.category_id
+			,getCodeValue('top_insu_template','category_id',a.category_id) as category_name
+			,a.nofile_content
+			,getCodeValue('top_insu_template','nofile_content',a.nofile_content) as nofile_content_val
+			,a.file_path
+			,a.template_enc_file
+			,a.template_org_file
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt		
+		FROM top_insu_template a
+		WHERE 1=1
+		<if test="srchTeamType != 5">
+			and a.team_type = #{srchTeamType}
+		</if>
+		<if test="srchCategoryType != 0">
+			and a.category_id = #{srchCategoryType}
+		</if>		
+		<if test="srchPtnrType != 0">
+			and a.ptnr_id = #{srchPtnrType}
+		</if>
+		ORDER BY a.category_id, a.reg_date desc
+	</select>
+	
+	<update id="updateInsuTemplate4Category" parameterType="hashmap">
+		UPDATE sysadm_codedic SET
+			col_val = #{col_val}
+		WHERE col_cd = #{col_cd}
+		AND tbl_nm = 'top_insu_template4'
+		AND col_nm = 'category_id' 
+	</update>
+	
+	<insert id="insertInsuTemplate4Category" parameterType="hashmap">
+		INSERT INTO sysadm_codedic (
+			tbl_nm
+			,col_nm
+			,col_cd
+			,col_val
+		) VALUES(
+			'top_insu_template4'
+			,'category_id'
+			,#{col_cd}
+			,#{col_val}
+		) 
+	</insert>
+	
+	<insert id="insertInsuTemplate4" parameterType="hashmap">
+		INSERT INTO top_insu_template4 (
+			user_no
+			,team_type			
+			,category_id
+			,file_path
+			,template_enc_file
+			,template_org_file			
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{team_type}			
+			,#{category_type}
+			,#{file_path}
+			,#{template_enc_file}
+			,#{template_org_file}			
+			,now()
+		)
+	</insert>
+	
+	<insert id="insertEduClass" parameterType="hashmap">
+		INSERT INTO top_edu_class (
+			user_no
+			,team_type			
+			,category_id
+			,teacher_name			
+			,file_path
+			,file_name			
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{team_type}			
+			,#{category_id}
+			,#{teacher_name}			
+			,#{file_path}
+			,#{file_name}
+			,now()
+		)
+	</insert>	
+	
+	<insert id="insertInsuTemplate" parameterType="hashmap">
+		INSERT INTO top_insu_template (
+			user_no
+			,team_type
+			,ptnr_id
+			,category_id
+			,file_path
+			,template_enc_file
+			,template_org_file
+			,nofile_content
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{team_type}
+			,#{ptnr_type}
+			,#{category_type}
+			,#{file_path}
+			,#{template_enc_file}
+			,#{template_org_file}
+			,#{nofile_content}
+			,now()
+		)
+	</insert>
+
+	<insert id="boardWrite" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		INSERT INTO brd_notice_ptnr1 (user_no, ptnr_id, title, contents, reg_ip, reg_date, view_cnt)
+		VALUES(#{user_no}, #{ptnr_id}, #{title}, #{contents}, #{reg_ip}, unix_timestamp(now()), 0)
+	</insert>
+
+	<select id="getBoardNo" parameterType="kr.co.toplac.brd.common.BoardVO" resultType = "String">
+		SELECT max(board_no)
+		FROM brd_notice_ptnr1
+		WHERE user_no = #{user_no}
+	</select>
+
+	<insert id="boardFileWrite" parameterType="kr.co.toplac.brd.common.BoardFileVO" >
+		INSERT INTO brd_notice_ptnr1_file (board_no,file_path,file_name,reg_date)
+		VALUES(#{board_no}, #{file_path}, #{file_name}, unix_timestamp(now()))
+	</insert>
+
+	<select id="boardDetail" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT board_no, user_no, getTopMbrBscUserName(user_no) user_nm
+			, ptnr_id, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+			, title, contents, reg_ip
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, view_cnt
+		FROM brd_notice_ptnr1
+		WHERE board_no = #{board_no}
+		ORDER BY board_no DESC
+	</select>
+
+	<select id="suim1PtnrNoticePop" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT getTopPtnrBscPtnrName(ptnr_id) ptnr_name, contents
+		FROM brd_notice_ptnr1
+		WHERE ptnr_id = #{id}
+		ORDER BY board_no DESC
+		Limit 0, 1
+	</select>
+
+	<select id="boardFileList" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardFileVO">
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_notice_ptnr1_file
+		WHERE board_no = #{board_no}
+		ORDER BY board_file_no
+	</select>
+
+	<update id="boardAddCnt" parameterType="String" >
+		UPDATE brd_notice_ptnr1 SET view_cnt = view_cnt + 1
+		WHERE board_no = #{board_no}
+	</update>
+
+	<delete id="boardDelete" parameterType="String" >
+		DELETE FROM brd_notice_ptnr1
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFilesDelete" parameterType="String" >
+		DELETE FROM brd_notice_ptnr1_file
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFileDelete" parameterType="String" >
+		DELETE FROM brd_notice_ptnr1_file
+		WHERE board_file_no = #{fileNo}
+	</delete>
+
+	<update id="boardUpdate" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_notice_ptnr1 SET title = #{title}, contents = #{contents}
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="updateCKPath" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_ptnr1 SET contents = REPLACE(contents,#{oldStr},#{newStr})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<insert id="boardWrite2" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		INSERT INTO brd_notice_ptnr1 (user_no, ptnr_id, title, contents, reg_ip, reg_date, view_cnt)
+		VALUES(#{user_no}, #{ptnr_id}, #{title}, #{contents}, #{reg_ip}, #{reg_date}, #{view_cnt})
+	</insert>
+
+	<update id="updateCKPath2" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_ptnr1 SET contents = REPLACE(contents,#{ckFileDir},#{ckFileDir2})
+		WHERE board_no = #{newBoardNo}
+	</update>
+
+	<update id="updateBoardFiles" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_ptnr1_file
+		SET board_no = #{newBoardNo}, file_path = REPLACE(file_path,#{attachFileDir},#{attachFileDir2})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<update id="updateBoardMemos" parameterType="java.util.HashMap" >
+		UPDATE brd_notice_ptnr1_memo SET fk_no = #{newBoardNo}
+		WHERE fk_no = #{boardNo}
+	</update>
+
+	<select id="getInsuNm" parameterType="String" resultType = "String">
+		select getTopPtnrBscPtnrName(#{insu})
+	</select>
+
+	<select id="noticePtnr1FileOneSelect" parameterType="String" resultType="kr.co.toplac.brd.common.BoardFileVO" >
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_notice_ptnr1_file
+		WHERE board_file_no = #{fileNo}
+	</select>
+
+</mapper>

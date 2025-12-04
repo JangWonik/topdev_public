@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BrdGuideMapper">
+
+	<select id="getBoardFileList" parameterType="String" resultType="hashmap">
+		SELECT 
+			a.title
+			,b.file_no
+			,b.orignl_file_nm as file_name	
+		FROM brd_guide a, brd_guide_file b
+		WHERE a.guide_no = b.guide_no
+		AND a.guide_no = #{guide_no}
+		ORDER BY b.file_no
+	</select>
+
+	<select id="boardList" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT 
+			a.guide_no as board_no
+			,a.title
+			,a.contents
+			,a.guide_type as title_classify
+			,getCodeValue('brd_notice_top', 'title_classify', a.guide_type) title_classify_nm
+			,a.use_at
+			,a.reg_user_no as user_no
+			,b.user_name as user_nm
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') reg_date_fmt			
+			,a.view_cnt
+			, (select count(file_no) from brd_guide_file where guide_no = a.guide_no) file_cnt
+			, (select count(memo_no) from brd_guide_memo where fk_no = a.guide_no) memo_cnt
+			, (select MAX(file_no) from brd_guide_file where guide_no = a.guide_no) board_file_no	
+		FROM brd_guide a, top_mbr_bsc b
+		WHERE a.reg_user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="titleSearch != null and titleSearch != 0">
+			AND a.guide_type = #{titleSearch}
+		</if>
+		AND a.use_at = 'Y'
+		ORDER BY a.guide_no DESC
+		LIMIT #{queryPgNoInt}, 15
+	</select>
+	
+	<select id="boardListCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.guide_no) cnt
+		FROM brd_guide a, top_mbr_bsc b
+		WHERE a.reg_user_no = b.user_no
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="titleSearch != null and titleSearch != 0">
+			AND a.guide_type = #{titleSearch}
+		</if>
+		AND a.use_at = 'Y'
+	</select>	
+	
+	<select id="boardDetail" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT guide_no as board_no
+			, reg_user_no as user_no
+			, getTopMbrBscUserName(reg_user_no) user_nm
+			, guide_type as title_classify
+			, getCodeValue('brd_notice_top', 'title_classify', guide_type) title_classify_nm
+			, title
+			, contents			
+			, reg_date
+			, DATE_FORMAT(reg_date, '%Y-%m-%d') reg_date_fmt
+			, view_cnt
+		FROM brd_guide
+		WHERE guide_no = #{guide_no}
+		ORDER BY guide_no DESC
+	</select>
+	
+	<select id="boardFileList" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardFileVO">
+		SELECT file_no
+			,guide_no as board_no
+			,stre_file_path as file_path
+			,stre_file_nm
+			,orignl_file_nm as file_name			
+			,CONCAT(stre_file_path, orignl_file_nm) encodedFilePathName
+		FROM brd_guide_file
+		WHERE guide_no = #{guide_no}
+		ORDER BY file_no
+	</select>
+	
+	<update id="boardAddCnt" parameterType="String" >
+		UPDATE brd_guide SET view_cnt = view_cnt + 1
+		WHERE guide_no = #{guide_no}
+	</update>
+	
+	<select id="brdGuideFileOneSelect" parameterType="String" resultType="kr.co.toplac.brd.common.BoardFileVO" >
+		SELECT 
+			file_no
+			,guide_no as board_no
+			,stre_file_path as file_path
+			,stre_file_nm
+			,orignl_file_nm as file_name			
+			,CONCAT(stre_file_path, orignl_file_nm) encodedFilePathName
+		FROM brd_guide_file
+		WHERE file_no = #{fileNo}
+	</select>
+	
+	<delete id="boardFileDelete" parameterType="String" >
+		DELETE FROM brd_guide_file
+		WHERE file_no = #{fileNo}
+	</delete>
+	
+	<update id="boardUpdate" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_guide SET guide_type = #{title_classify}, title = #{title}, contents = #{contents}
+		WHERE guide_no = #{board_no}
+	</update>
+	
+	<insert id="boardFileWrite" parameterType="kr.co.toplac.brd.common.BoardFileVO" >
+		INSERT INTO brd_guide_file 
+		(			
+			guide_no
+			,stre_file_path
+			,stre_file_nm			
+		)VALUES(		
+			#{board_no}
+			,#{file_path}
+			,#{file_name}			
+		)
+	</insert>
+	
+	<select id="selectList" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.GUIDE_NO
+        	   ,B.USER_NAME
+               ,A.TITLE
+               ,A.CONTENTS
+               ,A.GUIDE_TYPE
+               ,A.USE_AT
+               ,A.REG_USER_NO
+               ,DATE_FORMAT(A.REG_DATE, '%Y-%m-%d %H:%i:%s') AS REG_DATE
+               ,A.VIEW_CNT
+               ,(SELECT  count(FILE_NO) 
+                   FROM  brd_guide_file
+                  WHERE  GUIDE_NO = A.GUIDE_NO
+                 ) AS FILE_CNT
+          FROM  brd_guide A, top_mbr_bsc B
+         WHERE  A.REG_USER_NO = B.USER_NO
+           <if test="guide_type != 99">
+           AND  A.USE_AT = 'Y'
+           </if>
+           <if test="guide_type == 99">
+           AND  A.USE_AT = 'N'
+           </if>
+           <if test="guide_type != -1 and guide_type != 99">
+           AND  A.GUIDE_TYPE = #{guide_type}
+           </if>
+           <if test="keyword != null and keyword != ''">
+           AND  (A.TITLE LIKE CONCAT('%',#{keyword},'%') OR A.CONTENTS LIKE CONCAT('%',#{keyword},'%'))
+           </if>
+        ORDER BY A.GUIDE_NO DESC
+        LIMIT #{limitPage}, #{sizePerPage}
+    </select>
+    
+    <select id="selectListCnt" parameterType="hashmap"  resultType="Long">
+        SELECT  COUNT(*) AS CNT
+          FROM  brd_guide A
+          WHERE  1=1
+           <if test="guide_type != 99">
+           AND  A.USE_AT = 'Y'
+           </if>
+           <if test="guide_type == 99">
+           AND  A.USE_AT = 'N'
+           </if>
+           <if test="guide_type != -1 and guide_type != 99">
+           AND  A.GUIDE_TYPE = #{guide_type}
+           </if>
+           <if test="keyword != null and keyword != ''">
+           AND  (A.TITLE LIKE CONCAT('%',#{keyword},'%') OR A.CONTENTS LIKE CONCAT('%',#{keyword},'%'))
+           </if>
+        ORDER BY A.GUIDE_NO DESC
+    </select>
+
+	<insert id="insert" parameterType="hashmap">
+        INSERT INTO brd_guide(
+                     TITLE
+                    ,CONTENTS
+                    ,GUIDE_TYPE
+                    ,USE_AT
+                    ,REG_USER_NO
+                    ,REG_DATE
+                    ,MODIFY_USER_NO
+                    ,MODIFY_DATE
+                    ,VIEW_CNT
+                    ) VALUES(
+                     #{title}
+                    ,#{contents}
+                    ,#{guide_type}
+                    ,#{use_at}
+                    ,#{reg_user_no}
+                    ,NOW()
+                    ,#{reg_user_no}
+                    ,NOW()
+                    ,0
+                    )
+        <selectKey resultType="int" keyProperty="guide_no" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+	<insert id="insertFile" parameterType="hashmap">
+        INSERT INTO brd_guide_file (
+        			  GUIDE_NO
+        			 ,STRE_FILE_PATH
+        			 ,STRE_FILE_NM
+        			 ,ORIGNL_FILE_NM
+        			 )
+	        VALUES (
+	        	#{guideNo}
+	           ,#{streFilePath}
+	           ,#{streFileNm}
+	           ,#{orignlFileNm}
+	           )
+    </insert>
+
+	<select id="select" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.GUIDE_NO
+        	   ,B.USER_NAME
+               ,A.TITLE
+               ,A.CONTENTS
+               ,A.GUIDE_TYPE
+               ,A.USE_AT
+               ,A.REG_USER_NO
+               ,DATE_FORMAT(A.REG_DATE, '%Y-%m-%d %H:%i:%s') AS REG_DATE
+          FROM  brd_guide A, top_mbr_bsc B
+         WHERE  1=1
+           AND  A.REG_USER_NO = B.USER_NO
+           AND  A.GUIDE_NO = #{guide_no}
+    </select>
+
+	<select id="selectFileList" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+               ,A.STRE_FILE_PATH
+               ,A.STRE_FILE_NM
+               ,A.ORIGNL_FILE_NM
+          FROM  brd_guide_file A
+         WHERE  1=1
+           AND  A.GUIDE_NO = #{guide_no}
+    </select>
+
+	<select id="selectFile" parameterType="hashmap"  resultType="AsraMap">
+        SELECT  A.FILE_NO
+               ,A.STRE_FILE_PATH
+               ,A.STRE_FILE_NM
+               ,A.ORIGNL_FILE_NM
+          FROM  brd_guide_file A
+         WHERE  1=1
+           AND  A.FILE_NO = #{file_no}
+    </select>
+
+	<delete id="delete" parameterType="hashmap">
+        DELETE FROM brd_guide WHERE GUIDE_NO = #{guide_no}
+    </delete>
+
+	<update id="boardguideAddCnt" parameterType="String" >
+		UPDATE brd_guide SET VIEW_CNT = VIEW_CNT + 1
+		WHERE GUIDE_NO = #{guide_no}
+	</update>
+
+	<update id="update" parameterType="hashmap">
+		UPDATE  brd_guide
+		   SET  TITLE = #{title}
+		       ,CONTENTS = #{contents}
+		       ,GUIDE_TYPE = #{guide_type}
+		       ,USE_AT = #{use_at}
+		       ,MODIFY_USER_NO = #{user_no}
+		       ,MODIFY_DATE = NOW()
+		 WHERE  GUIDE_NO = #{guide_no}      
+	</update>
+
+	<delete id="deleteFile" parameterType="hashmap">
+        DELETE FROM brd_guide_file WHERE FILE_NO = #{file_no}
+    </delete>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

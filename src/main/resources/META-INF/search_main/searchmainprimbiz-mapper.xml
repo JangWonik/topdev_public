@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SearchMainPrimbizMapper">
+
+	<select id="searchMainPrimbizRptList" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+			 , a.suim_rpt_type1, getCodeValue('top_prim_biz_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			 , a.suim_rpt_state, getCodeValue('top_prim_biz_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+			 , a.suim_rpt_type1_close12, getCodeValue('top_prim_biz_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+			 , a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+			 , a.user_no, getTopMbrBscUserName(a.user_no) user_name
+			 , a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			 , a.ptnr_dept_id
+			 <!-- , getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm -->
+			 , (SELECT IFNULL(ptnr_tm_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no) AS ptnr_dept_nm
+			 , a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			 , a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+			 , a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+			 , a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+			 , a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+			 , a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+			 , ifnull(a.del_date, 0) del_date
+			 , ifnull(DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d %H:%i:%s'),'') del_date_fmt
+			 <!-- , getDateDiff(a.reg_date) + 1 past_date -->
+			 <!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+			 , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			 , (select count(memo_no) from top_prim_biz_rpt_memo where fk_no = a.suim_rpt_no) memo_cnt
+			 , (select count(serial_no) from top_prim_biz_rpt_file where suim_rpt_no = a.suim_rpt_no) file_cnt
+			 , b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+			 
+		 FROM top_prim_biz_rpt_head a, top_prim_biz_rpt_body b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		<if test="stateSearch != 9999">
+			AND a.suim_rpt_state = #{stateSearch}
+		</if>
+		<if test="noUserSearch == 'on'">
+			AND ifnull(a.user_no,0) = 0
+		</if>
+		<if test="type1Search != 0">
+			AND a.suim_rpt_type1 = #{type1Search}
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; unix_timestamp(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="cancelDateFromSearch != ''">
+			AND a.suim_cancel_date >= unix_timestamp(#{cancelDateFromSearch})
+		</if>
+		<if test="cancelDateToSearch != ''">
+			AND a.suim_cancel_date &lt; unix_timestamp(DATE_ADD(#{cancelDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="userNmSearch != ''">
+			AND a.user_no in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${userNmSearch}%'))
+		</if>
+		<if test="aprvDateFromSearch != ''">
+			AND a.suim_rpt_aprv_date >= unix_timestamp(#{aprvDateFromSearch})
+		</if>
+		<if test="aprvDateToSearch != ''">
+			AND a.suim_rpt_aprv_date &lt; unix_timestamp(DATE_ADD(#{aprvDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="closeDateFromSearch != ''">
+			AND a.close_date >= unix_timestamp(#{closeDateFromSearch})
+		</if>
+		<if test="closeDateToSearch != ''">
+			AND a.close_date &lt; unix_timestamp(DATE_ADD(#{closeDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="ptnrDeptNmSearch != ''">
+			AND a.ptnr_dept_nm_4edit like '%${ptnrDeptNmSearch}%'
+		</if>
+		<if test="ptnrUserNmSearch != ''">
+			AND a.ptnr_mbr_nm_4edit like '%${ptnrUserNmSearch}%'
+		</if>
+		<if test="insuNmSearch != ''">
+			AND b.insurance_nm like '%${insuNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.policyholder_nm like '%${policyhNmSearch}%'
+		</if>
+		<if test="policySsn1Search != ''">
+			AND LEFT(b.policyholder_ssn,6) like '%${policySsn1Search}%'
+		</if>
+		<if test="policySsn2Search != ''">
+			AND RIGHT(b.policyholder_ssn,7) like '%${policySsn2Search}%'
+		</if>
+		<if test="benefiNmSearch != ''">
+			AND a.beneficiary_nm like '%${benefiNmSearch}%'
+		</if>
+		<if test="benefiSsn1Search != ''">
+			AND LEFT(b.beneficiary_ssn,6) like '%${benefiSsn1Search}%'
+		</if>
+		<if test="benefiSsn2Search != ''">
+			AND RIGHT(b.beneficiary_ssn,7) like '%${benefiSsn2Search}%'
+		</if>
+		<if test="damagedNmSearch != ''">
+			AND a.damaged_nm like '%${damagedNmSearch}%'
+		</if>
+		<if test='accidentNoSearch != null and accidentNoSearch != ""'>
+			AND b.accident_no like '${accidentNoSearch}%'
+		</if>
+		<if test="policyNoSearch != ''">
+			AND b.policy_no like '%${policyNoSearch}%'
+		</if>
+		<if test="accidentFactsSearch != ''">
+			AND b.accident_facts like '%${accidentFactsSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="moralSearch == 'on'">
+			AND b.moral_flag = 1
+		</if>
+		<if test="minwonSearch != 3">
+			AND b.minwon_flag = #{minwonSearch}
+		</if>
+		<if test="searchMainSimpleQueryTxt != ''">
+			AND (a.policyholder_nm like '%${searchMainSimpleQueryTxt}%'
+				OR a.beneficiary_nm like '%${searchMainSimpleQueryTxt}%'
+				OR a.damaged_nm like '%${searchMainSimpleQueryTxt}%')
+		</if>
+		
+		<if test="notSearch == 1">
+			AND 1 = 0
+		</if>		
+		
+		<choose>
+			<when test="stateSearch == 2"><!-- 종결 상태일때는 종결일 순으로 -->
+				ORDER BY a.close_date DESC
+			</when>
+			<otherwise>
+				ORDER BY a.suim_rpt_no DESC<!-- 나머진 등록순 -->
+			</otherwise>
+		</choose>
+		
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="searchMainPrimbizRptListCnt" resultType = "int">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_prim_biz_rpt_head a, top_prim_biz_rpt_body b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		<if test="stateSearch != 9999">
+			AND a.suim_rpt_state = #{stateSearch}
+		</if>
+		<if test="noUserSearch == 'on'">
+			AND ifnull(a.user_no,0) = 0
+		</if>
+		<if test="type1Search != 0">
+			AND a.suim_rpt_type1 = #{type1Search}
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; unix_timestamp(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="cancelDateFromSearch != ''">
+			AND a.suim_cancel_date >= unix_timestamp(#{cancelDateFromSearch})
+		</if>
+		<if test="cancelDateToSearch != ''">
+			AND a.suim_cancel_date &lt; unix_timestamp(DATE_ADD(#{cancelDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="userNmSearch != ''">
+			AND a.user_no in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${userNmSearch}%'))
+		</if>
+		<if test="aprvDateFromSearch != ''">
+			AND a.suim_rpt_aprv_date >= unix_timestamp(#{aprvDateFromSearch})
+		</if>
+		<if test="aprvDateToSearch != ''">
+			AND a.suim_rpt_aprv_date &lt; unix_timestamp(DATE_ADD(#{aprvDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="closeDateFromSearch != ''">
+			AND a.close_date >= unix_timestamp(#{closeDateFromSearch})
+		</if>
+		<if test="closeDateToSearch != ''">
+			AND a.close_date &lt; unix_timestamp(DATE_ADD(#{closeDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="ptnrDeptNmSearch != ''">
+			AND a.ptnr_dept_nm_4edit like '%${ptnrDeptNmSearch}%'
+		</if>
+		<if test="ptnrUserNmSearch != ''">
+			AND a.ptnr_mbr_nm_4edit like '%${ptnrUserNmSearch}%'
+		</if>
+		<if test="insuNmSearch != ''">
+			AND b.insurance_nm like '%${insuNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.policyholder_nm like '%${policyhNmSearch}%'
+		</if>
+		<if test="policySsn1Search != ''">
+			AND LEFT(b.policyholder_ssn,6) like '%${policySsn1Search}%'
+		</if>
+		<if test="policySsn2Search != ''">
+			AND RIGHT(b.policyholder_ssn,7) like '%${policySsn2Search}%'
+		</if>
+		<if test="benefiNmSearch != ''">
+			AND a.beneficiary_nm like '%${benefiNmSearch}%'
+		</if>
+		<if test="benefiSsn1Search != ''">
+			AND LEFT(b.beneficiary_ssn,6) like '%${benefiSsn1Search}%'
+		</if>
+		<if test="benefiSsn2Search != ''">
+			AND RIGHT(b.beneficiary_ssn,7) like '%${benefiSsn2Search}%'
+		</if>
+		<if test="damagedNmSearch != ''">
+			AND a.damaged_nm like '%${damagedNmSearch}%'
+		</if>
+		<if test='accidentNoSearch != null and accidentNoSearch != ""'>
+			AND b.accident_no like '${accidentNoSearch}%'
+		</if>
+		<if test="policyNoSearch != ''">
+			AND b.policy_no like '%${policyNoSearch}%'
+		</if>
+		<if test="accidentFactsSearch != ''">
+			AND b.accident_facts like '%${accidentFactsSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="moralSearch == 'on'">
+			AND b.moral_flag = 1
+		</if>
+		<if test="minwonSearch != 3">
+			AND b.minwon_flag = #{minwonSearch}
+		</if>
+		<if test="notSearch == 1">
+			AND 1 = 0
+		</if>		
+		<if test="searchMainSimpleQueryTxt != ''">
+			AND (a.policyholder_nm like '%${searchMainSimpleQueryTxt}%'
+				OR a.beneficiary_nm like '%${searchMainSimpleQueryTxt}%'
+				OR a.damaged_nm like '%${searchMainSimpleQueryTxt}%')
+		</if>
+		
+	</select>
+
+	<select id="searchMainPrimbizRptListExcel" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no, getTopMbrBscUserName(a.user_no) user_name, getTopUserHp(a.user_no) handphone
+			, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+			, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+			, a.ptnr_dept_id
+			<!-- , getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm -->
+			, (SELECT IFNULL(ptnr_tm_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no) AS ptnr_dept_nm
+			, getTopPtnrMbrBscPtnrTeamName(a.ptnr_mbr_no) ptnr_tm2_nm
+			
+			, a.suim_rpt_type1, getCodeValue('top_prim_biz_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+			, b.accident_no, b.policy_no, b.insurance_nm
+			, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+			, b.accident_facts
+			, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+			, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+			<!-- getDateDiff(a.reg_date) + 1 past_date --> 
+			<!-- , DATEDIFF(now(), DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) +1 past_date -->
+			<!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+			, DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+			, b.amt_estimated_damage, b.commission_estimated
+			, a.suim_rpt_type1_close12, getCodeValue('top_prim_biz_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+			, b.amt_claimed, b.amt_settlement, b.amt_self_pay, b.amt_insu_payment, b.amt_reduction
+			, inv.amt_basic, inv.amt_daily, inv.amt_traffic, inv.amt_counsel, inv.amt_etc, inv.amt_total
+			,getCode2Value("top_rpt_head", "workload_type", a.suim_rpt_type1, a.workload_type) workloadTypeVal
+			,a.workload_ea workloadEa
+			,a.	registrant
+			,IF( a.registrant = 0, '-', getTopMbrBscUserName(a.registrant) ) as registrant_nm
+			,a.suim_rpt_state
+			, IFNULL(a.close_ptnr_dept_nm,'') AS close_ptnr_dept_nm
+			, IFNULL(a.close_ptnr_tm2_nm,'') AS close_ptnr_tm2_nm	
+		FROM top_prim_biz_rpt_head a, top_prim_biz_rpt_body b, top_prim_biz_inv inv
+		WHERE 1 = 1
+		<if test="stateSearch != 9999">
+			AND a.suim_rpt_state = #{stateSearch}
+		</if>
+		<if test="noUserSearch == 'on'">
+			AND ifnull(a.user_no,0) = 0
+		</if>
+		<if test="type1Search != 0">
+			AND a.suim_rpt_type1 = #{type1Search}
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; unix_timestamp(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="cancelDateFromSearch != ''">
+			AND a.suim_cancel_date >= unix_timestamp(#{cancelDateFromSearch})
+		</if>
+		<if test="cancelDateToSearch != ''">
+			AND a.suim_cancel_date &lt; unix_timestamp(DATE_ADD(#{cancelDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="userNmSearch != ''">
+			AND a.user_no in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${userNmSearch}%'))
+		</if>
+		<if test="aprvDateFromSearch != ''">
+			AND a.suim_rpt_aprv_date >= unix_timestamp(#{aprvDateFromSearch})
+		</if>
+		<if test="aprvDateToSearch != ''">
+			AND a.suim_rpt_aprv_date &lt; unix_timestamp(DATE_ADD(#{aprvDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="closeDateFromSearch != ''">
+			AND a.close_date >= unix_timestamp(#{closeDateFromSearch})
+		</if>
+		<if test="closeDateToSearch != ''">
+			AND a.close_date &lt; unix_timestamp(DATE_ADD(#{closeDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="ptnrDeptNmSearch != ''">
+			AND a.ptnr_dept_nm_4edit like '%${ptnrDeptNmSearch}%'
+		</if>
+		<if test="ptnrUserNmSearch != ''">
+			AND a.ptnr_mbr_nm_4edit like '%${ptnrUserNmSearch}%'
+		</if>
+		<if test="insuNmSearch != ''">
+			AND b.insurance_nm like '%${insuNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.policyholder_nm like '%${policyhNmSearch}%'
+		</if>
+		<if test="policySsn1Search != ''">
+			AND LEFT(b.policyholder_ssn,6) like '%${policySsn1Search}%'
+		</if>
+		<if test="policySsn2Search != ''">
+			AND RIGHT(b.policyholder_ssn,7) like '%${policySsn2Search}%'
+		</if>
+		<if test="benefiNmSearch != ''">
+			AND a.beneficiary_nm like '%${benefiNmSearch}%'
+		</if>
+		<if test="benefiSsn1Search != ''">
+			AND LEFT(b.beneficiary_ssn,6) like '%${benefiSsn1Search}%'
+		</if>
+		<if test="benefiSsn2Search != ''">
+			AND RIGHT(b.beneficiary_ssn,7) like '%${benefiSsn2Search}%'
+		</if>
+		<if test="damagedNmSearch != ''">
+			AND a.damaged_nm like '%${damagedNmSearch}%'
+		</if>
+		<if test='accidentNoSearch != null and accidentNoSearch != ""'>
+			AND b.accident_no like '${accidentNoSearch}%'
+		</if>
+		<if test="policyNoSearch != ''">
+			AND b.policy_no like '%${policyNoSearch}%'
+		</if>
+		<if test="accidentFactsSearch != ''">
+			AND b.accident_facts like '%${accidentFactsSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="moralSearch == 'on'">
+			AND b.moral_flag = 1
+		</if>
+		<if test="minwonSearch != 3">
+			AND b.minwon_flag = #{minwonSearch}
+		</if>
+		<if test="searchMainSimpleQueryTxt != ''">
+			AND (a.policyholder_nm like '%${searchMainSimpleQueryTxt}%'
+				OR a.beneficiary_nm like '%${searchMainSimpleQueryTxt}%'
+				OR a.damaged_nm like '%${searchMainSimpleQueryTxt}%')
+		</if>
+		<if test="notSearch == 1">
+			AND 1 = 0
+		</if>		
+		
+		AND a.suim_rpt_no = b.suim_rpt_no
+		AND a.suim_rpt_no = inv.suim_rpt_no
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+</mapper>

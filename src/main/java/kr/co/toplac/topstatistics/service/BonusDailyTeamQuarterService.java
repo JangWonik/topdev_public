@@ -1,0 +1,334 @@
+package kr.co.toplac.topstatistics.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.co.toplac.util.cmm.CommonUtils;
+import kr.co.toplac.util.cmm.DateUtil;
+
+@Service
+public class BonusDailyTeamQuarterService {
+
+	private static final Logger logger = LoggerFactory.getLogger(WorkloadService.class);
+
+    @Autowired
+    SqlSession sqlSession;
+	
+	public void syncProcess() {
+		
+		//오늘날짜 셋팅
+    	String sToday = DateUtil.getTodayString("yyyy-MM-dd");		//오늘 날짜(시스템에서 실행되는 날짜)
+    	String sBaseDate = DateUtil.addDateNew(sToday, -1);			//어제 날짜(보고서 정산날짜)
+    	String sBaseYear = DateUtil.getBaseYear(sBaseDate);			//기준년도
+    	
+    	logger.info("BonusDailyTeamQuarterService Start : "+sBaseDate );
+    	
+    	//해당일자에 등록된 성과급 정보가 있는지 확인한다. (중복등록방지)
+    	int nSchTeamChk = 0;
+    	nSchTeamChk = sqlSession.selectOne("SuimSchedule.selectSchBonusTeamQuarterDailyChk", sBaseDate);
+    	
+    	int nYearDays = 365;				//윤년계산으로 인해 날짜수 변수처리
+    	
+    	nYearDays = DateUtil.getYearToDays(sBaseYear);
+    	
+    	if( nSchTeamChk == 0 ) {		//등록된 성과급 정보가 없는 경우에 실행한다.
+    		
+    		//오늘 기준 분기 시작, 종료일 리스트를 셋팅한다.
+    		List<Map<String,Object>> dateList = DateUtil.makeQuarterDateList(sBaseDate);
+    		
+    		String sDate = "";					//분기기준 시작일
+    		String eDate = "";					//분기기준 종료일
+    		String quarterFlag = "";			//분기 기준 (1,2,3,4)
+    		
+    		//신입, 경력직 여부에 따라 입사일자(실적 기준 시작일자)를 넣어준다.
+    		String sSdate = "";						//실적계산 시작일자
+    		String sEdate = "";						//실적계산 종료일자
+    		String sUserNo = "";					//임시사번
+    		
+    		int nApChk = 0;								//기간 내 발령여부체크
+    		
+    		String apTeamId = "";					//분기 시작 전 발령 팀 아이디
+    		String orgTeamId = "";					//현재 인사정보 등록상의 팀 아이디
+    		
+    		//기준일자로 분기정보가 있는 만큼 loop 를 돌린다.
+    		for( int i=0; i < dateList.size(); i++) {
+    			
+    			Map<String,Object> setupMap = new HashMap<>();    			
+    			
+    			sDate = String.valueOf(dateList.get(i).get("sDate"));
+    			eDate = String.valueOf(dateList.get(i).get("eDate"));
+    			quarterFlag = String.valueOf(dateList.get(i).get("sQuarterFlag"));
+    			
+    			setupMap.put("sdate", sDate);
+    			setupMap.put("edate", eDate);
+    			setupMap.put("base_date", sBaseDate);
+    			
+    			List<Map<String, Object>> memberList = sqlSession.selectList("SuimSchedule.SchBonusTeamMemberQuarterListAll",setupMap);    			
+    			
+    			String sCareerStart = "";				//신입, 경력 계산한 시작일
+    			
+    			for(int k=0; k < memberList.size(); k++) {
+        			
+        			memberList.get(k).put("base_year", sBaseYear);			//기준년도 추가
+        			memberList.get(k).put("quarter_flag", quarterFlag);			//분기정보 추가
+        			
+        			sCareerStart = String.valueOf(memberList.get(k).get("sdate"));        				
+        			
+        			if( DateUtil.compareDate(sDate,sCareerStart) < 1 ) {			//시작일자가 년도 시작일자보다 이전 인 경우
+        				memberList.get(k).put("sdate", sDate);
+        			}
+        			
+        			Map<String, Object> apMap = memberList.get(k);
+        			
+        			//현재 인사 팀 정보와 해당 분기 이전 발령 팀이 동일 한지 체크한다.        			
+        			orgTeamId = String.valueOf(memberList.get(k).get("team_id"));
+        			apTeamId = sqlSession.selectOne("SuimSchedule.selectTopMbrAppointLastTeamInfo", apMap);
+        			
+        			if( !"".equals(apTeamId) && !apTeamId.equals(orgTeamId)) {
+        				//System.out.println("팀 정보 다시 넣어야함 : "+ orgTeamId +" >> "+apTeamId);
+        				Map<String,Object> updateTeamMap = new HashMap<>();
+        				updateTeamMap = sqlSession.selectOne("SuimSchedule.selectTopTmBscUpdateInfo",apTeamId);
+        				memberList.get(k).putAll(updateTeamMap);
+        			}        			
+        			//CommonUtils.printMap(memberList.get(k));
+        		}
+    			
+    			//기본 직원 목록 정보를 팀 분기기준 스케줄러에 넣어준다.
+        		sqlSession.insert("SuimSchedule.insertSchBonusTeamQuarterMemberBasicList",memberList);        		
+    		}
+    		
+    		//직원 발령 처리시작
+    		//해당 일자의 스케줄러 목록을 불러온다.
+    		List<Map<String, Object>> schMemberList = sqlSession.selectList("SuimSchedule.selectSchTeamMemberQuarterListByBaseDate", sBaseDate);
+    		
+    		String sSkey = "";			//작업후 삭제할 임시 키
+    		
+    		for( int k=0; k < schMemberList.size(); k++ ) {
+    			
+    			Map<String,Object> setupMap = new HashMap<>();
+    			
+    			sSkey = String.valueOf(schMemberList.get(k).get("skey"));
+    			sUserNo = String.valueOf(schMemberList.get(k).get("user_no"));
+    			sSdate = String.valueOf(schMemberList.get(k).get("sdate"));
+    			sEdate = String.valueOf(schMemberList.get(k).get("edate"));
+    			quarterFlag = String.valueOf(schMemberList.get(k).get("quarter_flag"));
+    			
+    			setupMap.put("user_no", sUserNo);
+    			setupMap.put("sdate", sSdate);
+    			setupMap.put("edate", sEdate);
+    			setupMap.put("quarter_flag", quarterFlag);
+    			
+    			//기간 내 발령이 있는지 체크한다.    			    			
+    			nApChk = sqlSession.selectOne("SuimSchedule.SchBonusTeamApCount", setupMap);
+    			
+    			String sAppointDate = "";			//임시 발령일자 변수
+    			
+    			if( nApChk > 0 ) {			//발령이 있는경우 처리시작
+    				
+    				List<Map<String, Object>> memberApList = sqlSession.selectList("SuimSchedule.SchBonusTeamQuarterMemberApList",setupMap);
+    				
+    				String sApEdate = "";
+    				
+					for( int r=0; r < memberApList.size(); r++ ) {
+						//Map<String,Object> apMap = new HashMap<>();
+						
+						//기본연도, 기준일자 설정, 분기기준
+						memberApList.get(r).put("base_year", sBaseYear);
+						memberApList.get(r).put("base_date", sBaseDate);
+						memberApList.get(r).put("quarter_flag", quarterFlag);	
+					
+    					sAppointDate = String.valueOf(memberApList.get(r).get("appoint_date_fmt"));
+    					
+    					setupMap.put("appoint_date", sAppointDate);
+    					
+    					sApEdate = sqlSession.selectOne("SuimSchedule.SchBonusTeamQuarterMemberApNextEdate", setupMap);
+    					
+    					if( "".equals(sApEdate) ) {										//기간 내 마지막 발령일자
+    						memberApList.get(r).put("edate", sEdate);
+    					}else{
+    						memberApList.get(r).put("edate", sApEdate);
+    					}    					
+    					//apMap = memberApList.get(r);    					
+    					//CommonUtils.printMap(apMap);
+    				}
+					//발령 정보를 스케줄러에 넣어준다.
+		    		sqlSession.insert("SuimSchedule.insertSchBonusTeamMemberQuarterBasicList",memberApList);
+		    		
+		    		//발령 처리 한 기존등록된 대상자 정보를 삭제한다.
+	    			sqlSession.delete("SuimSchedule.deleteSchBonusTeamQuarterMemberBySkey", sSkey);	    			
+    			}    			
+    		}
+    		//발령 실적 제외 데이터 를 삭제한다. (실적종료일자가 시작일자 이전 인 경우:퇴사자, 실적 당일 발령자)
+    		sqlSession.delete("SuimSchedule.deleteSchBonusTeamQuarterMemberByReverseDay", sBaseDate);
+    		//직원 발령 처리 끝
+    		
+    		//휴직, 실적 처리 시작
+    		//발령 처리 후 해당 일자의 스케줄러 목록을 불러온다.    		
+    		List<Map<String, Object>> workMemberList = sqlSession.selectList("SuimSchedule.selectSchTeamQuarterMemberListByBaseDate", sBaseDate);
+    		
+    		Map<String, Object> workMap = new HashMap<>();
+    		
+    		double dWorkday = 0;					//근무일
+    		double dWorkdayInterval = 0;		//기준일
+    		int nWorkdayPer = 0;			//근무율 퍼센트    		
+    		int nWorkChk = 0;				//기준일 기간 내 휴직 수
+    		
+    		String workSdate = "";		//휴직 시작일
+        	String workEdate = "";		//휴직 종료일
+        	String calSdate = "";		//계산할 날짜 시작일
+        	String calEdate = "";		//계산할 날짜 종료일
+        	double dCalSum = 0;				//기간에 휴직일 합계값
+        	
+        	String sWorkJob = "";		//목표 기준업무량을 가져오기위한 work_job
+        	String sJobCodeFull = "workload_job_code_"+sBaseYear;
+        	int nTargetCnt = 0;		//연간 목표건수  
+        	double dWorkload_target = 0;			//환산목표건수
+        	double dWorkload_cnt = 0;				//개인 실적건수 (기간별)
+        	double dWorkload_per = 0;				//개인 기준업무량 달성율
+        	String sCalWorkloadSum = "";			//개인 기준업무량 합산값
+        	double workload_cnt_temp = 0;			//개인 기준업무량 음수체크값
+        	
+        	int nBasicAmtSum = 0;		//실적합계 ( 기본료 합계 = 일반보고서 본인담당건 - 공동수행 지급 + 공동 수행 수령 + 농작물 실적)
+        	
+        	for(int i=0; i < workMemberList.size(); i++) {
+    			
+    			sSkey = String.valueOf(workMemberList.get(i).get("skey"));
+    			sUserNo = String.valueOf(workMemberList.get(i).get("user_no"));
+    			sDate = String.valueOf(workMemberList.get(i).get("sdate"));
+    			eDate = String.valueOf(workMemberList.get(i).get("edate"));
+    			
+    			dWorkdayInterval = DateUtil.getDiffDayCountNew(sDate, eDate)+1;				//기준일 (같은날이 0일이므로 1을 더한다)    			
+    			
+    			workMap.put("skey", sSkey);
+    			workMap.put("user_no", sUserNo);
+    			workMap.put("sDate", sDate);
+    			workMap.put("eDate", eDate);
+    			workMap.put("base_year", sBaseYear);
+    			
+    			//휴직일자를 가져온다.
+    			List<Map<String, Object>> workList = sqlSession.selectList("SuimSchedule.SchBonusWorkList", workMap);
+    			
+    			nWorkChk = workList.size();
+    			
+    			if( nWorkChk == 0 ) {					//휴직이 없는 경우(기준일과 근무일이 동일하고 근무율을 100%)
+    				dWorkday = dWorkdayInterval;
+    				nWorkdayPer = 100;
+    			}else{										//기간중 휴직이 있는 경우
+    				
+    				int nChk = 0;
+    				dCalSum = 0;		//휴직일 합계값 초기화
+    				
+    				for( int k=0; k < workList.size(); k++) {
+    					workSdate = String.valueOf(workList.get(k).get("work_sdate"));
+    					workEdate = String.valueOf(workList.get(k).get("work_edate"));
+    					
+    					//휴직 시작일계산
+    					nChk = DateUtil.compareDate(sDate, workSdate);
+    					
+    					if( nChk > 0 ) {					//휴직일자가 실적시작일 이후 인 경우
+    						calSdate = workSdate;
+    					}else{
+    						calSdate = sDate;
+    					}
+    					
+    					//휴직 종료일 계산
+    					nChk = DateUtil.compareDate(eDate, workEdate);
+    					
+    					if( nChk > 0 ) {		//휴직종료날짜가 실적종료일 이후인경우
+    						calEdate = eDate;    						
+    					}else{
+    						calEdate = workEdate;
+    					}
+    					
+    					dCalSum += DateUtil.getDiffDayCountNew(calSdate, calEdate)+1;    					
+    				}
+    				
+    				dWorkday = dWorkdayInterval - dCalSum;			//근무일 (기준근무일 - 휴직일 합계)
+    				
+    				if( dWorkday < 1) {									//근무일이 없는경우
+    					dWorkday = 0;
+    					nWorkdayPer = 0;
+    				}else{
+    					nWorkdayPer = (int) Math.round( dWorkday / dWorkdayInterval * 100 );
+    				}
+    			}
+    			
+    			workMap.put("workday_cnt", (int)dWorkday);
+    			workMap.put("workday_interval", (int)dWorkdayInterval);
+    			workMap.put("workday_per", nWorkdayPer);
+    			
+    			//System.out.println(i + " : "+sSkey+" : "+sUserNo+" : "+dWorkday + " : "+dWorkdayInterval+" : "+nWorkdayPer);
+    			//휴직 처리끝
+    			
+    			//기준업무량 목표건 시작
+    			sWorkJob = String.valueOf(workMemberList.get(i).get("work_job"));
+    			workMap.put("work_job", sWorkJob);
+    			workMap.put("job_code_full", sJobCodeFull);    			
+    			
+    			nTargetCnt = sqlSession.selectOne("SuimSchedule.selectWorkTargetByWorkjob", workMap);
+    			
+    			if( nTargetCnt > 0 && dWorkday > 0 ) {			//연간 목표건수가 있는 경우 일할 계산한다.
+    				//기준업무량 환산용 목표건 설정 yearEa
+    				workMap.put("yearEa", nTargetCnt);
+    				
+    				dWorkload_target = Double.parseDouble(String.valueOf(nTargetCnt));
+    				dWorkload_target = (dWorkload_target * dWorkday) / nYearDays;
+    				dWorkload_target = (Math.round(dWorkload_target * 1000) / 1000.000);
+    			}else{
+    				dWorkload_target = 0;
+    			}    			    			
+    			//기준업무량 목표건 끝
+    			
+    			//기준업무량 실적 시작
+    			//sCalWorkloadSum = sqlSession.selectOne("SuimSchedule.schWorkloadEaAll", workMap);
+    			sCalWorkloadSum = sqlSession.selectOne("SuimSchedule.schWorkloadEaAllQuarter", workMap);
+    			
+    			workload_cnt_temp = Double.parseDouble(sCalWorkloadSum);
+    			
+    			if( workload_cnt_temp < 0 ) {
+    				sCalWorkloadSum = "0";
+    			}
+    			
+    			dWorkload_cnt = Double.parseDouble(sCalWorkloadSum);    			
+    			//기준업무량 실적 끝
+    			
+    			//기준업무량 달성율 시작
+    			if( dWorkload_target > 0 &&  dWorkload_cnt > 0) {			//기준값과 실적값이 존재하는 경우만 계산한다.
+    				dWorkload_per = (dWorkload_cnt * 100) / dWorkload_target;
+    				dWorkload_per = (Math.round(dWorkload_per * 10000) / 10000.0000);		//달성율(소숫점4자리)
+    			}else{
+    				dWorkload_per = 0;
+    			}
+    			//기준업무량 달성율 끝
+    			
+    			workMap.put("workload_target", dWorkload_target);				//기준업무량 목표건
+    			workMap.put("workload_cnt", dWorkload_cnt);						//기준업무량 실적건
+    			workMap.put("workload_per", dWorkload_per);						//기준업무량 달성율
+    			
+    			//특정 기간 기본급 계산 시작 (분기성과는 종료일자까지 포함)
+    			//nBasicAmtSum = sqlSession.selectOne("SuimSchedule.schBonusPayAll", workMap);
+    			nBasicAmtSum = sqlSession.selectOne("SuimSchedule.schBonusPayAllQuarter", workMap);
+    			
+    			workMap.put("bonus_pay", nBasicAmtSum);    			
+    			//특정 기간 기본급 계산 끝
+    			
+    			sqlSession.update("SuimSchedule.updateSchBonusQuarterWorkList", workMap);
+    			
+    		}		
+    		//휴직, 실적 처리 끝    		
+    		
+    	}else{
+    		logger.info("BonusTeamQuarterDaily Duplicated Error : "+sBaseDate);
+    	}
+    	
+    	logger.info("BonusTeamQuarterDaily End : "+sBaseDate);
+		
+	}
+}

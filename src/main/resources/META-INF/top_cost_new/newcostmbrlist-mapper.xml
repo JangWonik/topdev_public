@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NewCostMbrListMapper">
+
+	<select id="getNewCostMbrList" resultType="kr.co.toplac.topindividual.MyCostInsListVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT cost_no
+				,team_id
+				,user_no
+				,cost_occur_date
+				,DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date_fmt
+				,cost_class_no
+				,getCodeValue('top_cost_item','cost_class_no',cost_class_no) cost_class_no_nm
+				,cost_pay_type
+				,getCodeValue('top_cost_item','cost_pay_type',cost_pay_type) cost_pay_type_nm
+				,cost_bill_ea
+				,cost_pay_amt
+				,cost_pay_place
+				,cost_involved_com
+				,cost_involved_man
+				,cost_memo
+				,cost_aprv_state
+				,getCodeValue('top_cost_item','cost_aprv_state',cost_aprv_state) cost_aprv_state_nm
+				,cost_deposit_amt
+		FROM top_cost_item
+		WHERE user_no = #{user_no}
+		AND cost_class_no != '999'
+		AND cost_gubun is null
+		AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+<!-- 		<if test="select_class_no != 0"> -->
+<!-- 			and cost_class_no = #{select_class_no} -->
+<!-- 		</if> -->
+		ORDER BY cost_class_no, cost_occur_date
+	</select>
+	
+	<select id="getMyCostClaimNewList" resultType="kr.co.toplac.topindividual.MyCostInsListVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT cost_no
+				,team_id
+				,user_no
+				,cost_occur_date
+				,DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date_fmt
+				,cost_class_no
+				,getCodeValue('top_cost_item','cost_class_no',cost_class_no) cost_class_no_nm
+				,cost_pay_type
+				,getCodeValue('top_cost_item','cost_pay_type',cost_pay_type) cost_pay_type_nm
+				,cost_bill_ea
+				,cost_pay_amt
+				,cost_pay_place
+				,cost_involved_com
+				,cost_involved_man
+				,cost_memo
+				,cost_aprv_state
+				,getCodeValue('top_cost_item','cost_aprv_state',cost_aprv_state) cost_aprv_state_nm
+				,cost_deposit_amt
+				,cost_suim_accept_no
+				,cost_class_no_claim
+				,cost_distance
+		FROM top_cost_item
+		WHERE user_no = #{user_no}
+		AND cost_class_no = '999'
+		AND cost_occur_date>=UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+		ORDER BY cost_class_no_claim, cost_occur_date
+	</select>
+
+	<select id="getMyCostAddNewList" resultType="kr.co.toplac.topindividual.MyCostInsListVO" parameterType="kr.co.toplac.topindividual.MyCostInsViewVO">
+		SELECT cost_no
+				,team_id
+				,user_no
+				,cost_occur_date
+				,DATE_FORMAT(FROM_UNIXTIME(cost_occur_date), '%Y-%m-%d') cost_occur_date_fmt
+				,DATE_FORMAT(FROM_UNIXTIME(cost_reg_date), '%Y-%m-%d') cost_reg_date_fmt
+				,cost_class_no
+				,getCodeValue('top_cost_item','cost_class_no',cost_class_no) cost_class_no_nm
+				,cost_pay_type
+				,getCodeValue('top_cost_item','cost_pay_type',cost_pay_type) cost_pay_type_nm
+				,cost_bill_ea
+				,cost_pay_amt
+				,cost_pay_place
+				,cost_involved_com
+				,cost_involved_man
+				,cost_memo
+				,cost_aprv_state
+				,getCodeValue('top_cost_item','cost_aprv_state',cost_aprv_state) cost_aprv_state_nm
+				,cost_deposit_amt
+		FROM top_cost_item
+		WHERE user_no = #{user_no}
+		AND cost_gubun = 3
+		AND cost_reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+		ORDER BY cost_class_no, cost_occur_date
+	</select>
+
+	<update id="newCostMbrUdt" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET	cost_occur_date = unix_timestamp(#{cost_occur_date}),
+			cost_class_no = #{cost_class_no},
+			cost_pay_type = #{cost_pay_type},
+			cost_bill_ea = #{cost_bill_ea},
+			cost_pay_amt = #{cost_pay_amt},
+			cost_pay_place = #{cost_pay_place},
+			cost_involved_com = #{cost_involved_com},
+			cost_involved_man = #{cost_involved_man},
+			cost_memo = #{cost_memo},
+			cost_reg_date = unix_timestamp(now()),
+			cost_deposit_amt = #{cost_deposit_amt}
+		WHERE cost_no = #{cost_no}
+	</update>
+	
+	<update id="newCostClaimMbrUdt" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET	cost_occur_date = unix_timestamp(#{cost_occur_date}),
+			cost_class_no_claim = #{cost_class_no_claim},
+			cost_pay_type = #{cost_pay_type},
+			cost_bill_ea = #{cost_bill_ea},
+			cost_pay_amt = #{cost_pay_amt},
+			cost_involved_com = #{cost_involved_com},
+			cost_involved_man = #{cost_involved_man},
+			cost_memo = #{cost_memo},
+			cost_reg_date = unix_timestamp(now()),
+			cost_deposit_amt = #{cost_deposit_amt},
+			cost_suim_accept_no = #{cost_suim_accept_no},
+			cost_distance = #{cost_distance}
+			
+		WHERE cost_no = #{cost_no}
+	</update>
+
+	<update id="newCostAddUdt" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET	cost_occur_date = unix_timestamp(#{cost_occur_date}),
+			cost_class_no = #{cost_class_no},
+			cost_pay_type = #{cost_pay_type},
+			cost_bill_ea = #{cost_bill_ea},
+			cost_pay_amt = #{cost_pay_amt},
+			cost_pay_place = #{cost_pay_place},
+			cost_involved_com = #{cost_involved_com},
+			cost_involved_man = #{cost_involved_man},
+			cost_memo = #{cost_memo},
+			cost_reg_date = unix_timestamp(#{cost_apply_date}),
+			cost_deposit_amt = #{cost_deposit_amt}
+		WHERE cost_no = #{cost_no}
+	</update>
+
+	<update id="newCostTmAprv" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET cost_aprv_state=#{aprvNo}, cost_aprv_user_no = #{loginUserNo}
+		<if test="aprvCode == 'tmAprv'">
+			, cost_deposit_amt = IF(cost_deposit_amt > 0, cost_deposit_amt, cost_pay_amt)
+		</if>
+		<if test="aprvCode == 'tmAprvX'">
+			, cost_deposit_amt = IF(cost_deposit_amt = cost_pay_amt, 0, cost_deposit_amt)
+		</if>
+		WHERE user_no = #{user_no} AND cost_aprv_state=#{stateNo}
+		AND cost_class_no != '999'
+		AND cost_gubun is null
+		AND cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+	</update>
+	
+	<update id="newCostTmAprv2" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET cost_aprv_state=#{aprvNo}, cost_aprv_user_no = #{loginUserNo}
+		<if test="aprvCode == 'tmAprv'">
+			, cost_deposit_amt = IF(cost_deposit_amt > 0, cost_deposit_amt, cost_pay_amt)
+		</if>
+		<if test="aprvCode == 'tmAprvX'">
+			, cost_deposit_amt = IF(cost_deposit_amt = cost_pay_amt, 0, cost_deposit_amt)
+		</if>
+		WHERE user_no = #{user_no} AND cost_aprv_state=#{stateNo}
+		AND cost_class_no = '999'
+		AND cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+	</update>
+
+	<update id="newCostTmAprv3" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		UPDATE top_cost_item
+		SET cost_aprv_state=#{aprvNo}, cost_aprv_user_no = #{loginUserNo}
+		<if test="aprvCode == 'tmAprv'">
+			, cost_deposit_amt = IF(cost_deposit_amt > 0, cost_deposit_amt, cost_pay_amt)
+		</if>
+		<if test="aprvCode == 'tmAprvX'">
+			, cost_deposit_amt = IF(cost_deposit_amt = cost_pay_amt, 0 ,  cost_deposit_amt)
+<!-- 			, cost_deposit_amt = 0 -->
+		</if>
+		WHERE user_no = #{user_no} AND cost_aprv_state=#{stateNo}
+		AND cost_gubun = 3
+		AND cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+		AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+	</update>
+
+</mapper>

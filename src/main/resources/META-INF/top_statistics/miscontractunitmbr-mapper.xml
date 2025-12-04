@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisContractUnitMbrMapper">
+
+	<select id="getMisContractUnitMbr" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisContractVO">
+		      SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, tmMbr.team_name
+         , ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+         , ifnull(end_m_fail,0) end_m_fail, ifnull(end_y_fail,0) end_y_fail
+         , ifnull(end_m,0) + ifnull(end_m_fail,0) end_sum_m, ifnull(end_y,0) + ifnull(end_y_fail,0) end_sum_y
+         , ifnull(end_mi,0) end_mi
+         , ifnull(price_a,0) price_a, ifnull(price_b,0) price_b
+         , ifnull(price_a,0) + ifnull(price_b,0) price_sum
+      FROM
+         (SELECT DISTINCT contract.user_no, mbrBsc.user_name, contract.team_id, tmBsc.team_name
+            FROM top_contract contract, top_mbr_bsc mbrBsc, top_tm_bsc tmBsc
+            WHERE contract.reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+            AND contract.reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+            AND contract.user_no = mbrBsc.user_no AND contract.team_id = tmBsc.team_id
+         ) tmMbr
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_m FROM top_contract
+                  WHERE suim_rpt_state!='3'
+                  and reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+                  and reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+                  GROUP BY user_no) a
+         ON tmMbr.user_no = a.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) reg_y FROM top_contract
+                  WHERE suim_rpt_state!='3'
+                  and reg_date>=UNIX_TIMESTAMP(#{viewFromYear})
+                  and reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+                  GROUP BY user_no) b
+         ON tmMbr.user_no = b.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_m FROM top_contract
+                  WHERE report_1='01'
+                  and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+                  and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+                  GROUP BY user_no) c
+         ON tmMbr.user_no = c.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_y FROM top_contract
+                  WHERE report_1='01'
+                  and close_date>=UNIX_TIMESTAMP(#{viewFromYear})
+                  and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+                  GROUP BY user_no) d
+         ON tmMbr.user_no = d.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_m_fail FROM top_contract
+                  WHERE report_1!='01'
+                  and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+                  and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+                  GROUP BY user_no) e
+         ON tmMbr.user_no = e.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_y_fail FROM top_contract
+                  WHERE report_1!='01'
+                  and close_date>=UNIX_TIMESTAMP(#{viewFromYear})
+                  and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+                  GROUP BY user_no) f
+         ON tmMbr.user_no = f.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) end_mi FROM top_contract
+                  WHERE suim_rpt_state &lt; 2
+                  GROUP BY user_no) g
+         ON tmMbr.user_no = g.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) * 30000 price_a FROM top_contract
+                  WHERE report_1='01' and bd_type='1'
+                  and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+                  and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+                  GROUP BY user_no) h
+         ON tmMbr.user_no = h.user_no
+         LEFT JOIN (SELECT user_no, COUNT(suim_rpt_no) * 40000 price_b FROM top_contract
+                  WHERE report_1='01' and bd_type='2'
+                  and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+                  and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+                  GROUP BY user_no) i
+         ON tmMbr.user_no = i.user_no
+	</select>
+
+</mapper>

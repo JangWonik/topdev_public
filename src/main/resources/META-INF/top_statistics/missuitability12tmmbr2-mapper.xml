@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisSuitability12TmMbr2Mapper">
+
+	<select id="getMisSuitability12TmMbr2" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisSuitability12VO">
+		select 
+		ptnr_id
+		, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+		, policyholder_nm
+		, suim_accept_no
+		, suim_close_no
+		, bd_type
+		, rstPptyNvCpltYn
+		, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date
+		, DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y-%m-%d') close_date
+		from top_suitability_12 
+		where user_no= #{user_no}
+		and close_date >= unix_timestamp(#{viewFromDate})
+		and close_date &lt; unix_timestamp(#{viewToDate}) 
+		order by suim_close_no desc
+	</select>
+
+</mapper>

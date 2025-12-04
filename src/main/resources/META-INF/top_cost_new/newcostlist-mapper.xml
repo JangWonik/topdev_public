@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NewCostListMapper">
+
+	<select id="getNewCostList0" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT team.team_id, team.team_name, team.team_type, tmMbr.userCnt
+				, item.cost_pay_amt, item.cost_deposit_amt, base_item.cost_base_pay_amt, base_item.cost_base_deposit_amt
+				, claim_item.cost_claim_pay_amt, claim_item.cost_claim_deposit_amt
+				, addition_item.cost_addition_pay_amt, addition_item.cost_addition_deposit_amt
+				, deposit.amt_hq_aprv, deposit.amt_finance_aprv, deposit.amt_deposit
+				, helpClient.price_total help_client_price_total, helpAccept.price_total help_accept_price_total
+		FROM 			
+			   (SELECT  team_order, team_id, team_name, team_type, team_level, team_group_order
+			      FROM  top_tm_bsc
+			    WHERE  team_type=0 and team_level = 1
+				ORDER BY team_order DESC, team_id ASC) team
+<!-- 			top_tm_bsc team -->
+		LEFT JOIN (SELECT mbrBsc.team_id_main team_id, count(mbrBsc.user_no) userCnt
+					FROM top_mbr_bsc mbrBsc
+					WHERE ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+							OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+					GROUP BY team_id_main) tmMbr
+		ON team.team_id = tmMbr.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_pay_amt, SUM(cost_deposit_amt) cost_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY team_id) item
+		ON team.team_id = item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_base_pay_amt, SUM(cost_deposit_amt) cost_base_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no != '999'
+					AND cost_gubun is null
+					GROUP BY team_id) base_item
+		ON team.team_id = base_item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_claim_pay_amt, SUM(cost_deposit_amt) cost_claim_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no = '999'
+					GROUP BY team_id) claim_item
+		ON team.team_id = claim_item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_addition_pay_amt, SUM(cost_deposit_amt) cost_addition_deposit_amt
+					FROM top_cost_item
+					WHERE cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_gubun = 3
+					GROUP BY team_id) addition_item
+		ON team.team_id = addition_item.team_id		
+		LEFT JOIN (SELECT team_id, SUM(amt_hq_aprv) amt_hq_aprv, SUM(amt_finance_aprv) amt_finance_aprv
+					, SUM(amt_deposit) amt_deposit
+					FROM top_cost_deposit
+					WHERE date_mbr_ins >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND date_mbr_ins &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY team_id) deposit
+		ON team.team_id = deposit.team_id
+		LEFT JOIN (SELECT client_team team_id, SUM(price_total) price_total
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY client_team) helpClient
+		ON team.team_id = helpClient.team_id
+		LEFT JOIN(SELECT accept_team team_id, sum(price_total) price_total
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY accept_team) helpAccept
+		ON team.team_id = helpAccept.team_id
+<!-- 		WHERE team.team_level != 0 -->
+		ORDER BY team.team_type, team.team_group_order DESC, team.team_order DESC, team.team_level
+	</select>
+	
+	<select id="getNewCostList1" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT team.team_id, team.team_name, team.team_type, tmMbr.userCnt
+				, item.cost_pay_amt, item.cost_deposit_amt, base_item.cost_base_pay_amt, base_item.cost_base_deposit_amt
+				, claim_item.cost_claim_pay_amt, claim_item.cost_claim_deposit_amt
+				, addition_item.cost_addition_pay_amt, addition_item.cost_addition_deposit_amt
+				, deposit.amt_hq_aprv, deposit.amt_finance_aprv, deposit.amt_deposit
+				, helpClient.price_total help_client_price_total, helpAccept.price_total help_accept_price_total
+		FROM 			
+			   (SELECT  team_order, team_id, team_name, team_type, team_level, team_group_order
+			      FROM  top_tm_bsc
+			    WHERE  team_type=1 and team_level != 0
+				ORDER BY team_order DESC, team_id ASC) team
+		LEFT JOIN (SELECT mbrBsc.team_id_main team_id, count(mbrBsc.user_no) userCnt
+					FROM top_mbr_bsc mbrBsc
+					WHERE ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+							OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+					GROUP BY team_id_main) tmMbr
+		ON team.team_id = tmMbr.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_pay_amt, SUM(cost_deposit_amt) cost_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY team_id) item
+		ON team.team_id = item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_base_pay_amt, SUM(cost_deposit_amt) cost_base_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no != '999'
+					AND cost_gubun is null
+					GROUP BY team_id) base_item
+		ON team.team_id = base_item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_claim_pay_amt, SUM(cost_deposit_amt) cost_claim_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no = '999'
+					GROUP BY team_id) claim_item
+		ON team.team_id = claim_item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_addition_pay_amt, SUM(cost_deposit_amt) cost_addition_deposit_amt
+					FROM top_cost_item
+					WHERE cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_gubun = 3
+					GROUP BY team_id) addition_item
+		ON team.team_id = addition_item.team_id		
+		LEFT JOIN (SELECT team_id, SUM(amt_hq_aprv) amt_hq_aprv, SUM(amt_finance_aprv) amt_finance_aprv
+					, SUM(amt_deposit) amt_deposit
+					FROM top_cost_deposit
+					WHERE date_mbr_ins >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND date_mbr_ins &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY team_id) deposit
+		ON team.team_id = deposit.team_id
+		LEFT JOIN (SELECT client_team team_id, SUM(price_total) price_total
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY client_team) helpClient
+		ON team.team_id = helpClient.team_id
+		LEFT JOIN(SELECT accept_team team_id, sum(price_total) price_total
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY accept_team) helpAccept
+		ON team.team_id = helpAccept.team_id
+<!-- 		WHERE team.team_level != 0 -->
+		ORDER BY team.team_type, team.team_group_order DESC, team.team_order DESC, team.team_level
+	</select>
+	
+	<select id="getNewCostList4" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+		SELECT team.team_id, team.team_name, team.team_type, tmMbr.userCnt
+				, item.cost_pay_amt, item.cost_deposit_amt, base_item.cost_base_pay_amt, base_item.cost_base_deposit_amt
+				, claim_item.cost_claim_pay_amt, claim_item.cost_claim_deposit_amt
+				, addition_item.cost_addition_pay_amt, addition_item.cost_addition_deposit_amt
+				, deposit.amt_hq_aprv, deposit.amt_finance_aprv, deposit.amt_deposit
+				, helpClient.price_total help_client_price_total, helpAccept.price_total help_accept_price_total
+		FROM 			
+			   (SELECT  team_order, team_id, team_name, team_type, team_level, team_group_order
+			      FROM  top_tm_bsc
+			    WHERE  team_type=4 and team_level != 0
+				ORDER BY team_order DESC, team_id ASC) team
+		LEFT JOIN (SELECT mbrBsc.team_id_main team_id, count(mbrBsc.user_no) userCnt
+					FROM top_mbr_bsc mbrBsc
+					WHERE ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+							OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+					GROUP BY team_id_main) tmMbr
+		ON team.team_id = tmMbr.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_pay_amt, SUM(cost_deposit_amt) cost_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY team_id) item
+		ON team.team_id = item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_base_pay_amt, SUM(cost_deposit_amt) cost_base_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no != '999'
+					AND cost_gubun is null
+					GROUP BY team_id) base_item
+		ON team.team_id = base_item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_claim_pay_amt, SUM(cost_deposit_amt) cost_claim_deposit_amt
+					FROM top_cost_item
+					WHERE cost_occur_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_occur_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_class_no = '999'
+					GROUP BY team_id) claim_item
+		ON team.team_id = claim_item.team_id
+		LEFT JOIN (SELECT team_id, SUM(cost_pay_amt) cost_addition_pay_amt, SUM(cost_deposit_amt) cost_addition_deposit_amt
+					FROM top_cost_item
+					WHERE cost_reg_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND cost_reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					AND cost_gubun = 3
+					GROUP BY team_id) addition_item
+		ON team.team_id = addition_item.team_id		
+		LEFT JOIN (SELECT team_id, SUM(amt_hq_aprv) amt_hq_aprv, SUM(amt_finance_aprv) amt_finance_aprv
+					, SUM(amt_deposit) amt_deposit
+					FROM top_cost_deposit
+					WHERE date_mbr_ins >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND date_mbr_ins &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY team_id) deposit
+		ON team.team_id = deposit.team_id
+		LEFT JOIN (SELECT client_team team_id, SUM(price_total) price_total
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY client_team) helpClient
+		ON team.team_id = helpClient.team_id
+		LEFT JOIN(SELECT accept_team team_id, sum(price_total) price_total
+					FROM top_rpt_help
+					WHERE end_date >= UNIX_TIMESTAMP(#{viewFromDate})
+					AND end_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+					GROUP BY accept_team) helpAccept
+		ON team.team_id = helpAccept.team_id
+<!-- 		WHERE team.team_level != 0 -->
+		ORDER BY team.team_type, team.team_group_order DESC, team.team_order DESC, team.team_level
+	</select>
+	
+	<select id="getMbrList" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+ 		SELECT a.user_no
+ 			  ,a.user_name
+ 			  ,b.team_name
+ 			  ,b.team_id
+		  FROM top_mbr_bsc a
+		 INNER JOIN top_tm_bsc b
+		    ON a.team_id_loc = b.team_id
+		 WHERE user_state != 1
+			<if test="user_no != '' and user_no != null">
+				AND  a.user_no = ${user_no}
+			</if>
+		 ORDER BY b.team_group_order DESC, b.team_order DESC, a.WORK_TYPE ASC, a.WORK_LEVEL DESC, a.USER_NO ASC
+	</select>
+
+	
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TopLogInLog">
+
+	<select id="getLogInLogList" resultType="kr.co.toplac.toplogin.TopLogInLogCompositeVO" parameterType="java.util.HashMap">
+		SELECT a.serial_no, a.user_no, a.ip_addr
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date
+			, b.user_id, b.user_name
+		FROM top_login_log a , top_mbr_bsc b
+		WHERE 1 = 1
+		<if test="mbrNo != null and mbrNo != ''">
+			AND a.user_no = #{mbrNo}
+		</if>
+		AND a.user_no = b.user_no
+		ORDER BY a.serial_no DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="getLogInLogListCnt" resultType="int" parameterType="kr.co.toplac.toplogin.TopLogInLogCompositeVO">
+		SELECT count(a.serial_no) cnt
+		FROM top_login_log a , top_mbr_bsc b
+		WHERE 1 = 1
+		<if test="mbrNo != null and mbrNo != ''">
+			AND a.user_no = #{mbrNo}
+		</if>
+		AND a.user_no = b.user_no
+	</select>
+
+	<select id="getLogInLogListExcel" resultType="kr.co.toplac.toplogin.TopLogInLogCompositeVO" parameterType="java.util.HashMap">
+		SELECT a.serial_no, a.user_no, a.ip_addr
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date
+			, b.user_id, b.user_name
+		FROM top_login_log a , top_mbr_bsc b
+		WHERE 1 = 1
+		<if test="mbrNo != null and mbrNo != ''">
+			AND a.user_no = #{mbrNo}
+		</if>
+		AND a.user_no = b.user_no
+		ORDER BY a.serial_no DESC
+	</select>
+
+
+	<select id="getDupLogInLogList" resultType="kr.co.toplac.toplogin.TopLogInLogCompositeVO">
+		SELECT
+		a.user_no, b.user_name ,a.ip_addr, b.user_id, a.login_state, 
+		DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date 
+		FROM top_login_dup a , top_mbr_bsc b  
+		WHERE a.user_no = b.user_no
+
+	</select>
+
+
+
+	<select id="getDupLogInLogListCnt" resultType="int" parameterType="kr.co.toplac.toplogin.TopLogInLogCompositeVO">
+		SELECT count(a.user_no) cnt
+		FROM top_login_dup a , top_mbr_bsc b
+		WHERE 1 = 1
+		<if test="mbrNo != null and mbrNo != ''">
+			AND a.user_no = #{mbrNo}
+		</if>
+		AND a.user_no = b.user_no
+	</select>
+
+
+
+	<select id="getDupLoginSearchByUserName" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="java.util.HashMap">
+	SELECT @RN:=@RN+1 AS ROWNUM, TB.*
+	FROM(  
+	 SELECT a.user_no, b.user_name ,a.ip_addr, b.user_id, a.login_state, c.team_name, 
+		  DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date,
+		            getCodeValue('top_mbr_bsc','work_type',b.work_type) work_type,
+		              getCodeValue('top_mbr_bsc','work_level',b.work_level) work_level,
+		              getCodeValue('top_mbr_bsc','user_state',b.user_state) user_state
+		      FROM top_login_dup a , top_mbr_bsc b  ,  top_tm_bsc c
+				WHERE 1=1 
+				  AND		a.user_no = b.user_no AND 	b.team_id_loc = c.team_id
+				  
+						<if test="searchStr != null and searchStr != ''">
+							AND b.user_name = #{searchStr}
+						</if>
+			)AS TB,
+						(SELECT @RN:=0) AS R
+						ORDER BY rownum DESC
+
+	</select>
+
+
+
+
+</mapper>

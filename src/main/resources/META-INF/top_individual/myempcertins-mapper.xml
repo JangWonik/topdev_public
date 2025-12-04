@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="MyEmpCertIns">
+	
+	<select id="getMyInfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+	
+		SELECT
+			a.user_no,
+			a.user_name,
+			a.home_address,
+			a.team_id_loc,
+			b.team_name,
+			a.work_level work_level_cd,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+			a.user_no = #{user_no} and
+			a.team_id_loc = b.team_id
+			
+	</select>
+	
+	<insert id = "insNewCert" parameterType="kr.co.toplac.topteam.TopCertVO" >
+	
+		INSERT INTO
+			top_emp_cert
+		(
+			user_no, team_id_loc, work_level, issue_reason, issue_state, expiry_date, reg_date 
+		)
+		VALUES
+		(
+			#{user_no}, #{team_id_loc}, #{work_level}, #{issue_reason}, 0, unix_timestamp(#{expiry_date}), unix_timestamp(now())
+		)
+	
+	</insert>
+	
+	
+	
+</mapper>

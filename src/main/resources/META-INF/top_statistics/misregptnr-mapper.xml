@@ -1,0 +1,3335 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisRegPtnrMapper">
+
+	<!-- 물보험 조사 통계 별도 분리 -->
+	<select id="MisRegPtnr1Main" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT tmPtnr.ptnr_id, tmPtnr.ptnr_nick
+			  ,(IFNULL(reg_12,0) + IFNULL(prim_reg_12,0)) AS reg_12			  
+			  ,(IFNULL(reg_11,0) + IFNULL(prim_reg_11,0)) AS reg_11
+			  ,(IFNULL(reg_10,0) + IFNULL(prim_reg_10,0)) AS reg_10
+			  ,(IFNULL(reg_9,0) + IFNULL(prim_reg_9,0)) AS reg_9
+			  ,(IFNULL(reg_8,0) + IFNULL(prim_reg_8,0)) AS reg_8
+			  ,(IFNULL(reg_7,0) + IFNULL(prim_reg_7,0)) AS reg_7
+			  ,(IFNULL(reg_6,0) + IFNULL(prim_reg_6,0)) AS reg_6
+			  ,(IFNULL(reg_5,0) + IFNULL(prim_reg_5,0)) AS reg_5
+			  ,(IFNULL(reg_4,0) + IFNULL(prim_reg_4,0)) AS reg_4
+			  ,(IFNULL(reg_3,0) + IFNULL(prim_reg_3,0)) AS reg_3
+			  ,(IFNULL(reg_2,0) + IFNULL(prim_reg_2,0)) AS reg_2
+			  ,(IFNULL(reg_1,0) + IFNULL(prim_reg_1,0)) AS reg_1
+			  ,(IFNULL(cls_12,0) + IFNULL(prim_cls_12,0)) AS cls_12
+			  ,(IFNULL(cls_11,0) + IFNULL(prim_cls_11,0)) AS cls_11
+			  ,(IFNULL(cls_10,0) + IFNULL(prim_cls_10,0)) AS cls_10
+			  ,(IFNULL(cls_9,0) + IFNULL(prim_cls_9,0)) AS cls_9
+			  ,(IFNULL(cls_8,0) + IFNULL(prim_cls_8,0)) AS cls_8
+			  ,(IFNULL(cls_7,0) + IFNULL(prim_cls_7,0)) AS cls_7
+			  ,(IFNULL(cls_6,0) + IFNULL(prim_cls_6,0)) AS cls_6
+			  ,(IFNULL(cls_5,0) + IFNULL(prim_cls_5,0)) AS cls_5
+			  ,(IFNULL(cls_4,0) + IFNULL(prim_cls_4,0)) AS cls_4
+			  ,(IFNULL(cls_3,0) + IFNULL(prim_cls_3,0)) AS cls_3
+			  ,(IFNULL(cls_2,0) + IFNULL(prim_cls_2,0)) AS cls_2
+			  ,(IFNULL(cls_1,0) + IFNULL(prim_cls_1,0)) AS cls_1
+		  FROM
+			( SELECT ptnr_id, ptnr_nick 
+			    FROM top_ptnr_bsc 
+			   WHERE ptnr_level='1' AND statistics_yn='1' 
+			   ORDER BY statistics_order ASC, ptnr_order DESC, ptnr_id ASC) tmPtnr
+				<choose>
+					<when test='basicYN == "Y"'>
+						<!-- 일반 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg12 ON tmPtnr.ptnr_id = reg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg11 ON tmPtnr.ptnr_id = reg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg10 ON tmPtnr.ptnr_id = reg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg9 ON tmPtnr.ptnr_id = reg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg8 ON tmPtnr.ptnr_id = reg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg7 ON tmPtnr.ptnr_id = reg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg6 ON tmPtnr.ptnr_id = reg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg5 ON tmPtnr.ptnr_id = reg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg4 ON tmPtnr.ptnr_id = reg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg3 ON tmPtnr.ptnr_id = reg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg2 ON tmPtnr.ptnr_id = reg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg1 ON tmPtnr.ptnr_id = reg1.ptnr_id							  
+						<!-- 일반 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls12 ON tmPtnr.ptnr_id = cls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls11 ON tmPtnr.ptnr_id = cls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls10 ON tmPtnr.ptnr_id = cls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls9 ON tmPtnr.ptnr_id = cls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls8 ON tmPtnr.ptnr_id = cls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls7 ON tmPtnr.ptnr_id = cls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls6 ON tmPtnr.ptnr_id = cls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls5 ON tmPtnr.ptnr_id = cls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls4 ON tmPtnr.ptnr_id = cls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls3 ON tmPtnr.ptnr_id = cls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls2 ON tmPtnr.ptnr_id = cls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(1, 2, 11, 12, 13)
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls1 ON tmPtnr.ptnr_id = cls1.ptnr_id							
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS reg_12 ,0 AS reg_11 ,0 AS reg_10,0 AS reg_9 ,0 AS reg_8 ,0 AS reg_7 
+										   ,0 AS reg_6  ,0 AS reg_5  ,0 AS reg_4 ,0 AS reg_3 ,0 AS reg_2 ,0 AS reg_1
+				 						   ,0 AS cls_12 ,0 AS cls_11 ,0 AS cls_10 ,0 AS cls_9 ,0 AS cls_8 ,0 AS cls_7 
+				 						   ,0 AS cls_6  ,0 AS cls_5  ,0 AS cls_4  ,0 AS cls_3 ,0 AS cls_2 ,0 AS cls_1
+									   FROM DUAL) non On tmPtnr.ptnr_id = non.ptnr_id					
+					</otherwise>
+				</choose>
+				<choose>
+					<when test='primYN == "Y"'>
+						<!-- 농작물 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg12 ON tmPtnr.ptnr_id = primReg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg11 ON tmPtnr.ptnr_id = primReg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg10 ON tmPtnr.ptnr_id = primReg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg9 ON tmPtnr.ptnr_id = primReg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg8 ON tmPtnr.ptnr_id = primReg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg7 ON tmPtnr.ptnr_id = primReg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg6 ON tmPtnr.ptnr_id = primReg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg5 ON tmPtnr.ptnr_id = primReg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg4 ON tmPtnr.ptnr_id = primReg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg3 ON tmPtnr.ptnr_id = primReg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg2 ON tmPtnr.ptnr_id = primReg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg1 ON tmPtnr.ptnr_id = primReg1.ptnr_id
+									  							  
+						<!-- 농작물 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls12 ON tmPtnr.ptnr_id = primCls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls11 ON tmPtnr.ptnr_id = primCls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls10 ON tmPtnr.ptnr_id = primCls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls9 ON tmPtnr.ptnr_id = primCls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls8 ON tmPtnr.ptnr_id = primCls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls7 ON tmPtnr.ptnr_id = primCls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls6 ON tmPtnr.ptnr_id = primCls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls5 ON tmPtnr.ptnr_id = primCls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls4 ON tmPtnr.ptnr_id = primCls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls3 ON tmPtnr.ptnr_id = primCls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls2 ON tmPtnr.ptnr_id = primCls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls1 ON tmPtnr.ptnr_id = primCls1.ptnr_id					
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS prim_reg_12 ,0 AS prim_reg_11 ,0 AS prim_reg_10 ,0 AS prim_reg_9 ,0 AS prim_reg_8 ,0 AS prim_reg_7 
+										   ,0 AS prim_reg_6  ,0 AS prim_reg_5  ,0 AS prim_reg_4  ,0 AS prim_reg_3 ,0 AS prim_reg_2 ,0 AS prim_reg_1
+				 						   ,0 AS prim_cls_12 ,0 AS prim_cls_11 ,0 AS prim_cls_10 ,0 AS prim_cls_9 ,0 AS prim_cls_8 ,0 AS prim_cls_7 
+				 						   ,0 AS prim_cls_6  ,0 AS prim_cls_5  ,0 AS prim_cls_4  ,0 AS prim_cls_3 ,0 AS prim_cls_2 ,0 AS prim_cls_1
+									   FROM DUAL) primNon On tmPtnr.ptnr_id = primNon.ptnr_id					
+					</otherwise>
+				</choose>
+	</select>
+	
+	<!-- 물보험 심사 별도 등록 데이터 가져오기 -->
+	<select id="MisRegPtnr1WrittenExtra" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT
+			IFNULL(SUM(GA.reg_12),0) AS reg_12
+			,IFNULL(SUM(GA.cls_12),0) AS cls_12
+			,IFNULL(SUM(GA.reg_11),0) AS reg_11
+			,IFNULL(SUM(GA.cls_11),0) AS cls_11
+			,IFNULL(SUM(GA.reg_10),0) AS reg_10
+			,IFNULL(SUM(GA.cls_10),0) AS cls_10
+			,IFNULL(SUM(GA.reg_9),0) AS reg_9
+			,IFNULL(SUM(GA.cls_9),0) AS cls_9
+			,IFNULL(SUM(GA.reg_8),0) AS reg_8
+			,IFNULL(SUM(GA.cls_8),0) AS cls_8
+			,IFNULL(SUM(GA.reg_7),0) AS reg_7
+			,IFNULL(SUM(GA.cls_7),0) AS cls_7
+			,IFNULL(SUM(GA.reg_6),0) AS reg_6
+			,IFNULL(SUM(GA.cls_6),0) AS cls_6
+			,IFNULL(SUM(GA.reg_5),0) AS reg_5
+			,IFNULL(SUM(GA.cls_5),0) AS cls_5
+			,IFNULL(SUM(GA.reg_4),0) AS reg_4
+			,IFNULL(SUM(GA.cls_4),0) AS cls_4
+			,IFNULL(SUM(GA.reg_3),0) AS reg_3
+			,IFNULL(SUM(GA.cls_3),0) AS cls_3
+			,IFNULL(SUM(GA.reg_2),0) AS reg_2
+			,IFNULL(SUM(GA.cls_2),0) AS cls_2
+			,IFNULL(SUM(GA.reg_1),0) AS reg_1
+			,IFNULL(SUM(GA.cls_1),0) AS cls_1			
+		FROM(
+			SELECT		
+				IFNULL(SUM(suim_cnt),0) AS reg_12
+				,IFNULL(SUM(end_cnt),0) AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore12}
+			AND base_date &lt; #{monBefore11}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,IFNULL(SUM(suim_cnt),0) AS reg_11
+				,IFNULL(SUM(end_cnt),0) AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore11}
+			AND base_date &lt; #{monBefore10}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,IFNULL(SUM(suim_cnt),0) AS reg_10
+				,IFNULL(SUM(end_cnt),0) AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore10}
+			AND base_date &lt; #{monBefore9}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,IFNULL(SUM(suim_cnt),0) AS reg_9
+				,IFNULL(SUM(end_cnt),0) AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore9}
+			AND base_date &lt; #{monBefore8}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,IFNULL(SUM(suim_cnt),0) AS reg_8
+				,IFNULL(SUM(end_cnt),0) AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore8}
+			AND base_date &lt; #{monBefore7}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,IFNULL(SUM(suim_cnt),0) AS reg_7
+				,IFNULL(SUM(end_cnt),0) AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore7}
+			AND base_date &lt; #{monBefore6}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,IFNULL(SUM(suim_cnt),0) AS reg_6
+				,IFNULL(SUM(end_cnt),0) AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore6}
+			AND base_date &lt; #{monBefore5}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,IFNULL(SUM(suim_cnt),0) AS reg_5
+				,IFNULL(SUM(end_cnt),0) AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore5}
+			AND base_date &lt; #{monBefore4}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,IFNULL(SUM(suim_cnt),0) AS reg_4
+				,IFNULL(SUM(end_cnt),0) AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore4}
+			AND base_date &lt; #{monBefore3}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,IFNULL(SUM(suim_cnt),0) AS reg_3
+				,IFNULL(SUM(end_cnt),0) AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore3}
+			AND base_date &lt; #{monBefore2}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,IFNULL(SUM(suim_cnt),0) AS reg_2
+				,IFNULL(SUM(end_cnt),0) AS cls_2
+				,0 AS reg_1
+				,0 AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore2}
+			AND base_date &lt; #{monBefore1}
+			AND ptnr_id = #{ptnr_id}
+			
+			UNION ALL
+			
+			SELECT		
+				0 AS reg_12
+				,0 AS cls_12
+				,0 AS reg_11
+				,0 AS cls_11
+				,0 AS reg_10
+				,0 AS cls_10
+				,0 AS reg_9
+				,0 AS cls_9
+				,0 AS reg_8
+				,0 AS cls_8
+				,0 AS reg_7
+				,0 AS cls_7
+				,0 AS reg_6
+				,0 AS cls_6
+				,0 AS reg_5
+				,0 AS cls_5
+				,0 AS reg_4
+				,0 AS cls_4
+				,0 AS reg_3
+				,0 AS cls_3
+				,0 AS reg_2
+				,0 AS cls_2
+				,IFNULL(SUM(suim_cnt),0) AS reg_1
+				,IFNULL(SUM(end_cnt),0) AS cls_1
+			FROM top_rpt_written_info
+			WHERE 1=1						
+			AND base_date >= #{monBefore1}
+			AND base_date &lt; #{monBefore0}
+			AND ptnr_id = #{ptnr_id}			
+			
+		)GA
+	</select>
+	
+	<!-- 물보험 심사 통계 별도 분리 -->
+	<select id="MisRegPtnr1Written" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT tmPtnr.ptnr_id, tmPtnr.ptnr_nick
+			  ,(IFNULL(reg_12,0) + IFNULL(prim_reg_12,0)) AS reg_12			  
+			  ,(IFNULL(reg_11,0) + IFNULL(prim_reg_11,0)) AS reg_11
+			  ,(IFNULL(reg_10,0) + IFNULL(prim_reg_10,0)) AS reg_10
+			  ,(IFNULL(reg_9,0) + IFNULL(prim_reg_9,0)) AS reg_9
+			  ,(IFNULL(reg_8,0) + IFNULL(prim_reg_8,0)) AS reg_8
+			  ,(IFNULL(reg_7,0) + IFNULL(prim_reg_7,0)) AS reg_7
+			  ,(IFNULL(reg_6,0) + IFNULL(prim_reg_6,0)) AS reg_6
+			  ,(IFNULL(reg_5,0) + IFNULL(prim_reg_5,0)) AS reg_5
+			  ,(IFNULL(reg_4,0) + IFNULL(prim_reg_4,0)) AS reg_4
+			  ,(IFNULL(reg_3,0) + IFNULL(prim_reg_3,0)) AS reg_3
+			  ,(IFNULL(reg_2,0) + IFNULL(prim_reg_2,0)) AS reg_2
+			  ,(IFNULL(reg_1,0) + IFNULL(prim_reg_1,0)) AS reg_1
+			  ,(IFNULL(cls_12,0) + IFNULL(prim_cls_12,0)) AS cls_12
+			  ,(IFNULL(cls_11,0) + IFNULL(prim_cls_11,0)) AS cls_11
+			  ,(IFNULL(cls_10,0) + IFNULL(prim_cls_10,0)) AS cls_10
+			  ,(IFNULL(cls_9,0) + IFNULL(prim_cls_9,0)) AS cls_9
+			  ,(IFNULL(cls_8,0) + IFNULL(prim_cls_8,0)) AS cls_8
+			  ,(IFNULL(cls_7,0) + IFNULL(prim_cls_7,0)) AS cls_7
+			  ,(IFNULL(cls_6,0) + IFNULL(prim_cls_6,0)) AS cls_6
+			  ,(IFNULL(cls_5,0) + IFNULL(prim_cls_5,0)) AS cls_5
+			  ,(IFNULL(cls_4,0) + IFNULL(prim_cls_4,0)) AS cls_4
+			  ,(IFNULL(cls_3,0) + IFNULL(prim_cls_3,0)) AS cls_3
+			  ,(IFNULL(cls_2,0) + IFNULL(prim_cls_2,0)) AS cls_2
+			  ,(IFNULL(cls_1,0) + IFNULL(prim_cls_1,0)) AS cls_1
+		  FROM
+			( SELECT ptnr_id, ptnr_nick 
+			    FROM top_ptnr_bsc 
+			   WHERE ptnr_level='1' AND statistics_yn='1' AND statistics_written_yn = '1' 
+			   ORDER BY statistics_order ASC, ptnr_order DESC, ptnr_id ASC) tmPtnr
+				<choose>
+					<when test='basicYN == "Y"'>
+						<!-- 일반 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg12 ON tmPtnr.ptnr_id = reg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg11 ON tmPtnr.ptnr_id = reg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg10 ON tmPtnr.ptnr_id = reg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg9 ON tmPtnr.ptnr_id = reg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg8 ON tmPtnr.ptnr_id = reg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg7 ON tmPtnr.ptnr_id = reg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg6 ON tmPtnr.ptnr_id = reg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg5 ON tmPtnr.ptnr_id = reg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg4 ON tmPtnr.ptnr_id = reg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg3 ON tmPtnr.ptnr_id = reg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg2 ON tmPtnr.ptnr_id = reg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg1 ON tmPtnr.ptnr_id = reg1.ptnr_id							  
+						<!-- 일반 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls12 ON tmPtnr.ptnr_id = cls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls11 ON tmPtnr.ptnr_id = cls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls10 ON tmPtnr.ptnr_id = cls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls9 ON tmPtnr.ptnr_id = cls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls8 ON tmPtnr.ptnr_id = cls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls7 ON tmPtnr.ptnr_id = cls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls6 ON tmPtnr.ptnr_id = cls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls5 ON tmPtnr.ptnr_id = cls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls4 ON tmPtnr.ptnr_id = cls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls3 ON tmPtnr.ptnr_id = cls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls2 ON tmPtnr.ptnr_id = cls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN(14, 15 ,16, 17, 18, 19)
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls1 ON tmPtnr.ptnr_id = cls1.ptnr_id							
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS reg_12 ,0 AS reg_11 ,0 AS reg_10,0 AS reg_9 ,0 AS reg_8 ,0 AS reg_7 
+										   ,0 AS reg_6  ,0 AS reg_5  ,0 AS reg_4 ,0 AS reg_3 ,0 AS reg_2 ,0 AS reg_1
+				 						   ,0 AS cls_12 ,0 AS cls_11 ,0 AS cls_10 ,0 AS cls_9 ,0 AS cls_8 ,0 AS cls_7 
+				 						   ,0 AS cls_6  ,0 AS cls_5  ,0 AS cls_4  ,0 AS cls_3 ,0 AS cls_2 ,0 AS cls_1
+									   FROM DUAL) non On tmPtnr.ptnr_id = non.ptnr_id					
+					</otherwise>
+				</choose>
+				<choose>
+					<when test='primYN == "Y"'>
+						<!-- 농작물 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg12 ON tmPtnr.ptnr_id = primReg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg11 ON tmPtnr.ptnr_id = primReg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg10 ON tmPtnr.ptnr_id = primReg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg9 ON tmPtnr.ptnr_id = primReg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg8 ON tmPtnr.ptnr_id = primReg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg7 ON tmPtnr.ptnr_id = primReg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg6 ON tmPtnr.ptnr_id = primReg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg5 ON tmPtnr.ptnr_id = primReg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg4 ON tmPtnr.ptnr_id = primReg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg3 ON tmPtnr.ptnr_id = primReg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg2 ON tmPtnr.ptnr_id = primReg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg1 ON tmPtnr.ptnr_id = primReg1.ptnr_id
+									  							  
+						<!-- 농작물 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls12 ON tmPtnr.ptnr_id = primCls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls11 ON tmPtnr.ptnr_id = primCls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls10 ON tmPtnr.ptnr_id = primCls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls9 ON tmPtnr.ptnr_id = primCls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls8 ON tmPtnr.ptnr_id = primCls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls7 ON tmPtnr.ptnr_id = primCls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls6 ON tmPtnr.ptnr_id = primCls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls5 ON tmPtnr.ptnr_id = primCls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls4 ON tmPtnr.ptnr_id = primCls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls3 ON tmPtnr.ptnr_id = primCls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls2 ON tmPtnr.ptnr_id = primCls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls1 ON tmPtnr.ptnr_id = primCls1.ptnr_id					
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS prim_reg_12 ,0 AS prim_reg_11 ,0 AS prim_reg_10 ,0 AS prim_reg_9 ,0 AS prim_reg_8 ,0 AS prim_reg_7 
+										   ,0 AS prim_reg_6  ,0 AS prim_reg_5  ,0 AS prim_reg_4  ,0 AS prim_reg_3 ,0 AS prim_reg_2 ,0 AS prim_reg_1
+				 						   ,0 AS prim_cls_12 ,0 AS prim_cls_11 ,0 AS prim_cls_10 ,0 AS prim_cls_9 ,0 AS prim_cls_8 ,0 AS prim_cls_7 
+				 						   ,0 AS prim_cls_6  ,0 AS prim_cls_5  ,0 AS prim_cls_4  ,0 AS prim_cls_3 ,0 AS prim_cls_2 ,0 AS prim_cls_1
+									   FROM DUAL) primNon On tmPtnr.ptnr_id = primNon.ptnr_id					
+					</otherwise>
+				</choose>
+	</select>
+
+	<select id="MisRegPtnr1" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT tmPtnr.ptnr_id, tmPtnr.ptnr_nick
+			  ,(IFNULL(reg_12,0) + IFNULL(prim_reg_12,0)) AS reg_12			  
+			  ,(IFNULL(reg_11,0) + IFNULL(prim_reg_11,0)) AS reg_11
+			  ,(IFNULL(reg_10,0) + IFNULL(prim_reg_10,0)) AS reg_10
+			  ,(IFNULL(reg_9,0) + IFNULL(prim_reg_9,0)) AS reg_9
+			  ,(IFNULL(reg_8,0) + IFNULL(prim_reg_8,0)) AS reg_8
+			  ,(IFNULL(reg_7,0) + IFNULL(prim_reg_7,0)) AS reg_7
+			  ,(IFNULL(reg_6,0) + IFNULL(prim_reg_6,0)) AS reg_6
+			  ,(IFNULL(reg_5,0) + IFNULL(prim_reg_5,0)) AS reg_5
+			  ,(IFNULL(reg_4,0) + IFNULL(prim_reg_4,0)) AS reg_4
+			  ,(IFNULL(reg_3,0) + IFNULL(prim_reg_3,0)) AS reg_3
+			  ,(IFNULL(reg_2,0) + IFNULL(prim_reg_2,0)) AS reg_2
+			  ,(IFNULL(reg_1,0) + IFNULL(prim_reg_1,0)) AS reg_1
+			  ,(IFNULL(cls_12,0) + IFNULL(prim_cls_12,0)) AS cls_12
+			  ,(IFNULL(cls_11,0) + IFNULL(prim_cls_11,0)) AS cls_11
+			  ,(IFNULL(cls_10,0) + IFNULL(prim_cls_10,0)) AS cls_10
+			  ,(IFNULL(cls_9,0) + IFNULL(prim_cls_9,0)) AS cls_9
+			  ,(IFNULL(cls_8,0) + IFNULL(prim_cls_8,0)) AS cls_8
+			  ,(IFNULL(cls_7,0) + IFNULL(prim_cls_7,0)) AS cls_7
+			  ,(IFNULL(cls_6,0) + IFNULL(prim_cls_6,0)) AS cls_6
+			  ,(IFNULL(cls_5,0) + IFNULL(prim_cls_5,0)) AS cls_5
+			  ,(IFNULL(cls_4,0) + IFNULL(prim_cls_4,0)) AS cls_4
+			  ,(IFNULL(cls_3,0) + IFNULL(prim_cls_3,0)) AS cls_3
+			  ,(IFNULL(cls_2,0) + IFNULL(prim_cls_2,0)) AS cls_2
+			  ,(IFNULL(cls_1,0) + IFNULL(prim_cls_1,0)) AS cls_1
+		  FROM
+			( SELECT ptnr_id, ptnr_nick 
+			    FROM top_ptnr_bsc 
+			   WHERE ptnr_level='1' AND statistics_yn='1' 
+			   ORDER BY ptnr_order DESC, ptnr_id ASC) tmPtnr
+				<choose>
+					<when test='basicYN == "Y"'>
+						<!-- 일반 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg12 ON tmPtnr.ptnr_id = reg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg11 ON tmPtnr.ptnr_id = reg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg10 ON tmPtnr.ptnr_id = reg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg9 ON tmPtnr.ptnr_id = reg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg8 ON tmPtnr.ptnr_id = reg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg7 ON tmPtnr.ptnr_id = reg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg6 ON tmPtnr.ptnr_id = reg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg5 ON tmPtnr.ptnr_id = reg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg4 ON tmPtnr.ptnr_id = reg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg3 ON tmPtnr.ptnr_id = reg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg2 ON tmPtnr.ptnr_id = reg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) reg1 ON tmPtnr.ptnr_id = reg1.ptnr_id							  
+						<!-- 일반 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls12 ON tmPtnr.ptnr_id = cls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls11 ON tmPtnr.ptnr_id = cls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls10 ON tmPtnr.ptnr_id = cls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls9 ON tmPtnr.ptnr_id = cls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls8 ON tmPtnr.ptnr_id = cls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls7 ON tmPtnr.ptnr_id = cls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls6 ON tmPtnr.ptnr_id = cls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls5 ON tmPtnr.ptnr_id = cls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls4 ON tmPtnr.ptnr_id = cls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls3 ON tmPtnr.ptnr_id = cls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls2 ON tmPtnr.ptnr_id = cls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 NOT IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) cls1 ON tmPtnr.ptnr_id = cls1.ptnr_id							
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS reg_12 ,0 AS reg_11 ,0 AS reg_10,0 AS reg_9 ,0 AS reg_8 ,0 AS reg_7 
+										   ,0 AS reg_6  ,0 AS reg_5  ,0 AS reg_4 ,0 AS reg_3 ,0 AS reg_2 ,0 AS reg_1
+				 						   ,0 AS cls_12 ,0 AS cls_11 ,0 AS cls_10 ,0 AS cls_9 ,0 AS cls_8 ,0 AS cls_7 
+				 						   ,0 AS cls_6  ,0 AS cls_5  ,0 AS cls_4  ,0 AS cls_3 ,0 AS cls_2 ,0 AS cls_1
+									   FROM DUAL) non On tmPtnr.ptnr_id = non.ptnr_id					
+					</otherwise>
+				</choose>
+				<choose>
+					<when test='primYN == "Y"'>
+						<!-- 농작물 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg12 ON tmPtnr.ptnr_id = primReg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg11 ON tmPtnr.ptnr_id = primReg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg10 ON tmPtnr.ptnr_id = primReg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg9 ON tmPtnr.ptnr_id = primReg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg8 ON tmPtnr.ptnr_id = primReg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg7 ON tmPtnr.ptnr_id = primReg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg6 ON tmPtnr.ptnr_id = primReg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg5 ON tmPtnr.ptnr_id = primReg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg4 ON tmPtnr.ptnr_id = primReg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg3 ON tmPtnr.ptnr_id = primReg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg2 ON tmPtnr.ptnr_id = primReg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primReg1 ON tmPtnr.ptnr_id = primReg1.ptnr_id
+									  							  
+						<!-- 농작물 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls12 ON tmPtnr.ptnr_id = primCls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls11 ON tmPtnr.ptnr_id = primCls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls10 ON tmPtnr.ptnr_id = primCls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls9 ON tmPtnr.ptnr_id = primCls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls8 ON tmPtnr.ptnr_id = primCls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls7 ON tmPtnr.ptnr_id = primCls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls6 ON tmPtnr.ptnr_id = primCls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls5 ON tmPtnr.ptnr_id = primCls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls4 ON tmPtnr.ptnr_id = primCls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls3 ON tmPtnr.ptnr_id = primCls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls2 ON tmPtnr.ptnr_id = primCls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type != 4
+									  GROUP BY ptnr_id ) primCls1 ON tmPtnr.ptnr_id = primCls1.ptnr_id					
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS prim_reg_12 ,0 AS prim_reg_11 ,0 AS prim_reg_10 ,0 AS prim_reg_9 ,0 AS prim_reg_8 ,0 AS prim_reg_7 
+										   ,0 AS prim_reg_6  ,0 AS prim_reg_5  ,0 AS prim_reg_4  ,0 AS prim_reg_3 ,0 AS prim_reg_2 ,0 AS prim_reg_1
+				 						   ,0 AS prim_cls_12 ,0 AS prim_cls_11 ,0 AS prim_cls_10 ,0 AS prim_cls_9 ,0 AS prim_cls_8 ,0 AS prim_cls_7 
+				 						   ,0 AS prim_cls_6  ,0 AS prim_cls_5  ,0 AS prim_cls_4  ,0 AS prim_cls_3 ,0 AS prim_cls_2 ,0 AS prim_cls_1
+									   FROM DUAL) primNon On tmPtnr.ptnr_id = primNon.ptnr_id					
+					</otherwise>
+				</choose>
+	</select>
+
+
+	<select id="MisRegPtnr4" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT tmPtnr.ptnr_id, tmPtnr.ptnr_nick
+			  ,(IFNULL(reg_12,0) + IFNULL(prim_reg_12,0)) AS reg_12			  
+			  ,(IFNULL(reg_11,0) + IFNULL(prim_reg_11,0)) AS reg_11
+			  ,(IFNULL(reg_10,0) + IFNULL(prim_reg_10,0)) AS reg_10
+			  ,(IFNULL(reg_9,0) + IFNULL(prim_reg_9,0)) AS reg_9
+			  ,(IFNULL(reg_8,0) + IFNULL(prim_reg_8,0)) AS reg_8
+			  ,(IFNULL(reg_7,0) + IFNULL(prim_reg_7,0)) AS reg_7
+			  ,(IFNULL(reg_6,0) + IFNULL(prim_reg_6,0)) AS reg_6
+			  ,(IFNULL(reg_5,0) + IFNULL(prim_reg_5,0)) AS reg_5
+			  ,(IFNULL(reg_4,0) + IFNULL(prim_reg_4,0)) AS reg_4
+			  ,(IFNULL(reg_3,0) + IFNULL(prim_reg_3,0)) AS reg_3
+			  ,(IFNULL(reg_2,0) + IFNULL(prim_reg_2,0)) AS reg_2
+			  ,(IFNULL(reg_1,0) + IFNULL(prim_reg_1,0)) AS reg_1
+			  ,(IFNULL(cls_12,0) + IFNULL(prim_cls_12,0)) AS cls_12
+			  ,(IFNULL(cls_11,0) + IFNULL(prim_cls_11,0)) AS cls_11
+			  ,(IFNULL(cls_10,0) + IFNULL(prim_cls_10,0)) AS cls_10
+			  ,(IFNULL(cls_9,0) + IFNULL(prim_cls_9,0)) AS cls_9
+			  ,(IFNULL(cls_8,0) + IFNULL(prim_cls_8,0)) AS cls_8
+			  ,(IFNULL(cls_7,0) + IFNULL(prim_cls_7,0)) AS cls_7
+			  ,(IFNULL(cls_6,0) + IFNULL(prim_cls_6,0)) AS cls_6
+			  ,(IFNULL(cls_5,0) + IFNULL(prim_cls_5,0)) AS cls_5
+			  ,(IFNULL(cls_4,0) + IFNULL(prim_cls_4,0)) AS cls_4
+			  ,(IFNULL(cls_3,0) + IFNULL(prim_cls_3,0)) AS cls_3
+			  ,(IFNULL(cls_2,0) + IFNULL(prim_cls_2,0)) AS cls_2
+			  ,(IFNULL(cls_1,0) + IFNULL(prim_cls_1,0)) AS cls_1
+		  FROM
+			( SELECT ptnr_id, ptnr_nick 
+			    FROM top_ptnr_bsc 
+			   WHERE ptnr_level='1' AND statistics_yn='1' 
+			   ORDER BY statistics_order ASC, ptnr_order DESC, ptnr_id ASC) tmPtnr
+				<choose>
+					<when test='basicYN == "Y"'>
+						<!-- 일반 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg12 ON tmPtnr.ptnr_id = reg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg11 ON tmPtnr.ptnr_id = reg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg10 ON tmPtnr.ptnr_id = reg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg9 ON tmPtnr.ptnr_id = reg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg8 ON tmPtnr.ptnr_id = reg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg7 ON tmPtnr.ptnr_id = reg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg6 ON tmPtnr.ptnr_id = reg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg5 ON tmPtnr.ptnr_id = reg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg4 ON tmPtnr.ptnr_id = reg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg3 ON tmPtnr.ptnr_id = reg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg2 ON tmPtnr.ptnr_id = reg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) reg_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) reg1 ON tmPtnr.ptnr_id = reg1.ptnr_id							  
+						<!-- 일반 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_12
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls12 ON tmPtnr.ptnr_id = cls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_11
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls11 ON tmPtnr.ptnr_id = cls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_10
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls10 ON tmPtnr.ptnr_id = cls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_9
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls9 ON tmPtnr.ptnr_id = cls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_8
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls8 ON tmPtnr.ptnr_id = cls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_7
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls7 ON tmPtnr.ptnr_id = cls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_6
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls6 ON tmPtnr.ptnr_id = cls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_5
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls5 ON tmPtnr.ptnr_id = cls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_4
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls4 ON tmPtnr.ptnr_id = cls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_3
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls3 ON tmPtnr.ptnr_id = cls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_2
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls2 ON tmPtnr.ptnr_id = cls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) cls_1
+									   FROM top_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 IN (3,4)
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) cls1 ON tmPtnr.ptnr_id = cls1.ptnr_id							
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS reg_12 ,0 AS reg_11 ,0 AS reg_10,0 AS reg_9 ,0 AS reg_8 ,0 AS reg_7 
+										   ,0 AS reg_6  ,0 AS reg_5  ,0 AS reg_4 ,0 AS reg_3 ,0 AS reg_2 ,0 AS reg_1
+				 						   ,0 AS cls_12 ,0 AS cls_11 ,0 AS cls_10 ,0 AS cls_9 ,0 AS cls_8 ,0 AS cls_7 
+				 						   ,0 AS cls_6  ,0 AS cls_5  ,0 AS cls_4  ,0 AS cls_3 ,0 AS cls_2 ,0 AS cls_1
+									   FROM DUAL) non On tmPtnr.ptnr_id = non.ptnr_id					
+					</otherwise>
+				</choose>
+				<choose>
+					<when test='primYN == "Y"'>
+						<!-- 농작물 수임 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore12})
+										AND reg_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg12 ON tmPtnr.ptnr_id = primReg12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore11})
+										AND reg_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg11 ON tmPtnr.ptnr_id = primReg11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore10})
+										AND reg_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg10 ON tmPtnr.ptnr_id = primReg10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore9})
+										AND reg_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg9 ON tmPtnr.ptnr_id = primReg9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore8})
+										AND reg_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg8 ON tmPtnr.ptnr_id = primReg8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore7})
+										AND reg_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg7 ON tmPtnr.ptnr_id = primReg7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore6})
+										AND reg_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg6 ON tmPtnr.ptnr_id = primReg6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore5})
+										AND reg_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg5 ON tmPtnr.ptnr_id = primReg5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore4})
+										AND reg_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg4 ON tmPtnr.ptnr_id = primReg4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore3})
+										AND reg_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg3 ON tmPtnr.ptnr_id = primReg3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore2})
+										AND reg_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg2 ON tmPtnr.ptnr_id = primReg2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_reg_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND reg_date >= unix_timestamp(#{monBefore1})
+										AND reg_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primReg1 ON tmPtnr.ptnr_id = primReg1.ptnr_id
+									  							  
+						<!-- 농작물 종결 -->
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_12
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore12})
+										AND close_date &lt; unix_timestamp(#{monBefore11})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls12 ON tmPtnr.ptnr_id = primCls12.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_11
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore11})
+										AND close_date &lt; unix_timestamp(#{monBefore10})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls11 ON tmPtnr.ptnr_id = primCls11.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_10
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore10})
+										AND close_date &lt; unix_timestamp(#{monBefore9})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls10 ON tmPtnr.ptnr_id = primCls10.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_9
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore9})
+										AND close_date &lt; unix_timestamp(#{monBefore8})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls9 ON tmPtnr.ptnr_id = primCls9.ptnr_id							  							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_8
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore8})
+										AND close_date &lt; unix_timestamp(#{monBefore7})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls8 ON tmPtnr.ptnr_id = primCls8.ptnr_id									  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_7
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore7})
+										AND close_date &lt; unix_timestamp(#{monBefore6})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls7 ON tmPtnr.ptnr_id = primCls7.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_6
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore6})
+										AND close_date &lt; unix_timestamp(#{monBefore5})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls6 ON tmPtnr.ptnr_id = primCls6.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_5
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore5})
+										AND close_date &lt; unix_timestamp(#{monBefore4})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls5 ON tmPtnr.ptnr_id = primCls5.ptnr_id
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_4
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore4})
+										AND close_date &lt; unix_timestamp(#{monBefore3})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls4 ON tmPtnr.ptnr_id = primCls4.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_3
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore3})
+										AND close_date &lt; unix_timestamp(#{monBefore2})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls3 ON tmPtnr.ptnr_id = primCls3.ptnr_id							  
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_2
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore2})
+										AND close_date &lt; unix_timestamp(#{monBefore1})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls2 ON tmPtnr.ptnr_id = primCls2.ptnr_id				
+					    LEFT JOIN (  SELECT ptnr_id, count(suim_rpt_no) prim_cls_1
+									   FROM top_prim_biz_rpt_head a
+									  INNER JOIN top_tm_bsc b
+									     ON a.team_id = b.team_id
+									  WHERE 1=1
+										AND suim_rpt_state != 3 
+										AND suim_rpt_type1 = 5
+										AND close_date >= unix_timestamp(#{monBefore1})
+										AND close_date &lt; unix_timestamp(#{monBefore0})
+										AND team_type = 4
+									  GROUP BY ptnr_id ) primCls1 ON tmPtnr.ptnr_id = primCls1.ptnr_id					
+					</when>
+					<otherwise>
+						 LEFT JOIN ( SELECT 0 AS ptnr_id
+										   ,0 AS prim_reg_12 ,0 AS prim_reg_11 ,0 AS prim_reg_10 ,0 AS prim_reg_9 ,0 AS prim_reg_8 ,0 AS prim_reg_7 
+										   ,0 AS prim_reg_6  ,0 AS prim_reg_5  ,0 AS prim_reg_4  ,0 AS prim_reg_3 ,0 AS prim_reg_2 ,0 AS prim_reg_1
+				 						   ,0 AS prim_cls_12 ,0 AS prim_cls_11 ,0 AS prim_cls_10 ,0 AS prim_cls_9 ,0 AS prim_cls_8 ,0 AS prim_cls_7 
+				 						   ,0 AS prim_cls_6  ,0 AS prim_cls_5  ,0 AS prim_cls_4  ,0 AS prim_cls_3 ,0 AS prim_cls_2 ,0 AS prim_cls_1
+									   FROM DUAL) primNon On tmPtnr.ptnr_id = primNon.ptnr_id					
+					</otherwise>
+				</choose>
+	</select>
+
+	
+	
+	
+	
+	<select id="MisRegPtnr1_backup_20180910" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT tmPtnr.ptnr_id, tmPtnr.ptnr_nick
+			, reg_12, reg_11, reg_10, reg_9, reg_8, reg_7, reg_6, reg_5, reg_4, reg_3, reg_2, reg_1
+			, cls_12, cls_11, cls_10, cls_9, cls_8, cls_7, cls_6, cls_5, cls_4, cls_3, cls_2, cls_1
+		FROM
+			(SELECT ptnr_id, ptnr_nick FROM top_ptnr_bsc WHERE ptnr_level='1' AND statistics_yn='1' 
+				ORDER BY ptnr_order DESC, ptnr_id ASC) tmPtnr
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_12
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore12})
+						AND reg_date &lt; unix_timestamp(#{monBefore11})
+						GROUP BY ptnr_id) a1 ON tmPtnr.ptnr_id = a1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_12
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore12})
+						AND close_date &lt; unix_timestamp(#{monBefore11})
+						GROUP BY ptnr_id) a2 ON tmPtnr.ptnr_id = a2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_11
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore11})
+						AND reg_date &lt; unix_timestamp(#{monBefore10})
+						GROUP BY ptnr_id) b1 ON tmPtnr.ptnr_id = b1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_11
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore11})
+						AND close_date &lt; unix_timestamp(#{monBefore10})
+						GROUP BY ptnr_id) b2 ON tmPtnr.ptnr_id = b2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_10
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore10})
+						AND reg_date &lt; unix_timestamp(#{monBefore9})
+						GROUP BY ptnr_id) c1 ON tmPtnr.ptnr_id = c1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_10
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore10})
+						AND close_date &lt; unix_timestamp(#{monBefore9})
+						GROUP BY ptnr_id) c2 ON tmPtnr.ptnr_id = c2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_9
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore9})
+						AND reg_date &lt; unix_timestamp(#{monBefore8})
+						GROUP BY ptnr_id) d1 ON tmPtnr.ptnr_id = d1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_9
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore9})
+						AND close_date &lt; unix_timestamp(#{monBefore8})
+						GROUP BY ptnr_id) d2 ON tmPtnr.ptnr_id = d2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_8
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore8})
+						AND reg_date &lt; unix_timestamp(#{monBefore7})
+						GROUP BY ptnr_id) e1 ON tmPtnr.ptnr_id = e1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_8
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore8})
+						AND close_date &lt; unix_timestamp(#{monBefore7})
+						GROUP BY ptnr_id) e2 ON tmPtnr.ptnr_id = e2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_7
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore7})
+						AND reg_date &lt; unix_timestamp(#{monBefore6})
+						GROUP BY ptnr_id) f1 ON tmPtnr.ptnr_id = f1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_7
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore7})
+						AND close_date &lt; unix_timestamp(#{monBefore6})
+						GROUP BY ptnr_id) f2 ON tmPtnr.ptnr_id = f2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_6
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore6})
+						AND reg_date &lt; unix_timestamp(#{monBefore5})
+						GROUP BY ptnr_id) g1 ON tmPtnr.ptnr_id = g1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_6
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore6})
+						AND close_date &lt; unix_timestamp(#{monBefore5})
+						GROUP BY ptnr_id) g2 ON tmPtnr.ptnr_id = g2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_5
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore5})
+						AND reg_date &lt; unix_timestamp(#{monBefore4})
+						GROUP BY ptnr_id) h1 ON tmPtnr.ptnr_id = h1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_5
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore5})
+						AND close_date &lt; unix_timestamp(#{monBefore4})
+						GROUP BY ptnr_id) h2 ON tmPtnr.ptnr_id = h2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_4
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore4})
+						AND reg_date &lt; unix_timestamp(#{monBefore3})
+						GROUP BY ptnr_id) i1 ON tmPtnr.ptnr_id = i1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_4
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore4})
+						AND close_date &lt; unix_timestamp(#{monBefore3})
+						GROUP BY ptnr_id) i2 ON tmPtnr.ptnr_id = i2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_3
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore3})
+						AND reg_date &lt; unix_timestamp(#{monBefore2})
+						GROUP BY ptnr_id) j1 ON tmPtnr.ptnr_id = j1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_3
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore3})
+						AND close_date &lt; unix_timestamp(#{monBefore2})
+						GROUP BY ptnr_id) j2 ON tmPtnr.ptnr_id = j2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_2
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore2})
+						AND reg_date &lt; unix_timestamp(#{monBefore1})
+						GROUP BY ptnr_id) k1 ON tmPtnr.ptnr_id = k1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_2
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore2})
+						AND close_date &lt; unix_timestamp(#{monBefore1})
+						GROUP BY ptnr_id) k2 ON tmPtnr.ptnr_id = k2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_1
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND reg_date >= unix_timestamp(#{monBefore1})
+						AND reg_date &lt; unix_timestamp(#{monBefore0})
+						GROUP BY ptnr_id) l1 ON tmPtnr.ptnr_id = l1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_1
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (1,2,11,12,13,14,15,16,17,18,19)
+						AND close_date >= unix_timestamp(#{monBefore1})
+						AND close_date &lt; unix_timestamp(#{monBefore0})
+						GROUP BY ptnr_id) l2 ON tmPtnr.ptnr_id = l2.ptnr_id
+	</select>
+	
+	
+
+	<select id="MisRegPtnr4_backup_20180910" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT tmPtnr.ptnr_id, tmPtnr.ptnr_nick
+			, reg_12, reg_11, reg_10, reg_9, reg_8, reg_7, reg_6, reg_5, reg_4, reg_3, reg_2, reg_1
+			, cls_12, cls_11, cls_10, cls_9, cls_8, cls_7, cls_6, cls_5, cls_4, cls_3, cls_2, cls_1
+		FROM
+			(SELECT ptnr_id, ptnr_nick FROM top_ptnr_bsc WHERE ptnr_level='1' AND statistics_yn='1' 
+				ORDER BY ptnr_order DESC, ptnr_id ASC) tmPtnr
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_12
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore12})
+						AND reg_date &lt; unix_timestamp(#{monBefore11})
+						GROUP BY ptnr_id) a1 ON tmPtnr.ptnr_id = a1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_12
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore12})
+						AND close_date &lt; unix_timestamp(#{monBefore11})
+						GROUP BY ptnr_id) a2 ON tmPtnr.ptnr_id = a2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_11
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore11})
+						AND reg_date &lt; unix_timestamp(#{monBefore10})
+						GROUP BY ptnr_id) b1 ON tmPtnr.ptnr_id = b1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_11
+						FROM top_rpt_head
+						WHERE suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore11})
+						AND close_date &lt; unix_timestamp(#{monBefore10})
+						GROUP BY ptnr_id) b2 ON tmPtnr.ptnr_id = b2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_10
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore10})
+						AND reg_date &lt; unix_timestamp(#{monBefore9})
+						GROUP BY ptnr_id) c1 ON tmPtnr.ptnr_id = c1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_10
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore10})
+						AND close_date &lt; unix_timestamp(#{monBefore9})
+						GROUP BY ptnr_id) c2 ON tmPtnr.ptnr_id = c2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_9
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore9})
+						AND reg_date &lt; unix_timestamp(#{monBefore8})
+						GROUP BY ptnr_id) d1 ON tmPtnr.ptnr_id = d1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_9
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore9})
+						AND close_date &lt; unix_timestamp(#{monBefore8})
+						GROUP BY ptnr_id) d2 ON tmPtnr.ptnr_id = d2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_8
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore8})
+						AND reg_date &lt; unix_timestamp(#{monBefore7})
+						GROUP BY ptnr_id) e1 ON tmPtnr.ptnr_id = e1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_8
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore8})
+						AND close_date &lt; unix_timestamp(#{monBefore7})
+						GROUP BY ptnr_id) e2 ON tmPtnr.ptnr_id = e2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_7
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore7})
+						AND reg_date &lt; unix_timestamp(#{monBefore6})
+						GROUP BY ptnr_id) f1 ON tmPtnr.ptnr_id = f1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_7
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore7})
+						AND close_date &lt; unix_timestamp(#{monBefore6})
+						GROUP BY ptnr_id) f2 ON tmPtnr.ptnr_id = f2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_6
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore6})
+						AND reg_date &lt; unix_timestamp(#{monBefore5})
+						GROUP BY ptnr_id) g1 ON tmPtnr.ptnr_id = g1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_6
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore6})
+						AND close_date &lt; unix_timestamp(#{monBefore5})
+						GROUP BY ptnr_id) g2 ON tmPtnr.ptnr_id = g2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_5
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore5})
+						AND reg_date &lt; unix_timestamp(#{monBefore4})
+						GROUP BY ptnr_id) h1 ON tmPtnr.ptnr_id = h1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_5
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore5})
+						AND close_date &lt; unix_timestamp(#{monBefore4})
+						GROUP BY ptnr_id) h2 ON tmPtnr.ptnr_id = h2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_4
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore4})
+						AND reg_date &lt; unix_timestamp(#{monBefore3})
+						GROUP BY ptnr_id) i1 ON tmPtnr.ptnr_id = i1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_4
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore4})
+						AND close_date &lt; unix_timestamp(#{monBefore3})
+						GROUP BY ptnr_id) i2 ON tmPtnr.ptnr_id = i2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_3
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore3})
+						AND reg_date &lt; unix_timestamp(#{monBefore2})
+						GROUP BY ptnr_id) j1 ON tmPtnr.ptnr_id = j1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_3
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore3})
+						AND close_date &lt; unix_timestamp(#{monBefore2})
+						GROUP BY ptnr_id) j2 ON tmPtnr.ptnr_id = j2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_2
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore2})
+						AND reg_date &lt; unix_timestamp(#{monBefore1})
+						GROUP BY ptnr_id) k1 ON tmPtnr.ptnr_id = k1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_2
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore2})
+						AND close_date &lt; unix_timestamp(#{monBefore1})
+						GROUP BY ptnr_id) k2 ON tmPtnr.ptnr_id = k2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) reg_1
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND reg_date >= unix_timestamp(#{monBefore1})
+						AND reg_date &lt; unix_timestamp(#{monBefore0})
+						GROUP BY ptnr_id) l1 ON tmPtnr.ptnr_id = l1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) cls_1
+						FROM top_rpt_head
+						WHERE 
+						suim_rpt_state NOT IN (3,31,32,33) AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{monBefore1})
+						AND close_date &lt; unix_timestamp(#{monBefore0})
+						GROUP BY ptnr_id) l2 ON tmPtnr.ptnr_id = l2.ptnr_id
+	</select>
+
+
+	<!--  
+		쿼리 변경 하려 했으나, 
+		CASE WHEN 처리 시 건수가 많아져서 느려짐..
+	-->
+	<select id="selectMisRegPtnr1" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisRegTmVO">
+		SELECT GA.PTNR_ID
+			  ,GA.PTNR_NICK
+			  ,GB.REG_12 ,GB.REG_11 ,GB.REG_10 ,GB.REG_9 ,GB.REG_8 ,GB.REG_7 ,GB.REG_6 ,GB.REG_5 ,GB.REG_4 ,GB.REG_3 ,GB.REG_2 ,GB.REG_1 			   
+			  ,GB.CLS_12 ,GB.CLS_11 ,GB.CLS_10 ,GB.CLS_9 ,GB.CLS_8 ,GB.CLS_7 ,GB.CLS_6 ,GB.CLS_5 ,GB.CLS_4 ,GB.CLS_3 ,GB.CLS_2 ,GB.CLS_1
+		  FROM top_ptnr_bsc GA
+		  LEFT OUTER JOIN 
+		  (
+		  		SELECT PTNR_ID
+		  			  ,SUM(reg_12) AS reg_12
+		  			  ,SUM(reg_11) AS reg_11		  			  		  			  
+		  			  ,SUM(reg_10) AS reg_10		  
+		  			  ,SUM(reg_9) AS reg_9
+		  			  ,SUM(reg_8) AS reg_8
+		  			  ,SUM(reg_7) AS reg_7
+		  			  ,SUM(reg_6) AS reg_6
+		  			  ,SUM(reg_5) AS reg_5
+		  			  ,SUM(reg_4) AS reg_4
+		  			  ,SUM(reg_3) AS reg_3
+		  			  ,SUM(reg_2) AS reg_2
+		  			  ,SUM(reg_1) AS reg_1
+		  			  
+		  			  ,SUM(cls_12) AS cls_12
+		  			  ,SUM(cls_11) AS cls_11
+		  			  ,SUM(cls_10) AS cls_10
+		  			  ,SUM(cls_9) AS cls_9
+		  			  ,SUM(cls_8) AS cls_8
+		  			  ,SUM(cls_7) AS cls_7
+		  			  ,SUM(cls_6) AS cls_6
+		  			  ,SUM(cls_5) AS cls_5
+		  			  ,SUM(cls_4) AS cls_4
+		  			  ,SUM(cls_3) AS cls_3
+		  			  ,SUM(cls_2) AS cls_2
+		  			  ,SUM(cls_1) AS cls_1
+				  FROM 
+				  (
+				  		SELECT 0 AS PTNR_ID
+							  ,0 AS REG_12
+							  ,0 AS REG_11							  
+							  ,0 AS REG_10
+							  ,0 AS REG_9
+							  ,0 AS REG_8
+							  ,0 AS REG_7
+							  ,0 AS REG_6
+							  ,0 AS REG_5
+							  ,0 AS REG_4
+							  ,0 AS REG_3
+							  ,0 AS REG_2
+							  ,0 AS REG_1
+							  ,0 AS CLS_12
+							  ,0 AS CLS_11							  
+							  ,0 AS CLS_10
+							  ,0 AS CLS_9
+							  ,0 AS CLS_8
+							  ,0 AS CLS_7
+							  ,0 AS CLS_6
+							  ,0 AS CLS_5
+							  ,0 AS CLS_4
+							  ,0 AS CLS_3
+							  ,0 AS CLS_2
+							  ,0 AS CLS_1							  
+						  FROM DUAL
+						 UNION ALL
+				  		SELECT PTNR_ID
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+                              ,0,0,0,0,0,0,0,0,0,0,0,0
+                         FROM top_rpt_head A 
+                        INNER JOIN top_tm_bsc B
+                           ON A.TEAM_ID = B.TEAM_ID
+                        FORCE INDEX(REG_DATE)
+                        WHERE 1=1
+						  AND A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15 ,16, 17, 18)                        
+                          AND A.SUIM_RPT_STATE != 3
+                          AND A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                          AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+                          AND B.TEAM_TYPE != 4
+						 UNION ALL
+				  		SELECT PTNR_ID
+                              ,0,0,0,0,0,0,0,0,0,0,0,0
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                         FROM top_rpt_head A 
+                        INNER JOIN top_tm_bsc B
+                           ON A.TEAM_ID = B.TEAM_ID
+                        WHERE 1=1
+						  AND A.SUIM_RPT_TYPE1 IN(1, 2, 11, 12, 13, 14, 15 ,16, 17, 18)                        
+                          AND A.SUIM_RPT_STATE = 2
+                          AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                          AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+                          AND B.TEAM_TYPE != 4      
+                          
+						 UNION ALL
+				  		SELECT PTNR_ID
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS REG_12
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS REG_11
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS REG_10
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS REG_9
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS REG_8
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS REG_7
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS REG_6
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS REG_5
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS REG_4
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS REG_3
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS REG_2
+                              ,CASE WHEN A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS REG_1
+                              ,0,0,0,0,0,0,0,0,0,0,0,0
+                         FROM top_prim_biz_rpt_head A 
+                        INNER JOIN top_tm_bsc B
+                           ON A.TEAM_ID = B.TEAM_ID
+                        WHERE 1=1
+						  AND A.SUIM_RPT_TYPE1 = 5   
+                          AND A.SUIM_RPT_STATE != 3
+                          AND A.REG_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                          AND A.REG_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+                          AND B.TEAM_TYPE != 4
+						 UNION ALL
+				  		SELECT PTNR_ID
+                              ,0,0,0,0,0,0,0,0,0,0,0,0
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore11}) THEN 1 ELSE 0 END AS CLS_12
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore11}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore10}) THEN 1 ELSE 0 END AS CLS_11
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore10}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore9}) THEN 1 ELSE 0 END AS CLS_10
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore9}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore8}) THEN 1 ELSE 0 END AS CLS_9
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore8}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore7}) THEN 1 ELSE 0 END AS CLS_8
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore7}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore6}) THEN 1 ELSE 0 END AS CLS_7
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore6}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore5}) THEN 1 ELSE 0 END AS CLS_6
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore5}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore4}) THEN 1 ELSE 0 END AS CLS_5
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore4}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore3}) THEN 1 ELSE 0 END AS CLS_4
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore3}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore2}) THEN 1 ELSE 0 END AS CLS_3
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore2}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore1}) THEN 1 ELSE 0 END AS CLS_2
+                              ,CASE WHEN A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore1}) AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0}) THEN 1 ELSE 0 END AS CLS_1
+                         FROM top_prim_biz_rpt_head A 
+                        INNER JOIN top_tm_bsc B
+                           ON A.TEAM_ID = B.TEAM_ID
+                        WHERE 1=1
+						  AND A.SUIM_RPT_TYPE1 = 5                        
+                          AND A.SUIM_RPT_STATE = 2
+                          AND A.CLOSE_DATE >= UNIX_TIMESTAMP(#{monBefore12})
+                          AND A.CLOSE_DATE &lt; UNIX_TIMESTAMP(#{monBefore0})
+                          AND B.TEAM_TYPE != 4                                                                          
+				  
+				  ) C
+				GROUP BY PTNR_ID	  
+		  
+		     ) GB
+		    ON GA.PTNR_ID = GB.PTNR_ID
+		 WHERE GA.PTNR_LEVEL = 1 
+		   AND GA.STATISTICS_YN = 1 
+		 ORDER BY GA.PTNR_ORDER DESC, GA.PTNR_ID ASC
+	</select>
+	
+
+
+
+
+</mapper>

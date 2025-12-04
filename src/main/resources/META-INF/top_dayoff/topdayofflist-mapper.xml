@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="TopDayoff">
+	
+	<select id="getMyInfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+	
+		SELECT
+			a.user_no,
+			a.user_name,
+			a.home_address,
+			a.team_id_insa,
+			b.team_name,
+			a.work_level work_level_cd,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+		FROM
+			top_mbr_bsc a, top_tm_bsc b
+		WHERE
+			a.user_no = #{user_no} and
+			a.team_id_insa = b.team_id
+			
+	</select>
+	
+	<select id="getTopDayoffUserList" resultType="kr.co.toplac.topdayoff.TopDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			a.serial_no,
+			a.team_id,
+			getTopTmBscTeamName(a.team_id) team_name,    
+			a.user_no,
+			b.user_name, 
+			DATE_FORMAT(FROM_UNIXTIME(b.join_date), '%Y-%m-%d') join_date, 
+			a.work_level,
+			getCodeValue('top_mbr_bsc', 'work_level', a.work_level) work_level_Nm, 
+			a.dayoff_type,
+			a.title,
+			DATE_FORMAT(FROM_UNIXTIME(a.dayoff_start_date), '%Y-%m-%d') dayoff_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(a.dayoff_end_date), '%Y-%m-%d') dayoff_end_date,
+			a.days,
+			a.state,
+			DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date,
+			a.reg_user,      
+			DATE_FORMAT(FROM_UNIXTIME(a.sub_date), '%Y-%m-%d') sub_date,      
+			a.sub_user,   
+			DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date,  
+			a.end_user,
+			DATE_FORMAT(FROM_UNIXTIME(a.cancel_date), '%Y-%m-%d') cancel_date,
+			a.cancel_user,
+			a.cancel_memo,
+			(SELECT count(holiday_date) FROM sysadm_holiday
+				WHERE holiday_date &lt;= DATE_FORMAT(FROM_UNIXTIME(a.dayoff_end_date), '%Y-%m-%d')
+				AND holiday_date >= DATE_FORMAT(FROM_UNIXTIME(a.dayoff_start_date), '%Y-%m-%d')
+				AND holiday_code not in (0,1,7)) dayoff_count
+		from
+			top_dayoff a, top_mbr_bsc b
+		where
+					a.user_no = #{user_no}
+					and a.user_no = b.user_no 
+					
+					order by serial_no desc
+					LIMIT #{queryPgNoInt}, 18
+					
+				
+	</select>
+	
+	<select id="getTopDayoffUserListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT
+			count(a.serial_no) cnt       
+			
+		from
+			
+			top_dayoff a, top_mbr_bsc b
+		where
+					a.user_no = #{user_no}
+					and a.user_no = b.user_no 
+					
+					order by serial_no desc
+	</select>
+
+	<select id="getTopDayoffList" resultType="kr.co.toplac.topdayoff.TopDayoffVO" parameterType="java.util.HashMap">
+		SELECT a.serial_no
+			  ,a.team_id
+			  ,getTopTmBscTeamName(a.team_id) team_name    
+			  ,a.user_no
+			  ,b.user_name 
+			  ,DATE_FORMAT(FROM_UNIXTIME(b.join_date), '%Y-%m-%d') join_date 
+			  ,a.work_level
+			  ,getCodeValue('top_mbr_bsc', 'work_level', a.work_level) work_level_Nm 
+			  ,a.dayoff_type
+			  ,a.title
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.dayoff_start_date), '%Y-%m-%d') dayoff_start_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.dayoff_end_date), '%Y-%m-%d') dayoff_end_date
+			  ,a.days
+			  ,a.state
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date
+			  ,a.reg_user
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.sub_date), '%Y-%m-%d') sub_date      
+			  ,a.sub_user
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date  
+			  ,a.end_user
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.cancel_date), '%Y-%m-%d') cancel_date
+			  ,a.cancel_user
+			  ,a.cancel_memo
+			  ,( SELECT count(holiday_date) 
+				   FROM sysadm_holiday
+				  WHERE holiday_date &lt;= DATE_FORMAT(FROM_UNIXTIME(a.dayoff_end_date), '%Y-%m-%d')
+				    AND holiday_date >= DATE_FORMAT(FROM_UNIXTIME(a.dayoff_start_date), '%Y-%m-%d')
+				    AND holiday_code not in (0,1,7) ) dayoff_count
+		  FROM top_dayoff a
+		 INNER JOIN top_mbr_bsc b
+		    ON a.user_no = b.user_no
+		 WHERE 1=1
+			<if test="ustat != null and ustat != 0">
+				AND state=#{ustat} 
+		  	</if>
+			<if test="tid != null and tid != 0">
+				AND team_id =#{tid}
+			</if>
+			<if test="searchStr != null">
+				AND user_name like CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test="type == 'team'">
+				AND ( a.team_id = #{team_id} OR a.team_id in ( SELECT team_id FROM top_tm_bsc WHERE team_manager = #{user_no}) ) 
+				AND state = '1' 
+			</if>
+		 ORDER BY serial_no desc
+		 LIMIT #{queryPgNoInt}, 18
+				
+	</select>
+	
+	<select id="getTopDayoffListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT count(a.serial_no) cnt       
+		  FROM top_dayoff a
+		 INNER JOIN top_mbr_bsc b
+		    ON a.user_no = b.user_no
+		 WHERE 1=1
+			<if test="ustat != null and ustat != 0">
+				AND state=#{ustat} 
+		  	</if>
+			<if test="tid != null and tid != 0">
+				AND team_id =#{tid}
+			</if>
+			<if test="searchStr != null">
+				AND user_name like CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test="type == 'team'">
+				AND ( a.team_id = #{team_id} OR a.team_id in ( SELECT team_id FROM top_tm_bsc WHERE team_manager = #{user_no}) ) 
+				AND state = '1' 
+			</if>
+	</select>
+	
+	
+	<!-- 리소스낭비로 인하여 쿼리 통합, 미사용 180116 lds -->
+	<select id="getTopDayoffMidList" resultType="kr.co.toplac.topdayoff.TopDayoffVO" parameterType="java.util.HashMap">
+		SELECT
+			a.serial_no,       
+			a.team_id,
+			getTopTmBscTeamName(a.team_id) team_name,    
+			a.user_no,
+			b.user_name,  
+			a.work_level,
+			getCodeValue('top_mbr_bsc', 'work_level', a.work_level) work_level_Nm, 
+			a.dayoff_type,
+			a.title,
+			DATE_FORMAT(FROM_UNIXTIME(a.dayoff_start_date), '%Y-%m-%d') dayoff_start_date,
+			DATE_FORMAT(FROM_UNIXTIME(a.dayoff_end_date), '%Y-%m-%d') dayoff_end_date,
+			a.days,
+			a.state,
+			DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date,
+			a.reg_user,      
+			DATE_FORMAT(FROM_UNIXTIME(a.sub_date), '%Y-%m-%d') sub_date,      
+			a.sub_user,   
+			DATE_FORMAT(FROM_UNIXTIME(a.end_date), '%Y-%m-%d') end_date,  
+			a.end_user,
+			DATE_FORMAT(FROM_UNIXTIME(a.cancel_date), '%Y-%m-%d') cancel_date,
+			a.cancel_user,
+			a.cancel_memo,
+			(SELECT count(holiday_date) FROM sysadm_holiday
+				WHERE holiday_date &lt;= DATE_FORMAT(FROM_UNIXTIME(a.dayoff_end_date), '%Y-%m-%d')
+				AND holiday_date >= DATE_FORMAT(FROM_UNIXTIME(a.dayoff_start_date), '%Y-%m-%d')
+				AND holiday_code not in (0,1,7)) dayoff_count
+		from
+			top_dayoff a, top_mbr_bsc b
+		where
+					a.user_no = b.user_no 
+					and a.team_id = #{team_id} and state = '1'
+					<!-- <if test="ustat != null">
+					and state=#{ustat} 
+					</if> -->
+					<!-- <if test="tid != null and tid != 0">
+					and team_id =#{tid}
+					</if> -->
+					<!-- <if test="searchStr != null">
+					and user_name like CONCAT('%',#{searchStr},'%')
+					</if> -->
+					order by serial_no desc
+					LIMIT #{queryPgNoInt}, 18
+				
+	</select>
+	
+	<!-- 리소스낭비로 인하여 쿼리 통합, 미사용 180116 lds -->
+	<select id="getTopDayoffMidListCnt" resultType = "int" parameterType="java.util.HashMap">
+		SELECT
+			count(a.serial_no) cnt       
+		from
+			
+			top_dayoff a, top_mbr_bsc b
+		where
+					a.user_no = b.user_no
+					and a.team_id = #{team_id} and state = '1' 
+					<!-- <if test="ustat != null">
+					and state=#{ustat} 
+					</if> -->
+					<!-- <if test="tid != null and tid != 0">
+					and team_id =#{tid}
+					</if> -->
+					<!-- <if test="searchStr != null">
+					and user_name like CONCAT('%',#{searchStr},'%')
+					</if> -->
+					order by serial_no desc
+	</select>
+	
+	<select id="getMyDayoffInfo" resultType="kr.co.toplac.topdayoff.TopDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			a.user_name,       
+			b.team_name,    
+			a.work_level,
+			getCodeValue('top_mbr_bsc', 'work_level', a.work_level) work_level_Nm,  
+			b.team_manager,
+			getTopMbrBscUserName(b.team_manager) team_manager_Nm,
+			b.team_addr
+		from
+			top_mbr_bsc a, top_tm_bsc b
+		where
+					a.team_id_main = b.team_id and
+					user_no = #{user_no} and team_id = #{team_id}
+				
+	</select>
+	
+	<select id="myDayoffsel" resultType="kr.co.toplac.topdayoff.TopDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT used
+			  ,total
+		  FROM top_dayoff_info
+		 WHERE user_no = #{user_no} and year=#{toServerYear}
+				
+	</select>
+
+	<select id="calcDayoffCnt" resultType="int" parameterType="java.util.HashMap">
+		SELECT count(holiday_date) result
+		  FROM sysadm_holiday
+		 WHERE holiday_date &lt;= #{dayoffToDate}
+		   AND holiday_date >= #{dayoffFromDate}
+		   AND holiday_code not in (0,1,7)
+	</select>
+
+	<select id="getToday" resultType="String">
+		SELECT DATE_FORMAT(NOW(), '%Y-%m-%d') strToday
+	</select>
+	
+	<update id = "dayoffMidSignUdt" parameterType="kr.co.toplac.topdayoff.TopDayoffVO" >
+		UPDATE top_dayoff
+		SET
+			
+			state = 5,
+			sub_date = unix_timestamp(now()),
+			sub_user = #{user_no}
+			
+		WHERE
+			serial_no = #{chkdayoff}
+	</update>
+	
+	<update id = "dayoffSignUdt" parameterType="kr.co.toplac.topdayoff.TopDayoffVO" >
+		UPDATE top_dayoff
+		SET
+			
+			state = 10,
+			end_date = unix_timestamp(now()),
+			end_user = #{user_no}
+			
+		WHERE
+			serial_no = #{chkdayoff}
+	</update>
+	
+	<update id = "dayoffReturn" parameterType="kr.co.toplac.topdayoff.TopDayoffVO" >
+		UPDATE top_dayoff
+		SET
+			
+			state = 2,
+			cancel_memo = #{cancel_memo}
+			
+		WHERE
+			serial_no = #{serial_no}
+	</update>
+	
+	<select id="selCancelMemo" resultType="kr.co.toplac.topdayoff.TopDayoffVO" parameterType="java.util.HashMap">
+	
+		SELECT
+			cancel_memo
+			
+		from
+			top_dayoff
+		where
+					
+					serial_no = #{serial_no}
+				
+	</select>
+	
+</mapper>

@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimMeritzReportMapper">
+	<!-- 메리츠 보고서 기본정보 top_rpt_print_16 SELECT -->
+	<select id="selectMeritzReport" parameterType="hashmap" resultType="AsraMap">
+		SELECT A.RPT_PRINT_NO					-- 보고서 순번
+		      ,A.SUIM_RPT_NO					-- 수임 번호
+		      ,A.INSU_PERIOD_S_1				-- 보험 시기 
+		      ,A.INSU_PERIOD_E_1				-- 보험 종기
+		      ,A.CONTRACT_STATE_1				-- 계약 상태
+		      ,A.ACCIDENT_DATE_1				-- 사고일자
+		      ,A.ACCIDENT_SUM_UP_1				-- 사고유형
+		      ,A.DIAGNOSIS_CODE_1				-- 진단명(코드)
+		      ,A.DIAGNOSIS_DISEASE_1			-- 진단명(병명)
+		      ,A.JOB_GRADE_JOIN_1				-- 가입시 직업 급수
+		      ,A.JOB_GRADE_ACCIDENT_1			-- 사고시 직업 급수
+		      ,A.INSU_MORTGAGE_DTL_1			-- 담보내용
+		      ,A.AMT_TOT_INSU_1					-- 보험 가입 금액
+		      ,A.AMT_ESTIMATED_DMG_DTL_1		-- 추정 손해액
+		      ,A.CLAIM_DTL_2					-- 청구 내용
+		      ,A.COMPLAINT_AVOID_ACTIVITY_2		-- 민원 예방 활동 
+		      ,A.INSPECT_RESULT_2				-- 조사자 의견 및 조사 결과
+		      ,A.CONTRACT_KEEP_YN_2				-- 계약 유지 
+		      ,A.MINWON_DTL_2					-- 민원 여부
+		      ,A.ACCIDENT_DTL_6					-- 사고 내용
+		      ,A.ACCIDENT_DTL_SUB				-- 사고 내용 SUB TXT
+		      ,A.ACCIDENT_DTL_USE_AT			-- 사고 내용 사용여부
+		      ,A.NOTICE_DUTY1_6					-- 고지 의무
+		      ,A.NOTICE_DUTY1_USE_AT			-- 고지 의무 사용여부
+		      ,A.NOTICE_DUTY2_6					-- 통지 의무
+		      ,A.NOTICE_DUTY2_USE_AT			-- 통지 의무 사용여부
+		      ,A.JOB_GRADE_CONFIRM_6			-- 직업 급수(확인)
+   		      ,A.JOB_GRADE_CONFIRM_SUB			-- 직업 급수(확인) SUB TXT
+		      ,A.JOB_GRADE_CONFIRM_USE_AT		-- 직업 급수(확인) 사용여부
+		      ,A.COUNSEL_MEDICAL_6				-- 의료 자문
+		      ,A.COUNSEL_MEDICAL_USE_AT			-- 의료 자문 사용여부
+		      ,A.COUNSEL_LEGAL_6				-- 법률 자문
+		      ,A.COUNSEL_LEGAL_USE_AT			-- 법률 자문 사용여부
+		      ,A.CONFIRM_PUBLIC_6				-- 관공서 확인 내용(경찰서 등)
+		      ,A.CONFIRM_PUBLIC_USE_AT			-- 관공서 확인 내용(경찰서 등) 사용여부
+		      ,A.SITE_PICTURE_6					-- 사고 현장 사진
+		      ,A.DISABILITY_6					-- 장해율/장해상태 확인
+		      ,A.DISABILITY_USE_AT				-- 장해율/장해상태 확인 사용여부
+		      ,A.FACE_MEMO_7 					-- 피보험자(또는 유가족) 면담 사항
+		      ,A.DELEGATE_7						-- 독립손사(세부정보 포함)
+		      ,A.QUESTIONING_7					-- 탐문내용
+		      ,A.GUIDE_ETC_7					-- 안내 및 특이사항
+		      ,A.MORE_DOCUMENT_7				-- 추가 서류 징구
+		  FROM top_rpt_print_16 A
+		 WHERE A.SUIM_RPT_NO = #{suim_rpt_no}
+	</select>
+	
+	<!-- 메리츠 보고서 조사자 일자별 확인사항 top_rpt_print_16_3 SELECT -->
+	<select id="selectMeritzReportConfirm" parameterType="hashmap" resultType="AsraMap">
+		SELECT A.SERIAL_NO			-- 순번
+			  ,A.RPT_PRINT_NO		-- 보고서 번호
+			  ,A.CONTRACT_BA		-- 계약 구분 (1:전, 2:일, 3:후)
+			  ,A.CONFIRM_DTL		-- 확인 내용
+			  ,A.RELATIVE_ORGAN		-- 관련기관
+			  ,A.CONFIRM_GUBUN		-- 날짜 기준 구분 (0:입원, 1:통원)
+			  ,A.CONFIRM_GUBUN_TXT	-- 입원 및 통원 기간
+			  ,A.CONFIRM_TO_DATE CONFIRM_TO_DATE		-- 시작일
+			  ,A.CONFIRM_FROM_DATE CONFIRM_FROM_DATE  -- 종료일
+		  FROM top_rpt_print_16_3 A
+		 WHERE A.RPT_PRINT_NO = #{rpt_print_no}
+		 ORDER BY A.CONTRACT_BA, A.CONFIRM_TO_DATE
+	</select>	
+	
+	<!-- 메리츠 보고서 타사 가입사항 top_rpt_print_16_4 SELECT -->	
+	<select id="selectMeritzReportOtherInsu" parameterType="HashMap" resultType="AsraMap">
+		SELECT SERIAL_NO	
+			  ,RPT_PRINT_NO			-- 보고서 번호
+			  ,OTHER_INSU_COM		-- 보험 회사
+			  ,OTHER_INSU_MORTGAGE	-- 담보 내용
+			  ,OTHER_INSU_PERIOD	-- 보험기간
+			  ,OTHER_INSU_ETC_MEMO	-- 청구내용 및 결과
+		  FROM top_rpt_print_16_4
+		 WHERE RPT_PRINT_NO = #{rpt_print_no}
+		 ORDER BY SERIAL_NO; 
+	</select>
+	
+	<!-- 메리츠 보고서 사고조사 처리과정 SELECT -->
+	<select id="selectMeritzReportControl"  parameterType="HashMap" resultType="AsraMap">
+		SELECT serial_no			-- 순번
+		 	  ,control_date			-- 진행일시
+		 	  ,control_memo			-- 주요내용
+		 	  ,control_who			-- 면담자
+		 	  ,control_relation		-- 관계
+		 	  ,control_contact		-- 접촉방법
+		 	  ,reg_date
+		  FROM top_rpt_ctrl_16
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+		 ORDER BY control_date, reg_date
+	</select>
+	
+	<insert id="insertReportPrint16ForExist" parameterType="HashMap">
+		 INSERT INTO top_rpt_print_16(SUIM_RPT_NO) VALUES (#{suim_rpt_no})
+	</insert>
+
+	<!-- 사고사항 업데이트 -->
+	<update id="updateMeritzContract" parameterType="HashMap">
+		UPDATE top_rpt_print_16
+		   SET INSU_PERIOD_S_1 	= #{insu_period_s} 
+		      ,INSU_PERIOD_E_1 	= #{insu_period_e}
+			  ,CONTRACT_STATE_1 = #{contract_state}
+	     WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<!-- 손해사항 업데이트 -->
+	<update id="updateMeritzLoss" parameterType="HashMap">
+		UPDATE top_rpt_print_16
+		   SET ACCIDENT_DATE_1 		= #{accident_date} 
+		      ,ACCIDENT_SUM_UP_1 	= #{accident_sum_up}
+			  ,DIAGNOSIS_DISEASE_1 	= #{diagnosis_disease}
+			  ,DIAGNOSIS_CODE_1 	= #{diagnosis_code}
+			  ,JOB_GRADE_JOIN_1 	= #{job_grade_join}
+			  ,JOB_GRADE_ACCIDENT_1 = #{job_grade_accident}
+			  
+			  ,INSU_MORTGAGE_DTL_1 		= #{insu_mortgage_dtl}
+			  ,AMT_TOT_INSU_1 			= #{amt_tot_insu}
+			  ,AMT_ESTIMATED_DMG_DTL_1 	= #{amt_estimated_dmg_dtl}
+	     WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<!-- 청구내용 및 조사결과 - 청구내용 업데이트 -->
+	<update id="updateMeritzClaim" parameterType="HashMap">	
+		UPDATE top_rpt_print_16
+		   SET CLAIM_DTL_2 = #{claim_dtl}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no} 
+	</update>
+	
+	<!-- 청구내용 및 조사결과 - 민원예방활동 업데이트 -->
+	<update id="updateMeritzComplaintAvoid" parameterType="HashMap">	
+		UPDATE top_rpt_print_16
+		   SET COMPLAINT_AVOID_ACTIVITY_2 = #{complaint_avoid_activity}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no} 
+	</update>	
+
+	<!-- 청구내용 및 조사결과 - 조사자의견 및 조사결과 업데이트 -->
+	<update id="updateMeritzResult" parameterType="HashMap">	
+		UPDATE top_rpt_print_16
+		   SET INSPECT_RESULT_2 	= #{inspect_result}
+		   	  ,CONTRACT_KEEP_YN_2 	= #{contract_keep_yn}
+		   	  ,MINWON_DTL_2			= #{minwon_dtl}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no} 
+	</update>		
+
+	<!-- 조사자 일자별 확인사항 INSERT -->
+	<insert id="insertMeritzConfirm" parameterType="HashMap">
+		INSERT INTO top_rpt_print_16_3
+		(
+			 RPT_PRINT_NO
+			,CONTRACT_BA
+			,CONFIRM_TO_DATE
+			,CONFIRM_FROM_DATE
+			,CONFIRM_GUBUN
+			,CONFIRM_GUBUN_TXT
+			,CONFIRM_DTL
+			,RELATIVE_ORGAN
+			,REG_DATE
+			
+			,confirm_date -- 이전 사용 날짜, 현재 미사용이나 기존 데이터 보존을 위해 0으로 세팅 171206.lds
+		)
+		VALUES
+		(
+			#{rpt_print_no}
+			,#{contract_ba}
+			,#{confirm_to_date}
+			,#{confirm_from_date}
+			,#{confirm_gubun}
+			,#{confirm_gubun_txt}
+			,#{confirm_dtl}
+			,#{relative_organ}
+			,unix_timestamp(now())	
+			
+			,0
+		)
+	</insert>		
+
+	<!-- 조사자 일자별 확인사항 UPDATE -->
+	<update id="updateMeritzConfirm" parameterType="HashMap">
+		UPDATE top_rpt_print_16_3
+		   SET CONFIRM_TO_DATE 		= #{confirm_to_date}
+			  ,CONFIRM_FROM_DATE	= #{confirm_from_date}
+			  ,CONFIRM_GUBUN		= #{confirm_gubun}
+			  ,CONFIRM_GUBUN_TXT	= #{confirm_gubun_txt}
+			  ,CONFIRM_DTL			= #{confirm_dtl}
+			  ,RELATIVE_ORGAN		= #{relative_organ}
+	 	 WHERE SERIAL_NO = #{serial_no}
+	</update>
+	
+	<!-- 조사자 일자별 확인사항 DELETE -->
+	<delete id="deleteMeritzConfirm" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_print_16_3
+		 WHERE SERIAL_NO = #{serial_no} 
+	</delete>
+	
+	
+	<!-- 타사 가입사항  INSERT -->
+	<insert id="insertMeritzOtherInsu" parameterType="HashMap">
+		INSERT INTO top_rpt_print_16_4
+		(
+			 RPT_PRINT_NO
+			,OTHER_INSU_COM
+			,OTHER_INSU_MORTGAGE 
+			,OTHER_INSU_PERIOD
+			,OTHER_INSU_ETC_MEMO
+		)
+		VALUES
+		(
+			 #{rpt_print_no}
+			,#{other_insu_com}
+			,#{other_insu_mortgage}
+			,#{other_insu_period}
+			,#{other_insu_etc_memo}
+		)
+	</insert>
+
+	<!-- 타사 가입사항 UPDATE -->
+	<update id="updateMeritzOtherInsu" parameterType="HashMap">
+		UPDATE top_rpt_print_16_4
+		   SET OTHER_INSU_COM 		= #{other_insu_com}
+			  ,OTHER_INSU_MORTGAGE 	= #{other_insu_mortgage}
+			  ,OTHER_INSU_PERIOD	= #{other_insu_period}
+			  ,OTHER_INSU_ETC_MEMO	= #{other_insu_etc_memo}
+		 WHERE SERIAL_NO = #{serial_no}
+	</update>	
+	
+	<!-- 타사 가입사항 DELETE -->
+	<delete id="deleteMeritzOtherInsu" parameterType="HashMap">
+		DELETE
+		  FROM top_rpt_print_16_4
+		 WHERE SERIAL_NO = #{serial_no}
+	</delete>
+		
+	<update id="updateMeritzIssuesUseAt" parameterType="HashMap">
+		UPDATE top_rpt_print_16
+		<choose>
+			<when test="gubun == 'notice1'">
+				SET NOTICE_DUTY1_USE_AT = #{use_at}
+			</when>
+			<when test="gubun == 'notice2'">
+				SET NOTICE_DUTY2_USE_AT = #{use_at}
+			</when>
+			<when test="gubun == 'accident'">
+				SET ACCIDENT_DTL_USE_AT = #{use_at}
+			</when>
+			<when test="gubun == 'job'">
+				SET JOB_GRADE_CONFIRM_USE_AT = #{use_at}
+			</when>
+			<when test="gubun == 'medical'">
+				SET COUNSEL_MEDICAL_USE_AT = #{use_at}
+			</when>
+			<when test="gubun == 'legal'">
+				SET COUNSEL_LEGAL_USE_AT = #{use_at}
+			</when>
+			<when test="gubun == 'public'">
+				SET CONFIRM_PUBLIC_USE_AT = #{use_at}
+			</when>																		
+			<when test="gubun == 'disability'">
+				SET DISABILITY_USE_AT = #{use_at}
+			</when>																		
+		</choose>
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+
+	<update id="updateMeritzIssuesContents" parameterType="HashMap">
+		UPDATE top_rpt_print_16
+		<choose>
+			<when test="gubun == 'notice1'">
+				SET NOTICE_DUTY1_6 = #{issues_contents}
+			</when>
+			<when test="gubun == 'notice2'">
+				SET NOTICE_DUTY2_6 = #{issues_contents}
+			</when>
+			<when test="gubun == 'accident'">
+				SET ACCIDENT_DTL_6 = #{issues_contents}
+				   ,ACCIDENT_DTL_SUB = #{issues_sub_contents}
+			</when>
+			<when test="gubun == 'job'">
+				SET JOB_GRADE_CONFIRM_6 = #{issues_contents}
+				   ,JOB_GRADE_CONFIRM_SUB = #{issues_sub_contents}
+			</when>
+			<when test="gubun == 'medical'">
+				SET COUNSEL_MEDICAL_6 = #{issues_contents}
+			</when>
+			<when test="gubun == 'legal'">
+				SET COUNSEL_LEGAL_6 = #{issues_contents}
+			</when>
+			<when test="gubun == 'public'">
+				SET CONFIRM_PUBLIC_6 = #{issues_contents}
+			</when>																		
+			<when test="gubun == 'disability'">
+				SET DISABILITY_6 = #{issues_contents}
+			</when>																		
+		</choose>
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<!-- 관련자면담 및 특이사항 업데이트 -->
+	<update id="updateMeritzInterview" parameterType="HashMap">	
+		UPDATE top_rpt_print_16
+		   SET FACE_MEMO_7 = #{face_memo}
+		      ,DELEGATE_7 = #{delegate}
+		      ,QUESTIONING_7 = #{questioning}
+		      ,GUIDE_ETC_7 = #{guide_etc}
+		      ,MORE_DOCUMENT_7 = #{more_document}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no} 
+	</update>
+	
+	<insert id="insertMeritzReportControl" parameterType="HashMap">
+		INSERT INTO top_rpt_ctrl_16
+	 	(
+	 		 suim_rpt_no
+	 		,control_date
+	 		,control_memo
+	 		,control_who
+	 		,control_relation
+	 		,control_contact
+	 		,reg_date
+	 	)
+	 	VALUES
+	 	(
+			 #{suim_rpt_no}
+			,#{control_date}
+			,#{control_memo}
+			,#{control_who}
+			,#{control_relation}
+			,#{control_contact}
+			,unix_timestamp(now())
+	 	)
+	</insert>
+	
+	<update id="updateMeritzReportControl" parameterType="HashMap">
+		UPDATE top_rpt_ctrl_16
+		   SET control_date = #{control_date}
+		   	  ,control_memo = #{control_memo}
+		   	  ,control_who = #{control_who}
+		   	  ,control_relation = #{control_relation}
+		   	  ,control_contact = #{control_contact}
+		 WHERE serial_no = #{serial_no}
+	</update>
+	
+	<delete id="deleteMeritzReportControl" parameterType="HashMap">
+		DELETE
+		  FROM top_rpt_ctrl_16
+		 WHERE serial_no = #{serial_no}
+	</delete>
+	
+	
+    <select id="selectCodeList" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.COL_CD
+               ,A.COL_VAL
+          FROM  sysadm_codedic A
+         WHERE  1=1
+           AND  A.TBL_NM = #{tbl_nm}
+           AND  A.COL_NM = #{col_nm}
+    </select>
+
+</mapper>

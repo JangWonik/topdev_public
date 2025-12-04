@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MainIndexListMapper">
+
+	<!-- 특정일자 기준 31일 이전의 공휴일 정보목록을 불러온다. -->
+	<select id="selectWorkdayToBefore" parameterType="String" resultType="HashMap">
+		SELECT 
+			holiday_date
+			,holiday_code 
+			,CASE
+				WHEN (holiday_code IN(2,3,4,5,6) ) THEN 1
+				ELSE 0
+			END AS h_flag
+		FROM sysadm_holiday
+		WHERE holiday_date &lt;= DATE_FORMAT( #{chkDate} , '%Y-%m-%d')
+		ORDER BY holiday_date DESC
+		LIMIT 0,31		
+	</select>
+
+	<select id="mainIndexSuimList" resultType="kr.co.toplac.topsuim.TopRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_type2, getCodeValue('top_rpt_head','suim_rpt_type2',a.suim_rpt_type2) suim_rpt_type2_nm
+		, a.suim_rpt_state, getCodeValue('top_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.ptnr_mbr_sanction ptnrMbrSanction
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		<!-- , getDateDiff(a.reg_date) + 1 past_date -->
+		<!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+		, DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, IFNULL(a.del_date,0) delDate
+		FROM top_rpt_head a
+		WHERE a.suim_rpt_state = 0
+		AND a.user_no = #{user_no}
+		AND a.del_date >= 0
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+	<select id="mainIndexPrimbizList" resultType="kr.co.toplac.topprimbiz.TopPrimBizRptHeadVO">
+		SELECT a.suim_rpt_no, a.suim_accept_no, a.suim_close_no ,a.lock_flag
+		, a.suim_rpt_type1, getCodeValue('top_prim_biz_rpt_head','suim_rpt_type1',a.suim_rpt_type1) suim_rpt_type1_nm
+		, a.suim_rpt_state, getCodeValue('top_prim_biz_rpt_head', 'suim_rpt_state', suim_rpt_state) suim_rpt_state_nm
+		, a.suim_rpt_type1_close12, getCodeValue('top_prim_biz_rpt_head', 'suim_rpt_type1_close12', suim_rpt_type1_close12) suim_rpt_type1_close12_nm
+		, a.team_id, getTopTmBscTeamName(a.team_id) team_name, getTopTmBscTeamMark(a.team_id) team_mark
+		, a.user_no, getTopMbrBscUserName(a.user_no) user_name
+		, a.ptnr_id, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick, getTopPtnrBscPtnrName(a.ptnr_id) ptnr_name
+		, a.ptnr_dept_id, getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) ptnr_dept_nm
+		, a.ptnr_mbr_no, getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+		, a.policyholder_nm, a.beneficiary_nm, a.damaged_nm
+		, a.accident_date, if(a.accident_date = null || a.accident_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.accident_date), '%Y-%m-%d')) accident_date_fmt
+		, a.reg_date, if(a.reg_date = null || a.reg_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d')) reg_date_fmt
+		, a.close_date, if(a.close_date = null || a.close_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d')) close_date_fmt
+		, a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suim_cancel_date_fmt
+		, ifnull(a.del_date, 0) del_date
+		, ifnull(DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d %H:%i:%s'),'') del_date_fmt
+		<!-- , getDateDiff(a.reg_date) + 1 past_date -->
+		<!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+		, DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+		, (select count(memo_no) from top_prim_biz_rpt_memo where fk_no = a.suim_rpt_no) memo_cnt
+		, (select count(serial_no) from top_prim_biz_rpt_file where suim_rpt_no = a.suim_rpt_no) file_cnt
+		, b.minwon_flag, getCodeValue('top_rpt_body','minwon_flag',b.minwon_flag) minwon_flag_nm
+		FROM top_prim_biz_rpt_head a, top_prim_biz_rpt_body b
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		AND a.suim_rpt_state = 0
+		AND a.user_no = #{user_no}
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+	<select id="mainIndexSuit10List" resultType="kr.co.toplac.topsuit.SuimSuit_10VO">
+		SELECT	a.suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				a.suim_rpt_state suimRptState,													<!-- 건 상태-->
+				a.lock_flag lockFlag, 															<!-- 락여부 --> 
+				a.suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				a.suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				a.ptnr_id ptnrId, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(a.ptnr_id) ptnrName,										<!-- 약명 -->
+				a.team_id teamId, getTopTmBscTeamName(a.team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(a.team_id) teamMark,										<!-- 팀마크 -->
+				a.user_no userNo, getTopMbrBscUserName(a.user_no) userName, 					<!-- 담당자 -->
+				a.bd_type bdType, <!-- 건물  getCodeValue('top_suitability_10','bd_type',replace(a.bd_type,'0','')) bdName,  -->
+				a.policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				a.del_date delDate,
+				<!-- getDateDiff(a.reg_date)+1 pastDateOld, --><!-- 수임부터 경과 일자 -->
+				DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) pastDateOld,
+				a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt	
+		FROM top_suitability_10 a
+		WHERE a.del_date >= 0
+		AND a.suim_rpt_state = 0
+		AND a.user_no = #{user_no}
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+	<select id="mainIndexSuit12List" resultType="kr.co.toplac.topsuit12.SuimSuit_12VO">
+		SELECT a.suim_rpt_no suimRptNo
+			, a.suim_accept_no suimAcceptNo
+			, a.suim_close_no suimCloseNo
+			, a.suim_rpt_state suimRptState
+			, a.team_id teamId
+			, getTopTmBscTeamName(a.team_id) teamName
+			, getTopTmBscTeamMark(a.team_id) teamMark
+			, a.user_no userNo
+			, getTopMbrBscUserName(a.user_no) userName
+			, a.ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick
+			, getTopPtnrBscPtnrName(a.ptnr_id) ptnrName
+			, a.policyholder_nm policyholderNm
+			, a.policyholder_hp policyholderHp
+			, a.reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDateFmt
+			, a.close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDateFmt
+			<!-- , getDateDiff(a.reg_date)+1 pastDate -->
+			<!-- , DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + 1 past_date -->
+			, DATEDIFF(NOW(),FROM_UNIXTIME(a.reg_date)) + (SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			, a.del_date delDate
+			, a.lock_flag lockFlag
+			, a.bd_type bdType
+		FROM top_suitability_12 a
+		WHERE a.del_date >= 0
+		AND a.suim_rpt_state = 0
+		AND a.user_no = #{user_no}
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+	<select id="mainIndexSuit17List" resultType="kr.co.toplac.topsuit17.SuimSuit_17VO">
+		SELECT a.suim_rpt_no suimRptNo
+			, a.suim_accept_no suimAcceptNo
+			, a.suim_close_no suimCloseNo
+			, a.suim_rpt_state suimRptState
+			, a.team_id teamId
+			, getTopTmBscTeamName(a.team_id) teamName
+			, getTopTmBscTeamMark(a.team_id) teamMark
+			, a.user_no userNo
+			, getTopMbrBscUserName(a.user_no) userName
+			, a.ptnr_id ptnrId
+			, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick
+			, getTopPtnrBscPtnrName(a.ptnr_id) ptnrName
+			, a.policyholder_nm policyholderNm
+			, a.policyholder_tel1 policyholderTel1
+			, a.policyholder_tel2 policyholderTel2
+			, a.policyholder_hp policyholderHp
+			, a.reg_date regDate
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDateFmt
+			, getDateDiff(a.reg_date)+1 pastDate
+			, a.suim_cancel_date cancelDate
+			, a.suim_rpt_aprv_date suimCancelDate
+			, a.close_date closeDate
+			, DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDateFmt
+			, a.del_date delDate
+			, a.lock_flag lockFlag
+			, a.bd_type bdType
+		FROM top_suitability_17 a
+		WHERE a.del_date >= 0
+		AND a.suim_rpt_state = 0
+		AND a.user_no = #{user_no}
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+	<select id="mainIndexSuit18List" resultType="kr.co.toplac.topsuit.SuimSuit_18VO">
+		SELECT	a.suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				a.suim_rpt_state suimRptState,													<!-- 건 상태-->
+				a.lock_flag lockFlag, 															<!-- 락여부 --> 
+				a.suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				a.suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				a.ptnr_id ptnrId, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(a.ptnr_id) ptnrName,										<!-- 약명 -->
+				a.team_id teamId, getTopTmBscTeamName(a.team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(a.team_id) teamMark,										<!-- 팀마크 -->
+				a.user_no userNo, getTopMbrBscUserName(a.user_no) userName, 					<!-- 담당자 -->
+				a.bd_type bdType, <!-- 건물  getCodeValue('top_contract','bd_type',replace(a.bd_type,'0','')) bdName,  -->
+				a.policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				a.del_date delDate,
+				getDateDiff(a.reg_date)+1 pastDateOld,<!-- 수임부터 경과 일자 -->
+				a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt,
+				clerkHndPhoneNo,
+				conHndPhoneNo
+		FROM top_contract a
+		WHERE a.del_date >= 0
+		AND a.suim_rpt_state = 0
+		AND a.user_no = #{user_no}
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+</mapper>

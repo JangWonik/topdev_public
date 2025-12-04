@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MigLsAdminUtilMapper">
+
+	<delete id="lsAdmin34DeleteAll">
+		DELETE FROM sysadm_aprv_user WHERE task_code = '911'
+	</delete>
+
+	<select id="lsAdmin34List" resultType = "kr.co.toplac.sysadm.migration.MigrationLsAdminVO">
+		SELECT a.user_id aprv_user_no, REPLACE(a.ls_admin34,'|',' ') splitTargetData
+		FROM ls_admin a, zetyx_member_table b
+		WHERE REPLACE(a.ls_admin34,'|','') != ''
+		AND a.user_id = b.`no`
+		AND b.member_state != 1
+		ORDER BY LENGTH(a.ls_admin34)
+	</select>
+
+	<insert id="lsAdmin34Write" parameterType="kr.co.toplac.sysadm.migration.MigrationLsAdminVO">
+		INSERT INTO sysadm_aprv_user
+		(team_id, task_code, aprv_user_no, reg_reason, reg_date, reg_ip, reg_user_no)
+		VALUES(#{team_id}, #{task_code}, #{aprv_user_no}, #{reg_reason}, unix_timestamp(now()), #{reg_ip}, #{reg_user_no})
+	</insert>
+
+	<delete id="lsAdmin35DeleteAll">
+		DELETE FROM sysadm_aprv_user WHERE task_code = '912'
+	</delete>
+
+	<select id="lsAdmin35List" resultType = "kr.co.toplac.sysadm.migration.MigrationLsAdminVO">
+		SELECT a.user_id aprv_user_no, REPLACE(a.ls_admin35,'|',' ') splitTargetData
+		FROM ls_admin a, zetyx_member_table b
+		WHERE REPLACE(a.ls_admin35,'|','') != ''
+		AND a.user_id = b.`no`
+		AND b.member_state != 1
+		ORDER BY LENGTH(a.ls_admin35)
+	</select>
+
+	<insert id="lsAdmin35Write" parameterType="kr.co.toplac.sysadm.migration.MigrationLsAdminVO">
+		INSERT INTO sysadm_aprv_user
+		(team_id, task_code, aprv_user_no, reg_reason, reg_date, reg_ip, reg_user_no)
+		VALUES(#{team_id}, #{task_code}, #{aprv_user_no}, #{reg_reason}, unix_timestamp(now()), #{reg_ip}, #{reg_user_no})
+	</insert>
+
+	<delete id="lsAdmin38DeleteAll">
+		DELETE FROM sysadm_aprv_user WHERE task_code = '913'
+	</delete>
+
+	<select id="lsAdmin38List" resultType = "kr.co.toplac.sysadm.migration.MigrationLsAdminVO">
+		SELECT a.user_id aprv_user_no, REPLACE(a.ls_admin38,'|',' ') splitTargetData
+		FROM ls_admin a, zetyx_member_table b
+		WHERE REPLACE(a.ls_admin38,'|','') != ''
+		AND a.user_id = b.`no`
+		AND b.member_state != 1
+		ORDER BY LENGTH(a.ls_admin38)
+	</select>
+
+	<insert id="lsAdmin38Write" parameterType="kr.co.toplac.sysadm.migration.MigrationLsAdminVO">
+		INSERT INTO sysadm_aprv_user
+		(team_id, task_code, aprv_user_no, reg_reason, reg_date, reg_ip, reg_user_no)
+		VALUES(#{team_id}, #{task_code}, #{aprv_user_no}, #{reg_reason}, unix_timestamp(now()), #{reg_ip}, #{reg_user_no})
+	</insert>
+
+</mapper>

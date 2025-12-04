@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="RegMemberMapper">
+
+	<select id="selteam" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.RegIgVO">
+		SELECT a.user_name name , a.user_no no
+		FROM top_mbr_bsc a
+		WHERE a.team_id_main=#{tmpTeamid}
+		AND ((a.user_state='1' AND a.out_date >= UNIX_TIMESTAMP(#{fromdate}))
+			OR (a.user_state!='1' AND a.join_date &lt; UNIX_TIMESTAMP(#{todate})))
+		ORDER BY a.work_type, a.work_level DESC, a.user_name ASC
+	</select>
+
+	<select id="regmember" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.RegIgVO">
+		select ifnull(reg_rid,0) reg_rid, ifnull(end_rid,0) end_rid, 
+			ifnull(reg_rid2,0) reg_rid2, ifnull(end_rid2,0) end_rid2, 
+			ifnull(reg_rid3,0) reg_rid3, ifnull(end_rid3,0) end_rid3, 
+			ifnull(reg_rid4,0) reg_rid4, ifnull(end_rid4,0) end_rid4,
+			ifnull(reg_rid5,0) reg_rid5, ifnull(end_rid5,0) end_rid5,
+			ifnull(reg_rid6,0) reg_rid6, ifnull(end_rid6,0) end_rid6,
+			ifnull(reg_rid7,0) reg_rid7, ifnull(end_rid7,0) end_rid7,
+			ifnull(reg_rid8,0) reg_rid8, ifnull(end_rid8,0) end_rid8,
+			ifnull(reg_rid9,0) reg_rid9, ifnull(end_rid9,0) end_rid9,
+			ifnull(reg_rid10,0) reg_rid10, ifnull(end_rid10,0) end_rid10,
+			ifnull(reg_rid11,0) reg_rid11, ifnull(end_rid11,0) end_rid11,
+			ifnull(reg_rid12,0) reg_rid12, ifnull(end_rid12,0) end_rid12,
+			ifnull(reg_rid + reg_rid2 + reg_rid3 + reg_rid4 + reg_rid5 + reg_rid6 + reg_rid7 + reg_rid8 + reg_rid9 + reg_rid10 + reg_rid11 + reg_rid12, 0) reg_sum, 
+			ifnull(end_rid + end_rid2 + end_rid3 + end_rid4 + end_rid5 + end_rid6 + end_rid7 + end_rid8 + end_rid9 + end_rid10 + end_rid11 + end_rid12, 0) end_sum
+		from 
+			(select count(suim_rpt_no) reg_rid FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(#{fromdate})
+			and reg_date &lt; unix_timestamp(#{todate})
+			)a,
+			(select count(suim_rpt_no) end_rid FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(#{fromdate})
+			AND rpt.close_date &lt; unix_timestamp(#{todate})
+			)b,
+			(select count(suim_rpt_no) reg_rid2 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+			)c,
+			(select count(suim_rpt_no) end_rid2 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 30 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 30 day), '%Y%m'),'16'))
+			)d,
+			(select count(suim_rpt_no) reg_rid3 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+			)e,
+			(select count(suim_rpt_no) end_rid3 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 60 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 60 day), '%Y%m'),'16'))
+			)f,
+			(select count(suim_rpt_no) reg_rid4 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+			)g,
+			(select count(suim_rpt_no) end_rid4 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 90 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 90 day), '%Y%m'),'16'))
+			)h,
+			(select count(suim_rpt_no) reg_rid5 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+			)i,
+			(select count(suim_rpt_no) end_rid5 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 120 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 120 day), '%Y%m'),'16'))
+			)j,
+			(select count(suim_rpt_no) reg_rid6 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+			)k,
+			(select count(suim_rpt_no) end_rid6 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 150 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 150 day), '%Y%m'),'16'))
+			)l,
+			(select count(suim_rpt_no) reg_rid7 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+			)m,
+			(select count(suim_rpt_no) end_rid7 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 180 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 180 day), '%Y%m'),'16'))
+			)n,
+			(select count(suim_rpt_no) reg_rid8 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+			)o,
+			(select count(suim_rpt_no) end_rid8 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 210 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 210 day), '%Y%m'),'16'))
+			)p,
+			(select count(suim_rpt_no) reg_rid9 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+			)q,
+			(select count(suim_rpt_no) end_rid9 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 240 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 240 day), '%Y%m'),'16'))
+			)r,
+			(select count(suim_rpt_no) reg_rid10 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+			)s,
+			(select count(suim_rpt_no) end_rid10 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 270 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 270 day), '%Y%m'),'16'))
+			)t,
+			(select count(suim_rpt_no) reg_rid11 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+			)u,
+			(select count(suim_rpt_no) end_rid11 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 300 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 300 day), '%Y%m'),'16'))
+			)v,
+			(select count(suim_rpt_no) reg_rid12 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			and reg_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16'))
+			and reg_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+			)w,
+			(select count(suim_rpt_no) end_rid12 FROM top_rpt_head rpt
+			WHERE rpt.user_no ==#{tmpNo} AND rpt.suim_rpt_state!='3'
+			AND rpt.close_date >= unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{fromdate}, interval 330 day), '%Y%m'),'16'))
+			AND rpt.close_date &lt; unix_timestamp(concat(DATE_FORMAT(DATE_ADD(#{todate}, interval 330 day), '%Y%m'),'16'))
+			)x;
+	</select>
+
+</mapper>

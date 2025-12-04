@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="SuimRptCancelMapper">
+	<!-- ================================= -->
+	<!-- ========== 위임취소 프로세스 ========== -->
+	<!-- ========== 2017.08.02  ========== -->
+	<!-- ========== by. lds     ========== -->
+	<!-- ================================= -->
+	
+	<!-- 위임취소 갯수정보 select -->
+	<select id="getRptCancelCnt" parameterType="HashMap" resultType="Integer">
+		SELECT count(*) cancelCnt
+		  FROM top_rpt_cancel
+		 WHERE
+		 	<choose>
+				<when test="processChk == 1">
+					suim_rpt_no = #{rptCancelSuimRptNo}
+				</when>
+				<when test="processChk == 2">
+					suim_rpt_no = #{rptCancelPrimRptNo}
+				</when>			
+			</choose>	 		   
+	</select>
+	
+	<!-- 위임취소 정보 SELECT -->
+	<select id="getRptCancel" parameterType="HashMap" resultType="kr.co.toplac.topsuim.SuimRptCancelVO">
+		SELECT  serial_no serialNo 
+			   ,suim_rpt_no suimRptNo
+		       ,cancel_flag cancelFlag
+		       ,cancel_gubun cancelGubun
+		       ,user_no userNo
+		       ,cancel_reason cancelReason
+		       ,agree_user_no agreeUserNo
+		       ,reg_date RegDate
+		       ,agree_date agreeDate
+		       ,del_date delDatae
+		  FROM top_rpt_cancel
+		 WHERE suim_rpt_no = #{suimRptNo}
+		   AND process_gubun = #{processChk}
+		   AND del_date = 0;
+	</select>
+	
+	<!-- 위임취소 요청 INSERT -->
+	<insert id="insRptCancel" parameterType="HashMap">
+		INSERT INTO top_rpt_cancel
+			   (suim_rpt_no, process_gubun, cancel_flag, cancel_gubun, user_no, cancel_reason, reg_date, agree_date, del_date)
+		VALUES
+ 			   (
+	   			<choose>
+					<when test="processChk == 1">
+						#{rptCancelSuimRptNo},
+					</when>
+					<when test="processChk == 2">
+						#{rptCancelPrimRptNo},
+					</when>			
+				</choose>		
+ 			   #{processChk},0,#{insCancelGubun},#{userNo},#{cancelReasonTxtArea}, unix_timestamp(now()), 0, 0) 
+	</insert>
+	
+	<!-- 위임취소 요청 UPDATE (위임취소를 취소하는 사람이 다를 수 있어서 조건 변경) by top3009 -->
+	<update id="upadateRptCancel" parameterType="HashMap">
+		UPDATE top_rpt_cancel		
+		SET 
+			cancel_flag = 0
+			,cancel_gubun = #{insCancelGubun}
+			,cancel_reason = #{cancelReasonTxtArea}
+			,reg_date = unix_timestamp(now())
+			,agree_date = 0
+			,del_date = 0
+		WHERE 
+			<choose>
+				<when test="processChk == 1">
+					suim_rpt_no = #{rptCancelSuimRptNo}
+				</when>
+				<when test="processChk == 2">
+					suim_rpt_no = #{rptCancelPrimRptNo}
+				</when>			
+			</choose>
+				and process_gubun 	= #{processChk}						 
+	</update>
+	
+	<!-- 위임취소 요청 UPDATE -->
+	<update id="upadateRptCancel_20200221" parameterType="HashMap">
+		UPDATE top_rpt_cancel		
+		SET 
+			cancel_flag = 0
+			,cancel_gubun = #{insCancelGubun}
+			,cancel_reason = #{cancelReasonTxtArea}
+			,reg_date = unix_timestamp(now())
+			,agree_date = 0
+			,del_date = 0
+		WHERE 
+			<choose>
+				<when test="processChk == 1">
+					suim_rpt_no = #{rptCancelSuimRptNo}
+				</when>
+				<when test="processChk == 2">
+					suim_rpt_no = #{rptCancelPrimRptNo}
+				</when>			
+			</choose>
+				and process_gubun 	= #{processChk}
+				and user_no = #{userNo}		 
+	</update>
+	
+	<!-- 위임취소 요청 사유 수정 -->
+	<insert id="udtRptCancel" parameterType="HashMap">
+		UPDATE top_rpt_cancel
+		   SET cancel_reason = #{cancelReasonModTxtArea}
+		      ,cancel_gubun = #{udtCancelGubun}
+		 WHERE serial_no = #{rptCancelSerialNo}
+	</insert>	
+	
+	<!-- 위임취소요청 취소 -->
+	<update id='delRptCancel' parameterType="HashMap">
+		UPDATE top_rpt_cancel
+	       SET  del_date = unix_timestamp(now())
+	           ,cancel_flag = #{cancelFlag}
+		 WHERE serial_no = #{rptCancelSerialNo}
+	</update>
+	
+	<!-- 위임취소요청 결재 -->
+	<update id='approvRptCancel' parameterType="HashMap">
+		UPDATE top_rpt_cancel
+	       SET  agree_date = unix_timestamp(now())
+	           ,cancel_flag = #{cancelFlag}
+	           ,agree_user_no = #{userNo}
+		 WHERE serial_no = #{rptCancelSerialNo}
+	</update>	
+	
+	<!-- 위임취소요청 반려 -->
+	<update id='returnRptCancel' parameterType="HashMap">
+		UPDATE top_rpt_cancel
+	       SET  del_date = unix_timestamp(now())
+	           ,cancel_flag = #{cancelFlag}
+	           ,agree_user_no = #{userNo}
+		 WHERE serial_no = #{rptCancelSerialNo}
+	</update>		
+
+	<!-- 위임취소 되돌리기 -->
+	<update id='restoreRptCancel' parameterType="HashMap">
+		UPDATE top_rpt_cancel
+	       SET del_date = unix_timestamp(now())
+	          ,cancel_flag = #{cancelFlag}
+		 WHERE serial_no = #{rptCancelSerialNo}
+	</update>		
+		
+	
+	<!-- 수임건 상태변경 -->
+	<update id="udtRptStateCancel" parameterType="HashMap">
+		UPDATE
+			<choose>
+				<when test="processChk == 1">
+					top_rpt_head
+				</when>
+				<when test="processChk == 2">
+					top_prim_biz_rpt_head
+				</when>			
+			</choose>		
+	       SET suim_rpt_state = #{suimRptState}
+			<choose>
+				<!-- 위임취소 결재 -->
+				<when test="cancelFlag == 1"> 
+					<choose>
+						<when test="processChk == 1">
+							,suim_rpt_aprv_date = 0
+							,suim_cancel_date = unix_timestamp(now())
+							,close_date = 0
+						</when>
+						<when test="processChk == 2">
+							,suim_cancel_date = UNIX_TIMESTAMP(NOW())
+						</when>			
+					</choose>	
+				</when>
+				<!-- 위임취소 반려 -->
+				<when test="cancelFlag == 3">
+					<choose>
+						<when test="processChk == 1">
+							,suim_cancel_date = 0
+						</when>
+						<when test="processChk == 2">
+							,suim_cancel_date = NULL
+						</when>			
+					</choose>	
+				</when>			
+			</choose>		
+	     WHERE 1=1
+   			<choose>
+				<when test="processChk == 1">
+					AND suim_rpt_no = #{rptCancelSuimRptNo}
+				</when>
+				<when test="processChk == 2">
+					AND suim_rpt_no = #{rptCancelPrimRptNo}
+				</when>			
+			</choose>	 
+	</update>
+	
+	
+	<!-- 결재목록 SELECT - 일반수임건 -->
+	<select id="getSuimRptCancelApprovList" parameterType="java.util.ArrayList" resultType="kr.co.toplac.topsuim.SuimRptCompositeVO">
+		  SELECT a.suim_rpt_no
+				,a.suim_accept_no
+				,a.suim_rpt_type1
+				,getCodeValue("top_rpt_head", "suim_rpt_type1", a.suim_rpt_type1) suim_rpt_type1_nm
+				,a.suim_rpt_state
+				,getCodeValue("top_rpt_head", "suim_rpt_state", a.suim_rpt_state) suimRptStateVal
+				,a.team_id
+				,getTopTmBscTeamName(a.team_id) team_name	
+				,a.user_no
+				,getTopMbrBscUserName(a.user_no) user_name		
+				,a.ptnr_id
+				,getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick		
+				,a.ptnr_dept_id
+				,getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id)	ptnr_dept_nm	
+				,a.ptnr_mbr_no
+				,getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+				,b.cancel_reason cancelReason
+				,b.cancel_gubun cancelGubun
+				,b.serial_no
+				,CASE WHEN a.CLOSE_DATE IS NOT NULL AND a.CLOSE_DATE > 0 THEN FROM_UNIXTIME(a.CLOSE_DATE, '%Y-%m-%d')
+				 ELSE '' END AS closeDate
+				,CASE WHEN c.DEPOSIT_DATE IS NOT NULL AND c.DEPOSIT_DATE > 0 THEN FROM_UNIXTIME(c.DEPOSIT_DATE, '%Y-%m-%d')
+				 ELSE '' END AS depositDate
+		  FROM top_rpt_head a
+		 INNER JOIN 
+		 		 (
+				  	SELECT suim_rpt_no, serial_no, cancel_reason, cancel_gubun
+				  	  FROM top_rpt_cancel
+				  	 WHERE del_date = 0
+				  	   AND process_gubun = 1
+				 ) b
+		    ON a.suim_rpt_no = b.suim_rpt_no
+		  LEFT JOIN top_rpt_invoice c
+		    ON  a.suim_rpt_no = c.suim_rpt_no
+		 WHERE 1=1
+		   AND suim_rpt_state = 31	
+		   AND a.team_id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>	
+	</select>
+	
+	<!-- 결재목록 SELECT - 농작물 -->
+	<select id="getPrimRptCancelApprovList" parameterType="java.util.ArrayList" resultType="kr.co.toplac.topsuim.SuimRptCompositeVO">
+		  SELECT a.suim_rpt_no
+				,a.suim_accept_no
+				,a.suim_rpt_type1
+				,getCodeValue("top_prim_biz_rpt_head", "suim_rpt_type1", a.suim_rpt_type1) suim_rpt_type1_nm
+				,a.suim_rpt_state
+				,getCodeValue("top_prim_biz_rpt_head", "suim_rpt_state", a.suim_rpt_state) suimRptStateVal
+				,a.team_id
+				,getTopTmBscTeamName(a.team_id) team_name	
+				,a.user_no
+				,getTopMbrBscUserName(a.user_no) user_name		
+				,a.ptnr_id
+				,getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick		
+				,a.ptnr_dept_id
+				,getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id)	ptnr_dept_nm	
+				,a.ptnr_mbr_no
+				,getTopPtnrMbrBscPtnrMbrName(a.ptnr_mbr_no) ptnr_mbr_nm
+				,b.cancel_reason cancelReason
+				,b.cancel_gubun cancelGubun
+				,b.serial_no
+				,CASE WHEN a.CLOSE_DATE IS NOT NULL AND a.CLOSE_DATE > 0 THEN FROM_UNIXTIME(a.CLOSE_DATE, '%Y-%m-%d')
+				 ELSE '' END AS closeDate
+                ,CASE WHEN c.DEPOSIT_DATE IS NOT NULL AND c.DEPOSIT_DATE > 0 THEN FROM_UNIXTIME(c.DEPOSIT_DATE, '%Y-%m-%d')
+                 ELSE '' END AS depositDate
+		  FROM top_prim_biz_rpt_head a
+		 INNER JOIN 
+		 		 (
+				  	SELECT suim_rpt_no, serial_no, cancel_reason, cancel_gubun
+				  	  FROM top_rpt_cancel
+				  	 WHERE del_date = 0
+				  	   AND process_gubun = 2
+				 ) b
+		    ON a.suim_rpt_no = b.suim_rpt_no
+         LEFT JOIN top_prim_biz_inv c
+            ON a.suim_rpt_no = c.suim_rpt_no
+		 WHERE 1=1
+		   AND suim_rpt_state = 31	
+		   AND a.team_id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>	
+	</select>	
+	
+	
+
+</mapper>

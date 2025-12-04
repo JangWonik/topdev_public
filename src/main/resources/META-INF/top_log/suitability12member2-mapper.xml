@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Suitability12Member2Mapper">
+
+	<select id="Suit12_M2" parameterType="java.util.List" resultType="kr.co.toplac.lslog.Suitability12Member2VO">
+		select ptnr_id ig_id, policyholder_nm ig_client, suim_accept_no report_id, suim_close_no result_id, bd_type, rstPptyNvCpltYn
+			,DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y/%m/%d') reg_date
+			,DATE_FORMAT(FROM_UNIXTIME(close_date), '%Y/%m/%d') end_date
+		from top_suitability_12 
+		where user_no= #{user_id}
+		and close_date >= unix_timestamp(#{fromdate})
+		and close_date &lt; unix_timestamp(#{todate}) 
+		order by close_date desc
+	</select>
+
+	<select id="Suit12_M2List" parameterType="java.util.HashMap" resultType="kr.co.toplac.lslog.Suitability12Member2VO">
+		select ptnr_nick ig_nick
+		from top_ptnr_bsc
+		where ptnr_id = #{tmpIg} 
+	</select>
+
+</mapper>

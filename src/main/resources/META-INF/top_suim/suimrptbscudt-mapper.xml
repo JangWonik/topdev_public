@@ -1,0 +1,930 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimBookUdtMapper">
+
+	<select id="getSuimBookOne" resultType="kr.co.toplac.topsuim.SuimRptCompositeVO">
+		
+		SELECT 
+			  a.suim_rpt_no
+			, a.accident_no
+			, a.policy_no
+			, a.insurance_nm
+			, a.policyholder_ssn
+			, a.policyholder_tel
+			, a.beneficiary_ssn
+			, a.beneficiary_tel
+			, a.damaged_tel
+			, a.accident_facts
+			, a.investigate_postcode
+			, a.investigate_addr1
+			, a.investigate_addr2
+			, a.amt_estimated_damage
+			, a.commission_estimated
+			, a.suim_rpt_aprv_user_no suimRptAprvUserNo
+			, getTopMbrBscUserName(a.suim_rpt_aprv_user_no) suimRptAprvUserName
+			, b.suim_rpt_no
+			, b.suim_rpt_no suimRptNo
+			, b.suim_rpt_state suimRptState
+			, b.suim_accept_no
+			, b.suim_close_no
+			, b.suim_rpt_type1 report_type
+			, getCodeValue('top_rpt_head','suim_rpt_type1',b.suim_rpt_type1) suim_rpt_type1_nm
+			, getCodeValue('top_rpt_head','suim_rpt_type2',b.suim_rpt_type2) suim_rpt_type2_nm
+			, b.suim_rpt_type2 report_type2
+			, b.team_id
+			, getTopTmBscTeamName(b.team_id) team_name
+			, b.user_no
+			, getTopMbrBscUserName(b.user_no) user_name
+			, b.ptnr_id
+			, getTopPtnrBscPtnrNick(b.ptnr_id) ptnr_nick
+			, getTopPtnrBscPtnrName(b.ptnr_id) ptnr_name
+			, b.ptnr_dept_id
+			, getTopPtnrDeptBscPtnrDeptName(b.ptnr_dept_id) ptnr_dept_nm
+			, b.ptnr_mbr_no
+			, getTopPtnrMbrBscPtnrMbrName(b.ptnr_mbr_no) ptnr_mbr_nm
+			, b.policyholder_nm, b.beneficiary_nm, b.damaged_nm
+			, DATE_FORMAT(FROM_UNIXTIME(b.accident_date), '%Y-%m-%d') accident_date
+			, DATE_FORMAT(FROM_UNIXTIME(b.reg_date), '%Y-%m-%d') reg_date
+			, DATE_FORMAT(FROM_UNIXTIME(b.trans_date), '%Y-%m-%d') trans_date 
+			, DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d') close_date
+			, a.moral_flag moralFlag 
+			, a.minwon_flag minwonFlag
+			, a.amt_self_pay amtSelfPay
+			, a.amt_compensation_limit amtCompensationLimit
+			, a.amt_self_pay_unit amtSelfPayUnit
+			, a.amt_compensation_limit_unit amtCompensationLimitUnit
+			, a.insu_term AS insuTerm
+			, b.pendncy_trget_at pendncyTrgetAt
+			, e.ptnr_tm2_nm 				<!-- 170614, 김두현 차장님 요청에 의해 추가 by lds -->
+			, b.speed_onestop speedOnestop 	<!-- 170811, 최중찬 대리님 요청에 의해 추가 by lds -->
+			, b.speed_type speedType		<!-- 170811, 최중찬 대리님 요청에 의해 추가 by lds -->
+			, b.workload_type workloadType
+			, b.workload_ea workloadEa
+			, getCode2Value('top_rpt_head', 'workload_type', b.suim_rpt_type1, b.workload_type) workloadTypeVal
+			, IF( IF(IFNULL(b.close_date,0)=0,unix_timestamp("2017-12-16"),b.close_date) >= unix_timestamp("2017-12-16"),1,0) workloadUseAt -- 기준업무량은 17년12월16일부터 적용
+			, a.retire_pending_flag retirePendingFlag
+			, b.ptnr_assign_gubun ptnrAssignGubun
+			, b.ptnr_detail_gubun ptnrDetailGubun
+			
+			, a.insu_condition <!-- 181123, 손해사정서 교부로 추가 -->
+			
+			, a.self_pay_flag AS selfPayFlag
+			, a.compensation_limit_flag AS compensationLimitFlag
+			
+			, IFNULL(b.close_ptnr_dept_nm,'') AS close_ptnr_dept_nm
+			, IFNULL(b.close_ptnr_tm2_nm,'') AS close_ptnr_tm2_nm
+			, b.site_rpt_state
+			, b.site_rpt_aprv_date AS site_rpt_aprv_date
+			, DATE_FORMAT(FROM_UNIXTIME(b.site_rpt_aprv_date), '%Y-%m-%d') AS site_rpt_aprv_date_fmt
+			
+			, b.ptnr_id_sub
+			, b.period_flag
+			, CASE
+				WHEN(b.period_flag = 1) 
+				THEN '장기'
+				WHEN(b.period_flag = 2) 
+				THEN '일반'
+				ELSE '없음'
+			END AS period_flag_nm
+			
+		FROM top_rpt_body a
+	   INNER JOIN top_rpt_head b
+	      ON a.suim_rpt_no = b.suim_rpt_no
+	    LEFT OUTER JOIN top_ptnr_mbr_bsc e
+	      ON b.ptnr_mbr_no = e.ptnr_mbr_no
+	   where b.suim_rpt_no = #{rid}
+	</select>
+	
+	
+	<update id="rptBscHeadUdt" parameterType="kr.co.toplac.topsuim.SuimRptUdtViewVO">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			 suim_rpt_type1 = #{suimRptType1}
+			,suim_rpt_type2 = #{suimRptType2}
+			,policyholder_nm = #{policyholderNm}
+			,beneficiary_nm = #{beneficiaryNm}
+			,damaged_nm = #{damagedNm}
+			,accident_date = unix_timestamp(#{accidentDate})
+			,reg_date = unix_timestamp(#{regDate})
+			<choose>
+				<when test='transDate == ""'>
+					,trans_date = NULL		
+				</when>
+				<otherwise>
+					,trans_date = unix_timestamp(#{transDate})
+				</otherwise>
+			</choose>			
+			,pendncy_trget_at = #{pendncyTrgetAt}
+			,speed_type = #{speedType}
+			,speed_onestop = #{speedOneStop}
+			,workload_type = #{workloadType}
+			,workload_ea = #{workloadEa}
+			,ptnr_assign_gubun = #{ptnrAssignGubun}
+			,ptnr_detail_gubun = #{ptnrDetailGubun}
+			,ptnr_id_sub = #{ptnrIdSub}
+			,period_flag = #{periodFlag}
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<update id="rptBscBodyUdt" parameterType="kr.co.toplac.topsuim.SuimRptUdtViewVO">
+		UPDATE 
+			top_rpt_body
+		SET	
+			 accident_no = #{accidentNo}
+			,policy_no = #{policyNo}
+			,insurance_nm = #{insuranceNm}
+			,insu_term = #{insuTerm}
+			,policyholder_tel = #{policyholderTel}
+			,beneficiary_tel = #{beneficiaryTel }
+			,damaged_tel = #{damagedTel }
+			,accident_facts = #{accidentFacts }
+			,investigate_postcode = #{investigatePostcode }
+			,investigate_addr1 = #{investigateAddr1 }
+			,investigate_addr2 = #{investigateAddr2 }
+			,amt_self_pay = #{amtSelfPay}
+			,amt_compensation_limit = #{amtCompensationLimit}
+			,amt_self_pay_unit = #{selfPayUnit}
+			,amt_compensation_limit_unit = #{compensationLimitUnit}
+			,compensation_limit_flag = #{compensationLimitFlag}
+			,self_pay_flag = #{selfPayFlag}
+			,retire_pending_flag = #{retirePendingFlag}
+			,insu_condition = #{insu_condition}
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<update id="rptBscBodyUdt_backup20170529" parameterType="kr.co.toplac.topsuim.SuimRptUdtViewVO">
+
+		UPDATE
+			top_rpt_body
+		SET
+			moral_flag = #{moralFlag},
+			minwon_flag = #{minwonFlag},
+			accident_no = #{accidentNo},
+			policy_no = #{policyNo},
+			insurance_nm = #{insuranceNm},
+			policyholder_ssn = #{policyholderSsn},
+			policyholder_tel = #{policyholderTel},
+			beneficiary_ssn = #{beneficiarySsn},
+			beneficiary_tel = #{beneficiaryTel },
+			damaged_tel = #{damagedTel },
+			accident_facts = #{accidentFacts },
+			investigate_postcode = #{investigatePostcode },
+			investigate_addr1 = #{investigateAddr1 },
+			investigate_addr2 = #{investigateAddr2 }
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+
+	</update>
+
+	<!-- 로그 입력 : 수임 상태 변경 시 -->
+ 	<insert id = "suimLogForAction" parameterType="kr.co.toplac.topsuim.SuimLogVO">
+ 	
+ 		INSERT INTO top_rpt_head_log
+ 		
+ 		(
+ 			suim_rpt_type1, suim_rpt_no,speed_type, suim_rpt_state, suim_rpt_type1_close12,suim_rpt_type1_close34
+ 			 , reg_date, suim_cancel_date, suim_rpt_aprv_date, close_date, del_date, lock_flag, moral_flag, minwon_flag, log_date,
+ 			 log_ip, log_user_no, action
+ 			 ,team_id, user_no, onestop_team_id, onestop_mbr_no, ptnr_id, ptnr_dept_id, ptnr_mbr_no, workload_type, workload_ea
+ 			 ,ptnr_assign_gubun, ptnr_detail_gubun
+ 			 
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptType1}, #{suimRptNo} , #{speedType} ,#{suimRptState},#{suimRptType1Close12},#{suimRptType1Close34}
+ 			,unix_timestamp(#{regDate}),unix_timestamp(#{suimCancelDate}),unix_timestamp(#{suimRptAprvDate})
+ 			,unix_timestamp(#{closeDate}),unix_timestamp(#{delDate}),#{lockFlag}, #{moralFlag} ,#{minwonFlag},unix_timestamp(now())
+ 			,#{logIp},#{logUserNo}, #{action}
+ 			,#{team_id}, #{user_no}, #{onestopTeamId}, #{onestopMbrNo}, #{ptnr_id}, #{ptnr_dept_id}, #{ptnr_mbr_no}, #{workloadType}, #{workloadEa}
+ 			,#{ptnrAssignGubun}, #{ptnrDetailGubun}
+ 			
+ 		)
+		
+ 	</insert>
+	
+	<update id="rptEndHeadUdt" parameterType="kr.co.toplac.topsuim.SuimRptEndViewVO">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			 suim_rpt_ea = #{suimRptEa}
+			,suim_rpt_type1_close12 = #{suimRptType1Close12}
+			,suim_rpt_type1_close34 = #{suimRptType1Close34}
+			<if test="workloadUseAt == 1">
+				,workload_type 			= #{workloadType}
+				,workload_ea 			= #{workloadEa}
+			</if>
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<update id="rptEndBodyUdt" parameterType="kr.co.toplac.topsuim.SuimRptEndViewVO">
+		
+		UPDATE 
+			top_rpt_body
+		SET	
+			 amt_estimated_damage = #{amtEstimatedDamage}
+			,amt_reduction = #{amtReduction}
+			,amt_claimed = #{amtClaimed}
+			,amt_settlement = #{amtSettlement}
+			,amt_self_pay = #{amtSelfPay}
+			,amt_insu_payment = #{amtInsuPayment}
+			,minwon_flag = #{minwonFlag}
+			,moral_flag = #{moralFlag}
+            <choose>
+                <when test="minwonDate == ''">,minwon_date = 0</when>
+                <otherwise>,minwon_date = UNIX_TIMESTAMP(#{minwonDate})</otherwise>
+            </choose>
+            <choose>
+                <when test="moralDate == ''">,moral_date = 0</when>
+                <otherwise>,moral_date = UNIX_TIMESTAMP(#{moralDate})</otherwise>
+            </choose>
+            
+			<if test="workloadUseAt == 1">
+				,retire_pending_flag = #{retirePendingFlag}
+			</if>
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 손해사정서 파일 업로드 키값 구하기 & dummy 컬럼 생성-->
+ 	<insert id="rptIssueFileUploadForSelectKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey"> 	
+		INSERT INTO top_rpt_issue_file
+		( suim_rpt_no, file_path, file_name, reg_date)
+		VALUES
+		( #{suimRptNo}, #{filePath}, #{fileName}, unix_timestamp(now()))
+			
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+ 	</insert>
+ 	
+ 	<!-- 손해사정서 dummy 컬럼에 실제 Data Update -->
+	<update id="rptIssueFileUploadForUpdate" parameterType="java.util.HashMap">
+		UPDATE 
+			top_rpt_issue_file 
+		SET 
+			  suim_rpt_no = #{suimRptNo}
+			, file_path = #{filePath}			
+			, file_name = #{fileName}	  		
+		WHERE 
+			serial_no = #{nextRptFileSerial}
+	</update>
+	
+ 	<!-- 현장보고서 이미지 파일 업로드 키값 구하기 & dummy 컬럼 생성-->
+ 	<insert id="rptOrgFileUploadForSelectKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey"> 	
+		INSERT INTO top_rpt_file
+		( suim_rpt_no, file_path, file_name, reg_date)
+		VALUES
+		( #{suimRptNo}, #{filePath}, #{fileName}, unix_timestamp(now()))
+			
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+ 	</insert>
+ 	
+	<!-- 현장보고서 dummy 컬럼에 실제 Data Update -->
+	<update id="rptOrgFileUploadForUpdate" parameterType="java.util.HashMap">
+		UPDATE 
+			top_rpt_file 
+		SET 
+			  suim_rpt_no = #{suimRptNo}
+			, file_path = #{filePath}			
+			, file_name = #{fileName}	  		
+		WHERE 
+			serial_no = #{nextRptFileSerial}
+	</update>
+	
+	<!-- 보고서 원본 파일 삭제하기 -->
+	<delete id="delRptOrgFile" parameterType="String">
+	
+		DELETE FROM
+			top_rpt_file
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+	
+	<!-- 손해사정서교부동의서 파일 삭제하기 -->
+	<delete id="delRptIssueFile" parameterType="String">
+	
+		DELETE FROM
+			top_rpt_issue_file
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+	
+	<!-- 손해사정서 이메일 첨부파일 발송시 다운로드 파일명 가져오기 -->
+	<select id="getRptIssueFileEmailAttachForDown" parameterType="String" resultType="String">
+	
+		SELECT
+			CONCAT(file_path, enc_file_name)
+		FROM top_rpt_issue_send
+		WHERE serial_no = #{key}
+		
+	</select>
+	
+	<select id="getRptIssueFileEmailAttachForFileName" parameterType="String" resultType="String">
+	
+		SELECT
+			org_File_name
+		FROM top_rpt_issue_send
+		WHERE serial_no = #{key}
+		
+	</select>
+	
+	<!-- 손해사정서 교부동의서 파일 다운로드용 파일명 가져오기  -->
+	<select id="getRptIssueFileNameForDown" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,file_name) 			 
+ 		FROM 
+ 			top_rpt_issue_file
+ 		WHERE 
+ 			serial_no = #{key}
+	
+	</select>
+	
+	<!-- 보고서 파일 다운로드용 파일명 가져오기  -->
+	<select id="getRptOrgFileNameForDown" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,file_name)
+ 			 
+ 		FROM 
+ 			top_rpt_file
+ 		WHERE 
+ 			serial_no = #{key}
+	
+	</select>
+	
+	<!-- 손해사정서 교부동의서 파일 삭제용 풀패스 가져오기  -->
+	<select id="getRptIssueFilePathForDel" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,'/', file_name) 
+ 		FROM 
+ 			top_rpt_issue_file
+ 		WHERE 
+ 			serial_no = #{serialNo}
+	
+	</select>
+	
+	<!-- 보고서 파일 삭제용 풀패스 가져오기  -->
+	<select id="getRptOrgFilePathForDel" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,'/', file_name) 
+ 		FROM 
+ 			top_rpt_file
+ 		WHERE 
+ 			serial_no = #{serialNo}
+	
+	</select>
+	
+	<!-- 반려하기 -->
+	<update id="rptActionRptReturn" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			 suim_rpt_state ='11'
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 반려 취소 -->
+	<update id="rptActionRptReturnCancel" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			 suim_rpt_state='1'
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결하기 일반 보험사--> 
+	<update id="rptActionRptEnd_20210209" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			 suim_rpt_state='2'
+			 ,close_date = unix_timestamp(#{closeDate})
+			 ,suim_close_no = #{nextCloseNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 보험사 담당자 기준 부서로 갱신함 by top3009 20230713 -->
+	<update id="rptActionRptEnd" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_rpt_head a
+		SET	
+			 a.suim_rpt_state='2'
+			 ,a.close_date = unix_timestamp(#{closeDate})
+			 ,a.suim_close_no = #{nextCloseNo}
+			 <!-- ,a.close_ptnr_dept_nm = getTopPtnrDeptBscPtnrDeptName(a.ptnr_dept_id) -->
+			 ,a.close_ptnr_dept_nm = (SELECT IFNULL(ptnr_tm_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no)
+			 ,a.close_ptnr_tm2_nm = (SELECT IFNULL(ptnr_tm2_nm,'') FROM top_ptnr_mbr_bsc WHERE ptnr_mbr_no = a.ptnr_mbr_no)
+		WHERE
+			a.suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결하기 : 인보이스 업데이트 ( 인보이스의 제출일이 존재하면 그대로, 아닐경우 수임건의 종결일을 인보이스 제출일로 업데이트! 컨트롤러 참고  )--> 
+	<update id="rptActionRptEndInv" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_rpt_invoice
+		SET	
+			invoice_date = unix_timestamp(#{invoiceDate})
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결하기 AIA..등 다음 종결 업무가 남은 보험사일 경우--> 
+	<update id="rptActionRptEnd19" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			ptnr_mbr_sanction = 1
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 상신하기 -->
+	<update id="rptActionSangsin" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			suim_rpt_state = 1
+			,suim_rpt_aprv_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 상신하기 body의 결재자 정보 입력 -->
+	<update id="rptActionSangsinBodyApvNo" parameterType="java.util.HashMap">
+		
+		UPDATE 
+			top_rpt_body
+		SET	
+			suim_rpt_aprv_user_no = #{apvNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 현장보고서 상신하기 -->
+	<update id="rptActionSiteSangsin" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET
+			site_rpt_state = 1			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 현장보고서 상신취소하기 -->
+	<update id="rptActionSiteSangsinCancel" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET
+			site_rpt_state = 0			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 현장보고서 결재 취소하기 -->
+	<update id="rptActionSiteEndCancel" parameterType="String">
+	
+		UPDATE 
+			top_rpt_head
+		SET
+			site_rpt_state = 1
+			,site_rpt_aprv_date = 0			
+			,site_result_flag = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<!-- 등록된 현장보고서 확인하기 -->
+	<select id="rptActionSiteChk0" parameterType="String" resultType="integer">
+		SELECT
+			COUNT(*) as Cnt
+		FROM top_rpt_site_interim
+		WHERE suim_rpt_no = #{suimRptNo} 
+		AND site_flag = 0
+	</select>
+	
+	<!-- 등록된 현장보고서 확인하기 -->
+	<select id="rptActionSiteChk1" parameterType="String" resultType="integer">
+		SELECT
+			COUNT(*) as Cnt
+		FROM top_rpt_site_interim
+		WHERE suim_rpt_no = #{suimRptNo} 
+		AND site_flag = 1
+	</select>
+	
+	<!-- 현장보고서 일정보고서로 결재하기 -->
+	<update id="rptActionSiteEnd1" parameterType="String">
+	
+		UPDATE 
+			top_rpt_head
+		SET
+			site_rpt_state = 2
+			,site_rpt_aprv_date = unix_timestamp(now())
+			,site_result_flag = 1			
+		WHERE
+			suim_rpt_no = #{suimRptNo}			
+	</update>
+	
+	<!-- 현장보고서 결재보고서 상태값만 바꾸어주기 -->
+	<update id="rptActionSiteEndEx" parameterType="String">	
+		UPDATE 
+			top_rpt_head
+		SET
+			site_result_flag = 2				
+		WHERE
+			suim_rpt_no = #{suimRptNo}			
+	</update>
+	
+	<!-- 현장보고서 정식보고서로 결재하기 -->
+	<update id="rptActionSiteEnd0" parameterType="String">
+	
+		UPDATE 
+			top_rpt_head
+		SET
+			site_rpt_state = 2
+			,site_rpt_aprv_date = unix_timestamp(now())
+			,site_result_flag = 2			
+		WHERE
+			suim_rpt_no = #{suimRptNo}			
+	</update>
+	
+	<!-- 현장보고서 보고성 상태 없이 결재하기 -->
+	<update id="rptActionSiteEnd" parameterType="String">
+	
+		UPDATE 
+			top_rpt_head
+		SET
+			site_rpt_state = 2
+			,site_rpt_aprv_date = unix_timestamp(now())			
+		WHERE
+			suim_rpt_no = #{suimRptNo}			
+	</update>
+	
+	<!-- 상신 취소하기 -->
+	<update id="rptActionSangsinCancel" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			suim_rpt_state = 0
+			,suim_rpt_aprv_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 종결 취소하기 -->
+	<update id="rptActionEndedCancel" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			suim_rpt_state = 1
+			,ptnr_mbr_sanction = 0
+			,close_date = 0          <!-- 운영은 종결 취소 시 이전 종결일을 남겨두고 있음 Tobe 에서는 0으로 업덷이트-->
+			,suim_close_no = ''
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- AIA 보완 요청하기 -->
+	<update id="rptActionSuppReq" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			ptnr_mbr_sanction = 2
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- AIA 보완 완료하기 -->
+	<update id="rptActionSuppEnd" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			ptnr_mbr_sanction = 3
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	
+	<!-- 위임 취소하기 -->
+	<update id="rptActionCancel" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			suim_rpt_state = 3
+			,suim_rpt_aprv_date = 0
+			,suim_cancel_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 위임 취소를 취소하기 -->
+	<update id="rptActionCancelX" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			suim_rpt_state = 0
+			,suim_cancel_date = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<!-- 보고서 Head 정보 삭제 -->
+	<update id="rptActionDelHead" parameterType="String">
+		UPDATE 
+			top_rpt_head 
+		SET
+			del_date = -1
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<!-- 보고서 Body 정보 삭제 -->
+	<!-- <update id="rptActionDelBody" parameterType="String">
+		UPDATE 
+			top_rpt_body 
+		SET
+			del_date = unix_timestamp(now())
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</update> -->
+	
+	<!-- 보고서 인보이스 정보 삭제 -->
+	<delete id="rptActionDelInv" parameterType="String">			
+		DELETE FROM 
+			top_rpt_invoice
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 보고서 협조건 정보 삭제 -->
+	<delete id="rptActionDelHelp" parameterType="String">
+		DELETE FROM 
+			top_rpt_help
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 보고서 사고 처리 과정표 정보 삭제 -->
+	<delete id="rptActionDelCtrl" parameterType="String">
+		DELETE FROM 
+			top_rpt_ctrl
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 현장, 중간 보고서 정보 삭제 -->
+	<delete id="rptActionDelSiteInterim" parameterType="String">
+		DELETE FROM 
+			top_rpt_site_interim
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 공동 조사자 정보 삭제 -->
+	<delete id="rptActionDelCollabo" parameterType="String">
+		DELETE FROM 
+			top_rpt_collabo
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!--  정보 삭제 -->
+	<delete id="rptActionDelMemo" parameterType="String">
+		DELETE FROM 
+			top_rpt_memo
+		WHERE
+			fk_no = #{suimRptNo}
+	</delete>
+	
+	<!--  정보 삭제 -->
+	<delete id="rptActionDelNow" parameterType="String">
+		DELETE FROM 
+			top_rpt_now
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</delete>
+	
+	<!-- 락 해제하기 -->
+	<update id="rptActionUnLock" parameterType="String">
+		
+		UPDATE 
+			top_rpt_head
+		SET	
+			lock_flag = 0
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</update>
+	
+	<update id="rptEndInvUdt" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		UPDATE top_rpt_invoice
+		SET
+			invoice_date = unix_timestamp(#{invoiceDate}),
+			amt_basic = #{amtBasic},
+			amt_basic_dtl = #{amtBasicText},
+			amt_daily = #{amtDaily},
+			amt_daily_dtl = #{amtDailyText},
+			amt_etc = #{amtEtc},
+			amt_etc_dtl = #{amtEtcText},
+			amt_traffic = #{amtTraffic},
+			amt_traffic_dtl = #{amtTrafficText},
+			amt_counsel = #{amtCounsel},
+			amt_counsel_dtl = #{amtCounselText},
+			amt_total = #{amtTotal}	
+		WHERE 
+			rpt_invoice_no = #{rptInvNo}
+	</update>
+	
+	<update id = "taskCheckUdt" parameterType="kr.co.toplac.topsuim.SuimRptTaskChkVO">
+	
+		UPDATE top_rpt_task_chk
+		
+		SET
+		<choose>
+			<when test="gubun == 'Contract'">
+				contact_yn = #{contactYn},
+				contact_memo = #{contactMemo},
+				contact_date = unix_timestamp(now())
+			</when>
+			<when test="gubun == 'Face'">
+				face_yn = #{faceYn},
+				face_memo = #{faceMemo},
+				face_date = unix_timestamp(now())
+			</when>
+			<when test="gubun == 'Interim'">
+				interim_yn = #{interimYn},
+				interim_memo = #{interimMemo},
+				interim_date = unix_timestamp(now())
+			</when>
+		</choose>
+		
+		WHERE 
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 문제점 기존 소스 -->
+<!-- 	<update id="probTodoUdt" parameterType="java.util.HashMap"> -->
+	
+<!-- 		UPDATE -->
+<!-- 			top_rpt_body -->
+<!-- 		SET -->
+<!-- 			${field} = #{contents} -->
+<!-- 		WHERE -->
+<!-- 			suim_rpt_no = #{suimRptNo} -->
+<!-- 	</update> -->
+	
+	<!-- 수임대장 - 문제점 입력 -->
+	<insert id="insProblem" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		INSERT INTO
+			top_rpt_problem 
+			(suim_rpt_no,prb_memo,prb_date)
+		VALUES
+			(#{suimRptNo}, #{contents},unix_timestamp(#{regDate}))
+			
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+	</insert>
+	
+	
+	<!-- 수임대장 - 향후처리방안 입력 -->
+	<insert id="insPlan" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		INSERT INTO
+			top_rpt_plan
+			(suim_rpt_no,pln_memo,pln_date)
+		VALUES
+			(#{suimRptNo}, #{contents}, unix_timestamp(#{regDate}))
+			
+			
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+	</insert>
+	
+	<!-- 수임대장 - 문제점 삭제 -->
+	<delete id="delProblem" parameterType="String">
+		DELETE 
+		  FROM top_rpt_problem
+		 WHERE serial_no = #{serialNo}
+	</delete>
+	
+	<!-- 수임대장 - 향후처리방안 삭제 -->
+	<delete id="delPlan" parameterType="String">
+		DELETE 
+		  FROM top_rpt_plan
+		 WHERE serial_no = #{serialNo}
+	</delete>
+	
+	<!-- 수임대장 - 문제점 수정 -->
+	<delete id="udtProblem" parameterType="kr.co.toplac.topsuim.SuimRptProblemVO">
+		UPDATE 
+			top_rpt_problem
+		   SET 
+		   	prb_memo = #{prb_memo}, prb_date = unix_timestamp(#{prb_date})
+		 WHERE 
+		 	serial_no = #{serial_no}
+	</delete>
+	
+	<!-- 수임대장 - 향후처리방안 수정 -->
+	<delete id="udtPlan" parameterType="kr.co.toplac.topsuim.SuimRptProblemVO">
+		UPDATE 
+			top_rpt_plan
+		   SET 
+		   	pln_memo = #{pln_memo}, pln_date = unix_timestamp(#{pln_date})
+		 WHERE 
+		 	serial_no = #{serial_no}
+	</delete>
+
+	<!-- 수임대장 chkList Update -->
+	<update id="updateRptBodyChkList" parameterType="hashmap">
+        UPDATE  top_rpt_body
+           SET  moral_flag = #{moralFlag}
+               ,minwon_flag = #{minwonFlag}
+               ,amt_estimated_damage = #{amtEstimatedDamage}
+               ,amt_claimed = #{amtClaimed}
+               ,pre_estmt_at = #{preEstmtAt}
+               ,pre_estmt_cmpy = #{preEstmtCmpy}
+               ,ind_ajmdmge_ennc = #{indAjmdmgeEnnc}
+               ,doc_rcept_at = #{docRceptAt}
+               <choose>
+                   <when test="minwonDate == ''">,minwon_date = 0</when>
+                   <otherwise>,minwon_date = UNIX_TIMESTAMP(#{minwonDate})</otherwise>
+               </choose>               <choose>
+                   <when test="moralDate == ''">,moral_date = 0</when>
+                   <otherwise>,moral_date = UNIX_TIMESTAMP(#{moralDate})</otherwise>
+               </choose>
+         WHERE  suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<update id="udtRptHeadForSpeedType" parameterType="HashMap">
+		UPDATE top_rpt_head
+	       SET suim_rpt_ea = #{suimRptEa}
+	     WHERE suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<update id="udtInvoiceForSpeedType" parameterType="HashMap">
+		UPDATE top_rpt_invoice
+	       SET amt_basic = #{invoiceBasic}
+	       	  ,amt_total = #{invoiceBasic}
+	     WHERE suim_rpt_no = #{suimRptNo}		
+	</update>
+
+</mapper>

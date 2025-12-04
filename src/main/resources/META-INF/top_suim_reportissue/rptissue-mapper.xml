@@ -1,0 +1,1268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="RptIssueMapper">
+
+	<insert id="insertTopRptCertiEnd" parameterType="HashMap">
+		INSERT INTO top_rpt_certi_end (
+			suim_rpt_no
+			,user_no
+			,user_name
+			,certi_state_val
+			,certi_number
+			,user_sign
+			,work_phone
+		) VALUES (
+			#{suim_rpt_no}
+			,#{user_no}
+			,#{user_name}
+			,#{certi_state_val}
+			,#{certi_number}
+			,#{user_sign}
+			,#{work_phone}
+		)
+	</insert>
+
+	<update id="deleteTopRptCertiEnd" parameterType="String">
+		DELETE FROM top_rpt_certi_end 
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+
+	<!-- 인보험 종결건 손해사정사 정보 갯수 불러오기 -->
+	<select id="selectReportCertiEndCntBy4" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) AS nCnt
+		FROM top_rpt_certi_end 
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND certi_state_val = '손해사정사'		
+	</select>
+
+	<select id="selectReportCertiEndCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) AS nCnt
+		FROM top_rpt_certi_end 
+		WHERE suim_rpt_no = #{suim_rpt_no}		
+	</select>
+	
+	<select id="selectReportCertiManagerCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) AS nCnt
+		FROM top_mbr_certi_manager 
+		WHERE user_no = #{user_no}
+		AND del_flag = 0		
+	</select>
+	
+	<select id="selectReportCertiManagerList" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			TMB.user_no AS user_no
+			,TMB.user_name AS user_name
+			,TMB.certi_state AS certi_state
+			,CASE
+				WHEN TMB.certi_state = 1
+				THEN '보조인'
+				WHEN TMB.certi_state = 4
+				THEN '손해사정사'
+				WHEN TMB.certi_state = 6
+				THEN '손해사정사'
+				ELSE '담당자'
+			END AS certi_state_val
+			,TMB.handphone AS handphone
+			,GA.certi_number AS certi_number
+			,CASE				
+				WHEN TMB.certi_state = 4
+				THEN GA.work_phone
+				ELSE TMB.handphone
+			END AS work_phone
+			,(SELECT user_sign FROM top_mbr_sgn WHERE user_no = TMB.user_no AND del_state = 0) AS user_sign
+		FROM
+		(
+			SELECT 
+				TC.user_no AS user_no
+				,TC.certi_number AS certi_number
+				,TC.work_phone AS work_phone
+			FROM top_mbr_certi_manager TM
+			LEFT JOIN top_mbr_certi TC
+			ON TM.ckey = TC.ckey
+			WHERE 1 = 1
+			AND TM.del_flag = 0
+			AND TM.user_no = #{user_no}
+		)GA 
+		LEFT JOIN top_mbr_bsc TMB
+		ON GA.user_no = TMB.user_no
+	</select>
+	
+	<!-- 인보험 종결건 손해사정사 정보 불러오기 -->	
+	<select id="selectReportCertiEndInfoBy4" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			ekey
+			,suim_rpt_no
+			,user_no
+			,user_name
+			,certi_state_val
+			,certi_number
+			,user_sign
+			,work_phone
+		FROM top_rpt_certi_end
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND certi_state_val = '손해사정사'
+		ORDER BY ekey ASC
+	</select>
+	
+	<select id="selectReportCertiEndInfo" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			ekey
+			,suim_rpt_no
+			,user_no
+			,user_name
+			,certi_state_val
+			,certi_number
+			,user_sign
+			,work_phone
+		FROM top_rpt_certi_end
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		ORDER BY ekey ASC
+	</select>
+
+	<select id="selectReportCertiMemberInfo" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			MB.user_no AS user_no
+			,MB.user_name AS user_name
+			,MB.certi_state AS certi_state
+			,CASE
+				WHEN MC.certi_class = 1
+				THEN '보조인'
+				WHEN MC.certi_class = 2
+				THEN '손해사정사'				
+				ELSE '담당자'
+			END AS certi_state_val
+			,MB.handphone AS handphone
+			,MC.certi_number	 AS certi_number
+			,CASE				
+				WHEN MB.certi_state = 4
+				THEN MC.work_phone
+				ELSE MB.handphone
+			END AS work_phone
+			,(SELECT user_sign FROM top_mbr_sgn WHERE user_no = MB.user_no AND del_state = 0) AS user_sign
+		FROM top_mbr_bsc MB
+		LEFT JOIN top_mbr_certi MC
+		ON MB.user_no = MC.user_no
+		AND MC.del_flag = 0
+		WHERE 1 = 1
+		AND MB.user_no = #{user_no}		
+	</select>
+	
+	<select id="getTopRptIssueFileCount" parameterType="String" resultType="integer">
+		SELECT 
+			count(*) as cnt
+		FROM
+			top_rpt_issue_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}	
+	</select>
+
+    <insert id="insertRptIssueForExist" parameterType="hashmap">
+        INSERT INTO top_rpt_issue (SUIM_RPT_NO) VALUES (#{suim_rpt_no})
+    </insert>
+    
+    <update id="updateRptBodyAddress" parameterType="HashMap">
+		UPDATE top_rpt_body
+		   SET investigate_addr1 = #{update_addr}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+    
+    <select id="selectRtpBody" parameterType="HashMap" resultType="AsraMap">
+    	SELECT a.suim_rpt_no
+    		,a.investigate_addr1
+    		,a.investigate_addr2
+    		,b.suim_accept_no
+    		,(SELECT team_name FROM top_tm_bsc WHERE b.team_id = team_id) as team_id
+    		,(SELECT user_name FROM top_mbr_bsc WHERE b.user_no = user_no) as user_nm
+		  FROM top_rpt_body a, top_rpt_head b where a.suim_rpt_no = b.suim_rpt_no and b.suim_rpt_state = 0 	 
+    </select>
+    
+    <select id="getTopRptIssueFileCountBySuimRptNo" parameterType="String" resultType="integer">
+    	SELECT 
+    		COUNT(*) AS nCnt			  
+		  FROM top_rpt_issue_file
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+     <select id="selectRptIssueCnt" parameterType="HashMap" resultType="integer">
+    	SELECT 
+    		COUNT(*) AS nCnt			  
+		  FROM top_rpt_issue
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectRptIssueLawContentInfo" parameterType="HashMap" resultType="hashmap">
+    	SELECT
+    		suim_rpt_no 
+    		,IFNULL(law_subject , '') AS law_subject
+			,IFNULL(law_etc , '') AS law_etc
+    	FROM top_rpt_issue
+    	WHERE suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectRptIssueLawReasonInfo" parameterType="HashMap" resultType="AsraMap">
+    	SELECT
+    		suim_rpt_no
+    		,reparation_liability_reason
+    	FROM top_rpt_issue
+    	WHERE suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectRptIssueLawSelInfo" parameterType="HashMap" resultType="hashmap">
+    	SELECT
+    		suim_rpt_no 
+    		,reparation_liability_type
+    		,reparation_liability_reason_etc
+    	FROM top_rpt_issue
+    	WHERE suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectRptIssue" parameterType="HashMap" resultType="AsraMap">
+    	SELECT SERIAL_NO
+    		  ,SUIM_RPT_NO
+    		  ,DATE_FORMAT(WRITE_DATE,"%Y-%m-%d") write_date
+    		  ,DATE_FORMAT(WRITE_DATE,"%Y. %m. %d.") write_date_fmt
+			  ,IFNULL(REPARATION_LIABILITY_TYPE,0) REPARATION_LIABILITY_TYPE
+			  ,IFNULL(REPARATION_LIABILITY_REASON,'-') REPARATION_LIABILITY_REASON
+			  ,IFNULL(INSU_PAYMENT_TYPE,0) INSU_PAYMENT_TYPE
+			  ,IFNULL(INSU_PAYMENT_REASON,'-') INSU_PAYMENT_REASON
+			  ,IFNULL(PAYMENT_BASIS,'-') PAYMENT_BASIS
+			  ,IFNULL(RPTISSUE_COMMENT,'-') RPTISSUE_COMMENT
+			  ,IFNULL(INSU_CONTENT,'-') INSU_CONTENT
+			  ,INSU_SEQUENCE
+			  ,SUIM_ZIPCODE				-- 주소지우편번호
+			  ,SUIM_ADDRESS				-- 주소지주소
+			  ,REMARK_VAL					-- 비고
+			  ,IFNULL(REPORT_COMMENT,'-') REPORT_COMMENT
+			  ,IFNULL(REPORT_REFERENCE,'-') REPORT_REFERENCE			  
+		  FROM top_rpt_issue
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+		 GROUP BY SUIM_RPT_NO
+    </select>
+    
+    <select id="selectReportAxaSummary" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		a.suim_rpt_no
+    		,a.amt_insu_payment
+    		,b.payment_place
+    		,b.reparation_liability_type
+    		,b.reparation_liability_reason
+    		,b.amt_insu_payment_disable
+    	FROM top_rpt_body a, top_rpt_issue b
+    	WHERE a.suim_rpt_no = b.suim_rpt_no
+    	AND a.suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectReportMeritzContract" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		a.suim_rpt_no
+    		,a.policyholder_nm
+    		,a.beneficiary_nm
+    		,b.policy_no
+    		,b.insurance_nm
+    		,b.insu_term    		
+    		,c.meritz_beneficiary
+    	FROM top_rpt_head a
+    	LEFT JOIN top_rpt_body b
+    	ON a.suim_rpt_no = b.suim_rpt_no
+    	LEFT JOIN top_rpt_issue c
+		ON a.suim_rpt_no = c.suim_rpt_no
+    	WHERE a.suim_rpt_no = #{suim_rpt_no}
+    	GROUP BY a.suim_rpt_no
+    </select>
+    
+    <select id="selectReportMeritzWriteDate" parameterType="hashmap" resultType="AsraMap">
+    	SELECT 
+    		IFNULL(DATE_FORMAT(WRITE_DATE,"%Y년 %m월 %d일"),'') AS write_date_fmt
+    		,COUNT(*) AS cnt
+    	FROM top_rpt_issue
+    	WHERE suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectReportMeritzCoverageInfo" parameterType="hashmap" resultType="AsraMap">
+    	SELECT 
+			ckey
+			,suim_rpt_no
+			,coverage_nm
+			,join_price
+			,bill_price
+		FROM top_rpt_issue_meritz_coverage
+		WHERE suim_rpt_no = #{suim_rpt_no}
+    </select>
+    
+    <select id="selectReportMeritzSuimInfo" parameterType="hashmap" resultType="AsraMap">
+    	SELECT
+    		a.suim_rpt_no
+    		,FROM_UNIXTIME(a.reg_date, '%Y-%m-%d') AS reg_date
+    		,b.meritz_accept_no
+    		,b.meritz_close_date
+    		,DATE_FORMAT(b.meritz_close_date,"%Y-%m-%d") meritz_close_date_fmt
+    		,b.meritz_suim_content    		
+    	FROM top_rpt_head a
+    	LEFT JOIN top_rpt_issue b
+    	ON a.suim_rpt_no = b.suim_rpt_no
+    	WHERE a.suim_rpt_no =  #{suim_rpt_no} 
+    	GROUP BY a.suim_rpt_no
+    </select>
+    
+    <select id="selectReportBscMeritz" parameterType="hashmap" resultType="AsraMap">
+    	SELECT  A.SUIM_RPT_NO
+               ,A.SUIM_ACCEPT_NO
+               ,A.SUIM_RPT_TYPE1
+               ,A.TEAM_ID
+               ,A.USER_NO 
+               ,A.POLICYHOLDER_NM
+               ,A.BENEFICIARY_NM
+               ,B.POLICYHOLDER_TEL
+               ,B.BENEFICIARY_TEL
+               ,B.POLICY_NO  						-- 증권번호
+               ,B.INSURANCE_NM 						-- 보험종목
+               ,B.ACCIDENT_NO  						-- 사고번호
+               ,IFNULL(B.INSU_TERM,'-')	INSU_TERM			-- 보험기간
+               ,IFNULL(B.INSU_CONDITION,'-') INSU_CONDITION	-- 보험조건
+               ,IFNULL(B.AMT_SELF_PAY,0) AMT_SELF_PAY						-- 보상한도액
+               ,IFNULL(B.AMT_COMPENSATION_LIMIT,0) AMT_COMPENSATION_LIMIT	-- 자기부담금
+               ,B.AMT_SELF_PAY_UNIT					-- 보상한도액 단위
+               ,B.AMT_COMPENSATION_LIMIT_UNIT		-- 자기부담금 단위     
+               ,IFNULL(B.SELF_PAY_FLAG,'-') SELF_PAY_FLAG						-- 보상한도액 청구 기준
+               ,IFNULL(B.COMPENSATION_LIMIT_FLAG,'-') COMPENSATION_LIMIT_FLAG	-- 자기부담금 청구 기준     
+               ,IFNULL(B.AMT_INSU_PAYMENT,0) AMT_INSU_PAYMENT       			-- 지급 보험금
+               ,B.ACCIDENT_FACTS					-- 사고 내용
+               ,FROM_UNIXTIME(A.ACCIDENT_DATE, '%Y년 %m월 %d일') AS ACCIDENT_DATE5
+               ,FROM_UNIXTIME(A.ACCIDENT_DATE, '%Y-%m-%d') AS ACCIDENT_DATE4
+               ,getTopPtnrBscPtnrName(A.PTNR_ID) AS PTNR_NAME
+               ,FROM_UNIXTIME(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+               ,C.AMT_INSU_PAYMENT_DISABLE
+               ,C.GUARANTEE_TITLE
+               ,C.reparation_liability_type
+               ,C.reparation_liability_reason
+               ,C.payment_place
+               
+               ,C.meritz_accept_no
+               ,C.meritz_close_date
+               ,DATE_FORMAT(C.meritz_close_date,"%Y-%m-%d") meritz_close_date_fmt
+               ,C.meritz_suim_content
+               ,C.meritz_beneficiary
+               ,IFNULL(DATE_FORMAT(C.write_date,"%Y년 %m월 %d일"),'') AS write_date_fmt
+          FROM  top_rpt_head A
+         INNER JOIN top_rpt_body B
+            ON  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+         INNER JOIN top_rpt_issue C
+            ON  A.SUIM_RPT_NO = C.SUIM_RPT_NO
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+         GROUP BY A.SUIM_RPT_NO
+    </select>
+
+	<select id="selectReportBsc" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SUIM_RPT_NO
+               ,A.SUIM_ACCEPT_NO
+               ,A.SUIM_RPT_TYPE1
+               ,A.TEAM_ID
+               ,A.USER_NO 
+               ,A.POLICYHOLDER_NM
+               ,A.BENEFICIARY_NM
+               ,B.POLICYHOLDER_TEL
+               ,B.BENEFICIARY_TEL
+               ,B.POLICY_NO  						-- 증권번호
+               ,B.INSURANCE_NM 						-- 보험종목
+               ,B.ACCIDENT_NO  						-- 사고번호
+               ,IFNULL(B.INSU_TERM,'-')	INSU_TERM			-- 보험기간
+               ,IFNULL(B.INSU_CONDITION,'-') INSU_CONDITION	-- 보험조건
+               ,IFNULL(B.AMT_SELF_PAY,0) AMT_SELF_PAY						-- 보상한도액
+               ,IFNULL(B.AMT_COMPENSATION_LIMIT,0) AMT_COMPENSATION_LIMIT	-- 자기부담금
+               ,B.AMT_SELF_PAY_UNIT					-- 보상한도액 단위
+               ,B.AMT_COMPENSATION_LIMIT_UNIT		-- 자기부담금 단위     
+               ,IFNULL(B.SELF_PAY_FLAG,'-') SELF_PAY_FLAG						-- 보상한도액 청구 기준
+               ,IFNULL(B.COMPENSATION_LIMIT_FLAG,'-') COMPENSATION_LIMIT_FLAG	-- 자기부담금 청구 기준     
+               ,IFNULL(B.AMT_INSU_PAYMENT,0) AMT_INSU_PAYMENT       			-- 지급 보험금
+               ,B.ACCIDENT_FACTS					-- 사고 내용
+               ,FROM_UNIXTIME(A.ACCIDENT_DATE, '%Y년 %m월 %d일') AS ACCIDENT_DATE5
+               ,FROM_UNIXTIME(A.ACCIDENT_DATE, '%Y-%m-%d') AS ACCIDENT_DATE4
+               ,getTopPtnrBscPtnrName(A.PTNR_ID) AS PTNR_NAME
+               ,FROM_UNIXTIME(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+               ,C.AMT_INSU_PAYMENT_DISABLE
+               ,C.GUARANTEE_TITLE
+               ,C.reparation_liability_type
+               ,C.reparation_liability_reason
+               ,C.payment_place
+          FROM  top_rpt_head A
+         INNER JOIN top_rpt_body B
+            ON  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+         INNER JOIN top_rpt_issue C
+            ON  A.SUIM_RPT_NO = C.SUIM_RPT_NO
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+         GROUP BY A.SUIM_RPT_NO
+    </select>
+
+    <select id="selectReportBsc_20240126" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.SUIM_RPT_NO
+               ,A.SUIM_ACCEPT_NO
+               ,A.SUIM_RPT_TYPE1
+               ,A.TEAM_ID
+               ,A.USER_NO 
+               ,A.POLICYHOLDER_NM
+               ,A.BENEFICIARY_NM
+               ,B.POLICYHOLDER_TEL
+               ,B.BENEFICIARY_TEL
+               ,B.POLICY_NO  						-- 증권번호
+               ,B.INSURANCE_NM 						-- 보험종목
+               ,B.ACCIDENT_NO  						-- 사고번호
+               ,IFNULL(B.INSU_TERM,'-')	INSU_TERM			-- 보험기간
+               ,IFNULL(B.INSU_CONDITION,'-') INSU_CONDITION	-- 보험조건
+               ,IFNULL(B.AMT_SELF_PAY,0) AMT_SELF_PAY						-- 보상한도액
+               ,IFNULL(B.AMT_COMPENSATION_LIMIT,0) AMT_COMPENSATION_LIMIT	-- 자기부담금
+               ,B.AMT_SELF_PAY_UNIT					-- 보상한도액 단위
+               ,B.AMT_COMPENSATION_LIMIT_UNIT		-- 자기부담금 단위     
+               ,IFNULL(B.SELF_PAY_FLAG,'-') SELF_PAY_FLAG						-- 보상한도액 청구 기준
+               ,IFNULL(B.COMPENSATION_LIMIT_FLAG,'-') COMPENSATION_LIMIT_FLAG	-- 자기부담금 청구 기준     
+               ,IFNULL(B.AMT_INSU_PAYMENT,0) AMT_INSU_PAYMENT       			-- 지급 보험금
+               ,B.ACCIDENT_FACTS					-- 사고 내용
+               ,FROM_UNIXTIME(A.ACCIDENT_DATE, '%Y년 %m월 %d일') AS ACCIDENT_DATE5
+               ,FROM_UNIXTIME(A.ACCIDENT_DATE, '%Y-%m-%d') AS ACCIDENT_DATE4
+               ,getTopPtnrBscPtnrName(A.PTNR_ID) AS PTNR_NAME
+               ,FROM_UNIXTIME(A.REG_DATE, '%Y-%m-%d') AS REG_DATE
+               ,( SELECT amt_insu_payment_disable FROM top_rpt_issue WHERE suim_rpt_no = #{suim_rpt_no} ) as AMT_INSU_PAYMENT_DISABLE
+               ,( SELECT guarantee_title FROM top_rpt_issue WHERE suim_rpt_no = #{suim_rpt_no} ) as GUARANTEE_TITLE
+               ,( SELECT reparation_liability_type FROM top_rpt_issue WHERE suim_rpt_no = #{suim_rpt_no} ) as reparation_liability_type
+               ,( SELECT reparation_liability_reason FROM top_rpt_issue WHERE suim_rpt_no = #{suim_rpt_no} ) as reparation_liability_reason
+               ,( SELECT payment_place FROM top_rpt_issue WHERE suim_rpt_no = #{suim_rpt_no} ) as payment_place
+          FROM  top_rpt_head A
+         INNER  JOIN top_rpt_body B
+            ON  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+         WHERE  1=1
+           AND  A.SUIM_RPT_NO = #{suim_rpt_no}
+    </select>
+
+    <select id="selectSuimReportTeam" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.TEAM_ID
+               ,A.TEAM_NAME
+               ,A.TEAM_LEVEL
+               ,A.TEAM_ADDR 
+               ,A.TEAM_TELEPHONE
+               ,A.TEAM_FAX
+               ,A.TEAM_TYPE
+          FROM  top_tm_bsc A
+         WHERE  1=1
+           AND  A.TEAM_ID = (
+                              SELECT  CASE WHEN TEAM_LEVEL = 2 THEN TEAM_ANCESTOR2 ELSE TEAM_ID END AS TEAM_ID
+                                FROM  top_tm_bsc
+                               WHERE  TEAM_ID = #{team_id}
+                            )
+    </select>
+
+    <select id="selectUserInfo" parameterType="hashmap" resultType="AsraMap">
+        SELECT  A.USER_NO
+               ,A.USER_ID
+               ,A.USER_NAME
+               ,A.EMAIL
+               ,A.OFFICE_TEL
+               ,A.OFFICE_FAX
+               ,A.HANDPHONE
+               ,A.WORK_LEVEL
+               ,GETCODEVALUE('top_mbr_bsc', 'work_level', A.WORK_LEVEL) AS DIS_WORK_LEVEL
+               ,A.PICTURE
+               ,IFNULL(B.USER_SIGN,'') AS USER_SIGN
+          FROM  top_mbr_bsc A
+          LEFT  JOIN top_mbr_sgn B
+            ON  A.USER_NO = B.USER_NO AND B.DEL_STATE = 0
+         WHERE  1=1
+           AND  A.USER_NO = #{user_no}
+   </select>
+   
+   <update id="updateRptIssueMeritzContractInfo" parameterType="HashMap">
+		UPDATE top_rpt_body a, top_rpt_issue b SET
+			a.insu_term = #{insu_term}
+			,b.meritz_beneficiary = #{meritz_beneficiary}
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		AND a.suim_rpt_no = #{suim_rpt_no}
+   </update>
+   
+   <update id="updateRptIssueMeritzWriteDate" parameterType="HashMap">
+		UPDATE top_rpt_issue SET
+			write_date = #{write_date}   			
+		WHERE suim_rpt_no = #{suim_rpt_no} 
+   </update>
+   
+   <update id="updateRptIssueMeritzSuimInfo" parameterType="HashMap">
+   		UPDATE top_rpt_issue SET
+   			meritz_accept_no = #{meritz_accept_no}   			
+   			,meritz_suim_content = #{meritz_suim_content}
+   			<if test="meritz_close_date != null and !meritz_close_date.equals('')">
+   				,meritz_close_date = #{meritz_close_date}
+   			</if>   			   			
+   		WHERE suim_rpt_no = #{suim_rpt_no}   	
+   </update>
+   
+   <update id="updateRptIssueReason" parameterType="HashMap">
+		UPDATE top_rpt_issue SET
+			reparation_liability_reason = #{reparation_liability_reason}
+		WHERE SUIM_RPT_NO = #{suim_rpt_no}
+   </update>
+   
+   <update id="updateRptIssueLawSel" parameterType="HashMap">
+		UPDATE top_rpt_issue SET
+			reparation_liability_type = #{reparation_liability_type}
+			,reparation_liability_reason_etc = #{reparation_liability_reason_etc}
+		WHERE SUIM_RPT_NO = #{suim_rpt_no}
+   </update>
+   
+   <update id="updateRptIssueLawContent" parameterType="HashMap">
+		UPDATE top_rpt_issue SET
+			law_subject = #{law_subject}
+			,law_etc = #{law_etc}
+		WHERE SUIM_RPT_NO = #{suim_rpt_no}
+   </update>
+
+	<update id="updateRptIssueWriteDate" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET WRITE_DATE = #{write_date}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueContCtype" parameterType="HashMap">
+		UPDATE top_rpt_issue_cont_lotte
+		   SET CTYPE = #{ctype}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueSummaryCtype" parameterType="HashMap">
+		UPDATE top_rpt_issue_summary_lotte
+		   SET CTYPE = #{ctype}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+
+	<update id="updateRptIssueContract" parameterType="HashMap">
+		UPDATE top_rpt_body
+		   SET INSURANCE_NM = #{insurance_nm}
+		   	  ,INSU_TERM = #{insu_term}
+		   	  ,INSU_CONDITION = #{insu_condition}
+		   	  ,AMT_SELF_PAY = #{amt_self_pay}
+		   	  ,AMT_SELF_PAY_UNIT = #{amt_self_pay_unit}
+		   	  ,AMT_COMPENSATION_LIMIT = #{amt_compensation_limit}
+		   	  ,AMT_COMPENSATION_LIMIT_UNIT = #{amt_compensation_limit_unit}
+		   	  ,POLICYHOLDER_TEL = #{policyholder_tel}
+		   	  ,BENEFICIARY_TEL = #{beneficiary_tel}
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+
+	<update id="updateRptIssueAccidentHead" parameterType="HashMap">
+		UPDATE top_rpt_head
+		   SET ACCIDENT_DATE = UNIX_TIMESTAMP(#{accident_date})
+		   <if test="damaged_nm != null">		   	
+				,DAMAGED_NM = #{damaged_nm}
+			</if>			
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+
+	<update id="updateRptIssueAccidentBody" parameterType="HashMap">
+		UPDATE top_rpt_body
+		   SET ACCIDENT_FACTS = #{accident_facts}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueAccidentBodyAddr" parameterType="HashMap">
+		UPDATE top_rpt_body
+		   SET INVESTIGATE_ADDR1 = #{investigate_addr1}		   
+		   ,INVESTIGATE_ADDR2 = #{investigate_addr2}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+
+	<update id="updateRptIssueLaw" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET REPARATION_LIABILITY_TYPE = #{reparation_liability_type}
+			  ,REPARATION_LIABILITY_REASON = #{reparation_liability_reason}
+			  ,INSU_PAYMENT_TYPE = #{insu_payment_type}
+			  ,INSU_PAYMENT_REASON = #{insu_payment_reason}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueAblComment" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET report_comment = #{report_comment}
+			  ,report_reference = #{report_reference}			  
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+
+	<update id="updateRptIssueBasis" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET PAYMENT_BASIS = #{payment_basis}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueAmtInsuPaymentDisable" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET amt_insu_payment_disable = #{amt_insu_payment_disable}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueInsupayment" parameterType="HashMap">
+		UPDATE top_rpt_body
+		   SET AMT_INSU_PAYMENT = #{amt_insu_payment}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>	
+
+	<update id="updateRptIssueComment" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET RPTISSUE_COMMENT = #{rptissue_comment}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+
+	<update id="updateInsuContent" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET INSU_CONTENT = #{insu_content}
+		   ,INSU_SEQUENCE = #{insu_sequence}		    
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<select id="selectRptIssueSend" parameterType="HashMap" resultType="AsraMap">
+		SELECT a.serial_no
+			  ,a.suim_rpt_no
+			  ,a.send_target
+			  ,a.send_state
+			  ,a.msgid
+			  ,a.privacy_agree
+			  ,a.tel1
+			  ,a.tel2
+			  ,a.tel3
+			  ,a.email
+			  ,a.send_method
+			  ,FROM_UNIXTIME(a.reg_date, '%Y-%m-%d') AS reg_date			  
+			  ,FROM_UNIXTIME(a.send_date, '%Y-%m-%d') AS send_date
+			  ,DATE_FORMAT(a.disagree_date, '%Y-%m-%d') AS disagree_date
+			  ,IFNULL(a.send_content,'') AS send_content
+			  ,b.suim_rpt_state
+			  ,a.file_path
+			  ,a.org_file_name
+			  ,a.enc_file_name
+			  ,a.complete_flag
+		 FROM top_rpt_issue_send a
+		 INNER JOIN top_rpt_head b
+		 ON a.suim_rpt_no = b.suim_rpt_no
+		 WHERE a.suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<select id="selectRptIssueContLotte" parameterType="HashMap" resultType="AsraMap">
+		SELECT cont_no
+		      ,suim_rpt_no
+		      ,ctype
+		      ,cont_cate
+		      ,cont_content
+			  ,DATE_FORMAT(write_date, '%Y-%m-%d') AS write_date
+			  ,DATE_FORMAT(mod_date, '%Y-%m-%d') AS mod_date
+		 FROM top_rpt_issue_cont_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no} AND ctype = #{ctype}
+	</select>
+	
+	<select id="selectRptIssueCtype" parameterType="HashMap" resultType="String">
+		SELECT ctype
+		 FROM top_rpt_issue_cont_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+		UNION
+		SELECT ctype
+		 FROM top_rpt_issue_summary_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<select id="selectRptIssueSummaryLotte" parameterType="HashMap" resultType="AsraMap">
+		SELECT summary_no
+		      ,suim_rpt_no
+		      ,ctype
+		      ,summary_cate
+		      ,join_price
+		      ,insu_price
+		      ,loss_price
+		      ,net_loss_price
+		      ,remain_price
+		      ,respon_price
+		      ,comp_limit_price
+		      ,comp_respon_price
+		      ,self_opt_price
+		      ,loss_comp_price
+		      ,bill_price
+		      ,pay_price
+		      ,exception_val
+		      ,insu_nm
+			  ,DATE_FORMAT(write_date, '%Y-%m-%d') AS write_date
+			  ,DATE_FORMAT(mod_date, '%Y-%m-%d') AS mod_date
+		 FROM top_rpt_issue_summary_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no} AND ctype = #{ctype}
+	</select>
+	
+	<update id="updateRptIssueSendresult" parameterType="String">
+		UPDATE top_rpt_head
+		   SET issue_send_result = 1		   
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueCancelresult" parameterType="String">
+		UPDATE top_rpt_head
+		   SET issue_send_result = 0		   
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueZipcode" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET SUIM_ZIPCODE = #{suim_zipcode},
+		   SUIM_ADDRESS = #{suim_address},
+		   GUARANTEE_TITLE = #{guarantee_title}
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueAxaSummary" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET reparation_liability_type = #{reparation_liability_type}
+		   ,reparation_liability_reason = #{reparation_liability_reason}
+		   ,payment_place = #{payment_place}
+		   ,amt_insu_payment_disable = #{amt_insu_payment_disable}
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptBodyAxa" parameterType="HashMap">
+		UPDATE top_rpt_body 
+			SET policy_no = #{policy_no}
+			,insu_term = #{insu_term}
+			,amt_self_pay = #{amt_self_pay}
+			,amt_compensation_limit = #{amt_compensation_limit}
+			,accident_no = #{accident_no}
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptBodyAxaSummary" parameterType="HashMap">
+		UPDATE top_rpt_body 
+			SET amt_insu_payment = #{amt_insu_payment}
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptHeadAxa" parameterType="HashMap">
+		UPDATE top_rpt_head 
+			SET policyholder_nm = #{policyholder_nm}
+			,beneficiary_nm = #{beneficiary_nm}
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueRemark" parameterType="HashMap">
+		UPDATE top_rpt_issue
+		   SET REMARK_VAL = #{remark_val}		   
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+		
+	<update id="updateRptBodySelfpay" parameterType="HashMap">
+		UPDATE top_rpt_body
+		   SET AMT_SELF_PAY_UNIT = #{amt_self_pay_unit},
+		   AMT_SELF_PAY = #{amt_self_pay} 
+		 WHERE SUIM_RPT_NO = #{suim_rpt_no}
+	</update>
+	
+	<update id="updateRptIssueTerm" parameterType="HashMap">
+		UPDATE top_rpt_body
+		   SET INSU_TERM = #{insu_term}		
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<insert id="insertRptIssueContLotte" parameterType="hashmap">
+		INSERT INTO top_rpt_issue_cont_lotte
+		(SUIM_RPT_NO,CTYPE,CONT_CATE,CONT_CONTENT,WRITE_DATE) VALUES
+		(#{suim_rpt_no},#{ctype},#{cont_cate},#{cont_content},now())
+    </insert>
+    
+    <delete id="deleteRptIssueContLotte" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_issue_cont_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no} 
+	</delete>
+	
+	<delete id="deleteRptIssueContNumLotte" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_issue_cont_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no} and cont_no = #{cont_no} 
+	</delete>
+	
+	<delete id="deleteRptIssueSummaryNumLotte" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_issue_summary_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no} and summary_no = #{summary_no} 
+	</delete>
+	
+	<delete id="deleteRptIssueMeritzCoverageNum" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_issue_meritz_coverage
+		 WHERE suim_rpt_no = #{suim_rpt_no} and ckey = #{ckey} 
+	</delete>
+	
+	<delete id="deleteRptIssueMeritzCoverageInfoTotal" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_issue_meritz_coverage
+		 WHERE suim_rpt_no = #{suim_rpt_no} 
+	</delete>
+	
+	<delete id="deleteRptIssueSummaryNumLotteTotal" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_issue_summary_lotte
+		 WHERE suim_rpt_no = #{suim_rpt_no} 
+	</delete>
+	
+	<!-- 발송메세지 내용저장 -->
+	<update id="updateRptIssueSendContent" parameterType="HashMap">
+		UPDATE top_rpt_issue_send SET
+			send_content = #{send_content}
+		WHERE serial_no = #{serial_no}
+	</update>
+	
+	<select id="selectRptIssueSendForMsg" parameterType="HashMap" resultType="AsraMap">
+		SELECT serial_no
+			  ,suim_rpt_no
+			  ,send_target
+			  ,send_state
+			  ,privacy_agree
+			  ,tel1
+			  ,tel2
+			  ,tel3
+			  ,email
+			  ,send_content
+			  ,send_date
+			  ,CONCAT(file_path,enc_file_name) AS file_path
+			  ,org_file_name
+			  ,enc_file_name			  
+		  FROM top_rpt_issue_send
+		 WHERE serial_no = #{serial_no}
+	</select>
+	
+	<select id="selectRptIssueSendForAttach" parameterType="HashMap" resultType="AsraMap">
+		SELECT serial_no
+			  ,suim_rpt_no
+			  ,send_target
+			  ,send_state
+			  ,privacy_agree
+			  ,tel1
+			  ,tel2
+			  ,tel3
+			  ,email
+			  ,send_content
+			  ,send_date
+			  ,file_path
+			  ,org_file_name
+			  ,enc_file_name
+			  ,short_url			  
+		  FROM top_rpt_issue_send
+		 WHERE serial_no = #{serial_no}
+	</select>
+	
+	<update id="updateTopRptIssueSendByShortUrl" parameterType="HashMap">
+		UPDATE top_rpt_issue_send SET
+			send_content = #{send_content}
+			,short_url = #{short_url}
+		WHERE serial_no = #{serial_no}		
+	</update>
+	
+	<insert id="insertRptMeritzCoverageInfo" parameterType="HashMap">
+		INSERT INTO top_rpt_issue_meritz_coverage
+		(
+			suim_rpt_no
+			,coverage_nm
+			,join_price
+			,bill_price
+		)
+		VALUES
+		(
+			#{suim_rpt_no}
+			,#{coverage_nm}
+			<choose>
+				<when test="join_price == null || join_price.equals('')">
+					,'0'
+				</when>
+				<otherwise>
+					,#{join_price}		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="bill_price == null || bill_price.equals('')">
+					,'0'
+				</when>
+				<otherwise>
+					,#{bill_price}		
+				</otherwise>
+			</choose>
+		)
+	</insert>
+	
+	<insert id="insertRptSummary" parameterType="HashMap">
+		INSERT INTO top_rpt_issue_summary_lotte
+		(
+			SUIM_RPT_NO, CTYPE, SUMMARY_CATE, JOIN_PRICE, INSU_PRICE, LOSS_PRICE, REMAIN_PRICE, RESPON_PRICE, COMP_LIMIT_PRICE, COMP_RESPON_PRICE, SELF_OPT_PRICE, NET_LOSS_PRICE, LOSS_COMP_PRICE, BILL_PRICE, PAY_PRICE, EXCEPTION_VAL, INSU_NM, WRITE_DATE			
+		)
+		VALUES
+		(
+			#{suim_rpt_no},
+			#{ctype},
+			#{summary_cate},			
+			<choose>
+				<when test="join_price == null || join_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{join_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="insu_price == null || insu_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{insu_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="loss_price == null || loss_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{loss_price},		
+				</otherwise>
+			</choose>			
+			<choose>
+				<when test="remain_price == null || remain_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{remain_price},		
+				</otherwise>
+			</choose>			
+			<choose>
+				<when test="respon_price == null || respon_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{respon_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="comp_limit_price == null || comp_limit_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{comp_limit_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="comp_respon_price == null || comp_respon_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{comp_respon_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="self_opt_price == null || self_opt_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{self_opt_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="net_loss_price == null || net_loss_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{net_loss_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="loss_comp_price == null || loss_comp_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{loss_comp_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="bill_price == null || bill_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{bill_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="pay_price == null || pay_price.equals('')">
+					'0',
+				</when>
+				<otherwise>
+					#{pay_price},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="exception_val == null || exception_val.equals('')">
+					'-',
+				</when>
+				<otherwise>
+					#{exception_val},		
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="insu_nm == null || insu_nm.equals('')">
+					'-',
+				</when>
+				<otherwise>
+					#{insu_nm},		
+				</otherwise>
+			</choose>
+			NOW()			
+		)
+	</insert>	
+
+	<insert id="insertRptIssueSend" parameterType="HashMap">
+		INSERT INTO top_rpt_issue_send
+		(
+			SUIM_RPT_NO, SEND_TARGET, SEND_STATE, PRIVACY_AGREE, TEL1, TEL2, TEL3, REG_DATE
+			<if test="disagree_date != null and !disagree_date.equals('')">	
+			,DISAGREE_DATE 
+			</if>
+		)
+		VALUES
+		(
+			 #{suim_rpt_no}
+			,#{send_target}
+			,0
+			,#{privacy_agree}
+			,#{tel1}
+			,#{tel2}
+			,#{tel3}
+			,UNIX_TIMESTAMP(NOW())
+			<if test="disagree_date != null and !disagree_date.equals('')">			
+			,#{disagree_date}
+			</if>
+		)
+	</insert>
+	
+	<insert id="insertRptIssueSendMobileAttach" parameterType="HashMap">
+		INSERT INTO top_rpt_issue_send
+		(
+			suim_rpt_no
+			,send_target
+			,send_state
+			,privacy_agree
+			,tel1
+			,tel2
+			,tel3
+			,reg_date
+			,send_method				
+			<!-- ,send_date -->
+			,complete_flag
+			,file_path
+			,org_file_name
+			,enc_file_name
+		)
+		VALUES
+		(
+			 #{suim_rpt_no}
+			,#{send_target}
+			,0
+			,#{privacy_agree}
+			,#{tel1_add}
+			,#{tel2_add}
+			,#{tel3_add}
+			,UNIX_TIMESTAMP(NOW())						
+			,#{send_method}
+			<!-- ,UNIX_TIMESTAMP(#{mobile_send_date}) -->
+			,0
+			,#{file_path}
+			,#{org_file_name}
+			,#{enc_file_name}
+		)
+	</insert>
+	
+	<insert id="insertRptIssueSendEmailAttach" parameterType="HashMap">
+		INSERT INTO top_rpt_issue_send
+		(
+			suim_rpt_no
+			,send_target
+			,send_state
+			,privacy_agree
+			,tel1
+			,tel2
+			,tel3
+			,reg_date
+			,send_method
+			,email 
+			<if test="disagree_date != null and !disagree_date.equals('')">	
+			,disagree_date 
+			</if>
+			<if test="temp_send_date != null and !temp_send_date.equals('')">	
+			,send_date
+			</if>
+			<if test="complete_flag != null and !complete_flag.equals('')">	
+			,complete_flag 
+			</if>
+			,file_path
+			,org_file_name
+			,enc_file_name
+		)
+		VALUES
+		(
+			 #{suim_rpt_no}
+			,#{send_target}
+			,0
+			,#{privacy_agree}
+			,#{tel1}
+			,#{tel2}
+			,#{tel3}
+			,UNIX_TIMESTAMP(NOW())						
+			,#{send_method}
+			,#{email_add}
+			<if test="disagree_date != null and !disagree_date.equals('')">			
+			,#{disagree_date}
+			</if>
+			<if test="temp_send_date != null and !temp_send_date.equals('')">
+			,UNIX_TIMESTAMP(#{temp_send_date})			
+			</if>
+			<if test="complete_flag != null and !complete_flag.equals('')">	
+			,#{complete_flag} 
+			</if>
+			,#{file_path}
+			,#{org_file_name}
+			,#{enc_file_name}
+		)
+	</insert>
+	
+	<insert id="insertRptIssueSendLotte" parameterType="HashMap">
+		INSERT INTO top_rpt_issue_send
+		(
+			SUIM_RPT_NO, SEND_TARGET, SEND_STATE, PRIVACY_AGREE, TEL1, TEL2, TEL3, REG_DATE, SEND_METHOD,EMAIL
+			<if test="disagree_date != null and !disagree_date.equals('')">	
+			,DISAGREE_DATE 
+			</if>
+			<if test="temp_send_date != null and !temp_send_date.equals('')">	
+			,SEND_DATE 
+			</if>
+			<if test="complete_flag != null and !complete_flag.equals('')">	
+			,COMPLETE_FLAG 
+			</if>
+		)
+		VALUES
+		(
+			 #{suim_rpt_no}
+			,#{send_target}
+			,0
+			,#{privacy_agree}
+			,#{tel1}
+			,#{tel2}
+			,#{tel3}
+			,UNIX_TIMESTAMP(NOW())						
+			,#{send_method}
+			,#{email}
+			<if test="disagree_date != null and !disagree_date.equals('')">			
+			,#{disagree_date}
+			</if>
+			<if test="temp_send_date != null and !temp_send_date.equals('')">
+			,UNIX_TIMESTAMP(#{temp_send_date})			
+			</if>
+			<if test="complete_flag != null and !complete_flag.equals('')">	
+			,#{complete_flag} 
+			</if>
+		)
+	</insert>
+	
+	<delete id="deleteRptIssueSend" parameterType="HashMap">
+		DELETE 
+		  FROM top_rpt_issue_send
+		 WHERE serial_no = #{serial_no} 
+	</delete>
+	
+	<update id="updateRptIssueSend" parameterType="HashMap">
+		UPDATE top_rpt_issue_send
+		   SET SEND_TARGET = #{send_target}
+		      ,TEL1 = #{tel1}
+		      ,TEL2 = #{tel2}
+		      ,TEL3 = #{tel3}
+		 WHERE serial_no = #{serial_no} 
+	</update>
+	
+	
+	<update id="updateRptIssueSendMagOk" parameterType="HashMap">
+		UPDATE top_rpt_issue_send
+		   SET SEND_STATE = #{send_state}
+		   	  ,MSGID = #{msgid}
+		      ,SEND_DATE = UNIX_TIMESTAMP(NOW())
+		      ,COMPLETE_FLAG = 1
+		 WHERE serial_no = #{serial_no} 	
+	</update>
+	
+	<update id="updateRptIssueSendEmailOk" parameterType="HashMap">
+		UPDATE top_rpt_issue_send
+		   SET SEND_STATE = 1
+		   	  ,SEND_METHOD = 'email'
+		      ,SEND_DATE = UNIX_TIMESTAMP(NOW())
+		      ,COMPLETE_FLAG = 1
+		      ,SEND_CONTENT = #{send_content}
+		 WHERE serial_no = #{serial_no} 	
+	</update>
+	
+	<!-- 이메일주소가 동일한건이 있는경우 동시처리한다. -->
+	<update id="updateRptIssueSendMagOkEmail" parameterType="HashMap">
+		UPDATE top_rpt_issue_send
+		   SET SEND_STATE = 1
+		   	  ,SEND_METHOD = 'email'
+		      ,SEND_DATE = UNIX_TIMESTAMP(NOW())
+		      ,COMPLETE_FLAG = 1
+		      ,SEND_CONTENT = #{send_content}
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+		 AND email = #{email}		  	
+	</update>
+	
+	<!-- 전화번호가 동일한건이 있는경우 동시처리한다. -->
+	<update id="updateRptIssueSendMagOkTelAttach" parameterType="HashMap">
+		UPDATE top_rpt_issue_send
+		   SET SEND_STATE = #{send_state}
+		   	  ,MSGID = #{msgid}
+		      ,SEND_DATE = UNIX_TIMESTAMP(NOW())
+		      ,SEND_CONTENT = #{send_content}
+		      ,SHORT_URL = #{short_url}
+		      ,COMPLETE_FLAG = 1
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+		 AND tel1 = #{tel1}
+		 AND tel2 = #{tel2}
+		 AND tel3 = #{tel3}		  	
+	</update>
+	
+	<!-- 전화번호가 동일한건이 있는경우 동시처리한다. -->
+	<update id="updateRptIssueSendMagOkTel" parameterType="HashMap">
+		UPDATE top_rpt_issue_send
+		   SET SEND_STATE = #{send_state}
+		   	  ,MSGID = #{msgid}
+		      ,SEND_DATE = UNIX_TIMESTAMP(NOW())
+		      ,SEND_CONTENT = #{send_content}
+		      ,COMPLETE_FLAG = 1
+		 WHERE suim_rpt_no = #{suim_rpt_no}
+		 AND tel1 = #{tel1}
+		 AND tel2 = #{tel2}
+		 AND tel3 = #{tel3}		  	
+	</update>
+	
+	<update id="updateRptIssueSendMagStateOk" parameterType="HashMap">
+		UPDATE top_rpt_issue_send
+		   SET SEND_STATE = #{send_state}		   	  
+		      ,SEND_DATE = UNIX_TIMESTAMP(NOW())
+		      ,COMPLETE_FLAG = 1
+		 WHERE msgid = #{msgid} 	
+	</update>
+	
+	<select id="selectBizmError" parameterType="HashMap" resultType="AsraMap">
+		SELECT ecode
+			  ,emessage
+			  ,edesc
+			  ,errinfo
+			  ,uflag		  
+		  FROM bizm_error
+		 WHERE ecode = #{ecode} and emessage = #{emessage}
+	</select>
+	
+
+</mapper>

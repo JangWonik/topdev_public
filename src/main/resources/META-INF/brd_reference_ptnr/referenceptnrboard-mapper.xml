@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="BoardReferencePtnrMapper">
+
+	<select id="getBoardFileList" parameterType="String" resultType="hashmap">
+		SELECT 
+			a.title
+			,b.board_file_no
+			,b.file_name	
+		FROM brd_reference_ptnr a, brd_reference_ptnr_file b
+		WHERE a.board_no = b.board_no
+		AND a.board_no = #{board_no}
+		ORDER BY b.board_file_no
+	</select>
+
+	<select id="boardList" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT a.board_no, a.user_no, b.user_name user_nm
+			, ptnr_id, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+			, title_classify, getCodeValue('brd_notice_top', 'title_classify', a.title_classify) title_classify_nm
+			, type_classify, getCodeValue('brd_reference_ptnr', 'type_classify', a.type_classify) type_classify_nm
+			, year_classify, a.title, a.contents, a.reg_ip
+			, a.reg_date
+			<!-- , DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt -->
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date_fmt
+			, a.view_cnt
+			, (select count(board_file_no) from brd_reference_ptnr_file where board_no = a.board_no) file_cnt
+			, (SELECT MAX(board_file_no) FROM brd_reference_ptnr_file WHERE board_no = a.board_no) board_file_no
+			, (select count(*) from brd_reference_ptnr_memo where fk_no = a.board_no) memo_cnt
+			, FLOOR((UNIX_TIMESTAMP(NOW()) - a.reg_date) / 24 / 60 / 60) day_cnt
+		FROM brd_reference_ptnr a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND a.category_id = #{cateSearch}
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="ptnrSearch != null and ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					AND a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					AND a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="titleSearch != null and titleSearch != 0">
+			AND a.title_classify = #{titleSearch}
+		</if>
+		<if test="typeSearch != null and typeSearch != 0">
+			AND a.type_classify = #{typeSearch}
+		</if>
+		<if test="yearSearch != null and yearSearch != 0">
+			AND a.year_classify = #{yearSearch}
+		</if>
+		ORDER BY a.board_no DESC
+		LIMIT #{queryPgNoInt}, 15
+	</select>
+
+	<select id="boardListCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT count(a.board_no) cnt
+		FROM brd_reference_ptnr a, top_mbr_bsc b
+		WHERE a.user_no = b.user_no
+		AND a.category_id = #{cateSearch}
+		<choose>
+			<when test="boardSrcType == 1">
+				<if test="boardSrcWord != ''">
+					AND a.title like '%${boardSrcWord}%'
+				</if>
+			</when>
+			<when test="boardSrcType == 2">
+				<if test="boardSrcWord != ''">
+					AND (a.title like '%${boardSrcWord}%' OR a.contents like '%${boardSrcWord}%')
+				</if>
+			</when>
+			<when test="boardSrcType == 3">
+				<if test="boardSrcWord != ''">
+					AND b.user_name like '%${boardSrcWord}%'
+				</if>
+			</when>
+		</choose>
+		<if test="ptnrSearch != null and ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					AND a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					AND a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="titleSearch != null and titleSearch != 0">
+			AND a.title_classify = #{titleSearch}
+		</if>
+		<if test="typeSearch != null and typeSearch != 0">
+			AND a.type_classify = #{typeSearch}
+		</if>
+		<if test="yearSearch != null and yearSearch != 0">
+			AND a.year_classify = #{yearSearch}
+		</if>
+	</select>
+
+	<insert id="boardWrite" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		INSERT INTO brd_reference_ptnr (
+			user_no
+			, category_id
+			, ptnr_id
+			, title_classify
+			, type_classify
+			, year_classify
+			, title, contents
+			, reg_ip
+			, reg_date
+			, view_cnt
+			)VALUES(
+			#{user_no}
+			, #{category_id}
+			, #{ptnr_id}
+			, #{title_classify}
+			, #{type_classify}
+			, #{year_classify}
+			, #{title}
+			, #{contents}
+			, #{reg_ip}
+			, unix_timestamp(now())
+			, 0
+			)
+	</insert>
+
+	<select id="getBoardNo" parameterType="kr.co.toplac.brd.common.BoardVO" resultType = "String">
+		SELECT max(board_no)
+		FROM brd_reference_ptnr
+		WHERE user_no = #{user_no}
+	</select>
+
+	<insert id="boardFileWrite" parameterType="kr.co.toplac.brd.common.BoardFileVO" >
+		INSERT INTO brd_reference_ptnr_file (board_no,file_path,file_name,reg_date)
+		VALUES(#{board_no}, #{file_path}, #{file_name}, unix_timestamp(now()))
+	</insert>
+
+	<select id="boardDetail" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardVO">
+		SELECT board_no, user_no, getTopMbrBscUserName(user_no) user_nm
+			, ptnr_id, getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+			, title_classify, getCodeValue('brd_notice_top', 'title_classify', title_classify) title_classify_nm
+			, type_classify, getCodeValue('brd_reference_ptnr', 'type_classify', type_classify) type_classify_nm
+			, year_classify, title, contents, reg_ip
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt, view_cnt
+		FROM brd_reference_ptnr
+		WHERE board_no = #{board_no}
+		ORDER BY board_no DESC
+	</select>
+
+	<select id="boardFileList" parameterType="String" resultType = "kr.co.toplac.brd.common.BoardFileVO">
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_reference_ptnr_file
+		WHERE board_no = #{board_no}
+		ORDER BY board_file_no
+	</select>
+
+	<update id="boardAddCnt" parameterType="String" >
+		UPDATE brd_reference_ptnr SET view_cnt = view_cnt + 1
+		WHERE board_no = #{board_no}
+	</update>
+
+	<delete id="boardDelete" parameterType="String" >
+		DELETE FROM brd_reference_ptnr
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFilesDelete" parameterType="String" >
+		DELETE FROM brd_reference_ptnr_file
+		WHERE board_no = #{board_no}
+	</delete>
+
+	<delete id="boardFileDelete" parameterType="String" >
+		DELETE FROM brd_reference_ptnr_file
+		WHERE board_file_no = #{fileNo}
+	</delete>
+
+	<update id="boardUpdate" parameterType="kr.co.toplac.brd.common.BoardVO" >
+		UPDATE brd_reference_ptnr SET ptnr_id = #{ptnr_id}, title_classify = #{title_classify}
+			, type_classify = #{type_classify}, year_classify = #{year_classify}
+			, title = #{title}, contents = #{contents}
+		WHERE board_no = #{board_no}
+	</update>
+
+	<update id="updateCKPath" parameterType="java.util.HashMap" >
+		UPDATE brd_reference_ptnr SET contents = REPLACE(contents,#{oldStr},#{newStr})
+		WHERE board_no = #{boardNo}
+	</update>
+
+	<select id="refPtnrFileOneSelect" parameterType="String" resultType="kr.co.toplac.brd.common.BoardFileVO" >
+		SELECT board_file_no,board_no,file_path,file_name
+			, reg_date, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, CONCAT(file_path, file_name) encodedFilePathName
+		FROM brd_reference_ptnr_file
+		WHERE board_file_no = #{fileNo}
+	</select>
+
+</mapper>

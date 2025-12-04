@@ -1,0 +1,1823 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="CostStatisticsMapper">
+
+	<select id="getTCStm0" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=0 AND team_level=1
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d1 ON tmBsc.team_id = d1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d2 ON tmBsc.team_id = d2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e1 ON tmBsc.team_id = e1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e2 ON tmBsc.team_id = e2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f1 ON tmBsc.team_id = f1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f2 ON tmBsc.team_id = f2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g1 ON tmBsc.team_id = g1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g2 ON tmBsc.team_id = g2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h1 ON tmBsc.team_id = h1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h2 ON tmBsc.team_id = h2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i1 ON tmBsc.team_id = i1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i2 ON tmBsc.team_id = i2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j1 ON tmBsc.team_id = j1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j2 ON tmBsc.team_id = j2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k1 ON tmBsc.team_id = k1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k2 ON tmBsc.team_id = k2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l1 ON tmBsc.team_id = l1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l2 ON tmBsc.team_id = l2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m1 ON tmBsc.team_id = m1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m2 ON tmBsc.team_id = m2.team_id
+	</select>
+
+	<select id="getTCStm1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=1 AND team_level != 0
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						WHERE cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d1 ON tmBsc.team_id = d1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d2 ON tmBsc.team_id = d2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e1 ON tmBsc.team_id = e1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e2 ON tmBsc.team_id = e2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f1 ON tmBsc.team_id = f1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f2 ON tmBsc.team_id = f2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g1 ON tmBsc.team_id = g1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g2 ON tmBsc.team_id = g2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h1 ON tmBsc.team_id = h1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h2 ON tmBsc.team_id = h2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i1 ON tmBsc.team_id = i1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i2 ON tmBsc.team_id = i2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j1 ON tmBsc.team_id = j1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j2 ON tmBsc.team_id = j2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k1 ON tmBsc.team_id = k1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k2 ON tmBsc.team_id = k2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l1 ON tmBsc.team_id = l1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l2 ON tmBsc.team_id = l2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m1 ON tmBsc.team_id = m1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m2 ON tmBsc.team_id = m2.team_id
+	</select>
+
+	<select id="getTCStm4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=4 and team_level != 0
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d1 ON tmBsc.team_id = d1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d2 ON tmBsc.team_id = d2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e1 ON tmBsc.team_id = e1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e2 ON tmBsc.team_id = e2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f1 ON tmBsc.team_id = f1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f2 ON tmBsc.team_id = f2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g1 ON tmBsc.team_id = g1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g2 ON tmBsc.team_id = g2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h1 ON tmBsc.team_id = h1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h2 ON tmBsc.team_id = h2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i1 ON tmBsc.team_id = i1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i2 ON tmBsc.team_id = i2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j1 ON tmBsc.team_id = j1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j2 ON tmBsc.team_id = j2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k1 ON tmBsc.team_id = k1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k2 ON tmBsc.team_id = k2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l1 ON tmBsc.team_id = l1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l2 ON tmBsc.team_id = l2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m1 ON tmBsc.team_id = m1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m2 ON tmBsc.team_id = m2.team_id
+	</select>
+	
+	<select id="getTCStmAdd0" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=0 AND team_level=1
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d1 ON tmBsc.team_id = d1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d2 ON tmBsc.team_id = d2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e1 ON tmBsc.team_id = e1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e2 ON tmBsc.team_id = e2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f1 ON tmBsc.team_id = f1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f2 ON tmBsc.team_id = f2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g1 ON tmBsc.team_id = g1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g2 ON tmBsc.team_id = g2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h1 ON tmBsc.team_id = h1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h2 ON tmBsc.team_id = h2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i1 ON tmBsc.team_id = i1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i2 ON tmBsc.team_id = i2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j1 ON tmBsc.team_id = j1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j2 ON tmBsc.team_id = j2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k1 ON tmBsc.team_id = k1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k2 ON tmBsc.team_id = k2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l1 ON tmBsc.team_id = l1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l2 ON tmBsc.team_id = l2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m1 ON tmBsc.team_id = m1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m2 ON tmBsc.team_id = m2.team_id
+	</select>
+	
+	<select id="getTCStmAdd1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=1 AND team_level != 0
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d1 ON tmBsc.team_id = d1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d2 ON tmBsc.team_id = d2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e1 ON tmBsc.team_id = e1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e2 ON tmBsc.team_id = e2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f1 ON tmBsc.team_id = f1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f2 ON tmBsc.team_id = f2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g1 ON tmBsc.team_id = g1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g2 ON tmBsc.team_id = g2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h1 ON tmBsc.team_id = h1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h2 ON tmBsc.team_id = h2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i1 ON tmBsc.team_id = i1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i2 ON tmBsc.team_id = i2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j1 ON tmBsc.team_id = j1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j2 ON tmBsc.team_id = j2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k1 ON tmBsc.team_id = k1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k2 ON tmBsc.team_id = k2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l1 ON tmBsc.team_id = l1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l2 ON tmBsc.team_id = l2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m1 ON tmBsc.team_id = m1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m2 ON tmBsc.team_id = m2.team_id
+	</select>
+	
+	<select id="getTCStmAdd4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=4 and team_level != 0
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d1 ON tmBsc.team_id = d1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) d2 ON tmBsc.team_id = d2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e1 ON tmBsc.team_id = e1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) e2 ON tmBsc.team_id = e2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f1 ON tmBsc.team_id = f1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) f2 ON tmBsc.team_id = f2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g1 ON tmBsc.team_id = g1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) g2 ON tmBsc.team_id = g2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h1 ON tmBsc.team_id = h1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) h2 ON tmBsc.team_id = h2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i1 ON tmBsc.team_id = i1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) i2 ON tmBsc.team_id = i2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j1 ON tmBsc.team_id = j1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) j2 ON tmBsc.team_id = j2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k1 ON tmBsc.team_id = k1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) k2 ON tmBsc.team_id = k2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l1 ON tmBsc.team_id = l1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) l2 ON tmBsc.team_id = l2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m1 ON tmBsc.team_id = m1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) m2 ON tmBsc.team_id = m2.team_id
+	</select>
+	
+		<select id="getTCStmClaim0" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash41
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash41,0) cashSum
+			, card11, card21, card41
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card41,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=0 AND team_level=1
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id			
+	</select>
+	
+	<select id="getTCStmClaim1" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash41
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash41,0) cashSum
+			, card11, card21, card41
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card41,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=1
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+			
+	</select>
+	
+	<select id="getTCStmClaim4" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, cash11, cash21, cash41
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash41,0) cashSum
+			, card11, card21, card41
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card41,0) cardSum
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=4
+				ORDER BY team_order DESC, team_id ASC) tmBsc
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b1 ON tmBsc.team_id = b1.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) b2 ON tmBsc.team_id = b2.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c1 ON tmBsc.team_id = c1.team_id
+
+			LEFT JOIN (SELECT team_id, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 3
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY team_id) c2 ON tmBsc.team_id = c2.team_id
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<select id="getTCStmMbr" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name
+				FROM top_mbr_bsc mbrBsc
+				WHERE 1=1
+					<if test="srch_team_id != 0">
+						AND  mbrBsc.team_id_main = #{srch_team_id}
+					</if>				
+				AND ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+				OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+		          <if test="srch_user_no != 0">
+		             AND mbrBsc.user_no = #{srch_user_no}
+		          </if>					
+				ORDER BY mbrBsc.work_type, mbrBsc.work_level DESC, mbrBsc.user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) a1 ON tmMbr.user_no = a1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) a2 ON tmMbr.user_no = a2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) b1 ON tmMbr.user_no = b1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) b2 ON tmMbr.user_no = b2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) c1 ON tmMbr.user_no = c1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) c2 ON tmMbr.user_no = c2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) d1 ON tmMbr.user_no = d1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) d2 ON tmMbr.user_no = d2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) e1 ON tmMbr.user_no = e1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) e2 ON tmMbr.user_no = e2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) f1 ON tmMbr.user_no = f1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) f2 ON tmMbr.user_no = f2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) g1 ON tmMbr.user_no = g1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) g2 ON tmMbr.user_no = g2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) h1 ON tmMbr.user_no = h1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) h2 ON tmMbr.user_no = h2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) i1 ON tmMbr.user_no = i1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) i2 ON tmMbr.user_no = i2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) j1 ON tmMbr.user_no = j1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) j2 ON tmMbr.user_no = j2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) k1 ON tmMbr.user_no = k1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) k2 ON tmMbr.user_no = k2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) l1 ON tmMbr.user_no = l1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) l2 ON tmMbr.user_no = l2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) m1 ON tmMbr.user_no = m1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 1
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) m2 ON tmMbr.user_no = m2.user_no
+	</select>	
+	
+	
+	<select id="getTCStmAddMbr" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">	
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, cash11, cash21, cash31, cash41, cash51, cash61, cash71, cash81, cash91, cash101, cash111, cash121, cash131
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash31,0)+IFNULL(cash41,0)+IFNULL(cash51,0)+IFNULL(cash61,0)+IFNULL(cash71,0)+IFNULL(cash81,0)+IFNULL(cash91,0)+IFNULL(cash101,0)+IFNULL(cash111,0)+IFNULL(cash121,0)+IFNULL(cash131,0) cashSum
+			, card11, card21, card31, card41, card51, card61, card71, card81, card91, card101, card111, card121, card131
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card31,0)+IFNULL(card41,0)+IFNULL(card51,0)+IFNULL(card61,0)+IFNULL(card71,0)+IFNULL(card81,0)+IFNULL(card91,0)+IFNULL(card101,0)+IFNULL(card111,0)+IFNULL(card121,0)+IFNULL(card131,0) cardSum
+		FROM
+			(SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name
+				FROM top_mbr_bsc mbrBsc
+				WHERE 1=1
+					<if test="srch_team_id != 0">
+						AND  mbrBsc.team_id_main = #{srch_team_id}
+					</if>					 
+				AND ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+				OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+		          <if test="srch_user_no != 0">
+		             AND mbrBsc.user_no = #{srch_user_no}
+		          </if>						
+				ORDER BY mbrBsc.work_type, mbrBsc.work_level DESC, mbrBsc.user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) a1 ON tmMbr.user_no = a1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_class_no=11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) a2 ON tmMbr.user_no = a2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) b1 ON tmMbr.user_no = b1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_class_no=21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) b2 ON tmMbr.user_no = b2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) c1 ON tmMbr.user_no = c1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card31
+						FROM top_cost_item_2nd
+						where cost_class_no=31 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) c2 ON tmMbr.user_no = c2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) d1 ON tmMbr.user_no = d1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_class_no=41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) d2 ON tmMbr.user_no = d2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) e1 ON tmMbr.user_no = e1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card51
+						FROM top_cost_item_2nd
+						where cost_class_no=51 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) e2 ON tmMbr.user_no = e2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) f1 ON tmMbr.user_no = f1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card61
+						FROM top_cost_item_2nd
+						where cost_class_no=61 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) f2 ON tmMbr.user_no = f2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) g1 ON tmMbr.user_no = g1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card71
+						FROM top_cost_item_2nd
+						where cost_class_no=71 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) g2 ON tmMbr.user_no = g2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) h1 ON tmMbr.user_no = h1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card81
+						FROM top_cost_item_2nd
+						where cost_class_no=81 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) h2 ON tmMbr.user_no = h2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) i1 ON tmMbr.user_no = i1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card91
+						FROM top_cost_item_2nd
+						where cost_class_no=91 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) i2 ON tmMbr.user_no = i2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) j1 ON tmMbr.user_no = j1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card101
+						FROM top_cost_item_2nd
+						where cost_class_no=101 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) j2 ON tmMbr.user_no = j2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) k1 ON tmMbr.user_no = k1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card111
+						FROM top_cost_item_2nd
+						where cost_class_no=111 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) k2 ON tmMbr.user_no = k2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) l1 ON tmMbr.user_no = l1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card121
+						FROM top_cost_item_2nd
+						where cost_class_no=121 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) l2 ON tmMbr.user_no = l2.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) m1 ON tmMbr.user_no = m1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card131
+						FROM top_cost_item_2nd
+						where cost_class_no=131 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_kind = 2
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) m2 ON tmMbr.user_no = m2.user_no		
+	</select>		
+	
+	
+	<select id="getTCStmMbrClaim" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topcostnew.TopCostStatisticsVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, cash11, cash21, cash41
+			, IFNULL(cash11,0)+IFNULL(cash21,0)+IFNULL(cash41,0) cashSum
+			, card11, card21, card41
+			, IFNULL(card11,0)+IFNULL(card21,0)+IFNULL(card41,0) cardSum
+		FROM
+			(SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name
+				FROM top_mbr_bsc mbrBsc
+				WHERE 1=1
+					<if test="srch_team_id != 0">
+						AND  mbrBsc.team_id_main = #{srch_team_id}
+					</if>	 
+				AND ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+				OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+		          <if test="srch_user_no != 0">
+		             AND mbrBsc.user_no = #{srch_user_no}
+		          </if>						
+				ORDER BY mbrBsc.work_type, mbrBsc.work_level DESC, mbrBsc.user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash11
+						FROM top_cost_item_2nd
+						where cost_kind=3 AND cost_class_no = 11 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) a1 ON tmMbr.user_no = a1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card11
+						FROM top_cost_item_2nd
+						where cost_kind=3 AND cost_class_no = 11 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) a2 ON tmMbr.user_no = a2.user_no
+
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash21
+						FROM top_cost_item_2nd
+						where cost_kind=3 AND cost_class_no = 21 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) b1 ON tmMbr.user_no = b1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card21
+						FROM top_cost_item_2nd
+						where cost_kind=3 AND cost_class_no = 21 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) b2 ON tmMbr.user_no = b2.user_no
+
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) cash41
+						FROM top_cost_item_2nd
+						where cost_kind=3 AND cost_class_no = 41 AND cost_item_state='4' AND cost_pay_type='0'
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) c1 ON tmMbr.user_no = c1.user_no
+			LEFT JOIN (SELECT user_no, sum(cost_pay_amt) card41
+						FROM top_cost_item_2nd
+						where cost_kind=3 AND cost_class_no = 41 AND cost_item_state='4' AND cost_pay_type='1'
+						AND cost_occur_date >= unix_timestamp(#{viewFromDate})
+						AND cost_occur_date &lt; unix_timestamp(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+						GROUP BY user_no) c2 ON tmMbr.user_no = c2.user_no
+	</select>
+		
+	
+	
+	
+</mapper>

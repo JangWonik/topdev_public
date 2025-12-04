@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+   
+<mapper namespace="RptAlarmMapper">
+
+	<select id="getSuimSpeed" resultType="kr.co.toplac.toprptalarm.SuimSpeedVO" parameterType="HashMap">
+		SELECT  A.SUIM_RPT_NO suimRptNo 						
+			   ,A.SUIM_ACCEPT_NO suimAcceptNo 					
+			   ,A.SUIM_RPT_TYPE1 suimRptType1	
+			   ,A.SPEED_TYPE speedTypeCd							
+			   ,getCodeValue('top_rpt_head', 'speed_type', A.SPEED_TYPE) speedTypeVal
+			   ,A.SUIM_RPT_STATE suimRptStateCd 				
+			   ,getCodeValue('top_rpt_head', 'suim_rpt_state', A.SUIM_RPT_STATE) suimRptStateVal
+			   ,B.accident_no accidentNo 
+			   ,B.policy_no policyNo
+			   ,A.SUIM_RPT_TYPE1_CLOSE12 suimRptType1Close12Cd	
+			   ,getCodeValue('top_prim_biz_rpt_head', 'suim_rpt_type1_close12', A.SUIM_RPT_TYPE1_CLOSE12) suimRptType1Close12Val 
+			   ,A.TEAM_ID teamId								
+			   ,getTopTmBscTeamName(A.TEAM_ID) teamNm
+			   ,A.USER_NO userNo								
+			   ,getTopMbrBscUserName(A.USER_NO) userNm		 
+			   ,A.policyholder_nm policyholderNm
+			   ,B.policyholder_tel policyholderTel				
+			   ,A.beneficiary_nm beneficiaryNm
+			   ,B.beneficiary_tel beneficiaryTel
+			   ,A.DAMAGED_NM damagedNm							
+			   ,B.damaged_tel damagedTel					
+			   ,B.speed_comment speedComment
+			   ,A.speed_onestop speedOneStop
+			   ,FROM_UNIXTIME(A.REG_DATE,'%Y-%m-%d') regDate
+			   ,A.DEL_DATE delDate
+			   ,FROM_UNIXTIME(A.SUIM_CANCEL_DATE,'%Y-%m-%d') suimCancelDateFmt
+			   ,FROM_UNIXTIME(A.CLOSE_DATE,'%Y-%m-%d') closeDateFmt
+			   ,(SELECT FROM_UNIXTIME(MIN(ALARM_DATE),'%Y-%m-%d') 
+				   FROM top_rpt_alarm 
+				  WHERE SUIM_RPT_NO = (A.SUIM_RPT_NO) 
+				 	AND ALARM_STATE = 0) recentAlarmDateFmt
+		  FROM top_rpt_head A
+		 INNER JOIN top_rpt_body B
+		    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		 WHERE 1=1
+		   AND SUIM_RPT_TYPE1 in (14,15,16,17,18,19) 
+		   AND DEL_DATE = 0
+		   
+	   		<choose>
+				<when test="flag == 'user'">
+					AND A.USER_NO = #{user_no}		   		
+		   		</when>
+		   		<when test="flag == 'team'">
+		   			AND A.TEAM_ID = #{team_id}
+		   		</when>
+		   	</choose>
+		   	
+		   	<choose>
+		   		<when test="code == 1">
+		   			AND A.SUIM_RPT_STATE = 0
+		   		</when>
+		   		<when test="code == 2">
+ 			        AND A.SUIM_RPT_STATE = 0
+	        		AND SPEED_ONESTOP = 1
+		   		</when>
+		   		<when test="code == 3">
+					AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+											 FROM top_rpt_alarm
+										    WHERE 1=1
+											  AND ALARM_DATE &lt;= unix_timestamp(now())
+											  AND END_DATE is null )		   		
+		   		</when>
+		   	</choose>
+ 
+		  	
+   			<if test="suimStartDate != ''">AND A.REG_DATE >= unix_timestamp(#{suimStartDate}) </if>
+   			<if test="suimEndDate != ''">AND A.REG_DATE &lt; unix_timestamp(DATE_ADD(#{suimEndDate},INTERVAL 1 day))</if>		   		
+   			
+	   		<if test="alarmStartDate != '' or alarmEndDate != ''">
+	   			AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+										 FROM top_rpt_alarm
+									    WHERE 1=1
+				<if test="alarmStartDate != ''">AND ALARM_DATE >= unix_timestamp(#{alarmStartDate}) </if>
+				<if test="alarmEndDate != ''">AND ALARM_DATE &lt; unix_timestamp(DATE_ADD(#{alarmEndDate},INTERVAL 1 day))</if> )			   		
+	   		</if>
+	   		
+ 			<if test="srchTmId != '999' and srchTmId != ''"><!-- 팀 -->
+	   			AND A.TEAM_ID = #{srchTmId}
+	   		</if>
+	   		
+		   	<if test="chkOneStop == 1">
+		   		AND SPEED_ONESTOP = 1
+		   	</if>
+		   	
+		   	<if test="speedType != '999' and speedType != ''">
+		   		AND A.SPEED_TYPE = #{speedType}
+		   	</if>
+		   
+ 			<if test="rptState != '999' and rptState != ''"> 
+		   		AND A.SUIM_RPT_STATE = #{rptState}
+		   	</if>
+		   	
+			<if test="srchAcceptNo != ''"><!-- 접수번호 -->
+				AND A.SUIM_ACCEPT_NO LIKE CONCAT('%',#{srchAcceptNo},'%')
+			</if>	
+				
+	   		<if test="srchAccidentNo != ''"><!-- 사고번호 -->
+				AND B.ACCIDENT_NO LIKE CONCAT('%',#{srchAccidentNo},'%')
+			</if>	
+				   	
+	   		<if test="srchPolicyNo != ''"><!-- 증권번호 -->
+				AND B.POLICY_NO LIKE CONCAT('%',#{srchPolicyNo},'%')
+			</if>
+			
+	   		<if test="srchUserNm != ''"><!-- 담당자 -->
+				AND A.USER_NO IN (
+									SELECT USER_NO
+									  FROM top_mbr_bsc
+									 WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%')				 					
+								 )
+			</if>	
+
+	   		<if test="srchPolicyNm != ''"><!-- 계약자 -->
+				AND ( 
+						A.POLICYHOLDER_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+						OR A.BENEFICIARY_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+						OR A.DAMAGED_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+					)
+			</if>	
+				   	
+	   		<if test="srchAlarm != ''"><!-- 알림내용 -->
+	   			AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+										 FROM top_rpt_alarm
+									    WHERE ALARM_COMMENT LIKE CONCAT('%',#{srchAlarm},'%') )
+				
+			</if>		
+				
+	   		<if test="srchMemo != ''"><!-- 메모 -->
+				AND B.SPEED_COMMENT LIKE CONCAT('%',#{srchMemo},'%')
+			</if>	
+		   	
+		 ORDER BY A.REG_DATE DESC, A.SUIM_RPT_NO DESC
+		 LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+
+	<select id="getSuimSpeedCnt" parameterType="hashmap"  resultType="Long">
+		SELECT COUNT(*) AS CNT					
+		  FROM top_rpt_head A
+		 INNER JOIN top_rpt_body B
+		    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		 WHERE 1=1
+		   AND SUIM_RPT_TYPE1 in (14,15,16,17,18,19) 
+		   AND DEL_DATE = 0
+	   		<choose>
+				<when test="flag == 'user'">
+					AND A.USER_NO = #{user_no}	
+		   		</when>
+		   		<when test="flag == 'team'">
+		   			AND A.TEAM_ID = #{team_id}
+		   		</when>
+		   	</choose>
+		   	
+		   	<choose>
+		   		<when test="code == 1">
+		   			AND A.SUIM_RPT_STATE = 0
+		   		</when>
+		   		<when test="code == 2">
+ 			        AND A.SUIM_RPT_STATE = 0
+	        		AND SPEED_ONESTOP = 1
+		   		</when>
+		   		<when test="code == 3">
+					AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+											 FROM top_rpt_alarm
+										    WHERE 1=1
+											  AND ALARM_DATE &lt;= unix_timestamp(now())
+											  AND END_DATE is null )		   		
+		   		</when>
+		   	</choose>
+		  	
+   			<if test="suimStartDate != ''">AND A.REG_DATE >= unix_timestamp(#{suimStartDate}) </if>
+   			<if test="suimEndDate != ''">AND A.REG_DATE &lt; unix_timestamp(DATE_ADD(#{suimEndDate},INTERVAL 1 day))</if>		   		
+   			
+	   		<if test="alarmStartDate != '' or alarmEndDate != ''">
+	   			AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+										 FROM top_rpt_alarm
+									    WHERE 1=1
+				<if test="alarmStartDate != ''">AND ALARM_DATE >= unix_timestamp(#{alarmStartDate}) </if>
+				<if test="alarmEndDate != ''">AND ALARM_DATE &lt; unix_timestamp(DATE_ADD(#{alarmEndDate},INTERVAL 1 day))</if> )			   		
+	   		</if>
+	   		
+ 			<if test="srchTmId != '' and srchTmId != 0"><!-- 팀 -->
+	   			AND A.TEAM_ID = #{srchTmId}
+	   		</if>
+	   		
+		   	<if test="chkOneStop == 1">
+		   		AND SPEED_ONESTOP = 1
+		   	</if>
+		   	
+		   	<if test="speedType != '999' and speedType != ''">
+		   		AND A.SPEED_TYPE = #{speedType}
+		   	</if>
+		   
+ 			<if test="rptState != '999' and rptState != ''"> 
+		   		AND A.SUIM_RPT_STATE = #{rptState}
+		   	</if>
+		   	
+			<if test="srchAcceptNo != ''"><!-- 접수번호 -->
+				AND A.SUIM_ACCEPT_NO LIKE CONCAT('%',#{srchAcceptNo},'%')
+			</if>	
+				
+	   		<if test="srchAccidentNo != ''"><!-- 사고번호 -->
+				AND B.ACCIDENT_NO LIKE CONCAT('%',#{srchAccidentNo},'%')
+			</if>	
+				   	
+	   		<if test="srchPolicyNo != ''"><!-- 증권번호 -->
+				AND B.POLICY_NO LIKE CONCAT('%',#{srchPolicyNo},'%')
+			</if>
+			
+	   		<if test="srchUserNm != ''"><!-- 담당자 -->
+				AND A.USER_NO IN (
+									SELECT USER_NO
+									  FROM top_mbr_bsc
+									 WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%')				 					
+								 )
+			</if>	
+
+	   		<if test="srchPolicyNm != ''"><!-- 계약자 -->
+				AND ( 
+						A.POLICYHOLDER_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+						OR A.BENEFICIARY_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+						OR A.DAMAGED_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+					)
+			</if>	
+				   	
+	   		<if test="srchAlarm != ''"><!-- 알림내용 -->
+	   			AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+										 FROM top_rpt_alarm
+									    WHERE ALARM_COMMENT LIKE CONCAT('%',#{srchAlarm},'%') )
+				
+			</if>		
+				
+	   		<if test="srchMemo != ''"><!-- 메모 -->
+				AND B.SPEED_COMMENT LIKE CONCAT('%',#{srchMemo},'%')
+			</if>	
+	</select>	
+	
+	<select id="getSuimSpeedExcel" resultType="kr.co.toplac.toprptalarm.SuimSpeedVO" parameterType="HashMap">
+		SELECT  A.SUIM_RPT_NO suimRptNo 						
+			   ,A.SUIM_ACCEPT_NO suimAcceptNo 					
+			   ,A.SUIM_RPT_TYPE1 suimRptType1	
+			   ,A.SPEED_TYPE speedTypeCd							
+			   ,getCodeValue('top_rpt_head', 'speed_type', A.SPEED_TYPE) speedTypeVal
+			   ,A.SUIM_RPT_STATE suimRptStateCd 				
+			   ,getCodeValue('top_rpt_head', 'suim_rpt_state', A.SUIM_RPT_STATE) suimRptStateVal
+			   ,B.accident_no accidentNo 
+			   ,B.policy_no policyNo
+			   ,A.SUIM_RPT_TYPE1_CLOSE12 suimRptType1Close12Cd	
+			   ,getCodeValue('top_prim_biz_rpt_head', 'suim_rpt_type1_close12', A.SUIM_RPT_TYPE1_CLOSE12) suimRptType1Close12Val 
+			   ,A.TEAM_ID teamId								
+			   ,getTopTmBscTeamName(A.TEAM_ID) teamNm
+			   ,A.USER_NO userNo								
+			   ,getTopMbrBscUserName(A.USER_NO) userNm		 
+			   ,A.policyholder_nm policyholderNm
+			   ,B.policyholder_tel policyholderTel				
+			   ,A.beneficiary_nm beneficiaryNm
+			   ,B.beneficiary_tel beneficiaryTel
+			   ,A.DAMAGED_NM damagedNm							
+			   ,B.damaged_tel damagedTel					
+			   ,B.speed_comment speedComment
+			   ,A.speed_onestop speedOneStop
+			   ,FROM_UNIXTIME(A.REG_DATE,'%Y-%m-%d') regDate
+			   ,A.DEL_DATE delDate
+			   ,FROM_UNIXTIME(A.SUIM_CANCEL_DATE,'%Y-%m-%d') suimCancelDateFmt
+			   ,FROM_UNIXTIME(A.CLOSE_DATE,'%Y-%m-%d') closeDateFmt
+			   ,(SELECT FROM_UNIXTIME(MIN(ALARM_DATE),'%Y-%m-%d') 
+				   FROM top_rpt_alarm 
+				  WHERE SUIM_RPT_NO = (A.SUIM_RPT_NO) 
+				 	AND ALARM_STATE = 0) recentAlarmDateFmt
+			   ,(SELECT GROUP_CONCAT( CONCAT(DATE_FORMAT(FROM_UNIXTIME(alarm_date), '%Y-%m-%d')," : ",alarm_comment) separator '\n' )
+				   FROM top_rpt_alarm 
+				  WHERE suim_rpt_no = A.SUIM_RPT_NO
+				  ORDER BY alarm_date DESC ) alarmData
+		  FROM top_rpt_head A
+		 INNER JOIN top_rpt_body B
+		    ON A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		 WHERE 1=1
+		   AND SUIM_RPT_TYPE1 in (14,15,16,17,18,19) 
+		   AND DEL_DATE = 0
+		   
+	   		<choose>
+				<when test="flag == 'user'">
+					AND A.USER_NO = #{user_no}		   		
+		   		</when>
+		   		<when test="flag == 'team'">
+		   			AND A.TEAM_ID = #{team_id}
+		   		</when>
+		   	</choose>
+		   	
+		   	<choose>
+		   		<when test="code == 1">
+		   			AND A.SUIM_RPT_STATE = 0
+		   		</when>
+		   		<when test="code == 2">
+ 			        AND A.SUIM_RPT_STATE = 0
+	        		AND SPEED_ONESTOP = 1
+		   		</when>
+		   		<when test="code == 3">
+					AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+											 FROM top_rpt_alarm
+										    WHERE 1=1
+											  AND ALARM_DATE &lt;= unix_timestamp(now())
+											  AND END_DATE is null )		   		
+		   		</when>
+		   	</choose>
+ 
+		  	
+   			<if test="suimStartDate != ''">AND A.REG_DATE >= unix_timestamp(#{suimStartDate}) </if>
+   			<if test="suimEndDate != ''">AND A.REG_DATE &lt; unix_timestamp(DATE_ADD(#{suimEndDate},INTERVAL 1 day))</if>		   		
+   			
+	   		<if test="alarmStartDate != '' or alarmEndDate != ''">
+	   			AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+										 FROM top_rpt_alarm
+									    WHERE 1=1
+				<if test="alarmStartDate != ''">AND ALARM_DATE >= unix_timestamp(#{alarmStartDate}) </if>
+				<if test="alarmEndDate != ''">AND ALARM_DATE &lt; unix_timestamp(DATE_ADD(#{alarmEndDate},INTERVAL 1 day))</if> )			   		
+	   		</if>
+	   		
+ 			<if test="srchTmId != '999' and srchTmId != ''"><!-- 팀 -->
+	   			AND A.TEAM_ID = #{srchTmId}
+	   		</if>
+	   		
+		   	<if test="chkOneStop == 1">
+		   		AND SPEED_ONESTOP = 1
+		   	</if>
+		   	
+		   	<if test="speedType != '999' and speedType != ''">
+		   		AND A.SPEED_TYPE = #{speedType}
+		   	</if>
+		   
+ 			<if test="rptState != '999' and rptState != ''"> 
+		   		AND A.SUIM_RPT_STATE = #{rptState}
+		   	</if>
+		   	
+			<if test="srchAcceptNo != ''"><!-- 접수번호 -->
+				AND A.SUIM_ACCEPT_NO LIKE CONCAT('%',#{srchAcceptNo},'%')
+			</if>	
+				
+	   		<if test="srchAccidentNo != ''"><!-- 사고번호 -->
+				AND B.ACCIDENT_NO LIKE CONCAT('%',#{srchAccidentNo},'%')
+			</if>	
+				   	
+	   		<if test="srchPolicyNo != ''"><!-- 증권번호 -->
+				AND B.POLICY_NO LIKE CONCAT('%',#{srchPolicyNo},'%')
+			</if>
+			
+	   		<if test="srchUserNm != ''"><!-- 담당자 -->
+				AND A.USER_NO IN (
+									SELECT USER_NO
+									  FROM top_mbr_bsc
+									 WHERE USER_NAME LIKE CONCAT('%',#{srchUserNm},'%')				 					
+								 )
+			</if>	
+
+	   		<if test="srchPolicyNm != ''"><!-- 계약자 -->
+				AND ( 
+						A.POLICYHOLDER_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+						OR A.BENEFICIARY_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+						OR A.DAMAGED_NM LIKE CONCAT('%',#{srchPolicyNm},'%')
+					)
+			</if>	
+				   	
+	   		<if test="srchAlarm != ''"><!-- 알림내용 -->
+	   			AND A.SUIM_RPT_NO IN ( SELECT DISTINCT(SUIM_RPT_NO)
+										 FROM top_rpt_alarm
+									    WHERE ALARM_COMMENT LIKE CONCAT('%',#{srchAlarm},'%') )
+				
+			</if>		
+				
+	   		<if test="srchMemo != ''"><!-- 메모 -->
+				AND B.SPEED_COMMENT LIKE CONCAT('%',#{srchMemo},'%')
+			</if>	
+		   	
+		 ORDER BY A.REG_DATE DESC, A.SUIM_RPT_NO DESC
+	</select>
+	
+	
+	
+	
+	
+	
+	<!-- 보고서 알림 등록 -->	
+	<insert id="insRptAlarm" parameterType="HashMap">
+		INSERT INTO top_rpt_alarm(
+			 suim_rpt_no
+			,alarm_state
+			,alarm_date
+			,alarm_comment
+			,reg_user
+			,reg_date
+		)
+		VALUES(
+			 #{suimRptNo}
+			,0
+			,unix_timestamp(#{alarmDate})
+			,#{alarmComment}
+			,#{userNo}
+			,unix_timestamp(now())
+		); 	
+	</insert>
+	
+	<!-- 보고서 알림 수정(날짜 수정 불가능) -->	
+	<insert id="udtRptAlarm" parameterType="HashMap">
+		UPDATE top_rpt_alarm 
+		   SET alarm_comment = #{alarmComment}
+		 WHERE serial_no = #{serialNo}
+	</insert>	
+	
+	<!-- 보고서 알림 완료 처리-->	
+	<insert id="udtRptAlarmConfirm" parameterType="HashMap">
+		UPDATE top_rpt_alarm 
+		   SET alarm_state = 1
+		      ,end_user = #{userNo}
+			  ,end_date = unix_timestamp(now())
+		 WHERE serial_no = #{serialNo}
+	</insert>	
+	
+	
+	<select id="getRptAlarmList" parameterType="HashMap" resultType="kr.co.toplac.toprptalarm.RptAlarmVO">
+		SELECT  serial_no serialNo
+	   		   ,suim_rpt_no suimRptNo
+	 		   ,alarm_state alarmState
+	 		   ,alarm_date alarmDate
+   	 		   ,date_format(from_unixtime(alarm_date),"%Y-%m-%d") alarmDateFormat
+	 		   ,alarm_comment alarmComment
+			   ,reg_user regUser
+			   ,getTopMbrBscUserName(reg_user) regUserNm
+			   ,date_format(from_unixtime(reg_date),"%Y-%m-%d") regDate
+  		  FROM top_rpt_alarm
+  		 WHERE suim_rpt_no = #{suimRptNo}
+		 ORDER BY alarm_date ASC, reg_date ASC
+	</select>
+	
+	
+<!-- 	<update id="udtSpeedMngCode"  parameterType="kr.co.toplac.topspeed.SuimSpeedVO"> -->
+<!-- 		UPDATE top_rpt_head  -->
+<!-- 		   SET speed_mng_code = #{speedMngCode} -->
+<!-- 		 WHERE suim_rpt_no = #{suimRptNo} -->
+<!-- 	</update> -->
+	
+	<update id="udtSpeedComment"  parameterType="java.util.HashMap">
+		UPDATE top_rpt_body 
+		   SET speed_comment = #{speedComment}
+		 WHERE suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	
+	
+</mapper>

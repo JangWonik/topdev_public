@@ -1,0 +1,1192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="CostListMapper">
+
+	<select id="selectCostPersonInfo" parameterType="HashMap" resultType="AsraMap">
+		
+	</select>
+
+	<select id="selectCostTmList0" parameterType="HashMap" resultType="AsraMap">
+		SELECT GA.TEAM_ID
+			  ,GA.TEAM_NAME
+			  ,GA.TEAM_TYPE
+			  ,GB.USER_CNT
+			  ,GB.BASIC_AMT
+			  ,GB.ADD_AMT
+			  ,GB.CLAIM_AMT
+			  ,GB.TOTAL_AMT
+			  ,GB.TM_APRV_AMT
+			  ,GB.HQ_APRV_AMT
+			  ,GB.FINANCE_APRV_AMT
+			  ,GB.DEPOSIT_AMT
+			  ,GB.HELP_CLIENT_AMT
+			  ,GB.HELP_ACCEPT_AMT
+		  FROM top_tm_bsc GA
+		  LEFT OUTER JOIN (
+					   SELECT TEAM_ID
+							 ,MAX(USER_CNT) AS USER_CNT
+							 ,SUM(BASIC_AMT) AS BASIC_AMT
+							 ,SUM(ADD_AMT) AS ADD_AMT
+							 ,SUM(CLAIM_AMT) AS CLAIM_AMT
+							 ,SUM(BASIC_AMT) + SUM(ADD_AMT) + SUM(CLAIM_AMT) AS TOTAL_AMT
+							 ,SUM(TM_ARPV_AMT) AS TM_APRV_AMT
+							 ,SUM(HQ_ARPV_AMT) AS HQ_APRV_AMT
+							 ,SUM(FINANCE_ARPV_AMT) AS FINANCE_APRV_AMT
+							 ,SUM(DEPOSIT_AMT) AS DEPOSIT_AMT 
+							 ,SUM(HELP_CLIENT_AMT) AS HELP_CLIENT_AMT
+							 ,SUM(HELP_ACCEPT_AMT) AS HELP_ACCEPT_AMT
+						 FROM (
+							   SELECT -1 TEAM_ID
+								  	  ,0 USER_CNT
+								  	  ,0 BASIC_AMT
+								  	  ,0 ADD_AMT
+								  	  ,0 CLAIM_AMT
+									  ,0 TOTAL_AMT
+								  	  ,0 TM_ARPV_AMT
+								  	  ,0 HQ_ARPV_AMT
+								  	  ,0 FINANCE_ARPV_AMT
+								  	  ,0 DEPOSIT_AMT
+								  	  ,0 HELP_CLIENT_AMT
+								  	  ,0 HELP_ACCEPT_AMT
+								  FROM DUAL
+								 UNION ALL						 
+								SELECT TEAM_ID_MAIN
+								  	  ,COUNT(*) USER_CNT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_mbr_bsc
+								 WHERE 
+								 <!-- USER_STATE != 1 -->
+								((USER_STATE = '1' AND OUT_DATE >= UNIX_TIMESTAMP(#{bgnDe})) OR (USER_STATE != '1' AND JOIN_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDe},INTERVAL 1 day))))
+								 GROUP BY TEAM_ID_MAIN
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,A.COST_DEPOSIT_BASIC_AMT AS BASIC_AMT
+								  	  ,A.COST_DEPOSIT_ADD_AMT AS ADD_AMT
+								  	  ,A.COST_DEPOSIT_CLAIM_AMT AS CLAIM_AMT
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TOTAL_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TM_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}		
+								   AND A.cost_deposit_state >= 1		 
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS HQ_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}				
+								   AND A.cost_deposit_state >= 2	 
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS FINANCE_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}			
+								   AND A.cost_deposit_state >= 3						   						   
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS DEPOSIT_AMT
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}		
+									AND A.cost_deposit_state = 4		
+								 UNION ALL
+								SELECT A.CLIENT_TEAM
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,SUM(price_total) HELP_CLIENT_AMT
+								  	  ,0
+								  FROM top_rpt_help A
+								 WHERE 1=1
+								   AND A.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+								   AND A.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+						 		 GROUP BY client_team									   						   					  		
+								 UNION ALL
+								SELECT A.ACCEPT_TEAM
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,SUM(price_total) HELP_ACCEPT_AMT
+						  FROM top_rpt_help A
+						 WHERE 1=1
+						   AND A.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+						   AND A.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+						 GROUP BY accept_team									   						   					  		
+		  		  
+						 ) A
+		  				GROUP BY A.TEAM_ID
+		  ) GB
+		  ON GA.TEAM_ID = GB.TEAM_ID
+	   WHERE TEAM_LEVEL != 0
+	     AND TEAM_TYPE = 0  
+ 	   ORDER BY team_group_order DESC, team_order DESC
+	</select>
+
+	<select id="selectCostTmList1" parameterType="HashMap" resultType="AsraMap">
+		SELECT GA.TEAM_ID
+			  ,GA.TEAM_NAME
+			  ,GA.TEAM_TYPE
+			  ,GB.USER_CNT
+			  ,GB.BASIC_AMT
+			  ,GB.ADD_AMT
+			  ,GB.CLAIM_AMT
+			  ,GB.TOTAL_AMT
+			  ,GB.TM_APRV_AMT
+			  ,GB.HQ_APRV_AMT
+			  ,GB.FINANCE_APRV_AMT
+			  ,GB.DEPOSIT_AMT
+			  ,GB.HELP_CLIENT_AMT
+			  ,GB.HELP_ACCEPT_AMT
+		  FROM top_tm_bsc GA
+		  LEFT OUTER JOIN (
+					   SELECT TEAM_ID
+							 ,MAX(USER_CNT) AS USER_CNT
+							 ,SUM(BASIC_AMT) AS BASIC_AMT
+							 ,SUM(ADD_AMT) AS ADD_AMT
+							 ,SUM(CLAIM_AMT) AS CLAIM_AMT
+							 ,SUM(BASIC_AMT) + SUM(ADD_AMT) + SUM(CLAIM_AMT) AS TOTAL_AMT
+							 ,SUM(TM_ARPV_AMT) AS TM_APRV_AMT
+							 ,SUM(HQ_ARPV_AMT) AS HQ_APRV_AMT
+							 ,SUM(FINANCE_ARPV_AMT) AS FINANCE_APRV_AMT
+							 ,SUM(DEPOSIT_AMT) AS DEPOSIT_AMT 
+							 ,SUM(HELP_CLIENT_AMT) AS HELP_CLIENT_AMT
+							 ,SUM(HELP_ACCEPT_AMT) AS HELP_ACCEPT_AMT
+						 FROM (
+							   SELECT -1 TEAM_ID
+								  	  ,0 USER_CNT
+								  	  ,0 BASIC_AMT
+								  	  ,0 ADD_AMT
+								  	  ,0 CLAIM_AMT
+									  ,0 TOTAL_AMT
+								  	  ,0 TM_ARPV_AMT
+								  	  ,0 HQ_ARPV_AMT
+								  	  ,0 FINANCE_ARPV_AMT
+								  	  ,0 DEPOSIT_AMT
+								  	  ,0 HELP_CLIENT_AMT
+								  	  ,0 HELP_ACCEPT_AMT
+								  FROM DUAL
+								 UNION ALL						 
+								SELECT TEAM_ID_MAIN
+								  	  ,COUNT(*) USER_CNT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_mbr_bsc
+								 WHERE 
+								 <!-- USER_STATE != 1 -->
+								((USER_STATE = '1' AND OUT_DATE >= UNIX_TIMESTAMP(#{bgnDe})) OR (USER_STATE != '1' AND JOIN_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDe},INTERVAL 1 day))))
+								 GROUP BY TEAM_ID_MAIN
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,A.COST_DEPOSIT_BASIC_AMT AS BASIC_AMT
+								  	  ,A.COST_DEPOSIT_ADD_AMT AS ADD_AMT
+								  	  ,A.COST_DEPOSIT_CLAIM_AMT AS CLAIM_AMT
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TOTAL_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TM_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}		
+								   AND A.cost_deposit_state >= 1		 
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS HQ_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}				
+								   AND A.cost_deposit_state >= 2	 
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS FINANCE_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}			
+								   AND A.cost_deposit_state >= 3						   						   
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS DEPOSIT_AMT
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}		
+									AND A.cost_deposit_state = 4		
+								 UNION ALL
+								SELECT A.CLIENT_TEAM
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,SUM(price_total) HELP_CLIENT_AMT
+								  	  ,0
+								  FROM top_rpt_help A
+								 WHERE 1=1
+								   AND A.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+								   AND A.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+						 		 GROUP BY client_team									   						   					  		
+								 UNION ALL
+								SELECT A.ACCEPT_TEAM
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,SUM(price_total) HELP_ACCEPT_AMT
+						  FROM top_rpt_help A
+						 WHERE 1=1
+						   AND A.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+						   AND A.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+						 GROUP BY accept_team									   						   					  		
+		  		  
+						 ) A
+		  				GROUP BY A.TEAM_ID
+		  ) GB
+		  ON GA.TEAM_ID = GB.TEAM_ID
+	   WHERE TEAM_LEVEL != 0
+	     AND TEAM_TYPE = 1  
+ 	   ORDER BY team_group_order DESC, team_order DESC
+	</select>
+	
+	<select id="selectCostTmList4" parameterType="HashMap" resultType="AsraMap">
+		SELECT GA.TEAM_ID
+			  ,GA.TEAM_NAME
+			  ,GA.TEAM_TYPE
+			  ,GB.USER_CNT
+			  ,GB.BASIC_AMT
+			  ,GB.ADD_AMT
+			  ,GB.CLAIM_AMT
+			  ,GB.TOTAL_AMT
+			  ,GB.TM_APRV_AMT
+			  ,GB.HQ_APRV_AMT
+			  ,GB.FINANCE_APRV_AMT
+			  ,GB.DEPOSIT_AMT
+			  ,GB.HELP_CLIENT_AMT
+			  ,GB.HELP_ACCEPT_AMT
+		  FROM top_tm_bsc GA
+		  LEFT OUTER JOIN (
+					   SELECT TEAM_ID
+							 ,MAX(USER_CNT) AS USER_CNT
+							 ,SUM(BASIC_AMT) AS BASIC_AMT
+							 ,SUM(ADD_AMT) AS ADD_AMT
+							 ,SUM(CLAIM_AMT) AS CLAIM_AMT
+							 ,SUM(BASIC_AMT) + SUM(ADD_AMT) + SUM(CLAIM_AMT) AS TOTAL_AMT
+							 ,SUM(TM_ARPV_AMT) AS TM_APRV_AMT
+							 ,SUM(HQ_ARPV_AMT) AS HQ_APRV_AMT
+							 ,SUM(FINANCE_ARPV_AMT) AS FINANCE_APRV_AMT
+							 ,SUM(DEPOSIT_AMT) AS DEPOSIT_AMT 
+							 ,SUM(HELP_CLIENT_AMT) AS HELP_CLIENT_AMT
+							 ,SUM(HELP_ACCEPT_AMT) AS HELP_ACCEPT_AMT
+						 FROM (
+							   SELECT -1 TEAM_ID
+								  	  ,0 USER_CNT
+								  	  ,0 BASIC_AMT
+								  	  ,0 ADD_AMT
+								  	  ,0 CLAIM_AMT
+									  ,0 TOTAL_AMT
+								  	  ,0 TM_ARPV_AMT
+								  	  ,0 HQ_ARPV_AMT
+								  	  ,0 FINANCE_ARPV_AMT
+								  	  ,0 DEPOSIT_AMT
+								  	  ,0 HELP_CLIENT_AMT
+								  	  ,0 HELP_ACCEPT_AMT
+								  FROM DUAL
+								 UNION ALL						 
+								SELECT TEAM_ID_MAIN
+								  	  ,COUNT(*) USER_CNT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_mbr_bsc
+								 WHERE 
+								 <!-- USER_STATE != 1 -->
+								 ((USER_STATE = '1' AND OUT_DATE >= UNIX_TIMESTAMP(#{bgnDe})) OR (USER_STATE != '1' AND JOIN_DATE &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDe},INTERVAL 1 day))))
+								 GROUP BY TEAM_ID_MAIN
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,A.COST_DEPOSIT_BASIC_AMT AS BASIC_AMT
+								  	  ,A.COST_DEPOSIT_ADD_AMT AS ADD_AMT
+								  	  ,A.COST_DEPOSIT_CLAIM_AMT AS CLAIM_AMT
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TOTAL_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TM_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}		
+								   AND A.cost_deposit_state >= 1		 
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS HQ_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}				
+								   AND A.cost_deposit_state >= 2	 
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS FINANCE_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}			
+								   AND A.cost_deposit_state >= 3						   						   
+								 UNION ALL
+								SELECT A.TEAM_ID
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS DEPOSIT_AMT
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}		
+									AND A.cost_deposit_state = 4		
+								 UNION ALL
+								SELECT A.CLIENT_TEAM
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,SUM(price_total) HELP_CLIENT_AMT
+								  	  ,0
+								  FROM top_rpt_help A
+								 WHERE 1=1
+								   AND A.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+								   AND A.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+						 		 GROUP BY client_team									   						   					  		
+								 UNION ALL
+								SELECT A.ACCEPT_TEAM
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,SUM(price_total) HELP_ACCEPT_AMT
+						  FROM top_rpt_help A
+						 WHERE 1=1
+						   AND A.end_date >= UNIX_TIMESTAMP(#{bgnDe}) 
+						   AND A.end_date &lt; UNIX_TIMESTAMP(#{endDe})
+						 GROUP BY accept_team									   						   					  		
+		  		  
+						 ) A
+		  				GROUP BY A.TEAM_ID
+		  ) GB
+		  ON GA.TEAM_ID = GB.TEAM_ID
+	   WHERE TEAM_LEVEL != 0
+	     AND TEAM_TYPE = 4	  
+ 	   ORDER BY team_group_order DESC, team_order DESC
+	</select>	
+	
+	
+	
+	<select id="selectCostMbrList" parameterType="HashMap" resultType="AsraMap">
+		SELECT GA.TEAM_ID
+			  ,GA.TEAM_NAME
+			  ,GA.TEAM_TYPE
+			  ,GB.USER_NO
+			  ,GB.USER_NAME
+			  ,GC.COST_DEPOSIT_NO
+			  ,GC.BASIC_AMT
+			  ,GC.ADD_AMT
+			  ,GC.CLAIM_AMT
+			  ,GC.TOTAL_AMT
+			  ,GC.COST_DEPOSIT_STATE
+			  ,GC.TM_APRV_AMT
+			  ,GC.HQ_APRV_AMT
+			  ,GC.FINANCE_APRV_AMT
+			  ,GC.DEPOSIT_AMT
+			  ,GC.DEPOSIT_DATE
+			  ,GC.HELP_CLIENT_TRAFFIC_FEE
+			  ,GC.HELP_CLIENT_CHART_FEE
+			  ,GC.HELP_ACCEPT_TRAFFIC_FEE
+			  ,GC.HELP_ACCEPT_CHART_FEE
+			  
+		  FROM top_tm_bsc GA
+		 INNER JOIN top_mbr_bsc GB
+		    ON GA.TEAM_ID = GB.TEAM_ID_MAIN
+		  LEFT OUTER JOIN (
+					   SELECT USER_NO
+							 ,MAX(COST_DEPOSIT_NO) AS COST_DEPOSIT_NO					   
+							 ,SUM(BASIC_AMT) AS BASIC_AMT
+							 ,SUM(ADD_AMT) AS ADD_AMT
+							 ,SUM(CLAIM_AMT) AS CLAIM_AMT
+							 ,SUM(BASIC_AMT) + SUM(ADD_AMT) + SUM(CLAIM_AMT) AS TOTAL_AMT
+							 ,MAX(COST_DEPOSIT_STATE) AS COST_DEPOSIT_STATE
+							 ,SUM(TM_ARPV_AMT) AS TM_APRV_AMT
+							 ,SUM(HQ_ARPV_AMT) AS HQ_APRV_AMT
+							 ,SUM(FINANCE_ARPV_AMT) AS FINANCE_APRV_AMT
+							 ,SUM(DEPOSIT_AMT) AS DEPOSIT_AMT 
+							 ,MAX(DEPOSIT_DATE) AS DEPOSIT_DATE
+							 ,SUM(HELP_CLIENT_TRAFFIC_FEE) AS HELP_CLIENT_TRAFFIC_FEE
+							 ,SUM(HELP_CLIENT_CHART_FEE) AS HELP_CLIENT_CHART_FEE
+							 ,SUM(HELP_ACCEPT_TRAFFIC_FEE) AS HELP_ACCEPT_TRAFFIC_FEE
+							 ,SUM(HELP_ACCEPT_CHART_FEE) AS HELP_ACCEPT_CHART_FEE							 
+							 
+						 FROM (
+							   SELECT -1 USER_NO
+									  ,0 COST_DEPOSIT_NO							   
+								  	  ,0 BASIC_AMT
+								  	  ,0 ADD_AMT
+								  	  ,0 CLAIM_AMT
+									  ,0 TOTAL_AMT
+									  ,0 COST_DEPOSIT_STATE
+								  	  ,0 TM_ARPV_AMT
+								  	  ,0 HQ_ARPV_AMT
+								  	  ,0 FINANCE_ARPV_AMT
+								  	  ,0 DEPOSIT_AMT
+								  	  ,0 DEPOSIT_DATE
+								  	  ,0 HELP_CLIENT_TRAFFIC_FEE
+								  	  ,0 HELP_CLIENT_CHART_FEE
+								  	  ,0 HELP_ACCEPT_TRAFFIC_FEE
+								  	  ,0 HELP_ACCEPT_CHART_FEE
+								  FROM DUAL
+								 UNION ALL
+								SELECT A.USER_NO
+									  ,A.COST_DEPOSIT_NO
+								  	  ,A.COST_DEPOSIT_BASIC_AMT AS BASIC_AMT
+								  	  ,A.COST_DEPOSIT_ADD_AMT AS ADD_AMT
+								  	  ,A.COST_DEPOSIT_CLAIM_AMT AS CLAIM_AMT
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TOTAL_AMT
+								  	  ,A.COST_DEPOSIT_STATE AS COST_DEPOSIT_STATE
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0								  	  
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND COST_YEAR_MONTH = #{yearMonth}
+								 UNION ALL
+								SELECT A.USER_NO
+								  	  ,0
+								  	  ,0								  	  
+								  	  ,0
+								  	  ,0
+								  	  ,0	
+								  	  ,0	
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS TM_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0		
+								  	  ,0		
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND COST_YEAR_MONTH = #{yearMonth}		
+								   AND A.COST_DEPOSIT_STATE >= 1		 
+								 UNION ALL
+								SELECT A.USER_NO
+								  	  ,0
+								  	  ,0								  	  
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0												  	  						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS HQ_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0	
+								  	  ,0	
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND COST_YEAR_MONTH = #{yearMonth}				
+								   AND A.COST_DEPOSIT_STATE >= 2	 
+								 UNION ALL
+								SELECT A.USER_NO
+								  	  ,0								
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0														  	  						 		
+								  	  ,0						 		
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS FINANCE_ARPV_AMT
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}			
+								   AND A.cost_deposit_state >= 3						   						   
+								 UNION ALL
+								SELECT A.USER_NO
+								  	  ,0								
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0													  	  						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,A.COST_DEPOSIT_TOTAL_AMT AS DEPOSIT_AMT
+								  	  ,FROM_UNIXTIME(A.COST_DEPOSIT_DATE,"%Y-%m-%d") AS DEPOSIT_DATE
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0								  	  
+								  FROM top_cost_deposit_2nd A
+								 WHERE 1=1
+								   AND cost_year_month = #{yearMonth}		
+								   AND A.cost_deposit_state = 4		
+								 UNION ALL
+								SELECT A.CLIENT_ID
+								  	  ,0								
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0								  	  
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,SUM(TRAFFIC_FEE) HELP_CLIENT_TRAFFIC_FEE
+								  	  ,SUM(CHART_FEE) HELP_CLIENT_CHART_FEE
+								  	  ,0
+								  	  ,0
+								  FROM top_rpt_help A
+								 WHERE 1=1
+								   AND A.END_DATE >= UNIX_TIMESTAMP(#{bgnDe}) 
+								   AND A.END_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+						 		 GROUP BY CLIENT_ID									   						   					  		
+								 UNION ALL
+								SELECT A.ACCEPT_ID
+								  	  ,0								
+								  	  ,0
+								  	  ,0								  	  
+								  	  ,0
+								  	  ,0
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0						 		
+								  	  ,0
+								  	  ,0
+								  	  ,0
+								  	  ,0				
+								  	  ,0												  	  		
+								  	  ,SUM(TRAFFIC_FEE) HELP_ACCEPT_TRAFFIC_FEE
+								  	  ,SUM(CHART_FEE) HELP_ACCEPT_CHART_FEE
+								  FROM top_rpt_help A
+								 WHERE 1=1
+								   AND A.END_DATE >= UNIX_TIMESTAMP(#{bgnDe}) 
+								   AND A.END_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+								 GROUP BY ACCEPT_ID							   						   					  		
+		  		  
+						 ) A
+		  				GROUP BY A.USER_NO
+		  ) GC
+		  ON GB.USER_NO = GC.USER_NO
+		
+		WHERE 
+		((GB.user_state = '1' AND GB.out_date >= UNIX_TIMESTAMP(#{bgnDe})) OR (GB.user_state != '1' AND GB.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDe},INTERVAL 1 day))))				   
+	    AND GA.TEAM_ID = #{srch_team_id}
+	   ORDER BY GA.TEAM_GROUP_ORDER DESC, GA.TEAM_ORDER DESC, GB.WORK_TYPE ASC, GB.WORK_LEVEL DESC, GB.USER_NO ASC		  
+	</select>
+
+
+	<update id="updateAprvCostItem" parameterType="HashMap">
+		UPDATE top_cost_item_2nd 
+		   SET cost_item_state = #{aprv_state}
+		   	  ,cost_deposit_date = UNIX_TIMESTAMP(NOW()) 
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}		
+	</update>
+	
+	<update id="updateAprvCostDeposit" parameterType="HashMap">
+		UPDATE top_cost_deposit_2nd 
+		   SET cost_deposit_state = #{aprv_state}
+		      ,cost_state_date = UNIX_TIMESTAMP(NOW())
+		 WHERE cost_deposit_no = #{cost_deposit_no}
+	</update>
+
+	<update id="updateAprvCostSettle" parameterType="HashMap">
+		UPDATE top_cost_deposit_2nd 
+		   SET cost_deposit_state = #{aprv_state}
+		      ,cost_state_date = UNIX_TIMESTAMP(NOW())
+		      ,cost_deposit_date = UNIX_TIMESTAMP(#{cost_deposit_date})
+		      ,cost_deposit_help_amt = #{cost_deposit_help_amt}
+		      ,cost_deposit_total_amt = #{cost_deposit_total_amt}
+		 WHERE cost_deposit_no = #{cost_deposit_no}	
+	</update>
+	
+	<update id="updateAprvCostSettleCancel" parameterType="HashMap">
+	    <selectKey resultType="string" keyProperty="tmpSum" order="BEFORE">
+	        SELECT IFNULL(COST_DEPOSIT_BASIC_AMT,0) +  IFNULL(COST_DEPOSIT_ADD_AMT,0) + IFNULL(COST_DEPOSIT_CLAIM_AMT,0) AS tmpSum FROM top_cost_deposit_2nd WHERE cost_deposit_no = #{cost_deposit_no}        
+	    </selectKey>	
+	
+		UPDATE top_cost_deposit_2nd 
+		   SET cost_deposit_state = #{aprv_state}
+		      ,cost_state_date = UNIX_TIMESTAMP(NOW())
+		      ,cost_deposit_date = NULL
+		      ,cost_deposit_help_amt = 0
+		      ,cost_deposit_total_amt = #{tmpSum}
+		 WHERE cost_deposit_no = #{cost_deposit_no}	
+	</update>	
+
+	<update id="updateAprvCostSettleCancel2" parameterType="HashMap">
+		UPDATE top_cost_item_2nd 
+		   SET cost_item_state = #{aprv_state}
+		   	  ,cost_deposit_date = null 
+		 WHERE user_no = #{user_no}
+		   AND cost_year_month = #{cost_year_month}	
+	</update>	
+
+	<insert id="insertAprvCostDepositLog" parameterType="HashMap">
+		INSERT INTO top_cost_deposit_2nd_log
+		(
+			 cost_deposit_no
+			,aprv_state
+			,aprv_user_no
+			,reg_date 		
+		)
+		VALUES
+		(
+			 #{cost_deposit_no}
+			,#{aprv_state}
+			,#{cost_aprv_user_no}
+			,NOW()
+		)
+	</insert>
+	
+	<select id="selectCostSettlePop" parameterType="HashMap" resultType="AsraMap">
+		SELECT A.COST_DEPOSIT_NO
+		 	  ,A.TEAM_ID
+		 	  ,getTopTmBscTeamName(A.TEAM_ID) AS TEAM_NM
+		 	  ,A.USER_NO
+		 	  ,getTopMbrBscUserName(A.USER_NO) AS USER_NM
+		 	  ,A.COST_YEAR_MONTH
+		 	  ,DATE_FORMAT(#{bgnDe},"%Y-%m-%d") AS bgnDe
+		 	  ,DATE_FORMAT(#{endDe},"%Y-%m-%d") AS endDe		 		 
+		 	  ,#{cost_deposit_no} COST_DEPOSIT_NO
+		 	  ,A.COST_DEPOSIT_STATE
+			  ,A.COST_DEPOSIT_TOTAL_AMT
+			  ,IFNULL(B.HELP_CLIENT_TRAFFIC_FEE + B.HELP_CLIENT_CHART_FEE,0) AS HELP_CLIENT_FEE
+			  ,IFNULL(C.HELP_ACCEPT_TRAFFIC_FEE + C.HELP_ACCEPT_CHART_FEE,0) AS HELP_ACCEPT_FEE
+		  FROM top_cost_deposit_2nd A
+		  LEFT JOIN ( SELECT CLIENT_ID, SUM(TRAFFIC_FEE) HELP_CLIENT_TRAFFIC_FEE, SUM(CHART_FEE) HELP_CLIENT_CHART_FEE
+						FROM top_rpt_help A
+					   WHERE 1=1
+						 AND A.CLIENT_ID = #{user_no}
+						 AND A.END_DATE >= UNIX_TIMESTAMP(#{bgnDe}) 
+						 AND A.END_DATE &lt; UNIX_TIMESTAMP(#{endDe}) ) B
+			ON A.USER_NO = B.client_id
+		  LEFT JOIN ( SELECT ACCEPT_ID, SUM(TRAFFIC_FEE) HELP_ACCEPT_TRAFFIC_FEE, SUM(CHART_FEE) HELP_ACCEPT_CHART_FEE
+						FROM top_rpt_help A
+					   WHERE 1=1
+						 AND A.ACCEPT_ID = #{user_no} 
+						 AND A.END_DATE >= UNIX_TIMESTAMP(#{bgnDe}) 
+						 AND A.END_DATE &lt; UNIX_TIMESTAMP(#{endDe}) ) C
+			ON A.USER_NO = C.ACCEPT_ID
+		 WHERE COST_DEPOSIT_NO = #{cost_deposit_no}
+		   AND COST_DEPOSIT_STATE = 3
+	</select>
+	
+	<select id="selectCostDeposit2ndPersonInfo" parameterType="HashMap" resultType="AsraMap">
+		SELECT 
+			GA.USER_NO
+			,MAX(GA.COST_DEPOSIT_NO) AS COST_DEPOSIT_NO					   
+			,IFNULL(SUM(GA.BASIC_AMT),0) AS BASIC_AMT
+			,IFNULL(SUM(GA.ADD_AMT),0) AS ADD_AMT
+			,IFNULL(SUM(GA.CLAIM_AMT),0) AS CLAIM_AMT
+			,IFNULL(SUM(GA.BASIC_AMT),0) + SUM(GA.ADD_AMT) + SUM(GA.CLAIM_AMT) AS TOTAL_AMT
+			,MAX(GA.COST_DEPOSIT_STATE) AS COST_DEPOSIT_STATE
+			,IFNULL(SUM(GA.TM_ARPV_AMT),0) AS TM_APRV_AMT
+			,IFNULL(SUM(GA.HQ_ARPV_AMT),0) AS HQ_APRV_AMT
+			,IFNULL(SUM(GA.FINANCE_ARPV_AMT),0) AS FINANCE_APRV_AMT
+			,IFNULL(SUM(GA.DEPOSIT_AMT),0) AS DEPOSIT_AMT 
+			,MAX(GA.DEPOSIT_DATE) AS DEPOSIT_DATE
+			,FROM_UNIXTIME(MAX(GA.DEPOSIT_DATE),"%Y-%m-%d") AS DEPOSIT_DATE_FMT
+			,IFNULL(SUM(GA.HELP_CLIENT_TRAFFIC_FEE),0) AS HELP_CLIENT_TRAFFIC_FEE
+			,IFNULL(SUM(GA.HELP_CLIENT_CHART_FEE),0) AS HELP_CLIENT_CHART_FEE
+			,IFNULL(SUM(GA.HELP_ACCEPT_TRAFFIC_FEE),0) AS HELP_ACCEPT_TRAFFIC_FEE
+			,IFNULL(SUM(GA.HELP_ACCEPT_CHART_FEE),0) AS HELP_ACCEPT_CHART_FEE
+		FROM 
+			(
+				SELECT
+					-1 USER_NO
+					,0 COST_DEPOSIT_NO							   
+					,0 BASIC_AMT
+					,0 ADD_AMT
+					,0 CLAIM_AMT
+					,0 TOTAL_AMT
+					,0 COST_DEPOSIT_STATE
+					,0 TM_ARPV_AMT
+					,0 HQ_ARPV_AMT
+					,0 FINANCE_ARPV_AMT
+					,0 DEPOSIT_AMT
+					,0 DEPOSIT_DATE
+					,0 HELP_CLIENT_TRAFFIC_FEE
+					,0 HELP_CLIENT_CHART_FEE
+					,0 HELP_ACCEPT_TRAFFIC_FEE
+					,0 HELP_ACCEPT_CHART_FEE
+				FROM DUAL
+				
+				UNION ALL
+				
+				SELECT A.USER_NO
+					,A.COST_DEPOSIT_NO
+					,A.COST_DEPOSIT_BASIC_AMT AS BASIC_AMT
+					,A.COST_DEPOSIT_ADD_AMT AS ADD_AMT
+					,A.COST_DEPOSIT_CLAIM_AMT AS CLAIM_AMT
+					,A.COST_DEPOSIT_TOTAL_AMT AS TOTAL_AMT
+					,A.COST_DEPOSIT_STATE AS COST_DEPOSIT_STATE
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0								  	  
+				FROM top_cost_deposit_2nd A
+				WHERE 1=1
+				AND COST_YEAR_MONTH = #{yearMonth}
+				AND USER_NO = #{user_no}
+				
+				UNION ALL
+				
+				SELECT A.USER_NO
+					,0
+					,0								  	  
+					,0
+					,0
+					,0	
+					,0	
+					,A.COST_DEPOSIT_TOTAL_AMT AS TM_ARPV_AMT
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0		
+					,0		
+				FROM top_cost_deposit_2nd A
+				WHERE 1=1
+				AND COST_YEAR_MONTH = #{yearMonth}
+				AND USER_NO = #{user_no}
+				AND A.COST_DEPOSIT_STATE >= 1
+				
+				UNION ALL
+				
+				SELECT A.USER_NO
+					,0
+					,0								  	  
+					,0
+					,0
+					,0						 		
+					,0
+					,0												  	  						 		
+					,A.COST_DEPOSIT_TOTAL_AMT AS HQ_ARPV_AMT
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0	
+					,0	
+				FROM top_cost_deposit_2nd A
+				WHERE 1=1
+				AND COST_YEAR_MONTH = #{yearMonth}
+				AND USER_NO = #{user_no}
+				AND A.COST_DEPOSIT_STATE >= 2
+				
+				UNION ALL
+				
+				SELECT A.USER_NO
+					,0								
+					,0
+					,0
+					,0
+					,0						 		
+					,0
+					,0														  	  						 		
+					,0						 		
+					,A.COST_DEPOSIT_TOTAL_AMT AS FINANCE_ARPV_AMT
+					,0
+					,0
+					,0
+					,0
+					,0
+					,0
+				FROM top_cost_deposit_2nd A
+				WHERE 1=1
+				AND cost_year_month = #{yearMonth}
+				AND USER_NO = #{user_no}
+				AND A.cost_deposit_state >= 3
+				
+				UNION ALL
+				
+				SELECT A.USER_NO
+					,0								
+					,0
+					,0
+					,0
+					,0						 		
+					,0
+					,0													  	  						 		
+					,0						 		
+					,0
+					,A.COST_DEPOSIT_TOTAL_AMT AS DEPOSIT_AMT
+					,A.COST_DEPOSIT_DATE AS DEPOSIT_DATE
+					,0
+					,0
+					,0
+					,0								  	  
+				FROM top_cost_deposit_2nd A
+				WHERE 1=1
+				AND cost_year_month = #{yearMonth}		
+				AND USER_NO = #{user_no}
+				AND A.cost_deposit_state = 4
+				
+				UNION ALL
+				
+				SELECT A.CLIENT_ID
+					,0								
+					,0
+					,0
+					,0
+					,0								  	  
+					,0						 		
+					,0						 		
+					,0						 		
+					,0
+					,0
+					,0
+					,SUM(TRAFFIC_FEE) HELP_CLIENT_TRAFFIC_FEE
+					,SUM(CHART_FEE) HELP_CLIENT_CHART_FEE
+					,0
+					,0
+				FROM top_rpt_help A
+				WHERE 1=1
+				AND A.END_DATE >= UNIX_TIMESTAMP(#{bgnDe}) 
+				AND A.END_DATE &lt; UNIX_TIMESTAMP(#{endDe})
+				AND A.CLIENT_ID = #{user_no}
+				
+				UNION ALL
+				
+				SELECT A.ACCEPT_ID
+					,0								
+					,0
+					,0								  	  
+					,0
+					,0
+					,0						 		
+					,0						 		
+					,0						 		
+					,0
+					,0
+					,0
+					,0				
+					,0												  	  		
+					,SUM(TRAFFIC_FEE) HELP_ACCEPT_TRAFFIC_FEE
+					,SUM(CHART_FEE) HELP_ACCEPT_CHART_FEE
+				FROM top_rpt_help A
+				WHERE 1=1
+				AND A.END_DATE >= UNIX_TIMESTAMP(#{bgnDe}) 
+				AND A.END_DATE &lt; UNIX_TIMESTAMP(#{endDe})		
+				AND A.ACCEPT_ID = #{user_no}		
+			)GA
+	</select>
+	
+	<!-- 일부 검색조건에 들어간 입퇴사자 포함 조회 -->
+	<select id="selectStatisticsMbrListOut" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+ 		SELECT a.user_no
+ 			  ,a.user_name
+ 			  ,b.team_name
+ 			  ,b.team_id
+ 			  ,CASE a.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15	
+			END AS new_work_order
+		  FROM top_mbr_bsc a
+		 INNER JOIN top_tm_bsc b
+		    ON a.team_id_main = b.team_id
+		 WHERE 1=1 
+		 	AND ((a.user_state = '1' AND a.out_date >= UNIX_TIMESTAMP(#{bgnDe})) OR (a.user_state != '1' AND a.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{endDe},INTERVAL 1 day)))) 
+		 	<!-- user_state != 1 -->
+			<if test="user_no != '' and user_no != null">
+				AND  a.user_no = ${user_no}
+			</if>
+			
+			<if test='team_id != "0" and team_id != "" and team_id != null '>
+				AND team_id_main = #{team_id}
+			</if>			
+		 ORDER BY b.team_group_order DESC, b.team_order DESC, new_work_order ASC, a.WORK_LEVEL DESC, a.USER_NO ASC
+	</select>
+	
+	<select id="selectStatisticsMbrList" resultType="kr.co.toplac.topcostnew.NewCostCpstVO" parameterType="kr.co.toplac.topcostnew.NewCostViewVO">
+ 		SELECT a.user_no
+ 			  ,a.user_name
+ 			  ,b.team_name
+ 			  ,b.team_id
+ 			  ,CASE a.work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15	
+			END AS new_work_order
+		  FROM top_mbr_bsc a
+		 INNER JOIN top_tm_bsc b
+		    ON a.team_id_main = b.team_id
+		 WHERE user_state != 1
+			<if test="user_no != '' and user_no != null">
+				AND  a.user_no = ${user_no}
+			</if>
+			
+			<if test='team_id != "0" and team_id != "" and team_id != null '>
+				AND team_id_main = #{team_id}
+			</if>			
+		 ORDER BY b.team_group_order DESC, b.team_order DESC, new_work_order ASC, a.WORK_LEVEL DESC, a.USER_NO ASC
+	</select>
+	
+     	
+
+</mapper>

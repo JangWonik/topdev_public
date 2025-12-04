@@ -1,0 +1,17 @@
+A { TEXT-DECORATION: none;COLOR: #4d4d4d }
+A:link { COLOR: #4d4d4d; FONT-FAMILY:±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-DECORATION: none } 
+A:active { COLOR: #4d4d4d; FONT-FAMILY:±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-DECORATION: none } 
+A:visited { COLOR: #4d4d4d; FONT-FAMILY: ±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-DECORATION: none } 
+A:hover { COLOR: #4E87FF; FONT-FAMILY: ±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-DECORATION: underline } 
+
+TD {COLOR: #333333;	FONT-FAMILY: ±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-DECORATION: none; line-height: 1.5}
+SELECT {	FONT-FAMILY: ±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; LINE-HEIGHT: 13pt; COLOR: #333333;}
+
+INPUT {	FONT-FAMILY: ±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; LINE-HEIGHT: 13pt; COLOR: #333333 }
+TEXTAREA {	FONT-FAMILY: ±¼¸², Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; LINE-HEIGHT: 13pt; COLOR: #333333 }
+IMG 	{ border: none; } 
+
+.form_style { border: 1px #666666 solid; font-family: "±¼¸²"; font-size: 12px}
+.form_style_disable { border: 0px #ffffff solid; font-family: "±¼¸²"; font-size: 12px}
+.unnamed1 {	font-family: "µ¸¿ò";	font-size: 12px;	line-height: 18px;	color: 80796F;}
+.unnamed2 {	font-family: "µ¸¿ò";	font-size: 12px;	line-height: 22px;	color: 8D826F;}

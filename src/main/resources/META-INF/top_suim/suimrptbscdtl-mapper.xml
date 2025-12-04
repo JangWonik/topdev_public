@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimBookDtlMapper">
+
+	<select id="getSuimRptStateNow" parameterType="String" resultType="integer">
+		SELECT
+			suim_rpt_state
+		FROM top_rpt_head
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+
+	<select id="selectPtnrNameBySuimRptNo" parameterType="String" resultType="String">
+		SELECT 
+			getTopPtnrBscPtnrNick(ptnr_id) AS ptnr_name
+		FROM top_rpt_head
+		WHERE suim_rpt_no = #{suim_rpt_no}		
+	</select>
+
+	<select id="getSuimBookDtlEditAuth" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			a.suim_rpt_state AS suimRptState
+			,getTopRptEditYN2(a.suim_rpt_no, a.team_id, #{user_no_session}) AS editYN
+			,(SELECT COUNT(*) FROM ls_admin WHERE user_id = #{user_no_session} AND ls_admin22 LIKE CONCAT('%|',a.team_id,'|%') )AS endModFlag
+		FROM top_rpt_head a
+		WHERE a.suim_rpt_no = #{suim_rpt_no}		
+	</select>
+
+	<select id="getAccSearchDetail" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			suim_rpt_no
+			,suim_accept_no
+			,beneficiary_nm
+			,accident_no
+		FROM v_top_rpt_head_acc
+		WHERE accident_no like CONCAT('%',#{accident_no},'%')
+		ORDER BY suim_rpt_no DESC
+		LIMIT 0,100;	
+	</select>
+
+	<select id="getSuimBookDtl" parameterType="HashMap" resultType="kr.co.toplac.topsuim.SuimRptCompositeVO">
+		SELECT 
+		  a.suim_rpt_no, a.accident_no, a.policy_no, a.insurance_nm, a.policyholder_ssn, a.policyholder_tel
+		, a.beneficiary_ssn, a.beneficiary_tel, a.damaged_tel, a.accident_facts, a.investigate_postcode
+		, a.investigate_addr1, a.investigate_addr2, a.amt_estimated_damage, a.commission_estimated
+		, a.suim_rpt_aprv_user_no suimRptAprvUserNo
+		, getTopMbrBscUserName(suim_rpt_aprv_user_no) suimRptAprvUserName
+		, a.amt_estimated_damage amtEstimatedDamage
+		, a.amt_claimed amtClaimed
+		, a.amt_settlement amtSettlement
+		, a.amt_reduction amtReduction
+		, a.amt_insu_payment amtInsuPayment
+		, a.amt_self_pay amtSelfPay
+		, a.amt_self_pay_unit as amtSelfPayUnit
+		, a.moral_flag moralFlag
+		, a.pre_estmt_at as preEstmtAt
+		, a.pre_estmt_cmpy as preEstmtCmpy
+		, a.ind_ajmdmge_ennc as indAjmdmgeEnnc
+		, a.doc_rcept_at as docRceptAt
+		, a.amt_compensation_limit as amtCompensationLimit
+		, a.amt_compensation_limit_unit as amtCompensationLimitUnit
+		, a.insu_term AS insuTerm
+		, getDateDiff(b.reg_date)+1 pastDays
+		, b.suim_rpt_no, b.suim_accept_no
+		, b.suim_close_no
+		, b.suim_rpt_type1
+		, b.suim_rpt_type1 suimRptType1
+		, IFNULL(DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d'),'1970-01-01') closeDate
+		, IFNULL(DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y%m%d'),'99999999') closeDateVal
+		, b.ptnr_mbr_sanction ptnrMbrSanction
+		, b.lock_flag lockFlag
+		, IFNULL(DATE_FORMAT(FROM_UNIXTIME(b.suim_cancel_date), '%Y-%m-%d'),'1970-01-01') suimCancelDate
+		, IFNULL(DATE_FORMAT(FROM_UNIXTIME(b.suim_rpt_aprv_date), '%Y-%m-%d'),'1970-01-01') suimRptAprvDate
+		, getCodeValue('top_rpt_head','suim_rpt_type1',b.suim_rpt_type1) suim_rpt_type1_nm
+		, getCodeValue('top_rpt_head','suim_rpt_type2',b.suim_rpt_type2) suim_rpt_type2_nm
+		, getCodeValue('top_rpt_head','suim_rpt_state',b.suim_rpt_state) suimRptStateVal
+		, getCodeValue('top_rpt_body','minwon_flag',a.minwon_flag) minwonFlagVal
+		, getCodeValue('top_rpt_body','moral_flag',a.minwon_flag) moralFlagVal
+		, a.minwon_date minwonDate
+		, FROM_UNIXTIME(a.minwon_date, '%Y-%m-%d') minwonDateVal
+		, a.moral_date moralDate
+		, FROM_UNIXTIME(a.moral_date, '%Y-%m-%d') moralDateVal
+		, b.suim_rpt_type2
+		, b.team_id
+		, getTopTmBscTeamName(b.team_id) team_name
+		, b.user_no
+		, getTopMbrBscUserName(b.user_no) user_name
+		, (SELECT email FROM top_mbr_bsc WHERE user_no = b.user_no) email
+		, b.ptnr_id
+		, b.suim_rpt_state suimRptState
+		, getTopPtnrBscPtnrNick(b.ptnr_id) ptnr_nick
+		, getTopPtnrBscPtnrName(b.ptnr_id) ptnr_name
+		, b.ptnr_dept_id
+		<!-- , getTopPtnrDeptBscPtnrDeptName(b.ptnr_dept_id) ptnr_dept_nm -->
+		, IFNULL( e.ptnr_tm_nm, '' ) AS ptnr_dept_nm
+		, b.ptnr_mbr_no
+		, getTopPtnrMbrBscPtnrMbrName(b.ptnr_mbr_no) ptnr_mbr_nm
+		, getTopPtnrMbrBscPositionName(b.ptnr_mbr_no) ptnrPositionNm
+		, b.policyholder_nm, b.beneficiary_nm, b.damaged_nm
+		, DATE_FORMAT(FROM_UNIXTIME(b.accident_date), '%Y-%m-%d') accident_date
+		, DATE_FORMAT(FROM_UNIXTIME(b.reg_date), '%Y-%m-%d') reg_date
+		, DATE_FORMAT(FROM_UNIXTIME(b.trans_date), '%Y-%m-%d') trans_date 
+		, DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d') close_date
+		, a.minwon_flag minwonFlag
+		, b.speed_type speedType
+		, getCodeValue("top_rpt_head", "speed_type", b.speed_type) speedTypeNm
+		, b.suim_rpt_ea suimRptEa
+		, IFNULL(b.suim_rpt_type1_close12,0) suimRptType1Close12
+		, IFNULL(b.suim_rpt_type1_close34,0) suimRptType1Close34
+		, c.issue_tax_invoice issueTaxInvoice
+		, e.ptnr_mbr_hp
+		, e.ptnr_mbr_office_tel
+		, e.ptnr_tm2_nm
+		, e.ptnr_mbr_position_nm
+		, getTopUserHp(b.user_no) handphone
+		, IFNULL(b.del_date,0) delDate
+		, a.memo_problem memoProblem
+		, a.memo_remedy memoRemedy
+		, if(b.suim_rpt_type1 in (3,4)
+		, (select ifnull(count(*),0) from brd_notice_ptnr4 where ptnr_id = b.ptnr_id)
+		, (select ifnull(count(*),0) from brd_notice_ptnr1 where ptnr_id = b.ptnr_id)) ptnr_notice_yn
+		, getTopRptCloseAuthYN(b.team_id, #{user_no_session}) closeAuthYN
+		, getTopRptCancelApprovalAuthYN(b.team_id, #{user_no_session}) rptCancelApprovalAuthYN
+		, getTopRptEditYN2(a.suim_rpt_no, b.team_id, #{user_no_session}) editYN
+		, getTopRptMbrChgYN(b.team_id, #{user_no_session}) mbrChgYN
+		, getTopRptPtnrMbrChgYN(b.team_id, #{user_no_session}) ptnrMbrChgYN
+		, b.pendncy_trget_at pendncyTrgetAt
+		, b.speed_onestop speedOnestop
+		, b.onestop_team_id onestopTeamId
+		, getTopTmBscTeamName(b.onestop_team_id) onestopTeamNm
+		, b.onestop_mbr_no onestopMbrNo
+		, getTopMbrBscUserName(b.onestop_mbr_no) onestopMbrNm
+		, getTopUserHp(b.onestop_mbr_no) onestopMbrHandphone
+		, IF( IF(IFNULL(b.close_date,0)=0,unix_timestamp("2017-12-16"),b.close_date) >= unix_timestamp("2017-12-16"),1,0) workloadUseAt -- 기준업무량은 17년12월16일부터 적용
+		, b.workload_type workloadType
+		, getCode2Value('top_rpt_head', CONCAT('workload_type_',#{year}), b.suim_rpt_type1, b.workload_type) workloadTypeVal
+		, workload_ea workloadEa
+		, a.retire_pending_flag retirePendingFlag
+		, b.ptnr_assign_gubun ptnrAssignGubun
+		, b.ptnr_detail_gubun ptnrDetailGubun
+		, a.insu_condition 
+
+		, a.self_pay_flag selfPayFlag
+		, a.compensation_limit_flag compensationLimitFlag
+		
+		, c.ptnr_homepage
+		, c.ptnr_url
+		
+		, b.damaged_nm damagedNm
+		, a.reference_facts
+		, b.registrant
+		, IF( b.registrant = 0, '-', getTopMbrBscUserName( b.registrant ) ) as  registrant_nm
+		
+		, IFNULL(b.close_ptnr_dept_nm,'') AS close_ptnr_dept_nm
+		, IFNULL(b.close_ptnr_tm2_nm,'') AS close_ptnr_tm2_nm
+		
+		, b.site_rpt_state
+		, b.site_rpt_aprv_date AS site_rpt_aprv_date
+		, DATE_FORMAT(FROM_UNIXTIME(b.site_rpt_aprv_date), '%Y-%m-%d') AS site_rpt_aprv_date_fmt
+		, b.site_result_flag
+		, b.ptnr_id_sub		
+		, (SELECT col_val FROM sysadm_codedic2 WHERE tbl_nm = 'top_rpt_head' AND col_nm = 'ptnr_id_sub' AND col_cd1 = b.ptnr_id AND col_cd2 = b.ptnr_id_sub) AS ptnr_id_sub_nm		
+		
+		, b.period_flag
+		, CASE
+			WHEN(b.period_flag = 1) 
+			THEN '장기'
+			WHEN(b.period_flag = 2) 
+			THEN '일반'
+			ELSE '없음'
+		END AS period_flag_nm
+		
+		 FROM top_rpt_head b
+		 LEFT JOIN top_ptnr_mbr_bsc e
+		   ON b.ptnr_mbr_no = e.ptnr_mbr_no
+		INNER JOIN top_rpt_body a
+		   ON b.suim_rpt_no = a.suim_rpt_no
+		INNER JOIN top_ptnr_bsc c
+		   ON b.ptnr_id = c.ptnr_id
+		WHERE b.suim_rpt_no = #{suim_rpt_no}
+		
+	</select>
+	
+	<select id="getTopMbrListForUserNoEdite" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptHelpAcceptMbrVO">
+
+	SELECT
+	user_no, user_name
+	FROM
+	top_mbr_bsc
+	WHERE
+	team_id_main = #{topTeamId}
+	and user_state != 1
+	
+	</select>
+	
+	<select id="getPtnrDeptMbrListForPtnrMbrNoEdite" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptHelpAcceptMbrVO">
+	
+		SELECT
+			  ptnr_mbr_no user_no
+			, ptnr_mbr_nm user_name
+		FROM
+			top_ptnr_mbr_bsc
+		WHERE
+			ptnr_dept_id = #{ptnrDeptId}
+			and del_state != 1
+	
+	</select>
+	
+	<update id = "rptTopUserChange" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_rpt_head
+		SET
+			user_no = #{topUserNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<update id = "rptTopSantionChange" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_rpt_body
+		SET
+			suim_rpt_aprv_user_no = #{topUserNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</update>
+	
+	<update id = "rptPtnrUserChange" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_rpt_head
+		SET
+			ptnr_mbr_no = #{ptnrUserNo}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<select id="getNowResultNo1" parameterType="String" resultType="String"><!-- //notUse-2016.11.02.rjh -->
+		SELECT max(suim_close_no)
+		FROM top_rpt_head 
+		WHERE team_id in (6,8,9,10,11,13,24,38,39,40,43,44)
+		and suim_close_no like CONCAT('%',#{searchStr},'%') 
+		and del_date != 0
+		<!-- and suim_close_no like '%${searchStr}%' -->
+	</select>
+
+	<update id="getNowResultNo12" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET suim_close_seq_no1 = suim_close_seq_no1 + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT suim_close_seq_no1
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+	    </selectKey>
+
+	</update>
+
+	<select id="getNowResultNo2" parameterType="String" resultType="String"><!-- //notUse-2016.11.02.rjh -->
+		SELECT max(suim_close_no)
+		FROM top_rpt_head 
+		WHERE team_id in (12,14,27) 
+		and suim_close_no like CONCAT('%',#{searchStr},'%') 
+		and del_date != 0
+	</select>
+
+	<update id="getNowResultNo22" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="suim_accept_seq_no" keyColumn="suim_accept_seq_no">
+		UPDATE sysadm_accept_no_mng
+		SET suim_close_seq_no2 = suim_close_seq_no2 + 1
+		WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+
+		<selectKey keyProperty="suim_accept_seq_no" resultType="String" >
+	        SELECT suim_close_seq_no2
+	        FROM sysadm_accept_no_mng 
+	        WHERE `year_month` = DATE_FORMAT(NOW(), '%y%m')
+	    </selectKey>
+
+	</update>
+
+	<select id="getNowResultNo3" parameterType="java.util.HashMap" resultType="String">
+	
+		SELECT 
+			max(suim_close_no)
+		FROM 
+			top_rpt_head 
+		WHERE 
+			team_id = #{team_id} 
+			and suim_close_no like CONCAT('%',#{searchStr},'%') 
+			
+	</select>
+	
+	<select id="latestSubCountForRptSub" parameterType="java.util.HashMap" resultType="Integer">
+		
+		SELECT 
+			count(suim_rpt_no)
+		FROM 
+			top_rpt_head 
+		WHERE 
+			reg_date &lt; unix_timestamp(#{dayBefore7}) 
+			and suim_rpt_aprv_date >= unix_timestamp(#{today}) 
+			and suim_rpt_aprv_date &lt; unix_timestamp(#{dayAfter1}) 
+			and user_no = #{user_no}
+			and del_date != 0
+			
+	</select>
+	
+	<!-- 손해사정서교부동의서 파일 -->
+	<select id="rptIssueFileList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptOrgFileVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+		FROM
+			top_rpt_issue_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+	
+	<!-- 보고서 원본 파일 -->
+	<select id="rptOrgFileList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptOrgFileVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			file_name fileName,
+			DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') regDate
+		FROM
+			top_rpt_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+
+	<!-- 결재 진행 시 종결 파일 유무를 확인한다. 종결, 손사문구제거 20251103 -->
+	<select id="getFinalRptFileYn" parameterType="String" resultType="Integer">
+	
+		SELECT
+			count(serial_no)
+		FROM
+			top_rpt_file
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+			<!-- and ( file_name like CONCAT('%','종결','%') or file_name like CONCAT('%','손사','%') ) -->		 
+	
+	</select>
+	
+	<select id="getTaskOneCount" parameterType="String" resultType="Integer">
+		SELECT
+			COUNT(*) as Cnt
+		FROM top_rpt_task_chk
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}	
+	</select>
+	
+	<!-- 보고서 상세 화면 : 처리내용 확인사항 추출 -->
+	<select id="getTaskOne" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptTaskChkVO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			getCodeValue('top_rpt_task_chk','contact_yn',contact_yn) contactYn,
+			contact_yn contactYnCode, 
+			contact_memo contactMemo,
+			contact_memo contactMemoSpan,
+			DATE_FORMAT(FROM_UNIXTIME(contact_date), '%Y-%m-%d') contactDate,
+			contact_user_no contactUserNo,
+			getCodeValue('top_rpt_task_chk','face_yn',face_yn) faceYn,
+			face_yn faceYnCode,
+			face_memo faceMemo,
+			face_memo faceMemoSpan,
+			DATE_FORMAT(FROM_UNIXTIME(face_date), '%Y-%m-%d') faceDate,
+			face_user_no faceUserNo,
+			getCodeValue('top_rpt_task_chk','interim_yn',interim_yn) interimYn,
+			interim_yn interimYnCode,
+			interim_memo interimMemo,
+			interim_memo interimMemoSpan,
+			DATE_FORMAT(FROM_UNIXTIME(interim_date), '%Y-%m-%d') interimDate,
+			interim_user_no interimUserNo
+		FROM
+			top_rpt_task_chk
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+	
+	<delete id="delNewTask" parameterType="String">
+		DELETE FROM top_rpt_task_chk WHERE suim_rpt_no = #{suim_rpt_no}
+	</delete>	
+	
+	<!-- 보고서 상세 화면 : 처리내용 확인사항 삽입 -->
+	<insert id = "insNewTask" parameterType="String">
+	
+		INSERT INTO top_rpt_task_chk
+		(
+			suim_rpt_no  
+		)
+		VALUES
+		(
+			#{suim_rpt_no}
+		)
+		
+	
+	</insert>
+	
+	<!-- 수임대장 - 문제점 SELECT -->
+	<select id="getProblem" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptProblemVO" > 
+		SELECT
+			serial_no, prb_memo, DATE_FORMAT(FROM_UNIXTIME(prb_date), '%Y-%m-%d') prb_date
+		  FROM
+		  	top_rpt_problem
+		 WHERE 
+		 	suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<!-- 수임대장 - 향후처리방안 SELECT -->
+	<select id="getPlan" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptProblemVO" > 
+		SELECT
+			serial_no, pln_memo, DATE_FORMAT(FROM_UNIXTIME(pln_date), '%Y-%m-%d') pln_date
+		  FROM
+		  	top_rpt_plan
+		 WHERE 
+		 	suim_rpt_no = #{suimRptNo}
+	</select>
+
+	<!-- 로직 변경으로 인한 미사용 1228, LDS -->
+	<!-- 4종 보고서 결재자 선택을 위한 재직사원 검색 -->
+<!-- 	<select id="getAllMember" resultType="kr.co.toplac.topteam.TopMbrBscVO"> -->
+<!-- 		SELECT user_name, user_no -->
+<!--   	 	  FROM top_mbr_bsc -->
+<!-- 		 WHERE user_state != 1 -->
+<!-- 	</select> -->
+
+	<!-- 4종 보고서 결재자 선택을 위한 재직사원 검색 -->
+	<select id="getTmLevel" resultType="String" parameterType="String">
+		select team_level
+		  from top_tm_bsc 
+		 where team_id = #{team_id}
+	</select>
+	
+	<select id="getTmID" resultType="String" parameterType="String">
+		select team_id
+		  from top_tm_bsc a
+		 where team_group_order = (select team_group_order from top_tm_bsc where team_id=#{team_id})
+		   and team_order >= (select team_order from top_tm_bsc where team_id=#{team_id})
+		 order by team_order 
+		 limit 2
+	</select>
+
+	<select id="getAllMyTeam" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+		SELECT user_name, user_no
+  	 	  FROM top_mbr_bsc a
+		 WHERE user_state != 1
+		   and a.team_id_loc = #{team_id}
+	</select>
+	
+	<!-- 4종 보고서 종결 결재자 목록 조회 추가 by top3009 -->
+	<select id="getApprovalMemberList4" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+		SELECT
+			GA.user_name as user_name
+			,GA.user_no as user_no
+			,GA.team_id as team_id_loc
+		FROM
+		(	
+			SELECT 
+				getTopMbrBscUserName(a.user_id) AS user_name
+				,a.user_id AS user_no
+				,b.team_id_loc AS team_id
+			FROM ls_admin a, top_mbr_bsc b
+			WHERE a.user_id = b.user_no
+			AND a.ls_admin7 LIKE CONCAT('%|',#{team_id},'|%')
+			<!-- user_state = 0 -->
+			AND b.user_state != 1
+		)GA, top_tm_bsc tm
+		WHERE GA.team_id = tm.team_id
+		AND tm.team_type = 4
+	</select>
+
+	<select id="getLevel2MyTeam" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="java.util.ArrayList">
+		SELECT user_name, user_no
+  	 	  FROM top_mbr_bsc a
+		 WHERE user_state != 1
+		   and a.team_id_loc in 
+	   	<foreach collection="list" item="item" open="(" close=")" separator=",">
+	      #{item}
+	    </foreach>
+	</select>
+	
+	<update id="udtRptAprvUser" parameterType="java.util.HashMap">
+		UPDATE top_rpt_body
+		   SET suim_rpt_aprv_user_no = #{rptAprvUserNo}
+		 WHERE suim_rpt_no = #{suimRptNo}
+	</update>
+
+	<select id="getEndModAuth" resultType="String" parameterType="java.util.HashMap">
+	 	SELECT COUNT(admin_no)
+		  FROM ls_admin
+		 WHERE user_id = #{user_no}
+		   AND ls_admin22 LIKE CONCAT('%|',#{team_id},'|%');
+	</select>
+	
+	<select id="getAuth24" resultType="String" parameterType="java.util.HashMap">
+	 	SELECT COUNT(admin_no)
+		  FROM ls_admin
+		 WHERE user_id = #{user_no}
+		   AND ls_admin24 LIKE CONCAT('%|',#{team_id},'|%');
+	</select>
+	
+	<select id="getEndModAuthHelp" resultType="String" parameterType="java.util.HashMap">
+	 	SELECT COUNT(admin_no)
+		  FROM ls_admin
+		 WHERE user_id = #{user_no}
+		   AND (ls_admin22 LIKE CONCAT('%|',#{team_id1},'|%')
+		        or ls_admin22 LIKE CONCAT('%|',#{team_id2},'|%') );
+	</select>	
+	
+	<select id="getEndModRptWriter" resultType="String" parameterType="java.util.HashMap">
+	 	SELECT COUNT(admin_no)
+		  FROM ls_admin
+		 WHERE user_id = #{user_no}
+		   AND ls_admin11 LIKE CONCAT('%|',#{team_id},'|%');
+	</select>	
+	
+	<select id="getDeptMngAuth" resultType="String" parameterType="java.util.HashMap">
+	 	SELECT COUNT(admin_no)
+		  FROM ls_admin
+		 WHERE user_id = #{user_no}
+		   AND ls_admin23 LIKE CONCAT('%|',#{team_id},'|%');
+	</select>	
+	
+</mapper>

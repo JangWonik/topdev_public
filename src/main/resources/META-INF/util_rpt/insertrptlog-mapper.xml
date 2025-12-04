@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="InsertRptLogMapper"> 
+
+	<insert id="insRptBscMap" parameterType="java.util.HashMap" >
+		INSERT INTO top_rpt_head_log
+		(
+			 suim_rpt_no
+			,suim_rpt_type1
+			,speed_type
+			,suim_rpt_state
+			,suim_rpt_type1_close12
+			,suim_rpt_type1_close34
+			,reg_date
+			,suim_cancel_date
+			,suim_rpt_aprv_date
+			,close_date,del_date
+			,lock_flag
+			,ptnr_mbr_sanction
+			,moral_flag
+			,minwon_flag
+			-- 171228 추가, lds
+			,team_id
+			,user_no
+			,onestop_team_id
+			,onestop_mbr_no
+			,ptnr_id
+			,ptnr_dept_id
+			,ptnr_mbr_no		
+				
+			,log_date
+			,log_ip
+			,log_user_no)
+		SELECT a.suim_rpt_no
+			  ,a.suim_rpt_type1
+			  ,a.speed_type
+			  ,a.suim_rpt_state
+			  ,a.suim_rpt_type1_close12
+			  ,a.suim_rpt_type1_close34
+			  ,a.reg_date
+			  ,a.suim_cancel_date
+			  ,a.suim_rpt_aprv_date
+			  ,a.close_date
+			  ,a.del_date
+			  ,a.lock_flag
+			  ,a.ptnr_mbr_sanction
+			  ,b.moral_flag
+			  ,b.minwon_flag
+			  -- 171228 추가, lds
+			  ,a.team_id
+			  ,a.user_no
+			  ,a.onestop_team_id
+			  ,a.onestop_mbr_no
+			  ,a.ptnr_id
+			  ,a.ptnr_dept_id
+			  ,a.ptnr_mbr_no				  
+			  
+			  ,UNIX_TIMESTAMP(NOW())
+			  ,#{userIp}
+			  ,#{userNo}
+		  FROM top_rpt_head a, top_rpt_body b
+		 WHERE a.suim_rpt_no = #{smNo}
+		   AND a.suim_rpt_no = b.suim_rpt_no
+	</insert>
+
+	<insert id="insPrimBizRptBscMap" parameterType="java.util.HashMap" >
+		INSERT INTO top_prim_biz_rpt_head_log
+			(suim_rpt_no,suim_rpt_type1,suim_rpt_state,suim_rpt_type1_close12
+			,reg_date,suim_cancel_date,suim_rpt_aprv_date,close_date,del_date,lock_flag
+			,moral_flag,minwon_flag,log_date,log_ip,log_user_no)
+		SELECT a.suim_rpt_no,a.suim_rpt_type1,a.suim_rpt_state,a.suim_rpt_type1_close12
+				,a.reg_date,a.suim_cancel_date,a.suim_rpt_aprv_date,a.close_date,a.del_date,a.lock_flag
+				,b.moral_flag,b.minwon_flag, UNIX_TIMESTAMP(NOW()), #{userIp}, #{userNo}
+		FROM top_prim_biz_rpt_head a, top_prim_biz_rpt_body b
+		WHERE a.suim_rpt_no = #{smNo}
+		AND a.suim_rpt_no = b.suim_rpt_no
+	</insert>
+
+</mapper>

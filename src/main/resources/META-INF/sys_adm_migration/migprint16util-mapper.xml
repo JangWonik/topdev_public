@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MigPrint16UtilMapper">
+
+	<delete id="print163DeleteAll">
+		DELETE FROM top_rpt_print_16_3
+	</delete>
+
+	<select id="report16Forprint163List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint16VO">
+		SELECT a.no, 1 tmpGubun, replace(replace(c_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_16 a
+		WHERE a.c_1_ch > 0
+		UNION ALL
+		SELECT a.no, 2 tmpGubun, replace(replace(c_2,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_16 a
+		WHERE a.c_2_ch > 0
+		UNION ALL
+		SELECT a.no, 3 tmpGubun, replace(replace(c_3,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_16 a
+		WHERE a.c_3_ch > 0
+		ORDER BY no
+	</select>
+
+	<insert id="print163Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint16VO">
+		INSERT INTO top_rpt_print_16_3 (rpt_print_no, contract_ba, confirm_date, confirm_dtl, relative_organ)
+		VALUES(#{rpt_print_no}, #{contract_ba}, #{confirm_date}, #{confirm_dtl}, #{relative_organ})
+	</insert>
+
+	<update id="print163UpdateSpaceData1">
+		UPDATE top_rpt_print_16_3 SET confirm_date = ''
+		WHERE confirm_date = '-'
+		OR confirm_date = '--'
+	</update>
+
+	<update id="print163UpdateSpaceData2">
+		UPDATE top_rpt_print_16_3 SET confirm_dtl = ''
+		WHERE confirm_dtl = '-'
+		OR confirm_dtl = '--'
+	</update>
+
+	<update id="print163UpdateSpaceData3">
+		UPDATE top_rpt_print_16_3 SET relative_organ = ''
+		WHERE relative_organ = '-'
+		OR relative_organ = '--'
+	</update>
+
+	<delete id="print163DeleteSpaceData">
+		DELETE FROM top_rpt_print_16_3
+		WHERE confirm_date = ''
+		AND confirm_dtl = ''
+		AND relative_organ = ''
+	</delete>
+
+	<update id="print163UpdateSpaceData4">
+		UPDATE top_rpt_print_16_3 SET confirm_date = LEFT(confirm_date,CHAR_LENGTH(confirm_date)-1)
+		WHERE RIGHT(confirm_date,1) = '-'
+	</update>
+
+	<update id="print163UpdateSpaceData5">
+		UPDATE top_rpt_print_16_3 SET relative_organ = RIGHT(relative_organ,CHAR_LENGTH(relative_organ)-1)
+		WHERE LEFT(relative_organ,1) = '-'
+	</update>
+
+	<update id="print163UpdateSpaceData6">
+		UPDATE top_rpt_print_16_3 SET confirm_dtl = LEFT(confirm_dtl,CHAR_LENGTH(confirm_dtl)-1)
+		WHERE RIGHT(confirm_dtl,1) = '-'
+	</update>
+
+	<update id="print163UpdateSpaceData7">
+		UPDATE top_rpt_print_16_3 SET confirm_dtl = RIGHT(confirm_dtl,CHAR_LENGTH(confirm_dtl)-1)
+		WHERE LEFT(confirm_dtl,1) = '-'
+	</update>
+
+	<delete id="print164DeleteAll">
+		DELETE FROM top_rpt_print_16_4
+	</delete>
+
+	<select id="report16Forprint164List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint16VO">
+		SELECT a.no, replace(replace(d_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_16 a
+		WHERE a.d_1_ch > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print164Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint16VO">
+		INSERT INTO top_rpt_print_16_4 (rpt_print_no, other_insu_com, other_insu_mortgage, other_insu_period, other_insu_etc_memo)
+		VALUES(#{rpt_print_no}, #{other_insu_com}, #{other_insu_mortgage}, #{other_insu_period}, #{other_insu_etc_memo})
+	</insert>
+
+	<update id="print164UpdateSpaceData1">
+		UPDATE top_rpt_print_16_4 SET other_insu_com = ''
+		WHERE other_insu_com = '-'
+		OR other_insu_com = '--'
+		OR other_insu_com = '---'
+	</update>
+
+	<update id="print164UpdateSpaceData2">
+		UPDATE top_rpt_print_16_4 SET other_insu_mortgage = ''
+		WHERE other_insu_mortgage = '-'
+		OR other_insu_mortgage = '--'
+		OR other_insu_mortgage = '---'
+	</update>
+
+	<update id="print164UpdateSpaceData3">
+		UPDATE top_rpt_print_16_4 SET other_insu_period = ''
+		WHERE other_insu_period = '-'
+		OR other_insu_period = '--'
+		OR other_insu_period = '---'
+	</update>
+
+	<update id="print164UpdateSpaceData4">
+		UPDATE top_rpt_print_16_4 SET other_insu_etc_memo = ''
+		WHERE other_insu_etc_memo = '-'
+		OR other_insu_etc_memo = '--'
+		OR other_insu_etc_memo = '---'
+	</update>
+
+	<delete id="print164DeleteSpaceData">
+		DELETE FROM top_rpt_print_16_4
+		WHERE other_insu_com = ''
+		AND other_insu_mortgage = ''
+		AND other_insu_period = ''
+		AND other_insu_etc_memo = ''
+	</delete>
+
+	<update id="print164UpdateSpaceData11">
+		UPDATE top_rpt_print_16_4 SET other_insu_com = LEFT(other_insu_com,CHAR_LENGTH(other_insu_com)-1)
+		WHERE RIGHT(other_insu_com,1) = '-'
+	</update>
+
+	<update id="print164UpdateSpaceData132">
+		UPDATE top_rpt_print_16_4 SET other_insu_mortgage = LEFT(other_insu_mortgage,CHAR_LENGTH(other_insu_mortgage)-1)
+		WHERE RIGHT(other_insu_mortgage,1) = '-'
+	</update>
+
+	<update id="print164UpdateSpaceData13">
+		UPDATE top_rpt_print_16_4 SET other_insu_mortgage = RIGHT(other_insu_mortgage,CHAR_LENGTH(other_insu_mortgage)-1)
+		WHERE LEFT(other_insu_mortgage,1) = '-'
+	</update>
+
+	<update id="print164UpdateSpaceData15">
+		UPDATE top_rpt_print_16_4 SET other_insu_period = LEFT(other_insu_period,CHAR_LENGTH(other_insu_period)-1)
+		WHERE RIGHT(other_insu_period,1) = '-'
+	</update>
+
+	<update id="print164UpdateSpaceData16">
+		UPDATE top_rpt_print_16_4 SET other_insu_period = RIGHT(other_insu_period,CHAR_LENGTH(other_insu_period)-1)
+		WHERE LEFT(other_insu_period,1) = '-'
+	</update>
+
+	<update id="print164UpdateSpaceData17">
+		UPDATE top_rpt_print_16_4 SET other_insu_etc_memo = LEFT(other_insu_etc_memo,CHAR_LENGTH(other_insu_etc_memo)-1)
+		WHERE RIGHT(other_insu_etc_memo,1) = '-'
+	</update>
+
+	<update id="print164UpdateSpaceData18">
+		UPDATE top_rpt_print_16_4 SET other_insu_etc_memo = RIGHT(other_insu_etc_memo,CHAR_LENGTH(other_insu_etc_memo)-1)
+		WHERE LEFT(other_insu_etc_memo,1) = '-'
+	</update>
+
+</mapper>

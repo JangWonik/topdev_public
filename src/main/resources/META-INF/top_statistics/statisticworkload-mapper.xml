@@ -1,0 +1,1385 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="StatisticWorkloadMapper">
+   
+   <select id="selectWorkLoadSumMember" parameterType="HashMap" resultType="String">
+		SELECT 
+			  IFNULL(SUM(calc_workload),0) calc_workload		  
+		  FROM (
+		  		SELECT 
+		  			  0 calc_workload		  			  
+				  FROM DUAL
+				 WHERE 1=0
+		<!-- <foreach item="jobList" index="index" collection="jobList" close="ORDER BY start_date desc"> -->
+				 UNION ALL
+				SELECT 
+					  ROUND(SUM(calc_workload),3) calc_workload					  
+				  FROM (
+				  		SELECT
+	 			  			  0 calc_workload				  			  
+				  		  FROM DUAL
+ 				  		 WHERE 1=0
+						<if test='"Y".equals(basicYN)'>
+	 				  		 -- 일반 수임
+					 		 UNION ALL 			
+							SELECT 
+								  SUM( ROUND(#{yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * a.workload_ea * (100 - (SELECT IFNULL(SUM(collabo_pp),0) FROM top_rpt_collabo WHERE suim_rpt_no = a.suim_rpt_no)) * 0.01,3) )  calc_workload
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{userNo}
+							   AND a.suim_rpt_state = 2
+							   AND suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND close_date >= UNIX_TIMESTAMP(#{sStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>							   
+							   
+							 UNION ALL
+							 -- 공동수행
+							SELECT 
+								  SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * a.workload_ea * b.collabo_pp * 0.01,3) )  calc_workload								  
+							  FROM top_rpt_head a
+							 INNER JOIN top_rpt_collabo b
+							    ON a.suim_rpt_no = b.suim_rpt_no
+							 WHERE b.user_id = #{jobList.userNo}
+						 	   AND a.suim_rpt_state = 2
+							   AND a.suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))												  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>
+						</if>
+								
+						<if test='"Y".equals(primYN)'>			   
+							 UNION ALL
+							 -- 농작물
+							SELECT  
+								  SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * b.share_workload_ea,3) )  calc_workload								  						  
+							  FROM top_prim_biz_rpt_head  a
+							 INNER JOIN top_prim_biz_inv_share b
+							    ON a.suim_rpt_no = b.suim_rpt_no	
+							 INNER JOIN top_prim_biz_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 WHERE b.share_user_no = #{jobList.userNo}
+ 							   AND a.suim_rpt_state = 2
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))												  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>			    
+						</if>
+						) aa
+		<!-- </foreach> -->
+		 ) a
+		<choose>
+			<when test="gubun == 'member'">GROUP BY userNo</when>
+			<otherwise>GROUP BY teamId</otherwise>
+		</choose>
+		ORDER BY teamGroupOrder DESC, teamOrder DESC
+	</select>
+   
+	<select id="selectMbrInfo" parameterType="HashMap" resultType="HashMap">
+		SELECT user_no userNo
+			  ,team_id_loc mbrTeamId
+			  ,work_job mbrWorkJob
+			  ,getCodeValue("top_rpt_head", CONCAT("workload_job_code_",#{year}), work_job) mbrYearEa
+			  ,FROM_UNIXTIME(join_date,"%Y-%m-%d") joinDate
+			  ,FROM_UNIXTIME(IFNULL(out_date,0),"%Y-%m-%d") outDate
+			  ,FROM_UNIXTIME(IFNULL(probation_date,0),"%Y-%m-%d") probationDate
+		  FROM top_mbr_bsc
+		 WHERE user_no = #{userNo}
+	</select>	
+	
+	<select id="selectPickTeamOrMember" parameterType="HashMap" resultType="String">
+		SELECT
+			<choose>
+				<when test="selectType == 'team'">DISTINCT(a.team_id_main) teamId</when>
+				<otherwise>
+					DISTINCT(a.user_no) userNo					
+				</otherwise>
+			</choose> 
+				,CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+		  FROM top_mbr_bsc a
+		 INNER join (
+		 			SELECT aa.*
+					  FROM top_mbr_appoint aa
+					 INNER JOIN ( SELECT MAX(appoint_no) appoint_no
+								    FROM top_mbr_appoint
+								   GROUP BY user_no ) bb
+						 on aa.appoint_no = bb.appoint_no
+					) b
+		    ON a.user_no = b.user_no
+		 INNER join top_tm_bsc c
+		    ON a.team_id_main = c.team_id
+		 WHERE 1=1
+		<choose>
+			<when test="gubun == 'team'">
+		 		AND appoint_team_id = #{mbrTeamId}
+		 	</when>
+		 	
+		 	<when test="gubun == 'center'">
+		 		<choose>
+		 			<when test="type == 3">
+		 				AND appoint_team_id = #{teamId}
+		 			</when>
+		 			<otherwise>
+		 				<choose>
+		 					<!-- 부문 임원처리 -->
+		 					<when test='"1".equals(extra)'>
+		 						<!-- 96 : 배상부문, 87 : 정책보험부문, 90 : 재물부문 -->
+								<choose>
+									<when test='"96".equals(mbrTeamId)'>AND b.appoint_work_job_cd in (25,30) </when>
+									<when test='"87".equals(mbrTeamId)'>AND b.appoint_work_job_cd in (10,15) </when>
+									<when test='"90".equals(mbrTeamId)'>AND b.appoint_work_job_cd = 20 </when>
+								</choose>					
+		 					</when>
+		 					<otherwise>
+								AND appoint_team_id IN ( SELECT team_id FROM top_tm_bsc WHERE team_group_order = #{mbrTeamGroupOrder} )
+		 					</otherwise>
+		 				</choose>
+		 			</otherwise>
+		 		</choose>
+		 	</when>
+		 	
+		 	<when test="gubun == 'adm'">
+		 		<choose>
+		 			<when test="type == 3">
+		 				AND appoint_team_id = #{teamId}
+		 			</when>
+		 			<when test="type == 2 and (teamGroupOrder != null and teamGroupOrder != '')">
+				 		AND appoint_team_id IN ( SELECT team_id FROM top_tm_bsc WHERE team_group_order = #{teamGroupOrder} )
+		 			</when>
+		 			
+		 			<otherwise>
+						<!-- AND b.appoint_work_job_cd in (10,13,15,20,25,30,35,36,37,38,39) -->
+						AND b.appoint_work_job_cd in (10,13,15,20,25,30,34,35,36,37,38,39)
+		 			</otherwise>
+		 		</choose>
+		 	</when>
+		 	
+			<when test="gubun == 'member'">
+				<!-- AND a.work_job in (10,13,15,20,25,30,35,36,37,38,39) -->
+				AND a.work_job in (10,13,15,20,25,30,34,35,36,37,38,39)
+				AND a.user_state != 1		 	
+			</when>
+			
+		</choose>
+<!-- 		   AND appoint_date >= unix_timestamp(#{yearStartDate}) -->
+<!-- 		   AND appoint_date &lt; unix_timestamp(#{yearEndDate})   	 -->
+		   AND (a.out_date is null or ( a.out_date >= unix_timestamp(#{yearStartDate}) AND a.out_date &lt; unix_timestamp(#{yearEndDate} + INTERVAL 1 DAY)))		   
+		   AND appoint_work_job_tm_type = 1
+		   <!-- 수습조건 제거 2023.03.23 by top3009 -->
+		   <!-- AND a.work_level != 5 -->
+
+		<choose>
+			<when test="gubun != 'member' and type == 3">
+				ORDER BY new_work_order, a.work_level DESC
+			</when>
+			<otherwise>
+				ORDER BY c.team_group_order DESC, c.team_order DESC, new_work_order, a.work_level DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="selectMemberWorkJob" parameterType="HashMap" resultType="HashMap">
+		SELECT IFNULL(appoint_work_job_cd,"") workJob
+			  ,appoint_team_id appointTeamId
+			  ,IFNULL(getCodeValue("top_rpt_head", CONCAT("workload_job_code_",#{year}), appoint_work_job_cd),0) yearEa
+			  ,FROM_UNIXTIME(appoint_date,'%Y-%m-%d') workJobDate
+		  FROM top_mbr_appoint 
+		 WHERE user_no = #{userNo}
+		   AND appoint_date >= unix_timestamp(#{yearStartDate})
+		   AND appoint_date &lt; unix_timestamp(#{yearEndDate})  
+		   AND appoint_team_id IS NOT NULL
+		   
+		 UNION ALL
+		(
+		SELECT IFNULL(appoint_work_job_cd,"") workJob
+			  ,appoint_team_id appointTeamId		
+			  ,getCodeValue("top_rpt_head", CONCAT("workload_job_code_",#{year}), appoint_work_job_cd) yearEa		
+			  ,FROM_UNIXTIME(appoint_date,'%Y-%m-%d') workJobDate
+		  FROM top_mbr_appoint
+		 WHERE user_no = #{userNo}
+		   AND appoint_date &lt; unix_timestamp(#{yearStartDate})
+		 ORDER BY appoint_date DESC
+		 LIMIT 0, 1
+		)  
+		 ORDER BY workJobDate;		   
+	</select>
+	
+	<select id="selectMyWorkLoadSumStatistics" parameterType="HashMap" resultType="HashMap">
+		SELECT start_date
+			  ,IFNULL(SUM(purpose_workload),0) purpose_workload
+			  ,IFNULL(SUM(calc_workload),0) calc_workload
+			  ,IFNULL(SUM(minwonCnt),0) minwonCnt
+			  ,IFNULL(SUM(moralCnt),0) moralCnt
+			  ,jobCd
+			  ,userNo
+			  ,userName
+			  ,teamId
+			  ,teamName
+			  ,centerName
+			  ,teamGroupOrder
+			  ,teamOrder
+			  ,IFNULL((SELECT MAX(rank) FROM top_rpt_workload_daily WHERE user_no = userNo AND base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))),0) rank_workload
+		  FROM (
+		  		SELECT 0 start_date
+		  			  ,0 purpose_workload
+		  			  ,0 calc_workload
+		  			  ,0 minwonCnt
+		  			  ,0 moralCnt
+		  			  ,0 jobCd
+		  			  ,0 userNo
+		  			  ,'' userName
+		  			  ,0 teamId
+		  			  ,'' teamName
+		  			  ,'' centerName
+		  			  ,0 teamGroupOrder
+		  			  ,0 teamOrder
+				  FROM DUAL
+				 WHERE 1=0
+		<foreach item="jobList" index="index" collection="jobList" close="ORDER BY start_date desc">
+				 UNION ALL
+				SELECT MAX(start_date) start_date
+					  ,ROUND(SUM(purpose_workload),3) purpose_workload
+					  ,ROUND(SUM(calc_workload),3) calc_workload
+					  ,SUM(minwonCnt) minwonCnt
+					  ,SUM(moralCnt) moralCnt
+					  ,#{jobList.jobCd} jobCd
+					  ,#{jobList.userNo} userNo
+					  ,getTopMbrBscUserName(#{jobList.userNo}) userName
+					  ,#{jobList.teamId} teamId
+					  ,getTopTmBscTeamName(#{jobList.teamId}) teamName
+					  ,getTopTmBscCenterName(#{jobList.teamId}) centerName
+					  ,(SELECT team_group_order FROM top_tm_bsc WHERE team_id=#{jobList.teamId}) teamGroupOrder
+					  ,(SELECT team_order FROM top_tm_bsc WHERE team_id=#{jobList.teamId}) teamOrder
+				  FROM (
+				  		SELECT 0 start_date
+							  ,0 purpose_workload
+	 			  			  ,0 calc_workload 
+				  			  ,0 minwonCnt
+				  			  ,0 moralCnt
+				  			  ,0 jobCd
+				  			  ,0 userNo
+				  			  ,'' userName
+				  			  ,0 teamId
+				  			  ,'' teamName
+				  			  ,'' centerName
+				  			  ,0 teamGroupOrder
+				  			  ,0 teamOrder
+				  		  FROM DUAL
+ 				  		 WHERE 1=0
+						<if test='"Y".equals(basicYN)'>
+	 				  		 -- 일반 수임
+					 		 UNION ALL 			
+							SELECT #{jobList.workStartDate} start_date
+					  			<choose>
+					  				<when test="jobListSize == 1">
+					  					,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload
+					  				</when>
+					  				<otherwise>
+							  			<choose>
+							  				<when test="index == 1">
+												,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload 
+							  				</when>
+							  				<otherwise>
+												,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(#{jobList.perposeEndDate}, #{jobList.perposeStartDate}), 3) purpose_workload			  			  
+							  				</otherwise>
+							  			</choose>
+					  				</otherwise>
+					  			</choose>								  
+								  ,SUM(ROUND(
+								  	( #{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}) ,a.suim_rpt_type1 ) )
+								  	* ( ( a.workload_ea * ( 100 - ( SELECT IFNULL(SUM(collabo_pp),0) FROM top_rpt_collabo WHERE suim_rpt_no = a.suim_rpt_no ) ) * 0.01 ) 
+								  	 - (SELECT IFNULL(SUM(written_cnt),0) FROM top_rpt_collabo WHERE suim_rpt_no = a.suim_rpt_no) )
+								   ,3 ) ) 
+								  as calc_workload						  
+								  ,0 minwonCnt
+								  ,0 moralCnt
+								  ,#{jobList.jobCd} jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,#{jobList.teamId} teamId
+								  ,getTopTmBscTeamName(a.team_id) teamName
+								  ,getTopTmBscCenterName(a.team_id) centerName
+								  ,d.team_group_order teamGroupOrder
+								  ,d.team_order teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND a.suim_rpt_state = 2
+							   AND suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 										
+									<!-- AND close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>							   
+							   
+							   
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,SUM( IF(c.minwon_flag = 2, 1, 0) ) minwonCnt
+								  ,0 moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND c.minwon_flag = 2
+							   AND c.minwon_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})	
+							<choose>
+								<when test="jobListSize == 1">
+									AND c.minwon_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND c.minwon_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND c.minwon_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 										
+<!-- 									AND c.minwon_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>	 	
+							   
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,0 minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND a.suim_rpt_type1 in (2,11,12,13)
+							   AND a.suim_rpt_state = 2							   			
+							   AND c.moral_flag = 1
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 										
+<!-- 									AND a.close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,0 minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND suim_rpt_type1 in (14,15,16,17,18,19)								   		
+							   AND c.moral_flag = 1
+							   AND c.moral_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND c.moral_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND c.moral_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND c.moral_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 	
+									<!-- AND c.moral_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>							   
+							   
+							 UNION ALL
+							 -- 공동수행
+							SELECT #{jobList.workStartDate} start_date
+								  ,0 purpose_workload
+								  ,(SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * a.workload_ea * b.collabo_pp * 0.01,3) ) ) + ( IFNULL(SUM(b.written_cnt),0) ) as calc_workload
+								  ,0 minwonCnt
+								  ,0 moralCnt
+								  ,0 jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,a.team_id teamId
+								  ,getTopTmBscTeamName(a.team_id) teamName
+								  ,getTopTmBscCenterName(a.team_id) centerName
+								  ,0 teamGroupOrder
+								  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_rpt_collabo b
+							    ON a.suim_rpt_no = b.suim_rpt_no
+							 WHERE b.user_id = #{jobList.userNo}
+						 	   AND a.suim_rpt_state = 2
+							   AND a.suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 	
+									<!-- AND a.close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>
+						</if>
+								
+						<if test='"Y".equals(primYN)'>			   
+							 UNION ALL
+							 -- 농작물
+							SELECT  #{jobList.workStartDate} start_date
+					  			<choose>
+					  				<when test='"Y".equals(basicYN)'>
+					  					,0 purpose_workload
+					  				</when>
+					  				<otherwise>
+							  			<choose>
+							  				<when test="jobListSize == 1">
+							  					,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload
+							  				</when>
+							  				<otherwise>
+									  			<choose>
+									  				<when test="index == 1">
+														,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload 
+									  				</when>
+									  				<otherwise>
+														,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(#{jobList.perposeEndDate}, #{jobList.perposeStartDate}), 3) purpose_workload			  			  
+									  				</otherwise>
+									  			</choose>
+							  				</otherwise>
+							  			</choose>					  				
+					  				</otherwise>
+					  			</choose>
+					  			-- share_ea -> share_workload_ea 변경
+								  ,SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * b.share_workload_ea,3) )  calc_workload						  
+								  ,SUM( IF(c.minwon_flag = 2, 1, 0) ) minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+								  ,0 jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,b.share_team_id teamId
+								  ,getTopTmBscTeamName(b.share_team_id) teamName
+								  ,getTopTmBscCenterName(b.share_team_id) centerName					  
+								  ,0 teamGroupOrder
+								  ,0 teamOrder						  
+							  FROM top_prim_biz_rpt_head  a
+							 INNER JOIN top_prim_biz_inv_share b
+							    ON a.suim_rpt_no = b.suim_rpt_no	
+							 INNER JOIN top_prim_biz_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 WHERE b.share_user_no = #{jobList.userNo}
+ 							   AND a.suim_rpt_state = 2
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))	
+									<!-- AND a.close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>			    
+						</if>
+						) aa
+		</foreach>
+		 ) a
+		<choose>
+			<when test="gubun == 'member'">GROUP BY userNo</when>
+			<otherwise>GROUP BY teamId</otherwise>
+		</choose>
+		ORDER BY teamGroupOrder DESC, teamOrder DESC
+	</select>	 
+	
+	
+	<select id="selectMyWorkLoadSumStatistics_20191017" parameterType="HashMap" resultType="HashMap">
+		SELECT start_date
+			  ,IFNULL(SUM(purpose_workload),0) purpose_workload
+			  ,IFNULL(SUM(calc_workload),0) calc_workload
+			  ,IFNULL(SUM(minwonCnt),0) minwonCnt
+			  ,IFNULL(SUM(moralCnt),0) moralCnt
+			  ,jobCd
+			  ,userNo
+			  ,userName
+			  ,teamId
+			  ,teamName
+			  ,centerName
+			  ,teamGroupOrder
+			  ,teamOrder
+			  ,IFNULL((SELECT MAX(rank) FROM top_rpt_workload_daily WHERE user_no = userNo AND base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))),0) rank_workload
+		  FROM (
+		  		SELECT 0 start_date
+		  			  ,0 purpose_workload
+		  			  ,0 calc_workload
+		  			  ,0 minwonCnt
+		  			  ,0 moralCnt
+		  			  ,0 jobCd
+		  			  ,0 userNo
+		  			  ,'' userName
+		  			  ,0 teamId
+		  			  ,'' teamName
+		  			  ,'' centerName
+		  			  ,0 teamGroupOrder
+		  			  ,0 teamOrder
+				  FROM DUAL
+				 WHERE 1=0
+		<foreach item="jobList" index="index" collection="jobList" close="ORDER BY start_date desc">
+				 UNION ALL
+				SELECT MAX(start_date) start_date
+					  ,ROUND(SUM(purpose_workload),3) purpose_workload
+					  ,ROUND(SUM(calc_workload),3) calc_workload
+					  ,SUM(minwonCnt) minwonCnt
+					  ,SUM(moralCnt) moralCnt
+					  ,#{jobList.jobCd} jobCd
+					  ,#{jobList.userNo} userNo
+					  ,getTopMbrBscUserName(#{jobList.userNo}) userName
+					  ,#{jobList.teamId} teamId
+					  ,getTopTmBscTeamName(#{jobList.teamId}) teamName
+					  ,getTopTmBscCenterName(#{jobList.teamId}) centerName
+					  ,(SELECT team_group_order FROM top_tm_bsc WHERE team_id=#{jobList.teamId}) teamGroupOrder
+					  ,(SELECT team_order FROM top_tm_bsc WHERE team_id=#{jobList.teamId}) teamOrder
+				  FROM (
+				  		SELECT 0 start_date
+							  ,0 purpose_workload
+	 			  			  ,0 calc_workload 
+				  			  ,0 minwonCnt
+				  			  ,0 moralCnt
+				  			  ,0 jobCd
+				  			  ,0 userNo
+				  			  ,'' userName
+				  			  ,0 teamId
+				  			  ,'' teamName
+				  			  ,'' centerName
+				  			  ,0 teamGroupOrder
+				  			  ,0 teamOrder
+				  		  FROM DUAL
+ 				  		 WHERE 1=0
+						<if test='"Y".equals(basicYN)'>
+	 				  		 -- 일반 수임
+					 		 UNION ALL 			
+							SELECT #{jobList.workStartDate} start_date
+					  			<choose>
+					  				<when test="jobListSize == 1">
+					  					,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload
+					  				</when>
+					  				<otherwise>
+							  			<choose>
+							  				<when test="index == 1">
+												,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload 
+							  				</when>
+							  				<otherwise>
+												,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(#{jobList.perposeEndDate}, #{jobList.perposeStartDate}), 3) purpose_workload			  			  
+							  				</otherwise>
+							  			</choose>
+					  				</otherwise>
+					  			</choose>
+								  ,SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * a.workload_ea * (100 - (SELECT IFNULL(SUM(collabo_pp),0) FROM top_rpt_collabo WHERE suim_rpt_no = a.suim_rpt_no)) * 0.01,3) )  calc_workload						  
+								  ,0 minwonCnt
+								  ,0 moralCnt
+								  ,#{jobList.jobCd} jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,#{jobList.teamId} teamId
+								  ,getTopTmBscTeamName(a.team_id) teamName
+								  ,getTopTmBscCenterName(a.team_id) centerName
+								  ,d.team_group_order teamGroupOrder
+								  ,d.team_order teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND a.suim_rpt_state = 2
+							   AND suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 										
+									<!-- AND close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>							   
+							   
+							   
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,SUM( IF(c.minwon_flag = 2, 1, 0) ) minwonCnt
+								  ,0 moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND c.minwon_flag = 2
+							   AND c.minwon_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})	
+							<choose>
+								<when test="jobListSize == 1">
+									AND c.minwon_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND c.minwon_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND c.minwon_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 										
+<!-- 									AND c.minwon_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>	 	
+							   
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,0 minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND a.suim_rpt_type1 in (2,11,12,13)
+							   AND a.suim_rpt_state = 2							   			
+							   AND c.moral_flag = 1
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 										
+<!-- 									AND a.close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,0 minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND suim_rpt_type1 in (14,18)								   		
+							   AND c.moral_flag = 1
+							   AND c.moral_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND c.moral_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND c.moral_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND c.moral_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 	
+									<!-- AND c.moral_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>							   
+							   
+							 UNION ALL
+							 -- 공동수행
+							SELECT #{jobList.workStartDate} start_date
+								  ,0 purpose_workload
+								  ,SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * a.workload_ea * b.collabo_pp * 0.01,3) )  calc_workload
+								  ,0 minwonCnt
+								  ,0 moralCnt
+								  ,0 jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,a.team_id teamId
+								  ,getTopTmBscTeamName(a.team_id) teamName
+								  ,getTopTmBscCenterName(a.team_id) centerName
+								  ,0 teamGroupOrder
+								  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_rpt_collabo b
+							    ON a.suim_rpt_no = b.suim_rpt_no
+							 WHERE b.user_id = #{jobList.userNo}
+						 	   AND a.suim_rpt_state = 2
+							   AND a.suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 	
+									<!-- AND a.close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>
+						</if>
+								
+						<if test='"Y".equals(primYN)'>			   
+							 UNION ALL
+							 -- 농작물
+							SELECT  #{jobList.workStartDate} start_date
+					  			<choose>
+					  				<when test='"Y".equals(basicYN)'>
+					  					,0 purpose_workload
+					  				</when>
+					  				<otherwise>
+							  			<choose>
+							  				<when test="jobListSize == 1">
+							  					,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload
+							  				</when>
+							  				<otherwise>
+									  			<choose>
+									  				<when test="index == 1">
+														,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload 
+									  				</when>
+									  				<otherwise>
+														,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(#{jobList.perposeEndDate}, #{jobList.perposeStartDate}), 3) purpose_workload			  			  
+									  				</otherwise>
+									  			</choose>
+							  				</otherwise>
+							  			</choose>					  				
+					  				</otherwise>
+					  			</choose>
+					  			-- share_ea -> share_workload_ea 변경
+								  ,SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", CONCAT("workload_type1_",#{year}), a.suim_rpt_type1) * b.share_workload_ea,3) )  calc_workload						  
+								  ,SUM( IF(c.minwon_flag = 2, 1, 0) ) minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+								  ,0 jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,b.share_team_id teamId
+								  ,getTopTmBscTeamName(b.share_team_id) teamName
+								  ,getTopTmBscCenterName(b.share_team_id) centerName					  
+								  ,0 teamGroupOrder
+								  ,0 teamOrder						  
+							  FROM top_prim_biz_rpt_head  a
+							 INNER JOIN top_prim_biz_inv_share b
+							    ON a.suim_rpt_no = b.suim_rpt_no	
+							 INNER JOIN top_prim_biz_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 WHERE b.share_user_no = #{jobList.userNo}
+ 							   AND a.suim_rpt_state = 2
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							<choose>
+								<when test="jobListSize == 1">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+								</when>
+								<otherwise>
+									<choose>
+										<when test="index+1 == jobListSize">
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day)) 
+										</when>
+										<otherwise>
+									AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))	
+									<!-- AND a.close_date &lt; unix_timestamp(#{jobList.workEndDate}) -->			  			  
+										</otherwise>
+									</choose>
+								</otherwise>
+							</choose>			    
+						</if>
+						) aa
+		</foreach>
+		 ) a
+		<choose>
+			<when test="gubun == 'member'">GROUP BY userNo</when>
+			<otherwise>GROUP BY teamId</otherwise>
+		</choose>
+		ORDER BY teamGroupOrder DESC, teamOrder DESC
+	</select>	 
+	 
+	
+	<select id="selectTeamWorkLoadSumStatistics" parameterType="HashMap" resultType="HashMap">
+		SELECT IFNULL(ROUND(SUM(purpose_workload),3),0) purpose_workload
+			  ,IFNULL(ROUND(SUM(calc_workload),3),0) calc_workload
+			  ,IFNULL(SUM(minwonCnt),0) minwonCnt
+			  ,IFNULL(SUM(moralCnt),0) moralCnt
+			  ,userName 
+			  ,jobCd
+			  ,teamId 
+			  ,teamName	
+			  ,centerName 
+			  ,teamGroupOrder
+			  ,teamOrder
+		  FROM (  
+		  	SELECT 0 purpose_workload
+				  ,0 calc_workload
+				  ,0 minwonCnt
+				  ,0 moralCnt
+				  ,0 userName
+				  ,0 jobCd
+				  ,0 teamId
+				  ,0 teamName
+				  ,0 centerName
+				  ,0 teamGroupOrder 
+				  ,0 teamOrder 
+			  FROM DUAL 
+			 WHERE 1=0
+		<foreach item="userList" index="index" collection="userList" separator="UNION ALL" open="UNION ALL ">
+			<if test="userList.jobCd == 10 || userList.jobCd == 13 || userList.jobCd == 15 || userList.jobCd == 20 || userList.jobCd == 25 || userList.jobCd == 30 || userList.jobCd == 35  || userList.jobCd == 36 || userList.jobCd == 37 || userList.jobCd == 38 || userList.jobCd == 39">
+				SELECT #{userList.purpose_workload} purpose_workload
+					  ,#{userList.calc_workload} calc_workload
+					  ,#{userList.minwonCnt} minwonCnt
+					  ,#{userList.moralCnt} moralCnt
+					  ,#{userList.userName} userName
+					  ,#{userList.jobCd} jobCd
+					  ,#{userList.teamId} teamId
+					  ,#{userList.teamName} teamName
+					  ,#{userList.centerName} centerName
+					  ,#{userList.teamGroupOrder} teamGroupOrder 
+					  ,#{userList.teamOrder} teamOrder 
+				  FROM DUAL
+			 </if> 		
+		</foreach>
+		) a
+		<choose>
+			<when test="(gubun == 'center' or gubun == 'adm') and type == 1">
+				GROUP BY teamGroupOrder
+			</when>
+			<when test="type == 3"></when> 
+			
+			<otherwise>
+				GROUP BY teamId
+			</otherwise>
+		</choose>
+		ORDER BY teamGroupOrder DESC, teamOrder DESC
+	</select>
+
+	<insert id="insertWorkloadDaily" parameterType="HashMap">
+		INSERT INTO top_rpt_workload_daily
+		(
+			 base_date
+			,user_no
+			,purpose_workload
+			,calc_workload
+			,rate_workload
+			,reg_date
+		)
+		VALUES
+		(
+			 UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))
+			,#{userNo}
+			,#{purpose_workload}
+			,#{calc_workload}
+			,ROUND(#{calc_workload} / #{purpose_workload} * 100,3)
+			,UNIX_TIMESTAMP(now()) 
+		)
+	</insert>
+	
+	<select id="selectWorkloadRank" parameterType="HashMap" resultType="HashMap">
+		SELECT T1.user_no userNo
+			  ,MIN(T1.rate_workload) score
+			  ,COUNT(T2.user_no) + 1 rank
+			  ,UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d")) baseDate 
+		  FROM top_rpt_workload_daily T1
+		  LEFT OUTER JOIN (SELECT * FROM top_rpt_workload_daily WHERE base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))) T2
+		    ON T1.rate_workload &lt; T2.rate_workload
+		 WHERE T1.base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))
+		 GROUP BY T1.user_no
+		 ORDER BY rank
+	</select>
+	
+	<update id="updateWorkloadRank" parameterType="HashMap">
+		UPDATE top_rpt_workload_daily
+		   SET rank = #{rank}
+		 WHERE user_no = #{userNo}
+		   and base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))
+	</update>
+	
+	<select id="selectWorkloadRankCnt" resultType="int">
+		SELECT COUNT(DISTINCT(user_no)) cnt
+	  	  FROM top_rpt_workload_daily
+	 	 WHERE base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))
+	</select>
+
+	<select id="selectWorkloadDupChk" resultType="int" parameterType="String">
+		SELECT COUNT(DISTINCT(user_no)) cnt
+	  	  FROM top_rpt_workload_daily
+	 	 WHERE base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))
+	 	   AND user_no = #{_parameter}
+	</select>
+
+
+
+
+
+
+
+
+
+
+
+
+	<select id="selectMyWorkLoadSumStatistics_back_20181205" parameterType="HashMap" resultType="HashMap">
+		SELECT start_date
+			  ,IFNULL(SUM(purpose_workload),0) purpose_workload
+			  ,IFNULL(SUM(calc_workload),0) calc_workload
+			  ,IFNULL(SUM(minwonCnt),0) minwonCnt
+			  ,IFNULL(SUM(moralCnt),0) moralCnt
+			  ,jobCd
+			  ,userNo
+			  ,userName
+			  ,teamId
+			  ,teamName
+			  ,centerName
+			  ,teamGroupOrder
+			  ,teamOrder
+			  ,IFNULL((SELECT MAX(rank) FROM top_rpt_workload_daily WHERE user_no = userNo AND base_date = UNIX_TIMESTAMP(DATE_FORMAT(now(),"%Y-%m-%d"))),0) rank_workload
+		  FROM (
+		  		SELECT 0 start_date
+		  			  ,0 purpose_workload
+		  			  ,0 calc_workload
+		  			  ,0 minwonCnt
+		  			  ,0 moralCnt
+		  			  ,0 jobCd
+		  			  ,0 userNo
+		  			  ,'' userName
+		  			  ,0 teamId
+		  			  ,'' teamName
+		  			  ,'' centerName
+		  			  ,0 teamGroupOrder
+		  			  ,0 teamOrder
+				  FROM DUAL
+				 WHERE 1=0
+		<foreach item="jobList" index="index" collection="jobList" close="ORDER BY start_date desc">
+				 UNION ALL
+				SELECT MAX(start_date) start_date
+					  ,ROUND(SUM(purpose_workload),3) purpose_workload
+					  ,ROUND(SUM(calc_workload),3) calc_workload
+					  ,SUM(minwonCnt) minwonCnt
+					  ,SUM(moralCnt) moralCnt
+					  ,#{jobList.jobCd} jobCd
+					  ,#{jobList.userNo} userNo
+					  ,getTopMbrBscUserName(#{jobList.userNo}) userName
+					  ,#{jobList.teamId} teamId
+					  ,getTopTmBscTeamName(#{jobList.teamId}) teamName
+					  ,getTopTmBscCenterName(#{jobList.teamId}) centerName
+					  ,(SELECT team_group_order FROM top_tm_bsc WHERE team_id=#{jobList.teamId}) teamGroupOrder
+					  ,(SELECT team_order FROM top_tm_bsc WHERE team_id=#{jobList.teamId}) teamOrder
+				  FROM (
+				  		SELECT 0 start_date
+							  ,0 purpose_workload
+	 			  			  ,0 calc_workload 
+				  			  ,0 minwonCnt
+				  			  ,0 moralCnt
+				  			  ,0 jobCd
+				  			  ,0 userNo
+				  			  ,'' userName
+				  			  ,0 teamId
+				  			  ,'' teamName
+				  			  ,'' centerName
+				  			  ,0 teamGroupOrder
+				  			  ,0 teamOrder
+				  		  FROM DUAL
+ 				  		 WHERE 1=0
+						<if test='"Y".equals(basicYN)'>
+	 				  		 -- 일반 수임
+					 		 UNION ALL 			
+							SELECT #{jobList.workStartDate} start_date
+					  			<choose>
+					  				<when test="jobListSize == 1">
+					  					,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload
+					  				</when>
+					  				<otherwise>
+							  			<choose>
+							  				<when test="index == 1">
+												,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload 
+							  				</when>
+							  				<otherwise>
+												,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(#{jobList.perposeEndDate}, #{jobList.perposeStartDate}), 3) purpose_workload			  			  
+							  				</otherwise>
+							  			</choose>
+					  				</otherwise>
+					  			</choose>
+								  ,SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", "workload_type1", a.suim_rpt_type1) * a.workload_ea * (100 - (SELECT IFNULL(SUM(collabo_pp),0) FROM top_rpt_collabo WHERE suim_rpt_no = a.suim_rpt_no)) * 0.01,3) )  calc_workload						  
+								  ,0 minwonCnt
+								  ,0 moralCnt
+								  ,#{jobList.jobCd} jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,#{jobList.teamId} teamId
+								  ,getTopTmBscTeamName(a.team_id) teamName
+								  ,getTopTmBscCenterName(a.team_id) centerName
+								  ,d.team_group_order teamGroupOrder
+								  ,d.team_order teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND a.suim_rpt_state = 2
+							   AND suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							   AND close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,SUM( IF(c.minwon_flag = 2, 1, 0) ) minwonCnt
+								  ,0 moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND c.minwon_flag = 2
+							   AND c.minwon_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							   AND c.minwon_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))			
+							   
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,0 minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND a.suim_rpt_type1 in (2,11,12,13)
+							   AND a.suim_rpt_state = 2							   			
+							   AND c.moral_flag = 1
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							   AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))		
+							 UNION ALL
+					  		SELECT 0 start_date
+								  ,0 purpose_workload
+		 			  			  ,0 calc_workload 
+								  ,0 minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+					  			  ,0 jobCd
+					  			  ,0 userNo
+					  			  ,'' userName
+					  			  ,0 teamId
+					  			  ,'' teamName
+					  			  ,'' centerName
+					  			  ,0 teamGroupOrder
+					  			  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_mbr_bsc b
+							    ON a.user_no = b.user_no
+							 INNER JOIN top_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 INNER JOIN top_tm_bsc d
+							    ON b.team_id_main = d.team_id				
+							 WHERE a.user_no = #{jobList.userNo}
+							   AND suim_rpt_type1 in (14,18)								   		
+							   AND c.moral_flag = 1
+							   AND c.moral_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							   AND c.moral_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))								   
+							   
+							 UNION ALL
+							 -- 공동수행
+							SELECT #{jobList.workStartDate} start_date
+								  ,0 purpose_workload
+								  ,SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", "workload_type1", a.suim_rpt_type1) * a.workload_ea * b.collabo_pp * 0.01,3) )  calc_workload
+								  ,0 minwonCnt
+								  ,0 moralCnt
+								  ,0 jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,a.team_id teamId
+								  ,getTopTmBscTeamName(a.team_id) teamName
+								  ,getTopTmBscCenterName(a.team_id) centerName
+								  ,0 teamGroupOrder
+								  ,0 teamOrder
+							  FROM top_rpt_head a
+							 INNER JOIN top_rpt_collabo b
+							    ON a.suim_rpt_no = b.suim_rpt_no
+							 WHERE b.user_id = #{jobList.userNo}
+						 	   AND a.suim_rpt_state = 2
+							   AND a.suim_rpt_type1 in (2,11,12,13,14,15,16,17,18,19)		
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							   AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))
+						</if>
+								
+						<if test='"Y".equals(primYN)'>			   
+							 UNION ALL
+							 -- 농작물
+							SELECT  #{jobList.workStartDate} start_date
+					  			<choose>
+					  				<when test='"Y".equals(basicYN)'>
+					  					,0 purpose_workload
+					  				</when>
+					  				<otherwise>
+							  			<choose>
+							  				<when test="jobListSize == 1">
+							  					,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload
+							  				</when>
+							  				<otherwise>
+									  			<choose>
+									  				<when test="index == 1">
+														,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(DATE_ADD(#{jobList.perposeEndDate},INTERVAL 1 day), #{jobList.perposeStartDate}), 3) purpose_workload 
+									  				</when>
+									  				<otherwise>
+														,ROUND( #{jobList.yearEa} / #{jobList.purposeYearPeriod} *  DATEDIFF(#{jobList.perposeEndDate}, #{jobList.perposeStartDate}), 3) purpose_workload			  			  
+									  				</otherwise>
+									  			</choose>
+							  				</otherwise>
+							  			</choose>					  				
+					  				</otherwise>
+					  			</choose>
+					  			
+								  ,SUM( ROUND(#{jobList.yearEa} / getCodeValue("top_rpt_head", "workload_type1", a.suim_rpt_type1) * b.share_ea,3) )  calc_workload						  
+								  ,SUM( IF(c.minwon_flag = 2, 1, 0) ) minwonCnt
+								  ,SUM( IF(c.moral_flag = 1, 1, 0) ) moralCnt
+								  ,0 jobCd
+								  ,a.user_no userNo
+								  ,getTopMbrBscUserName(a.user_no) userName
+								  ,b.share_team_id teamId
+								  ,getTopTmBscTeamName(b.share_team_id) teamName
+								  ,getTopTmBscCenterName(b.share_team_id) centerName					  
+								  ,0 teamGroupOrder
+								  ,0 teamOrder						  
+							  FROM top_prim_biz_rpt_head  a
+							 INNER JOIN top_prim_biz_inv_share b
+							    ON a.suim_rpt_no = b.suim_rpt_no	
+							 INNER JOIN top_prim_biz_rpt_body c
+							    ON a.suim_rpt_no = c.suim_rpt_no
+							 WHERE b.share_user_no = #{jobList.userNo}
+ 							   AND a.suim_rpt_state = 2
+							   AND a.close_date >= UNIX_TIMESTAMP(#{jobList.workStartDate})		
+							   AND a.close_date &lt; unix_timestamp(DATE_ADD(#{jobList.workEndDate},INTERVAL 1 day))					    
+						</if>
+						) aa
+		</foreach>
+		 ) a
+		<choose>
+			<when test="gubun == 'member'">GROUP BY userNo</when>
+			<otherwise>GROUP BY teamId</otherwise>
+		</choose>
+		ORDER BY teamGroupOrder DESC, teamOrder DESC
+	</select>	 	
+	
+</mapper>
+ 

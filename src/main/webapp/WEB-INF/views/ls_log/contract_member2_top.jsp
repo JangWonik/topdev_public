@@ -1,0 +1,101 @@
+<%@ page	language="java"
+			contentType="text/html; charset=UTF-8"
+			pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
+<!-- 
+*********************************************************
+* Program ID           : // 영문 프로그램 이름 (파일 이름 가능)
+
+* Program Name       : // 국문 프로그램 이름 (파일 이름 가능)
+* Description           : // 간략한 설명
+* Author                  : // 개발자 이름
+* Date                     : // 최초 작성일
+*********************************************************
+ -->
+ 
+<script>
+	$(document).ready(function(){
+	    $("#yearprev").click(function(){
+	        var imsiyeartxt = $("#yeartxt").text();
+	        $("#yeartxt").text(--imsiyeartxt);
+	    });
+	    $("#yearnext").click(function(){
+	        var imsiyeartxt = $("#yeartxt").text();
+	        $("#yeartxt").text(++imsiyeartxt);
+	    });
+
+	    //월별 선택 버튼 클릭시 해당월에 해당하는 날짜 text 입력
+	    $(".monthbtn").click(function(){
+	    	var imsimonth = $(this).attr("id");
+	    	var imsiMonthStart = imsimonth;
+	    	if(imsimonth.length < 2) imsimonth = "0"+imsimonth;
+	    	var imsiMonthStartStr = "0"+imsiMonthStart;
+	    	if(imsiMonthStartStr.length > 2) imsiMonthStartStr = imsiMonthStartStr.substring(1, imsiMonthStartStr.length);
+	        	$("#selectorFrom").val($("#yeartxt").text()+"-"+imsiMonthStartStr +"-"+ "01");
+	        	$("#selectorTo").val($("#yeartxt").text()+"-"+imsimonth+"-"+ "01");
+		    datef.submit();
+	    });//monthbtn.click
+	});//$(document).ready
+	
+	$(document).ready(function(){
+		/***** 엑셀다운로드 *****/
+		$("#btn_excel").click(function(){
+			//엑셀의 경우 ajax는 사용 불가.. 반드시 submit이나 href로 화면제어를 줘야함
+			var data = $("#tab_log_ig").html();
+			$("#hidtab").attr('value',data);
+			//alert(data);
+			$("#excelform").submit();
+		});
+	});
+</script>
+
+	<c:set var="fromdate" value="${fromdate}" />
+	<c:set var="todate" value="${todate}" />
+	<c:set var="toAccumYear" value="${toAccumYear}" />
+	<c:set var="toMonthInt" value="${toMonthInt}" />
+	<c:set var="team_name" value="${team_name}" />
+	<c:set var="team_id" value="${team_id}" />
+	<c:set var="user_id" value="${user_id}" />
+	<c:set var="name" value="${name}" />
+
+	<div style="float: left;">
+	<img src="./resources/ls_img/dotte.gif" width="12" height="12" border="0" align="absmiddle">&nbsp;<font color="red">
+	<c:set var="str" value="${fromdate}"></c:set>
+	<b>${toAccumYear}년 ${toMonthInt}월 </b></font> ${team_name} 개인별 적부심사(삼성) 통계
+	</div>
+	<div style="text-align: right;">
+	<img id="yearprev" src="./resources/ne_img/icon_prev.gif" align="absmiddle" width="17" height="13" border="0">
+	<a id="yeartxt" href="">${toAccumYear}</a>
+	<img id="yearnext" src="./resources/ne_img/icon_next.gif" align="absmiddle" width="17" height="13" border="0">
+
+	<c:forEach var="i" begin="1" end="12" step="1" varStatus="">
+		<input id="${i}" class="monthbtn" type="button" value="${i}월" />
+	</c:forEach>
+	</div>
+	</br>
+
+	<form name="datef" method="POST" action="./contract_member2"> 
+	<input type = "hidden" name="team_name" value="${team_name}">
+	<input type = "hidden" name="team_id" value="${team_id}">
+	<input type = "hidden" name="user_id" value="${user_id}">
+	<input type = "hidden" name="name" value="${name}">
+	
+	<!-- 달력 From -->
+	&nbsp&nbsp&nbsp&nbsp&nbsp
+	<input type="text" id="selectorFrom" name="viewFromDate" size="10" value="${fromdate}" maxlength="10" />
+	<font color="#0066CC">부터&nbsp&nbsp&nbsp</font>
+	<!-- 달력 To -->
+	<input type="text" id="selectorTo"  name="viewToDate" size="10"  value="${todate}" maxlength="10" /> 
+	<font color="#0066CC">까지</font>
+	<input type=image src="./resources/ne_img/icon_log_src.gif" width="110" height="22" border="0" class="btn">
+	</form>
+	<p style="display: inline; float: right;">
+	<b><input type=image src="./resources/ls_img/btn_excel.gif" width="60" height="15" border="0" id="btn_excel"></b>
+	</p>
+	<br>
+	<form action="./contract_member2_excel" method="POST" id="excelform">
+		<input type="hidden" name="hidtab" id="hidtab" />
+	</form>
+	

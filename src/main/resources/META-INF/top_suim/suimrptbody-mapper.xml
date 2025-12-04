@@ -1,0 +1,2536 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimRptBodyMapper">
+	
+	<select id="mbrinfo" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String" >
+		SELECT 
+			a.user_no,
+			a.user_name,
+			a.user_id,
+			a.jumin_no1,
+			a.jumin_no2,
+			a.work_type work_type_cd,
+			a.work_level work_level_cd,
+			a.team_id_main,
+			a.team_id_loc,
+			a.handphone,
+			a.job_memo,
+			a.home_tel,
+			a.home_address,
+			a.office_tel,
+			a.email,
+			a.comment,
+			a.picture,
+			a.office_fax,
+			DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date,
+			DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d') out_date,
+			b.team_name
+  			, c.yearcnt
+
+			, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+  			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+  			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state
+  			
+  			,d.user_sign
+		FROM 
+			top_mbr_bsc a 
+		inner join top_tm_bsc b
+		   on a.team_id_main = b.team_id
+		 left join (select * from top_mbr_sgn where del_state = 0 and user_no =#{user_no}) d
+			on a.user_no = d.user_no
+			, (select max(work_level), ceil((UNIX_TIMESTAMP(now()) - min(reg_date))/(60*60*24)/365) yearcnt
+				from top_mbr_bsc_log where user_no = #{user_no}) c
+		WHERE 
+			a.user_no = #{user_no}
+	</select>
+	
+	<!-- 보고서 처리담당자 직급정보 가져오기 -->
+	<select id="getMbrWorkLevelNm" parameterType="String" resultType="String">
+		SELECT
+			GA.work_level_nm AS work_level_nm
+		FROM(
+			SELECT 
+				IFNULL(getCodeValue('top_mbr_bsc','work_level',a.work_level),'') AS work_level_nm
+				,COUNT(*)
+			FROM top_mbr_bsc a
+			WHERE a.user_no = #{user_no}
+		)GA
+	</select>
+	
+	<select id="topTmInfoForBody" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT 
+			team_id ,
+			team_level ,
+			team_group_order ,
+			team_order ,
+			team_type ,
+			suim_scode ,
+			suim_ecode ,
+			team_name , 
+			team_interphone ,
+			team_telephone ,
+			team_fax ,
+			team_addr ,
+			team_mark ,
+			team_statistics1 ,
+			team_statistics4 ,
+			only_statistics
+		FROM 
+			top_tm_bsc
+		WHERE 
+			team_id = (SELECT if(team_level = 2, (select team_ancestor2 from top_tm_bsc where team_id=#{team_id}), team_id) team_id
+						 FROM top_tm_bsc
+						WHERE team_id = #{team_id})
+	</select>
+	
+	
+	<select id="getBody6" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody6VO">
+	
+		SELECT
+			serial_no serialNo
+			,suim_rpt_no suimRptNo
+			,request_dtl requestDtl
+			,days_inpatient daysInpatient
+			,days_outpatient daysOutpatient
+		FROM
+			top_rpt_print_6
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+	
+	
+	<insert id="insNewBody6" parameterType="String">
+	
+		INSERT INTO top_rpt_print_6
+		(suim_rpt_no)
+		VALUES
+		(#{suim_rpt_no})
+	
+	</insert>
+	
+	<!-- 신규 Print_1 입력 -->
+	<insert id="insBody1_13467" parameterType="String">
+	
+		INSERT INTO top_rpt_print_1
+		(suim_rpt_no)
+		VALUES
+		(#{suim_rpt_no})
+	
+	</insert>
+	
+	<!-- 신규 Print_9 입력 -->
+	<insert id="insBody9_13467" parameterType="String">
+	
+		INSERT INTO top_rpt_print_9
+		(suim_rpt_no)
+		VALUES
+		(#{suim_rpt_no})
+	
+	</insert>
+	
+	<select id="getBody6AfterIns" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody6VO">
+	
+		SELECT
+			serial_no serialNo
+			,suim_rpt_no suimRptNo
+			,request_dtl requesDtl
+			,days_inpatient daysInpatient
+			,days_outpatient daysOutpatient
+		FROM
+			top_rpt_print_6
+		WHERE
+			serial_no = #{nextBody6Serial}
+	
+	</select>
+	
+	<select id="nextBody6Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_6'
+	
+	</select>
+	
+	<select id="nextBody1_13467" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_1'
+	
+	</select>
+	
+	<!-- 롯데 Print_9 차기 시리얼번호 -->
+	<select id="nextBody9_13467" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_9'
+	
+	</select>
+	
+	
+	<!-- 메리츠 Print_16 차기 시리얼번호 -->
+	<select id="nextBody16_1267" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_16'
+	
+	</select>
+	
+	<select id="nextRptPrint1ImgSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_img'
+	
+	</select>
+	
+	<update id="udtBody6" parameterType="kr.co.toplac.topsuim.SuimRptBody6VO">
+	
+		UPDATE
+			top_rpt_print_6
+		SET
+			request_dtl = #{requestDtl},
+			days_inpatient = #{daysInpatient},
+			days_outpatient = #{daysOutpatient}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print_1 계약사항 업데이트 -->
+	<update id="udtBody1_1" parameterType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		UPDATE
+			top_rpt_print_1
+		SET
+			insured_addr_1 = #{insuredAddr1},
+			insu_term_1 = #{insuTerm1},
+			insured_job_1 = #{insuredJob1},
+			insu_mortgage_1 = #{insuMortgage1},
+			insu_mortgage_dtl_1 = #{insuMortgageDtl1}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print_1 계약사항 업데이트 : 사고사항만 해당 (Print1_3 페이지)-->
+	<update id="udtBody1_3" parameterType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		UPDATE
+			top_rpt_print_1
+		SET
+			diagnosis_disease_3 = #{diagnosisDisease3},
+			diagnosis_hospital_3 = #{diagnosisHospital3},
+			accident_dtl_3 = #{accidentDtl3},
+			claim_dtl_3 = #{claimDtl3}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print_1 계약사항 업데이트 : 조사사항만 해당 (Print1_4 페이지)-->
+	<update id="udtBody1_4" parameterType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		UPDATE
+			top_rpt_print_1
+		SET
+			inspect_point_4 = #{inspectPoint4},
+			inspect_result_4 = #{inspectResult4}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print_1 업데이트 : 과거력만 해당 (Print1_6c 페이지)-->
+	<update id="udtBody1_6_c" parameterType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		UPDATE
+			top_rpt_print_1
+		SET
+			past_respect_6 = #{pastRespect6},
+			past_hospital_6 = #{pastHospital6},
+			past_result_6 = #{pastResult6}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	<!-- Print_1 업데이트 : 기타 사항  (Print1_6_2 페이지)-->
+	<update id="udtBody1_6_2" parameterType="kr.co.toplac.topsuim.SuimRptBody1_6_2VO">
+	
+		UPDATE
+			top_rpt_print_1_6_2
+		SET
+			confirm_outline = #{confirmOutline},
+			confirm_dtl = #{confirmDtl}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print_9 업데이트 : 계약 확인 사항  (Print9_1 페이지)-->
+	<update id="udtBody9_1" parameterType="kr.co.toplac.topsuim.SuimRptBody9_13467VO">
+	
+		UPDATE
+			top_rpt_print_9
+		SET
+			insured_job_1 = #{insuredJob1},
+			insu_mortgage_1 = #{insuMortgage1},
+			insu_mortgage_dtl_1 = #{insuMortgageDtl1}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print_9 업데이트 : 조사결과(요약)  (Print9_2 페이지)-->
+	<update id="udtBody9_2" parameterType="kr.co.toplac.topsuim.SuimRptBody9_13467VO">
+	
+		UPDATE
+			top_rpt_print_9
+		SET
+			diagnosis_disease_3 = #{diagnosisDisease3},
+			accident_dtl_3 = #{accidentDtl3},
+			inspect_point_3 = #{inspectPoint3},
+			inspect_result_3 = #{inspectResult3}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print_9_6 업데이트 : 기타 병원 확인결과  (Print9_6 페이지)-->
+	<update id="udtBody9_6" parameterType="kr.co.toplac.topsuim.SuimRptBody9_13467VO">
+	
+		UPDATE
+			top_rpt_print_9
+		SET
+			hospital_memo_6 = #{hospitalMemo6}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print_9_7 업데이트 : 조사결과  (Print9_7 페이지)-->
+	<update id="udtBody9_7" parameterType="kr.co.toplac.topsuim.SuimRptBody9_13467VO">
+	
+		UPDATE
+			top_rpt_print_9
+		SET
+			detail_record_7 = #{detailRecord7}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print16_1 업데이트 : 계약사항 및 손해사항  (Print16_1 페이지)-->
+	<update id="udtBody16_1" parameterType="kr.co.toplac.topsuim.SuimRptBody16_1267VO">
+	
+		UPDATE
+			top_rpt_print_16
+		SET
+			accident_date_1 = unix_timestamp(#{accidentDate1}),
+			insu_period_s_1 = #{insuPeriodS1},
+			insu_period_e_1 = #{insuPeriodE1},
+			contract_state_1 = #{contractState1},
+			accident_sum_up_1 = #{accidentSumUp1},
+			diagnosis_code_1 = #{diagnosisCode1},
+			diagnosis_disease_1 = #{diagnosisDisease1},
+			job_grade_join_1 = #{jobGradeJoin1},
+			job_grade_accident_1 = #{jobGradeAccident1},
+			insu_mortgage_dtl_1 = #{insuMortgageDtl1},
+			amt_tot_insu_1 = #{amtTotInsu1},
+			amt_estimated_dmg_dtl_1 = #{amtEstimatedDmgDtl1}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print17_1 업데이트 : 계약사항 (Print17_1 페이지)-->
+	<update id="udtBody17_1" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			contract_period_1 = #{contractPeriod1},
+			beneficiary_dtl_1 = #{beneficiaryDtl1},
+			job_join_1 = #{jobJoin1},
+			job_present_1 = #{jobPresent1},
+			mortgage_dtl_1 = #{mortgageDtl1},
+			amt_tot_insu_1 = #{amtTotInsu1},
+			etc_1 = #{etc1},
+			chunggu_type = #{chungguType}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	
+	<!-- Print17_3 업데이트 : 면담내용 (Print17_3 페이지)-->
+	<update id="udtBody17_3" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			face_date_3 = #{faceDate3},
+			face_dtl_3 = #{faceDtl3},
+			more_document_3 = #{moreDocument3}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 인보험 보고서 작성 : Print_1 기존 정보 추출 -->
+	<select id="getBody1_13467" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		SELECT
+			rpt_print_no rptPrintNo
+			,IFNULL(suim_rpt_no,'') suimRptNo
+			,IFNULL(insured_addr_1,'') insuredAddr1
+			,IFNULL(insu_term_1,'') insuTerm1
+			,IFNULL(insured_job_1,'') insuredJob1
+			,IFNULL(insu_mortgage_1,'정보없음') insuMortgage1
+			,IFNULL(insu_mortgage_dtl_1,'정보없음') insuMortgageDtl1
+			,IFNULL(diagnosis_disease_3,'') diagnosisDisease3
+			,IFNULL(diagnosis_hospital_3,'') diagnosisHospital3
+			,IFNULL(accident_dtl_3,'') accidentDtl3
+			,IFNULL(claim_dtl_3,'') claimDtl3
+			,IFNULL(accident_dtl_3,'') accidentDtl3Span
+			,IFNULL(claim_dtl_3,'') claimDtl3Span
+			,IFNULL(inspect_point_4,'') inspectPoint4
+			,IFNULL(inspect_result_4,'') inspectResult4
+			,IFNULL(face_outline_6,'') faceOutline6
+			,IFNULL(face_insured_job_6,'') faceInsuredJob6
+			,IFNULL(face_insured_job_6,'') faceInsuredJob6Span
+			,IFNULL(face_contract_situation_6,'') faceContractSituation6
+			,IFNULL(face_contract_situation_6,'') faceContractSituation6Span
+			,IFNULL(face_occur_situation_6,'') faceOccurSituation6
+			,IFNULL(face_occur_situation_6,'') faceOccurSituation6Span
+			,IFNULL(face_inform_sign_yn_6,'') faceInformSignYn6
+			,IFNULL(face_inform_sign_yn_6,'') faceInformSignYn6Span
+			,IFNULL(face_etc_memo_6,'') faceEtcMemo6
+			,IFNULL(face_etc_memo_6,'') faceEtcMemo6Span
+			,IFNULL(past_respect_6,'') pastRespect6
+			,IFNULL(past_hospital_6,'') pastHospital6
+			,IFNULL(past_result_6,'') pastResult6
+			,IFNULL(past_respect_6,'') pastRespect6Span
+			,IFNULL(past_hospital_6,'') pastHospital6Span
+			,IFNULL(past_result_6,'') pastResult6Span
+			,IFNULL(adjust_result_7,'') adjustResult7
+			,IFNULL(adjust_result_7,'') adjustResult7Span 
+		FROM
+			top_rpt_print_1
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	
+	</select>
+	
+	<!-- print1_13467 정보 추출 : 신규 인서트 이후-->
+	<select id="getBody1_13467AfterIns" parameterType="Integer" resultType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		SELECT
+			rpt_print_no rptPrintNo
+			,IFNULL(suim_rpt_no,'') suimRptNo
+			,IFNULL(insured_addr_1,'') insuredAddr1
+			,IFNULL(insu_term_1,'') insuTerm1
+			,IFNULL(insured_job_1,'') insuredJob1
+			,IFNULL(insu_mortgage_1,'정보없음') insuMortgage1
+			,IFNULL(insu_mortgage_dtl_1,'정보없음') insuMortgageDtl1
+			,IFNULL(diagnosis_disease_3,'') diagnosisDisease3
+			,IFNULL(diagnosis_hospital_3,'') diagnosisHospital3
+			,IFNULL(accident_dtl_3,'') accidentDtl3
+			,IFNULL(claim_dtl_3,'') claimDtl3
+			,IFNULL(inspect_point_4,'') inspectPoint4
+			,IFNULL(inspect_result_4,'') inspectResult4
+			,IFNULL(face_outline_6,'') faceOutline6
+			,IFNULL(face_insured_job_6,'') faceInsuredJob6
+			,IFNULL(face_contract_situation_6,'') faceContractSituation6
+			,IFNULL(face_occur_situation_6,'') faceOccurSituation6
+			,IFNULL(face_inform_sign_yn_6,'') faceInformSignYn6
+			,IFNULL(face_etc_memo_6,'') faceEtcMemo6
+			,IFNULL(past_respect_6,'') pastRespect6
+			,IFNULL(past_hospital_6,'') pastHospital6
+			,IFNULL(past_result_6,'') pastResult6
+			,IFNULL(adjust_result_7,'') adjustResult7
+		FROM
+			top_rpt_print_1
+		WHERE
+			rpt_print_no = #{nextBody1_13467Serial}
+	
+	</select>
+	
+	<!-- print9_13467 정보 추출 : 신규 인서트 이후-->
+	<select id="getBody9_13467AfterIns" parameterType="Integer" resultType="kr.co.toplac.topsuim.SuimRptBody9_13467VO">
+	
+		SELECT
+			rpt_print_no rptPrintNo
+			,suim_rpt_no suimRptNo
+			,IFNULL(insured_job_1,'') insuredJob1
+			,IFNULL(insured_job_1,'') insuredJob1Span
+			,IFNULL(insu_mortgage_1,'') insuMortgage1
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1
+			,IFNULL(insu_mortgage_1,'') insuMortgage1Span
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1Span
+			,IFNULL(diagnosis_disease_3,'') diagnosisDisease3
+			,IFNULL(accident_dtl_3,'') accidentDtl3
+			,IFNULL(inspect_point_3,'') inspectPoint3
+			,IFNULL(inspect_result_3,'') inspectResult3
+			,IFNULL(diagnosis_disease_3,'') diagnosisDisease3Span
+			,IFNULL(accident_dtl_3,'') accidentDtl3Span
+			,IFNULL(inspect_point_3,'') inspectPoint3Span
+			,IFNULL(inspect_result_3,'') inspectResult3Span
+			,IFNULL(face_contract_situation_4,'') faceContractSituation4
+			,IFNULL(face_inform_sign_yn_4,'') faceInformSignYn4
+			,IFNULL(face_other_insu_memo_4,'') faceOtherInsuMemo4
+			,IFNULL(face_insured_demand_4,'') faceInsuredDemand4
+			,IFNULL(face_contract_situation_4,'') faceContractSituation4Span
+			,IFNULL(face_inform_sign_yn_4,'') faceInformSignYn4Span
+			,IFNULL(face_other_insu_memo_4,'') faceOtherInsuMemo4Span
+			,IFNULL(face_insured_demand_4,'') faceInsuredDemand4Span
+			,IFNULL(hospital_memo_6,'') hospitalMemo6
+			,IFNULL(hospital_memo_6,'') hospitalMemo6Span
+			,IFNULL(detail_record_7,'') detailRecord7
+			,IFNULL(detail_record_7,'') detailRecord7Span
+		FROM
+			top_rpt_print_9
+		WHERE
+			rpt_print_no = #{nextBody9_13467Serial}
+	
+	</select>
+	
+	<!-- print16_1267 정보 추출 : 신규 인서트 이후-->
+	<select id="getBody16_1267AfterIns" parameterType="Integer" resultType="kr.co.toplac.topsuim.SuimRptBody16_1267VO">
+	
+		SELECT 
+			rpt_print_no rptPrintNo
+			,suim_rpt_no suimRptNo
+			,IFNULL(DATE_FORMAT(FROM_UNIXTIME(accident_date_1), '%Y-%m-%d'),'') accidentDate1
+			,IFNULL(insu_period_s_1,'') insuPeriodS1
+			,IFNULL(insu_period_e_1,'') insuPeriodE1
+			,IFNULL(contract_state_1,'') contractState1
+			,IFNULL(accident_sum_up_1,'') accidentSumUp1
+			,IFNULL(diagnosis_code_1,'') diagnosisCode1
+			,IFNULL(diagnosis_disease_1,'') diagnosisDisease1
+			,IFNULL(job_grade_join_1,'') jobGradeJoin1
+			,IFNULL(job_grade_accident_1,'') jobGradeAccident1
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1
+			,IFNULL(amt_tot_insu_1,'') amtTotInsu1
+			,IFNULL(amt_estimated_dmg_dtl_1,'') amtEstimatedDmgDtl1
+			,IFNULL(claim_dtl_2,'') claimDtl2
+			,IFNULL(complaint_avoid_activity_2,'') complaintAvoidActivity2
+			,IFNULL(inspect_result_2,'') inspectResult2
+			,IFNULL(contract_keep_yn_2,'') contractKeepYn2
+			,IFNULL(minwon_dtl_2,'') minwonDtl2
+			,IFNULL(accident_dtl_6,'') accidentDtl6
+			,IFNULL(notice_duty1_6,'') noticeDuty16
+			,IFNULL(notice_duty2_6,'') noticeDuty26
+			,IFNULL(job_grade_confirm_6,'') jobGradeConfirm6
+			,IFNULL(counsel_medical_6,'') counselMedical6
+			,IFNULL(counsel_legal_6,'') counselLegal6
+			,IFNULL(confirm_public_6,'') confirmPublic6
+			,IFNULL(site_picture_6,'') sitePicture6
+			,IFNULL(disability_6,'') disability6
+			,IFNULL(face_memo_7,'') faceMemo7
+			,IFNULL(delegate_7,'') delegate7
+			,IFNULL(questioning_7,'') questioning7
+			,IFNULL(guide_etc_7,'') guideEtc7
+			,IFNULL(more_document_7,'') moreDocument7
+			,IFNULL(insu_period_s_1,'') insuPeriodS1Span
+			,IFNULL(insu_period_e_1,'') insuPeriodE1Span
+			,IFNULL(contract_state_1,'') contractState1Span
+			,IFNULL(accident_sum_up_1,'') accidentSumUp1Span
+			,IFNULL(diagnosis_code_1,'') diagnosisCode1Span
+			,IFNULL(diagnosis_disease_1,'') diagnosisDisease1Span
+			,IFNULL(job_grade_join_1,'') jobGradeJoin1Span
+			,IFNULL(job_grade_accident_1,'') jobGradeAccident1Span
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1Span
+			,IFNULL(amt_tot_insu_1,'') amtTotInsu1Span
+			,IFNULL(amt_estimated_dmg_dtl_1,'') amtEstimatedDmgDtl1Span
+			,IFNULL(claim_dtl_2,'') claimDtl2Span
+			,IFNULL(complaint_avoid_activity_2,'') complaintAvoidActivity2Span
+			,IFNULL(inspect_result_2,'') inspectResult2Span
+			,IFNULL(contract_keep_yn_2,'') contractKeepYn2Span
+			,IFNULL(minwon_dtl_2,'') minwonDtl2Span
+			,IFNULL(accident_dtl_6,'') accidentDtl6Span
+			,IFNULL(notice_duty1_6,'') noticeDuty16Span
+			,IFNULL(notice_duty2_6,'') noticeDuty26Span
+			,IFNULL(job_grade_confirm_6,'') jobGradeConfirm6Span
+			,IFNULL(counsel_medical_6,'') counselMedical6Span
+			,IFNULL(counsel_legal_6,'') counselLegal6Span
+			,IFNULL(confirm_public_6,'') confirmPublic6Span
+			,IFNULL(site_picture_6,'') sitePicture6Span
+			,IFNULL(disability_6,'') disability6Span
+			,IFNULL(face_memo_7,'') faceMemo7Span
+			,IFNULL(delegate_7,'') delegate7Span
+			,IFNULL(questioning_7,'') questioning7Span
+			,IFNULL(guide_etc_7,'') guideEtc7Span
+			,IFNULL(more_document_7,'') moreDocument7Span
+		FROM
+			top_rpt_print_16
+		WHERE
+			rpt_print_no = #{nextBody16_1267Serial}
+	
+	</select>
+	
+	<select id="getPrint9ForDtl" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody9_13467VO">
+		
+		SELECT 
+			rpt_print_no rptPrintNo
+			,suim_rpt_no suimRptNo
+			,IFNULL(insured_job_1,'') insuredJob1
+			,IFNULL(insured_job_1,'') insuredJob1Span
+			,IFNULL(insu_mortgage_1,'') insuMortgage1
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1
+			,IFNULL(insu_mortgage_1,'') insuMortgage1Span
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1Span
+			,IFNULL(diagnosis_disease_3,'') diagnosisDisease3
+			,IFNULL(accident_dtl_3,'') accidentDtl3
+			,IFNULL(inspect_point_3,'') inspectPoint3
+			,IFNULL(inspect_result_3,'') inspectResult3
+			,IFNULL(diagnosis_disease_3,'') diagnosisDisease3Span
+			,IFNULL(accident_dtl_3,'') accidentDtl3Span
+			,IFNULL(inspect_point_3,'') inspectPoint3Span
+			,IFNULL(inspect_result_3,'') inspectResult3Span
+			,IFNULL(face_contract_situation_4,'') faceContractSituation4
+			,IFNULL(face_inform_sign_yn_4,'') faceInformSignYn4
+			,IFNULL(face_other_insu_memo_4,'') faceOtherInsuMemo4
+			,IFNULL(face_insured_demand_4,'') faceInsuredDemand4
+			,IFNULL(face_contract_situation_4,'') faceContractSituation4Span
+			,IFNULL(face_inform_sign_yn_4,'') faceInformSignYn4Span
+			,IFNULL(face_other_insu_memo_4,'') faceOtherInsuMemo4Span
+			,IFNULL(face_insured_demand_4,'') faceInsuredDemand4Span
+			,IFNULL(hospital_memo_6,'') hospitalMemo6
+			,IFNULL(hospital_memo_6,'') hospitalMemo6Span
+			,IFNULL(detail_record_7,'') detailRecord7
+			,IFNULL(detail_record_7,'') detailRecord7Span
+		FROM
+			top_rpt_print_9
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		
+	</select>
+	
+	
+	<select id="getPrint16ForDtl" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody16_1267VO">
+		
+		SELECT 
+			rpt_print_no rptPrintNo
+			,suim_rpt_no suimRptNo
+			,IFNULL(DATE_FORMAT(FROM_UNIXTIME(accident_date_1), '%Y-%m-%d'),'') accidentDate1
+			,IFNULL(insu_period_s_1,'') insuPeriodS1
+			,IFNULL(insu_period_e_1,'') insuPeriodE1
+			,IFNULL(contract_state_1,'') contractState1
+			,IFNULL(accident_sum_up_1,'') accidentSumUp1
+			,IFNULL(diagnosis_code_1,'') diagnosisCode1
+			,IFNULL(diagnosis_disease_1,'') diagnosisDisease1
+			,IFNULL(job_grade_join_1,'') jobGradeJoin1
+			,IFNULL(job_grade_accident_1,'') jobGradeAccident1
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1
+			,IFNULL(amt_tot_insu_1,'') amtTotInsu1
+			,IFNULL(amt_estimated_dmg_dtl_1,'') amtEstimatedDmgDtl1
+			,IFNULL(claim_dtl_2,'') claimDtl2
+			,IFNULL(complaint_avoid_activity_2,'') complaintAvoidActivity2
+			,IFNULL(inspect_result_2,'') inspectResult2
+			,IFNULL(contract_keep_yn_2,'') contractKeepYn2
+			,IFNULL(minwon_dtl_2,'') minwonDtl2
+			,IFNULL(accident_dtl_6,'') accidentDtl6
+			,IFNULL(notice_duty1_6,'') noticeDuty16
+			,IFNULL(notice_duty2_6,'') noticeDuty26
+			,IFNULL(job_grade_confirm_6,'') jobGradeConfirm6
+			,IFNULL(counsel_medical_6,'') counselMedical6
+			,IFNULL(counsel_legal_6,'') counselLegal6
+			,IFNULL(confirm_public_6,'') confirmPublic6
+			,IFNULL(site_picture_6,'') sitePicture6
+			,IFNULL(disability_6,'') disability6
+			,IFNULL(face_memo_7,'') faceMemo7
+			,IFNULL(delegate_7,'') delegate7
+			,IFNULL(questioning_7,'') questioning7
+			,IFNULL(guide_etc_7,'') guideEtc7
+			,IFNULL(more_document_7,'') moreDocument7
+			,IFNULL(insu_period_s_1,'') insuPeriodS1Span
+			,IFNULL(insu_period_e_1,'') insuPeriodE1Span
+			,IFNULL(contract_state_1,'') contractState1Span
+			,IFNULL(accident_sum_up_1,'') accidentSumUp1Span
+			,IFNULL(diagnosis_code_1,'') diagnosisCode1Span
+			,IFNULL(diagnosis_disease_1,'') diagnosisDisease1Span
+			,IFNULL(job_grade_join_1,'') jobGradeJoin1Span
+			,IFNULL(job_grade_accident_1,'') jobGradeAccident1Span
+			,IFNULL(insu_mortgage_dtl_1,'') insuMortgageDtl1Span
+			,IFNULL(amt_tot_insu_1,'') amtTotInsu1Span
+			,IFNULL(amt_estimated_dmg_dtl_1,'') amtEstimatedDmgDtl1Span
+			,IFNULL(claim_dtl_2,'') claimDtl2Span
+			,IFNULL(complaint_avoid_activity_2,'') complaintAvoidActivity2Span
+			,IFNULL(inspect_result_2,'') inspectResult2Span
+			,IFNULL(contract_keep_yn_2,'') contractKeepYn2Span
+			,IFNULL(minwon_dtl_2,'') minwonDtl2Span
+			,IFNULL(accident_dtl_6,'') accidentDtl6Span
+			,IFNULL(notice_duty1_6,'') noticeDuty16Span
+			,IFNULL(notice_duty2_6,'') noticeDuty26Span
+			,IFNULL(job_grade_confirm_6,'') jobGradeConfirm6Span
+			,IFNULL(counsel_medical_6,'') counselMedical6Span
+			,IFNULL(counsel_legal_6,'') counselLegal6Span
+			,IFNULL(confirm_public_6,'') confirmPublic6Span
+			,IFNULL(site_picture_6,'') sitePicture6Span
+			,IFNULL(disability_6,'') disability6Span
+			,IFNULL(face_memo_7,'') faceMemo7Span
+			,IFNULL(delegate_7,'') delegate7Span
+			,IFNULL(questioning_7,'') questioning7Span
+			,IFNULL(guide_etc_7,'') guideEtc7Span
+			,IFNULL(more_document_7,'') moreDocument7Span
+		FROM
+			top_rpt_print_16
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		
+	</select>
+	
+	<!-- 흥국 일반 인보험 보고서 작성용 데이터 추출 -->
+	<select id="getPrint17ForDtl" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+		
+		SELECT 
+			suim_rpt_no suimRptNo
+			,getCodeValue('top_rpt_print_17','chunggu_type',chunggu_type) chungguType 
+			,IFNULL(chunggu_type,'') chungguTypeCode
+			,IFNULL(contract_period_1,'') contractPeriod1
+			,IFNULL(contract_period_1,'') contractPeriod1Span
+			,IFNULL(job_present_1,'') jobPresent1
+			,IFNULL(mortgage_dtl_1,'') mortgageDtl1
+			,IFNULL(mortgage_dtl_1,'') mortgageDtl1Span
+			,IFNULL(amt_tot_insu_1,'') amtTotInsu1
+			,IFNULL(amt_tot_insu_1,'') amtTotInsu1Span
+			,IFNULL(beneficiary_dtl_1,'') beneficiaryDtl1
+			,IFNULL(job_join_1,'') jobJoin1
+			,IFNULL(etc_1,'') etc1
+			,IFNULL(etc_1,'') etc1Span
+			,IFNULL(face_date_3,'') faceDate3
+			,IFNULL(face_dtl_3,'') faceDtl3
+			,IFNULL(more_document_3,'') moreDocument3
+			,IFNULL(face_date_3,'') faceDate3Span
+			,IFNULL(face_dtl_3,'') faceDtl3Span
+			,IFNULL(more_document_3,'') moreDocument3Span
+			,IFNULL(record_public_5,'') recordPublic5
+			,IFNULL(record_doc_nm_5,'') recordDocNm5
+			,IFNULL(record_dtl_5,'') recordDtl5
+			,IFNULL(record_etc_5,'') recordEtc5
+			,IFNULL(record_public_5,'') recordPublic5Span
+			,IFNULL(record_doc_nm_5,'') recordDocNm5Span
+			,IFNULL(record_dtl_5,'') recordDtl5Span
+			,IFNULL(record_etc_5,'') recordEtc5Span
+			,IFNULL(exemption_basis_6,'') exemptionBasis6
+			,IFNULL(exemption_dtl_6,'') exemptionDtl6
+			,IFNULL(exemption_prove_6,'') exemptionProve6
+			,IFNULL(exemption_basis_6,'') exemptionBasis6Span
+			,IFNULL(exemption_dtl_6,'') exemptionDtl6Span
+			,IFNULL(exemption_prove_6,'') exemptionProve6Span
+			,IFNULL(contract_agent_8,'') contractAgent8
+			,IFNULL(contract_relation_8,'') contractRelation8
+			,IFNULL(contract_situation_8,'') contractSituation8
+			,IFNULL(contract_agent_8,'') contractAgent8Span
+			,IFNULL(contract_relation_8,'') contractRelation8Span
+			,IFNULL(contract_situation_8,'') contractSituation8Span
+			,IFNULL(inspect_result_9,'') inspectResult9
+			,IFNULL(inspect_insist_9,'') inspectInsist9
+			,IFNULL(inspect_basis_9,'') inspectBasis9
+			,IFNULL(inspect_result_9,'') inspectResult9Span
+			,IFNULL(inspect_insist_9,'') inspectInsist9Span
+			,IFNULL(inspect_basis_9,'') inspectBasis9Span
+			,IFNULL(check_terms_11,'') checkTerms11
+			,IFNULL(check_explain_11,'') checkExplain11
+			,IFNULL(check_apply_11,'') checkApply11
+			,IFNULL(check_doc_11,'') checkDoc11
+			,IFNULL(check_figure_11,'') checkFigure11
+			,IFNULL(check_dis_11,'') checkDis11
+			,IFNULL(check_precedent_11,'') checkPrecedent11
+			,IFNULL(check_re_yn_11,'') checkReYn11
+			,IFNULL(intervene_nm_12,'') interveneNm12
+			,IFNULL(intervene_situation_12,'') interveneSituation12
+			,IFNULL(intervene_staff_12,'') interveneStaff12
+			,IFNULL(intervene_tel_12,'') interveneTel12
+			,IFNULL(intervene_nm_12,'') interveneNm12Span
+			,IFNULL(intervene_situation_12,'') interveneSituation12Span
+			,IFNULL(intervene_staff_12,'') interveneStaff12Span
+			,IFNULL(intervene_tel_12,'') interveneTel12Span
+		FROM
+			top_rpt_print_17
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		
+	</select>
+	
+	<select id="getIssueSendResultCnt" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(DISTINCT(send_target)) as nCnt
+		FROM
+			top_rpt_issue_send
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		AND complete_flag = 1	
+	</select>
+	
+	<select id="getIssueSendResultListCnt" parameterType="String" resultType="integer">
+		SELECT 
+			count(*) as nCnt
+		FROM
+			top_rpt_issue_send
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	</select>	
+	
+	<!-- 흥국 의료 인보험 보고서 작성용 데이터 추출 -->
+	<select id="getPrint1700ForDtl" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1700VO">
+		
+		SELECT 
+			suim_rpt_no suimRptNo
+			,IFNULL(join_date_1,'') joinDate1
+			,IFNULL(mortgage_1,'') mortgage1
+			,IFNULL(diagnosis_1,'') diagnosis1
+			,IFNULL(patient_period_1,'') patientPeriod1
+			,IFNULL(patient_period_1,'') patientPeriod1Span
+			,IFNULL(cure_dtl_1,'') cureDtl1
+			,IFNULL(hospital_1,'') hospital1
+			,IFNULL(hospital_1,'') hospital1Span
+			,IFNULL(amt_req_1,'') amtReq1
+			,IFNULL(amt_reduce_1,'') amtReduce1
+			,IFNULL(issue_2,'') issue2
+			,IFNULL(issue_2,'') issue2Span
+			,IFNULL(addr_3,'') addr3
+			,IFNULL(tel_3,'') tel3
+			,IFNULL(job_3,'') job3
+			,IFNULL(job_dtl_3,'') jobDtl3
+			,IFNULL(tot_sal_3,'') totSal3
+			,IFNULL(nhis_3,'') nhis3
+			,IFNULL(amt_nhis_3,'') amtNhis3
+			,IFNULL(drive_yn_3,'') driveYn3
+			,IFNULL(car_no_3,'') carNo3
+			,IFNULL(agent_3,'') agent3
+			,IFNULL(contract_situation_3,'') contractSituation3
+			,IFNULL(other_insu_dtl_3,'') otherInsuDtl3
+			,IFNULL(customer_info_3,'') customerInfo3
+			,IFNULL(contract_keep_yn_4,'') contractKeepYn4
+			,IFNULL(qna_paper_4,'') qnaPaper4
+			,IFNULL(reuse_yn_4,'') reuseYn4
+			,IFNULL(special_case_4,'') specialCase4
+			,IFNULL(amt_home_4,'') amtHome4
+			,IFNULL(amt_home_4,'') amtHome4Span
+			,IFNULL(amt_settle_4,'') amtSettle4
+			,IFNULL(amt_settle_4,'') amtSettle4Span
+			,IFNULL(basis_4,'') basis4
+			,IFNULL(basis_4,'') basis4Span
+			,IFNULL(amt_home_sum_4,'') amtHomeSum4
+			,IFNULL(amt_settle_sum_4,'') amtSettleSum4
+			,IFNULL(current_state_4,'') currentState4
+			,IFNULL(future_plan_4,'') futurePlan4
+			,IFNULL(hospital_memo_4,'') hospitalMemo4
+			,IFNULL(etc_memo_5,'') etcMemo5
+			,IFNULL(etc_memo_5,'') etcMemo5Span
+			,IFNULL(minwon_grade_6,'') minwonGrade6
+			,IFNULL(minwon_customer_6,'') minwonCustomer6
+			,IFNULL(minwon_memo_6,'') minwonMemo6
+			,IFNULL(minwon_customer_6,'') minwonCustomer6Span
+			,IFNULL(minwon_memo_6,'') minwonMemo6Span
+		FROM
+			top_rpt_print_1700
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		
+	</select>
+	
+	<!-- Print17_5 한건 업데이트 -->
+	<update id="udtBody17_5" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			record_public_5 = #{recordPublic5}
+			,record_doc_nm_5 = #{recordDocNm5}
+			,record_dtl_5 = #{recordDtl5}
+			,record_etc_5 = #{recordEtc5}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	
+	<!-- Print17_6 한건 업데이트 -->
+	<update id="udtBody17_6" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			exemption_basis_6 = #{exemptionBasis6}
+			,exemption_dtl_6 = #{exemptionDtl6}
+			,exemption_prove_6 = #{exemptionProve6}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	
+	<!-- Print17_8 한건 업데이트 -->
+	<update id="udtBody17_8" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			contract_agent_8 = #{contractAgent8}
+			,contract_relation_8 = #{contractRelation8}
+			,contract_situation_8 = #{contractSituation8}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- Print17_9 한건 업데이트 -->
+	<update id="udtBody17_9" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			inspect_result_9 = #{inspectResult9}
+			,inspect_insist_9 = #{inspectInsist9}
+			,inspect_basis_9 = #{inspectBasis9}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	
+	<!-- Print17_11 한건 업데이트 -->
+	<update id="udtBody17_11" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			check_terms_11 = #{checkTerms11}
+			,check_explain_11 = #{checkExplain11}
+			,check_apply_11 = #{checkApply11}
+			,check_doc_11 = #{checkDoc11}
+			,check_figure_11 = #{checkFigure11}
+			,check_dis_11 = #{checkDis11}
+			,check_precedent_11 = #{checkPrecedent11}
+			,check_re_yn_11 = #{checkReYn11}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- Print17_12 한건 업데이트 -->
+	<update id="udtBody17_12" parameterType="kr.co.toplac.topsuim.SuimRptBody17_1356891112VO">
+	
+		UPDATE
+			top_rpt_print_17
+		SET
+			intervene_nm_12 = #{interveneNm12}
+			,intervene_situation_12 = #{interveneSituation12}
+			,intervene_staff_12 = #{interveneStaff12}
+			,intervene_tel_12 = #{interveneTel12}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- 흥국 일반 청구내용 추출 -->
+	<select id="getPrint17_2" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody17_2VO">
+		
+		SELECT 
+			suim_rpt_no suimRptNo
+			,IFNULL(chunggu_dtl_1,'') chungguDtl1
+			,IFNULL(chunggu_dtl_2,'') chungguDtl2
+			,IFNULL(chunggu_dtl_3,'') chungguDtl3
+			,IFNULL(chunggu_dtl_4,'') chungguDtl4
+			,IFNULL(chunggu_dtl_5,'') chungguDtl5
+			,IFNULL(chunggu_dtl_6,'') chungguDtl6
+			,IFNULL(chunggu_dtl_7,'') chungguDtl7
+			,IFNULL(chunggu_dtl_8,'') chungguDtl8
+			,IFNULL(chunggu_dtl_9,'') chungguDtl9
+			,IFNULL(chunggu_dtl_10,'') chungguDtl10
+			,IFNULL(chunggu_dtl_1,'') chungguDtl1Span
+			,IFNULL(chunggu_dtl_2,'') chungguDtl2Span
+			,IFNULL(chunggu_dtl_3,'') chungguDtl3Span
+			,IFNULL(chunggu_dtl_4,'') chungguDtl4Span
+			,IFNULL(chunggu_dtl_5,'') chungguDtl5Span
+			,IFNULL(chunggu_dtl_6,'') chungguDt16Span
+			,IFNULL(chunggu_dtl_7,'') chungguDtl7Span
+			,IFNULL(chunggu_dtl_8,'') chungguDtl8Span
+			,IFNULL(chunggu_dtl_9,'') chungguDtl9Span
+			,IFNULL(chunggu_dtl_10,'') chungguDtl10Span
+		FROM
+			top_rpt_print_17_2
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		
+	</select>
+	
+	
+	<!-- 흥국 일반 타사 가입내역 -->
+	<select id="getPrint17_4List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody17_4VO">
+		
+		SELECT 
+			serial_no serialNo
+			,suim_rpt_no suimRptNo
+			,IFNULL(other_insu_com,'') otherInsuCom
+			,IFNULL(other_insu_join_date,'') otherInsuJoinDate
+			,IFNULL(other_insu_join_amt,'') otherInsuJoinAmt
+			,IFNULL(other_insu_premium,'') otherInsuPremium
+			,IFNULL(other_insu_agent,'') otherInsuAgent
+		FROM
+			top_rpt_print_17_4
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		ORDER BY serial_no asc
+		
+	</select>
+	
+	
+	<!-- 흥국 일반 치료력 목록 -->
+	<select id="getPrint17_7List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody17_7VO">
+		
+		SELECT 
+			serial_no serialNo
+			,suim_rpt_no suimRptNo
+			,IFNULL(medical_history_period,'') medicalHistoryPeriod
+			,IFNULL(medical_history_hospital,'') medicalHistoryHospital
+			,IFNULL(medical_history_diagnosis,'') medicalHistoryDiagnosis
+			,IFNULL(medical_history_test,'') medicalHistoryTest
+			,IFNULL(medical_history_medicine,'') medicalHistoryMedicine
+			,IFNULL(medical_history_period,'') medicalHistoryPeriodSpan
+			,IFNULL(medical_history_hospital,'') medicalHistoryHospitalSpan
+			,IFNULL(medical_history_diagnosis,'') medicalHistoryDiagnosisSpan
+			,IFNULL(medical_history_test,'') medicalHistoryTestSpan
+			,IFNULL(medical_history_medicine,'') medicalHistoryMedicineSpan
+		FROM
+			top_rpt_print_17_7
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		ORDER BY serial_no asc
+		
+	</select>
+	
+	
+	<!-- 흥국 일반 탐문내역 목록 -->
+	<select id="getPrint17_13List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody17_13VO">
+		
+		SELECT 
+			serial_no serialNo
+			,suim_rpt_no suimRptNo
+			,IFNULL(questioning_hospital,'') questioningHospital
+			,IFNULL(questioning_basis,'') questioningBasis
+			,IFNULL(questioning_visit,'') questioningVisit
+			,IFNULL(questioning_etc,'') questioningEtc
+		FROM
+			top_rpt_print_17_13
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		ORDER BY serial_no asc
+		
+	</select>
+	
+	<!-- 흥국 일반 청구내용 업데이트 -->
+	<select id="udtBody17_2" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody17_2VO">
+		
+		UPDATE top_rpt_print_17_2
+		SET
+			chunggu_dtl_1 = #{chungguDtl1},
+			chunggu_dtl_2 = #{chungguDtl2},
+			chunggu_dtl_3 = #{chungguDtl3},
+			chunggu_dtl_4 = #{chungguDtl4},
+			chunggu_dtl_5 = #{chungguDtl5},
+			chunggu_dtl_6 = #{chungguDtl6},
+			chunggu_dtl_7 = #{chungguDtl7},
+			chunggu_dtl_8 = #{chungguDtl8},
+			chunggu_dtl_9 = #{chungguDtl9},
+			chunggu_dtl_10 = #{chungguDtl10}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+		
+	</select>
+	
+	
+	<!-- 차기 보고서 Print1_2 시리얼 가져오기 -->
+	<select id="nextPrint1_2Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_1_2'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print1_5 시리얼 가져오기 -->
+	<select id="nextPrint1_5Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_1_5'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print1_6_1 시리얼 가져오기 -->
+	<select id="nextPrint1_6_1Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_1_6_1'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print1_6_2 시리얼 가져오기 -->
+	<select id="nextPrint1_6_2Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_1_6_2'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print1_8 시리얼 가져오기 -->
+	<select id="nextPrint1_8Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_1_8'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print1700_7 시리얼 가져오기 -->
+	<select id="nextPrint1700_7Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_1700_7'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print9_file 시리얼 가져오기 -->
+	<select id="nextPrint9_fileSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_9_8'
+	
+	</select>
+	
+	
+	<!-- 차기 보고서 Print9_3a 시리얼 가져오기 -->
+	<select id="nextPrint9_3aSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_9_5_1'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print9_3c 시리얼 가져오기 -->
+	<select id="nextPrint9_3cSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_9_5_2'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print9_3d 시리얼 가져오기 -->
+	<select id="nextPrint9_3dSerial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_9_6'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print16_3 시리얼 가져오기 -->
+	<select id="nextPrint16_3Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_16_3'
+	
+	</select>
+	
+	
+	<!-- 차기 보고서 Print16_4 시리얼 가져오기 -->
+	<select id="nextPrint16_4Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_16_4'
+	
+	</select>
+	
+	<!-- 차기 보고서 Print17_4 시리얼 가져오기 -->
+	<select id="nextPrint17_4Serial" resultType="Integer">
+	
+		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_rpt_print_17_4'
+	
+	</select>
+	
+	<!-- Print1_2 신규 입력 -->
+	<insert id = "insBody1_2" parameterType="kr.co.toplac.topsuim.SuimRptBody1_2VO">	
+	
+		INSERT INTO top_rpt_print_1_2
+		(
+			rpt_print_no, other_insu_com, other_insu_dtl
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{otherInsuCom}, #{otherInsuDtl}
+		)		
+	
+	</insert>
+	
+	<!-- Print1_5 신규 입력 -->
+	<insert id = "insBody1_5" parameterType="kr.co.toplac.topsuim.SuimRptBody1_5VO">	
+	
+		INSERT INTO top_rpt_print_1_5
+		(
+			rpt_print_no, process_date_s, process_date_e , process_dtl, process_etc_memo
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{processDateS}, #{processDateE}, #{processDtl}, #{processEtcMemo}
+		)		
+	
+	</insert>
+	
+	
+	<!-- Print1_5 신규 입력 -->
+	<insert id = "insBody1_6_1" parameterType="kr.co.toplac.topsuim.SuimRptBody1_6_1VO">	
+	
+		INSERT INTO top_rpt_print_1_6_1
+		(
+			rpt_print_no, investigate_outline, investigate_dtl
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{investigateOutline}, #{investigateDtl}
+		)		
+	
+	</insert>
+	
+	<!-- Print1_6_2 신규 입력 -->
+	<insert id = "insBody1_6_2" parameterType="kr.co.toplac.topsuim.SuimRptBody1_6_2VO">	
+	
+		INSERT INTO top_rpt_print_1_6_2
+		(
+			rpt_print_no, confirm_outline, confirm_dtl
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{confirmOutline}, #{confirmDtl}
+		)		
+	
+	</insert>
+	
+	<!-- Print1_8 신규 입력 -->
+	<insert id = "insBody1_8" parameterType="kr.co.toplac.topsuim.SuimRptBody1_8VO">	
+	
+		INSERT INTO top_rpt_print_1_8
+		(
+			rpt_print_no, attach_name, attach_copy, attach_etc_memo
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{attachName}, #{attachCopy}, #{attachEtcMemo}
+		)		
+	
+	</insert>
+	
+	
+	<!-- Print1700_7 신규 입력 -->
+	<insert id = "insBody1700_7" parameterType="kr.co.toplac.topsuim.SuimRptBody1_8VO">	
+	
+		INSERT INTO top_rpt_print_1700_7
+		(
+			suim_rpt_no, attach_name, attach_copy, attach_etc_memo
+		)
+		VALUES
+		(
+			#{suimRptNo}, #{attachName}, #{attachCopy}, #{attachEtcMemo}
+		)		
+	
+	</insert>
+	
+	<!-- Print9_file 신규 입력 -->
+	<insert id = "insBody9_file" parameterType="kr.co.toplac.topsuim.SuimRptBody1_8VO">	
+	
+		INSERT INTO top_rpt_print_9_8
+		(
+			rpt_print_no, attach_name, attach_copy, attach_etc_memo
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{attachName}, #{attachCopy}, #{attachEtcMemo}
+		)		
+	
+	</insert>
+	
+	<!-- Print9_3a 신규 입력 -->
+	<insert id = "insBody9_3a" parameterType="kr.co.toplac.topsuim.SuimRptBody9_3aVO">	
+	
+		INSERT INTO top_rpt_print_9_5_1
+		(
+			rpt_print_no, process_date_s, process_date_e, process_dtl, process_hospital
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{processDateS}, #{processDateE}, #{processDtl}, #{processHospital}
+		)		
+	
+	</insert>
+	
+	<!-- Print9_3c 신규 입력 -->
+	<insert id = "insBody9_3c" parameterType="kr.co.toplac.topsuim.SuimRptBody9_3cVO">	
+	
+		INSERT INTO top_rpt_print_9_5_2
+		(
+			rpt_print_no, other_insu_com, other_insu_contract, other_insu_process, other_insu_etc_memo
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{otherInsuCom}, #{otherInsuContract}, #{otherInsuProcess}, #{otherInsuEtcMemo}
+		)		
+	
+	</insert>
+	
+	<!-- Print9_3d 신규 입력 -->
+	<insert id = "insBody9_3d" parameterType="kr.co.toplac.topsuim.SuimRptBody9_3dVO">	
+	
+		INSERT INTO top_rpt_print_9_6
+		(
+			rpt_print_no, investigate_outline, investigate_dtl
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{investigateOutline}, #{investigateDtl}
+		)		
+	
+	</insert>
+	
+	<!-- Print16_3 신규 입력 -->
+	<insert id = "insBody16_3" parameterType="kr.co.toplac.topsuim.SuimRptBody16_3VO">	
+	
+		INSERT INTO top_rpt_print_16_3
+		(
+			rpt_print_no, contract_ba, confirm_date, confirm_dtl, relative_organ
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{contractBa}, #{confirmDate}, #{confirmDtl}, #{relativeOrgan}
+		)		
+	
+	</insert>
+	
+	
+	<!-- Print16_4 신규 입력 -->
+	<insert id = "insBody16_4" parameterType="kr.co.toplac.topsuim.SuimRptBody16_4VO">	
+	
+		INSERT INTO top_rpt_print_16_4
+		(
+			rpt_print_no, other_insu_com, other_insu_mortgage, other_insu_period, other_insu_etc_memo
+		)
+		VALUES
+		(
+			#{rptPrintNo}, #{otherInsuCom}, #{otherInsuMortgage}, #{otherInsuPeriod}, #{otherInsuEtcMemo}
+		)		
+	
+	</insert>
+	
+	<!-- Print16_1267 신규 입력 -->	
+	<insert id="insBody16_1267" parameterType="String">
+	
+		INSERT INTO top_rpt_print_16
+		(suim_rpt_no)
+		VALUES
+		(#{suim_rpt_no})
+	
+	</insert>
+	
+	
+	<!-- Print17_1356891112 신규 입력 -->	
+	<insert id="insBody17_1356891112" parameterType="String">
+	
+		INSERT INTO top_rpt_print_17
+		(suim_rpt_no)
+		VALUES
+		(#{suim_rpt_no})
+	
+	</insert>
+	
+	
+	<!-- Print1700 신규 입력 -->	
+	<insert id="insBody1700" parameterType="String">
+	
+		INSERT INTO top_rpt_print_1700
+		(suim_rpt_no)
+		VALUES
+		(#{suim_rpt_no})
+	
+	</insert>
+	
+	<!-- Print17_2 신규 입력 -->	
+	<insert id="insBody17_2" parameterType="String">
+	
+		INSERT INTO top_rpt_print_17_2
+		(suim_rpt_no)
+		VALUES
+		(#{suim_rpt_no})
+	
+	</insert>
+	
+	
+	<!-- Print17_4 신규 입력 -->	
+	<insert id="insBody17_4" parameterType="String">
+	
+		INSERT INTO top_rpt_print_17_4
+		(suim_rpt_no, other_insu_com, other_insu_join_date, other_insu_join_amt, other_insu_premium , other_insu_agent  )
+		VALUES
+		(#{suimRptNo}, #{otherInsuCom}, #{otherInsuJoinDate}, #{otherInsuJoinAmt}, #{otherInsuPremium}, #{otherInsuAgent})
+	
+	</insert>
+	
+	
+	<!-- Print17_7 신규 입력 -->	
+	<insert id="insBody17_7" parameterType="String">
+	
+		INSERT INTO top_rpt_print_17_7
+		(suim_rpt_no, medical_history_period, medical_history_hospital, medical_history_diagnosis, medical_history_test , medical_history_medicine  )
+		VALUES
+		(#{suimRptNo}, #{medicalHistoryPeriod}, #{medicalHistoryHospital}, #{medicalHistoryDiagnosis}, #{medicalHistoryTest}, #{medicalHistoryMedicine})
+	
+	</insert>
+	
+	
+	<!-- Print17_13 신규 입력 -->	
+	<insert id="insBody17_13" parameterType="String">
+	
+		INSERT INTO top_rpt_print_17_13
+		(suim_rpt_no, questioning_hospital, questioning_basis, questioning_visit, questioning_etc  )
+		VALUES
+		(#{suimRptNo}, #{questioningHospital}, #{questioningBasis}, #{questioningVisit}, #{questioningEtc})
+	
+	</insert>
+	
+	
+	<!-- Print17_7 시리얼 얻기  -->	
+	<select id="getBody17_7Serial" parameterType="String" resultType="String">
+	
+		SELECT 
+			max(serial_no)
+		FROM
+			top_rpt_print_17_7
+		WHERE 	
+			suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<!-- Print17_13 시리얼 얻기  -->	
+	<select id="getBody17_13Serial" parameterType="String" resultType="String">
+	
+		SELECT 
+			max(serial_no)
+		FROM
+			top_rpt_print_17_13
+		WHERE 	
+			suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<!-- Print1_2 한 건 삭제 -->
+	<delete id ="delBody1_2" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_1_2
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print1_5 한 건 삭제 -->
+	<delete id ="delBody1_5" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_1_5
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print1_6_1 한 건 삭제 -->
+	<delete id ="delBody1_6_1" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_1_6_1
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print1_6_2 한 건 삭제 -->
+	<delete id ="delBody1_6_2" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_1_6_2
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print1_8 한 건 삭제 -->
+	<delete id ="delBody1_8" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_1_8
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print1700_7 한 건 삭제 -->
+	<delete id ="delBody1700_7" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_1700_7
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	
+	<!-- Print9_file 한 건 삭제 -->
+	<delete id ="delBody9_file" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_9_8
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print9_3a 한 건 삭제 -->
+	<delete id ="delBody9_3a" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_9_5_1
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	
+	<!-- Print9_3c 한 건 삭제 -->
+	<delete id ="delBody9_3c" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_9_5_2
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print9_3d 한 건 삭제 -->
+	<delete id ="delBody9_3d" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_9_6
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<!-- Print1_8 한 건 삭제 -->
+	<delete id ="delPrint1Img" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_img
+		WHERE
+			serial_no = #{imgSerial}
+	</delete>
+	
+	<!-- Print16_3 한 건 삭제 -->
+	<delete id ="delBody16_3" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_16_3
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	
+	<!-- Print16_4 한 건 삭제 -->
+	<delete id ="delBody16_4" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_16_4
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	
+	<!-- Print17_4 한 건 삭제 -->
+	<delete id ="delBody17_4" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_17_4
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	
+	<!-- Print17_7 한 건 삭제 -->
+	<delete id ="delBody17_7" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_17_7
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	
+	<!-- Print17_13 한 건 삭제 -->
+	<delete id ="delBody17_13" parameterType="String">
+	
+		DELETE FROM 
+			top_rpt_print_17_13
+		WHERE
+			serial_no = #{serialNo}
+	</delete>
+	
+	<select id="get1_8Num" parameterType="String" resultType="String">
+	
+		SELECT
+			count(*)
+		FROM
+			top_rpt_print_1_8
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</select>
+	
+	
+	<select id="get1700_7Num" parameterType="String" resultType="String">
+	
+		SELECT
+			count(*)
+		FROM
+			top_rpt_print_1700_7
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</select>
+	
+	<select id="get9_fileNum" parameterType="String" resultType="String">
+	
+		SELECT
+			count(*)
+		FROM
+			top_rpt_print_9_8
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</select>
+	
+	<!-- Print1_2 목록 추출 -->
+	<select id="getPrint1_2List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_2VO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,other_insu_com otherInsuCom
+			,other_insu_dtl otherInsuDtl
+			,other_insu_com otherInsuComSpan
+			,other_insu_dtl otherInsuDtlSpan
+		FROM
+			top_rpt_print_1_2
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+		ORDER BY 
+			serial_no asc	
+	</select>
+	
+	<!-- Print1_5 목록 추출 -->
+	<select id="getPrint1_5List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_5VO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,process_date_s processDateS
+			,process_date_e processDateE
+			,process_dtl processDtl
+			,process_dtl processDtlSpan
+			,process_etc_memo processEtcMemo
+		FROM
+			top_rpt_print_1_5
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+		ORDER BY 
+			serial_no asc	
+	</select>
+	
+	<!-- Print1_6_1 목록 추출 -->
+	<select id="getPrint1_6_1List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_6_1VO">
+		
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+				SELECT
+					serial_no serialNo
+					,rpt_print_no rptPrintNo
+					,investigate_outline investigateOutline
+					,investigate_dtl investigateDtl
+					,investigate_outline investigateOutlineSpan
+					,investigate_dtl investigateDtlSpan
+				FROM
+					top_rpt_print_1_6_1
+				WHERE
+					rpt_print_no = #{rptPrintNo}
+				ORDER BY 
+					serial_no asc	
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum asc
+	</select>
+	
+	<!-- Print1_6_2 목록 추출 -->
+	<select id="getPrint1_6_2List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_6_2VO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,confirm_outline confirmOutline
+			,confirm_dtl confirmDtl
+			,confirm_dtl confirmDtlSpan
+		FROM
+			top_rpt_print_1_6_2
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+		ORDER BY 
+			serial_no asc
+				
+	</select>
+	
+	
+	<!-- Print1_8 목록 추출 -->
+	<select id="getPrint1_8List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_8VO">
+		
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT
+				serial_no serialNo
+				,rpt_print_no rptPrintNo
+				,attach_name attachName
+				,attach_copy attachCopy
+				,attach_etc_memo attachEtcMemo
+			FROM
+				top_rpt_print_1_8
+			WHERE
+				rpt_print_no = #{rptPrintNo}
+			ORDER BY 
+				serial_no asc
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum asc
+				
+	</select>
+	
+	<!-- Print16_3 : B목록 추출 -->
+	<select id="getPrint16_3BList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody16_3VO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,contract_ba contractBa
+			,confirm_date confirmDate
+			,confirm_dtl confirmDtl
+			,relative_organ relativeOrgan
+			,confirm_date confirmDateSpan
+			,confirm_dtl confirmDtlSpan
+			,relative_organ relativeOrganSpan
+		FROM
+			top_rpt_print_16_3
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+			and contract_ba = 1
+				
+	</select>
+	
+	<!-- Print16_3 : D 목록 추출 -->
+	<select id="getPrint16_3DList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody16_3VO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,contract_ba contractBa
+			,confirm_date confirmDate
+			,confirm_dtl confirmDtl
+			,relative_organ relativeOrgan
+			,confirm_date confirmDateSpan
+			,confirm_dtl confirmDtlSpan
+			,relative_organ relativeOrganSpan
+		FROM
+			top_rpt_print_16_3
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+			and contract_ba = 2
+				
+	</select>
+	
+	<!-- Print16_3 : A 목록 추출 -->
+	<select id="getPrint16_3AList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody16_3VO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,contract_ba contractBa
+			,confirm_date confirmDate
+			,confirm_dtl confirmDtl
+			,relative_organ relativeOrgan
+			,confirm_date confirmDateSpan
+			,confirm_dtl confirmDtlSpan
+			,relative_organ relativeOrganSpan
+		FROM
+			top_rpt_print_16_3
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+			and contract_ba = 3
+				
+	</select>
+	
+	<!-- Print16_4 : 목록 추출 -->
+	<select id="getPrint16_4List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody16_4VO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,other_insu_com otherInsuCom
+			,other_insu_mortgage otherInsuMortgage
+			,other_insu_period otherInsuPeriod
+			,other_insu_etc_memo otherInsuEtcMemo
+			,other_insu_com otherInsuComSpan
+			,other_insu_mortgage otherInsuMortgageSpan
+			,other_insu_period otherInsuPeriodSpan
+			,other_insu_etc_memo otherInsuEtcMemoSpan
+			
+		FROM
+			top_rpt_print_16_4
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+				
+	</select>
+	
+	<!-- Print9_file 목록 추출 -->
+	<select id="getPrint9_fileList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_8VO">
+		
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT
+				serial_no serialNo
+				,rpt_print_no rptPrintNo
+				,attach_name attachName
+				,attach_copy attachCopy
+				,attach_etc_memo attachEtcMemo
+			FROM
+				top_rpt_print_9_8
+			WHERE
+				rpt_print_no = #{rptPrintNo}
+			ORDER BY 
+				serial_no asc
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum asc
+				
+	</select>
+	
+	<!-- Print9_3a 목록 추출 -->
+	<select id="getPrint9_3aList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody9_3aVO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,process_date_s processDateS
+			,process_date_e processDateE
+			,process_dtl processDtl
+			,process_dtl processDtlSpan
+			,process_hospital processHospital
+		FROM
+			top_rpt_print_9_5_1
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+		ORDER BY 
+			serial_no asc
+				
+	</select>
+	
+	<!-- Print9_3c 목록 추출 -->
+	<select id="getPrint9_3cList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody9_3cVO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,other_insu_com otherInsuCom
+			,other_insu_contract otherInsuContract
+			,other_insu_process otherInsuProcess
+			,other_insu_etc_memo otherInsuEtcMemo
+			,other_insu_contract otherInsuContractSpan
+			,other_insu_process otherInsuProcessSpan
+			,other_insu_etc_memo otherInsuEtcMemoSpan
+		FROM
+			top_rpt_print_9_5_2
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+		ORDER BY 
+			serial_no asc
+				
+	</select>
+	
+	
+	<!-- Print9_3d 목록 추출 -->
+	<select id="getPrint9_3dList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody9_3dVO">
+		
+		SELECT
+			serial_no serialNo
+			,rpt_print_no rptPrintNo
+			,investigate_outline investigateOutline
+			,investigate_dtl investigateDtl
+			,investigate_dtl investigateDtlSpan
+		FROM
+			top_rpt_print_9_6
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+		ORDER BY 
+			serial_no asc
+				
+	</select>
+	
+	<!-- Print1700_7 목록 추출 -->
+	<select id="getPrint1700_7List" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptBody1_8VO">
+		
+		SELECT @RN:=@RN+1 AS ROWNUM, TB.* 
+		FROM (
+			SELECT
+				serial_no serialNo
+				,suim_rpt_no suimRptNo
+				,attach_name attachName
+				,attach_copy attachCopy
+				,attach_etc_memo attachEtcMemo
+			FROM
+				top_rpt_print_1700_7
+			WHERE
+				suim_rpt_no = #{suimRptNo}
+			ORDER BY 
+				serial_no asc
+			) AS TB,
+		(SELECT @RN:=0) AS R
+		ORDER BY rownum asc	
+		
+	</select>
+	
+	
+	<!-- Print1_2 한건 업데이트 -->
+	<update id="udtBody1_2" parameterType="kr.co.toplac.topsuim.SuimRptBody1_2VO">
+	
+		UPDATE
+			top_rpt_print_1_2
+		SET
+			other_insu_com = #{otherInsuCom},
+			other_insu_dtl = #{otherInsuDtl}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print1_5 한건 업데이트 -->
+	<update id="udtBody1_5" parameterType="kr.co.toplac.topsuim.SuimRptBody1_5VO">
+	
+		UPDATE
+			top_rpt_print_1_5
+		SET
+			process_date_s = #{processDateS},
+			process_date_e = #{processDateE},
+			process_dtl = #{processDtl},
+			process_etc_memo = #{processEtcMemo}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print1_6_1 한건 업데이트 -->
+	<update id="udtBody1_6_1" parameterType="kr.co.toplac.topsuim.SuimRptBody1_6_1VO">
+	
+		UPDATE
+			top_rpt_print_1_6_1
+		SET
+			investigate_outline = #{investigateOutline},
+			investigate_dtl = #{investigateDtl}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print1_6 한건 업데이트 -->
+	<update id="udtBody1_6" parameterType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		UPDATE
+			top_rpt_print_1
+		SET
+			face_outline_6 = #{faceOutline6},
+			face_insured_job_6 = #{faceInsuredJob6},
+			face_contract_situation_6 = #{faceContractSituation6},
+			face_occur_situation_6 = #{faceOccurSituation6},
+			face_inform_sign_yn_6 = #{faceInformSignYn6},
+			face_etc_memo_6 = #{faceEtcMemo6}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	<!-- Print1_7 한건 업데이트 -->
+	<update id="udtBody1_7" parameterType="kr.co.toplac.topsuim.SuimRptBody1_13467VO">
+	
+		UPDATE
+			top_rpt_print_1
+		SET
+			adjust_result_7 = #{adjustResult7}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	<!-- Print1_8 한건 업데이트 -->
+	<update id="udtBody1_8" parameterType="kr.co.toplac.topsuim.SuimRptBody1_8VO">
+	
+		UPDATE
+			top_rpt_print_1_8
+		SET
+			attach_name = #{attachName}
+			,attach_copy = #{attachCopy}
+			,attach_etc_memo = #{attachEtcMemo}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	
+	<!-- Print1700_7 한건 업데이트 -->
+	<update id="udtBody1700_7" parameterType="kr.co.toplac.topsuim.SuimRptBody1_8VO">
+	
+		UPDATE
+			top_rpt_print_1700_7
+		SET
+			attach_name = #{attachName}
+			,attach_copy = #{attachCopy}
+			,attach_etc_memo = #{attachEtcMemo}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print16_2 한건 업데이트 -->
+	<update id="udtBody16_2" parameterType="kr.co.toplac.topsuim.SuimRptBody16_1267VO">
+	
+		UPDATE
+			top_rpt_print_16
+		SET
+			claim_dtl_2 = #{claimDtl2}
+			,complaint_avoid_activity_2 = #{complaintAvoidActivity2}
+			,inspect_result_2 = #{inspectResult2}
+			,contract_keep_yn_2 = #{contractKeepYn2}
+			,minwon_dtl_2 = #{minwonDtl2}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print16_5 한건 업데이트 -->
+	<update id="udtBody16_5" parameterType="kr.co.toplac.topsuim.SuimRptBody16_1267VO">
+	
+		UPDATE
+			top_rpt_print_16
+		SET
+			accident_dtl_6 = #{accidentDtl6}
+			,notice_duty1_6 = #{noticeDuty16}
+			,notice_duty2_6 = #{noticeDuty26}
+			,job_grade_confirm_6 = #{jobGradeConfirm6}
+			,counsel_medical_6 = #{counselMedical6}
+			,counsel_legal_6 = #{counselLegal6}
+			,confirm_public_6 = #{confirmPublic6}
+			,site_picture_6 = #{sitePicture6}
+			,disability_6 = #{disability6}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print16_7 한건 업데이트 -->
+	<update id="udtBody16_7" parameterType="kr.co.toplac.topsuim.SuimRptBody16_1267VO">
+	
+		UPDATE
+			top_rpt_print_16
+		SET
+			face_memo_7 = #{faceMemo7}
+			,delegate_7 = #{delegate7}
+			,questioning_7 = #{questioning7}
+			,guide_etc_7 = #{guideEtc7}
+			,more_document_7 = #{moreDocument7}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- Print16_7 한건 업데이트 -->
+	<update id="udtBody17_4" parameterType="kr.co.toplac.topsuim.SuimRptBody17_4VO">
+	
+		UPDATE
+			top_rpt_print_17_4
+		SET
+			other_insu_com = #{otherInsuCom}
+			,other_insu_join_date = #{otherInsuJoinDate}
+			,other_insu_join_amt = #{otherInsuJoinAmt}
+			,other_insu_premium = #{otherInsuPremium}
+			,other_insu_agent = #{otherInsuAgent}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	
+	<!-- Print17_13 한건 업데이트 -->
+	<update id="udtBody17_13" parameterType="kr.co.toplac.topsuim.SuimRptBody17_13VO">
+	
+		UPDATE
+			top_rpt_print_17_13
+		SET
+			questioning_hospital = #{questioningHospital}
+			,questioning_basis = #{questioningBasis}
+			,questioning_visit = #{questioningVisit}
+			,questioning_etc = #{questioningEtc}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print17_7 한건 업데이트 -->
+	<update id="udtBody17_7" parameterType="kr.co.toplac.topsuim.SuimRptBody17_7VO">
+	
+		UPDATE
+			top_rpt_print_17_7
+		SET
+			medical_history_period = #{medicalHistoryPeriod}
+			,medical_history_hospital = #{medicalHistoryHospital}
+			,medical_history_diagnosis = #{medicalHistoryDiagnosis}
+			,medical_history_test = #{medicalHistoryTest}
+			,medical_history_medicine = #{medicalHistoryMedicine}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	
+	<!-- Print1700_1  업데이트 -->
+	<update id="udtBody1700_1" parameterType="kr.co.toplac.topsuim.SuimRptBody1700VO">
+	
+		UPDATE
+			top_rpt_print_1700
+		SET
+			minwon_grade_6 = #{minwonGrade6}
+			,minwon_customer_6 = #{minwonCustomer6}
+			,minwon_memo_6 = #{minwonMemo6}
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	
+	<!-- Print1700_2  업데이트 -->
+	<update id="udtBody1700_2" parameterType="kr.co.toplac.topsuim.SuimRptBody1700VO">
+	
+		UPDATE
+			top_rpt_print_1700
+		SET
+			join_date_1 = #{joinDate1}
+			,mortgage_1 = #{mortgage1}
+			,diagnosis_1 = #{diagnosis1}
+			,hospital_1 = #{hospital1}
+			,patient_period_1 = #{patientPeriod1}
+			,cure_dtl_1 = #{cureDtl1}
+			,amt_req_1 = #{amtReq1}
+			,amt_reduce_1 = #{amtReduce1}
+			,issue_2 = #{issue2}
+			,addr_3 = #{addr3}
+			,tel_3 = #{tel3}
+			,job_3 = #{job3}
+			,job_dtl_3 = #{jobDtl3}
+			,tot_sal_3 = #{totSal3}
+			,nhis_3 = #{nhis3}
+			,amt_nhis_3 = #{amtNhis3}
+			,drive_yn_3 = #{driveYn3}
+			,car_no_3 = #{carNo3}
+			,agent_3 = #{agent3}
+			,contract_situation_3 = #{contractSituation3}
+			,other_insu_dtl_3 = #{otherInsuDtl3}
+			,customer_info_3 = #{customerInfo3}
+			,contract_keep_yn_4 = #{contractKeepYn4}
+			,qna_paper_4 = #{qnaPaper4}
+			,reuse_yn_4 = #{reuseYn4}
+			,special_case_4 = #{specialCase4}
+			,amt_home_4 = #{amtHome4}
+			,amt_settle_4 = #{amtSettle4}
+			,basis_4 = #{basis4}
+			,amt_home_sum_4 = #{amtHomeSum4}
+			,amt_settle_sum_4 = #{amtSettleSum4}
+			,current_state_4 = #{currentState4}
+			,future_plan_4 = #{futurePlan4}
+			,hospital_memo_4 = #{hospitalMemo4}
+			,etc_memo_5 = #{etcMemo5}
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<!-- Print9_file 한건 업데이트 -->
+	<update id="udtBody9_file" parameterType="kr.co.toplac.topsuim.SuimRptBody1_8VO">
+	
+		UPDATE
+			top_rpt_print_9_8
+		SET
+			attach_name = #{attachName}
+			,attach_copy = #{attachCopy}
+			,attach_etc_memo = #{attachEtcMemo}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- Print9_3a 한건 업데이트 -->
+	<update id="udtBody9_3a" parameterType="kr.co.toplac.topsuim.SuimRptBody9_3aVO">
+	
+		UPDATE
+			top_rpt_print_9_5_1
+		SET
+			process_date_s = #{processDateS}
+			,process_date_e = #{processDateE}
+			,process_dtl = #{processDtl}
+			,process_hospital = #{processHospital}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	
+	<!-- Print9_3c 한건 업데이트 -->
+	<update id="udtBody9_3c" parameterType="kr.co.toplac.topsuim.SuimRptBody9_3cVO">
+	
+		UPDATE
+			top_rpt_print_9_5_2
+		SET
+			other_insu_com = #{otherInsuCom}
+			,other_insu_contract = #{otherInsuContract}
+			,other_insu_process = #{otherInsuProcess}
+			,other_insu_etc_memo = #{otherInsuEtcMemo}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	
+	<!-- Print9_3d 한건 업데이트 -->
+	<update id="udtBody9_3d" parameterType="kr.co.toplac.topsuim.SuimRptBody9_3dVO">
+	
+		UPDATE
+			top_rpt_print_9_6
+		SET
+			investigate_outline = #{investigateOutline}
+			,investigate_dtl = #{investigateDtl}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- udtBody9_3b 한건 업데이트 -->
+	<update id="udtBody9_3b" parameterType="kr.co.toplac.topsuim.SuimRptBody9_3aVO">
+	
+		UPDATE
+			top_rpt_print_9
+		SET
+			face_contract_situation_4 = #{faceContractSituation4}
+			,face_inform_sign_yn_4 = #{faceInformSignYn4}
+			,face_other_insu_memo_4 = #{faceOtherInsuMemo4}
+			,face_insured_demand_4 = #{faceInsuredDemand4}
+		WHERE
+			rpt_print_no = #{rptPrintNo}
+	
+	</update>
+	
+	
+	<!-- udtBody16_3 한건 업데이트 -->
+	<update id="udtBody16_3" parameterType="kr.co.toplac.topsuim.SuimRptBody16_3VO">
+	
+		UPDATE
+			top_rpt_print_16_3
+		SET
+			confirm_date = #{confirmDate}
+			,confirm_dtl = #{confirmDtl}
+			,relative_organ = #{relativeOrgan}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	<!-- udtBody16_4 한건 업데이트 -->
+	<update id="udtBody16_4" parameterType="kr.co.toplac.topsuim.SuimRptBody16_4VO">
+	
+		UPDATE
+			top_rpt_print_16_4
+		SET
+			other_insu_com = #{otherInsuCom}
+			,other_insu_mortgage = #{otherInsuMortgage}
+			,other_insu_period = #{otherInsuPeriod}
+			,other_insu_etc_memo = #{otherInsuEtcMemo}
+		WHERE
+			serial_no = #{serialNo}
+	
+	</update>
+	
+	
+	<!-- 보고서 Print1 의 이미지 목록 -->
+	<select id="getRptPrint1ImgList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptImgPrint_1VO">
+	
+		SELECT
+			serial_no serialNo,
+			suim_rpt_no suimRptNo,
+			file_path filePath,
+			img_name imgName,
+			img_memo imgMemo,
+			img_rank imgRank,
+			reg_date regDate
+		FROM
+			top_rpt_img
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+		ORDER BY img_rank asc
+	</select>
+	
+	<!-- 보고서 Print1 dummy 올리기 -->
+	<insert id="insNewPrint1ImgForKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		
+		INSERT INTO top_rpt_img
+			( suim_rpt_no, img_name, img_memo, img_rank, reg_date)
+		VALUES
+			( #{suimRptNo}, #{imgName}, #{imgMemo}, #{imgRank}, unix_timestamp(now())) 
+		
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+	</insert>
+	
+	<!--보고서 Print1 dummy 컬럼에 실제 Data Update -->
+	<update id="insNewPrint1ImgForUpdate" parameterType="java.util.HashMap">
+		UPDATE 
+			top_rpt_img 
+		SET 
+			  file_path = #{filePath}
+			, img_name = #{imgName}			
+		WHERE 
+			serial_no = #{nextRptPrint1ImgSerial}
+	</update>
+	
+	<!-- 보고서 Print1의 파일 경로 찾기 -->
+	<select id="getPrint1FilePath" parameterType="String" resultType="String">
+		SELECT file_path
+		  FROM top_rpt_img
+		 WHERE serial_no = #{no}
+	</select>
+	
+	<!-- 보고서 Print1의 삭제용 파일 경로 찾기 -->
+	<select id="getDelPrint1FilePath" parameterType="String" resultType="String">
+		SELECT CONCAT(file_path,img_name)
+		  FROM top_rpt_img
+		 WHERE serial_no = #{no}
+	</select>	
+	
+	<!-- 보고서 Print1 의 이미지 업데이트 -->
+	<update id ="udtBody1ImgInfo" parameterType="kr.co.toplac.topsuim.SuimRptImgPrint_1VO">
+	
+		UPDATE top_rpt_img
+		SET
+			img_memo = #{imgMemo},
+			img_rank = #{imgRank}
+		WHERE
+			serial_no = #{serialNo}
+	</update>
+			
+	<!-- 사고처리과정표 - 처리과정 - top_print_9_ctrl SELECT -->
+	<select id="get9Print_9_ctrl" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT  serial_no serialNo
+			   ,rpt_print_no rptPrintNo
+			   ,control_date controlDate
+			   ,control_subject controlSubject
+			   ,control_memo controlMemo
+			   ,control_end_date controlEndDate
+			   ,control_delay_agent controlDelayAgent
+			   ,control_date_cnt controlDateCnt
+			   ,control_delay_cnt controlDelayCnt
+		  FROM  
+		  	top_rpt_print_9_ctrl
+		 WHERE  
+		 	rpt_print_no = #{_parameter}
+		 ORDER BY 
+		 	serial_no
+	</select>
+	
+	<!-- 사고처리과정표 - 처리과정(롯데) - 지연일수 - top_print_1 SELECT -->
+	<select id="get9Print_9_ctrl_delay_cnt" parameterType="String" resultType="kr.co.toplac.rptin.SuimPrint1001VO">
+		SELECT  printctrl_all_delay_cnt allDelayCnt
+			   ,printctrl_insu_delay_cnt insuDelayCnt
+			   ,printctrl_notinsu_delay_cnt notInsuDelayCnt
+		  FROM
+		  	top_rpt_print_9
+		 WHERE
+		 	rpt_print_no = #{_parameter}
+	</select>
+	
+		
+	<!-- 5. 사고처리과정표 - 처리결과 - top_print_1_ctrl Insert -->
+	<insert id="ins9printCtrl" parameterType="kr.co.toplac.rptin.SuimPrint1001VO" useGeneratedKeys="true" keyProperty="serialNo">
+		INSERT INTO top_rpt_print_9_ctrl
+		(
+			 rpt_print_no
+			,control_date
+			,control_subject
+			,control_memo
+			,control_end_date
+			,control_delay_agent
+			,control_date_cnt
+			,control_delay_cnt
+			,reg_date
+		)
+		VALUES
+		(
+			 #{rptPrintNo}
+			,#{controlDate}
+			,#{controlSubject}
+			,#{controlMemo}
+			,#{controlEndDate}
+			,#{controlDelayAgent}
+			,#{controlDateCnt}
+			,#{controlDelayCnt}
+			,unix_timestamp(now())
+		)
+		<selectKey keyProperty="serialNo" resultType="java.lang.String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>	
+	</insert>	
+	
+	<!-- 사고처리과정표 - 처리과정 -  top_rpt_print_1_ctrl DELETE -->
+	<delete id="del9printCtrl" parameterType="String">
+		DELETE 
+		  FROM top_rpt_print_9_ctrl
+		 WHERE serial_no = #{_parameter} 
+	</delete>	
+	
+	<!-- 사고처리과정표 - 처리과정 -  top_rpt_print_1_ctrl UPDATE -->
+	<update id="udt9printCtrl" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE 
+			top_rpt_print_9_ctrl
+		   SET 
+		   	 control_date = #{controlDate}
+		   	,control_subject = #{controlSubject}
+		   	,control_memo = #{controlMemo}
+		   	,control_end_date = #{controlEndDate}
+		   	,control_delay_agent = #{controlDelayAgent}
+ 			,control_date_cnt = #{controlDateCnt}
+		   	,control_delay_cnt = #{controlDelayCnt}
+			,reg_date = unix_timestamp(now())
+		 WHERE
+		 	serial_no = #{serialNo} 
+	</update>
+	
+	<!-- 사고처리과정표 - 처리과정(롯데) - 지연일수 top_rpt_print_1 UPDATE -->
+	<update id="udt9printCtrlDelay" parameterType="kr.co.toplac.rptin.SuimPrint1001VO">
+		UPDATE top_rpt_print_9
+		   SET 
+		   	 printctrl_all_delay_cnt = #{allDelayCnt} 
+		   	,printctrl_insu_delay_cnt = #{insuDelayCnt}
+		   	,printctrl_notinsu_delay_cnt = #{notInsuDelayCnt}
+		 WHERE
+		 	rpt_print_no = #{rptPrintNo} 
+	</update>
+	
+</mapper>

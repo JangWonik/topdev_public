@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="MyDocIns">
+
+	<select id="getMyDocType" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO" >
+		SELECT col_cd, col_val
+  		 FROM sysadm_codedic
+ 		WHERE tbl_nm = "top_mbr_doc"
+   		  AND col_nm = "doc_type"
+	</select>
+	
+ 	<select id="nextMyDocSerial" resultType="Integer">
+ 		SELECT 
+ 			AUTO_INCREMENT 
+ 		FROM 
+ 			information_schema.TABLES 
+ 		WHERE 
+ 			TABLE_SCHEMA = 'toplac' 
+ 			AND TABLE_NAME = 'top_mbr_doc'
+ 	</select>
+	
+	<insert id="insMyDoc" parameterType="kr.co.toplac.topindividual.TopMbrDocVO">
+		INSERT INTO 
+			top_mbr_doc
+			(doc_type, doc_title, file_path, file_name, user_no, doc_state, reg_user_no, reg_date)
+		 VALUES
+		 	(#{doc_type}, #{doc_title}, #{file_path}, #{file_name}, #{user_no}, 0, #{user_no}, unix_timestamp(now()))
+	</insert>
+	
+	<!-- LOG -->
+	<insert id="insMyDocLogIns" parameterType="java.util.HashMap">
+		INSERT INTO 
+			top_mbr_doc_log
+			(doc_no, doc_state, user_no, state_chg_date)
+		VALUES
+			(#{docNo},'0',#{userNo}, unix_timestamp(now()))
+	</insert>
+	<!-- /LOG -->
+	
+</mapper>

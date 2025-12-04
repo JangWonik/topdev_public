@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SearchMainSuit10Mapper">
+
+	<select id="searchMainSuit10RptList" resultType="kr.co.toplac.topsuit.SuimSuit_10VO">
+		SELECT	a.suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				a.suim_rpt_state suimRptState,													<!-- 건 상태-->
+				a.lock_flag lockFlag, 															<!-- 락여부 --> 
+				a.suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				a.suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				a.ptnr_id ptnrId, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(a.ptnr_id) ptnrName,										<!-- 약명 -->
+				a.team_id teamId, getTopTmBscTeamName(a.team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(a.team_id) teamMark,										<!-- 팀마크 -->
+				a.user_no userNo, getTopMbrBscUserName(a.user_no) userName, 					<!-- 담당자 -->
+				a.bd_type bdType, <!-- 건물  getCodeValue('top_suitability_10','bd_type',replace(a.bd_type,'0','')) bdName,  -->
+				a.policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				a.del_date delDate,
+				getDateDiff(a.reg_date)+1 pastDateOld,<!-- 수임부터 경과 일자 -->
+				a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt	
+		FROM top_suitability_10 a
+		WHERE a.del_date >= 0
+		<if test="stateSearch != 9999">
+			AND a.suim_rpt_state = #{stateSearch}
+		</if>
+		<if test="noUserSearch == 'on'">
+			AND ifnull(a.user_no,0) = 0
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; unix_timestamp(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="cancelDateFromSearch != ''">
+			AND a.suim_cancel_date >= unix_timestamp(#{cancelDateFromSearch})
+		</if>
+		<if test="cancelDateToSearch != ''">
+			AND a.suim_cancel_date &lt; unix_timestamp(DATE_ADD(#{cancelDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="userNmSearch != ''">
+			AND a.user_no in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${userNmSearch}%'))
+		</if>
+		<if test="aprvDateFromSearch != ''">
+			AND a.suim_rpt_aprv_date >= unix_timestamp(#{aprvDateFromSearch})
+		</if>
+		<if test="aprvDateToSearch != ''">
+			AND a.suim_rpt_aprv_date &lt; unix_timestamp(DATE_ADD(#{aprvDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="closeDateFromSearch != ''">
+			AND a.close_date >= unix_timestamp(#{closeDateFromSearch})
+		</if>
+		<if test="closeDateToSearch != ''">
+			AND a.close_date &lt; unix_timestamp(DATE_ADD(#{closeDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="insuNmSearch != ''">
+			AND a.pkgName like '%${insuNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.contractorName like '%${policyhNmSearch}%'
+		</if>
+		<if test="policyNoSearch != ''">
+			AND a.plcyNo like '%${policyNoSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="searchMainSimpleQueryTxt != ''">
+			AND (a.contractorName like '%${searchMainSimpleQueryTxt}%')
+		</if>
+		
+		<if test="notSearch == 1">
+			AND 1 = 0
+		</if>
+		
+		<choose>
+			<when test="stateSearch == 2"><!-- 종결 상태일때는 종결일 순으로 -->
+				ORDER BY a.close_date DESC
+			</when>
+			<otherwise>
+				ORDER BY a.suim_rpt_no DESC<!-- 나머진 등록순 -->
+			</otherwise>
+		</choose>
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+
+	<select id="searchMainSuit10RptListCnt" resultType = "int">
+		SELECT count(a.suim_rpt_no) cnt
+		FROM top_suitability_10 a
+		WHERE a.del_date >= 0
+		<if test="stateSearch != 9999">
+			AND a.suim_rpt_state = #{stateSearch}
+		</if>
+		<if test="noUserSearch == 'on'">
+			AND ifnull(a.user_no,0) = 0
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; unix_timestamp(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="cancelDateFromSearch != ''">
+			AND a.suim_cancel_date >= unix_timestamp(#{cancelDateFromSearch})
+		</if>
+		<if test="cancelDateToSearch != ''">
+			AND a.suim_cancel_date &lt; unix_timestamp(DATE_ADD(#{cancelDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="userNmSearch != ''">
+			AND a.user_no in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${userNmSearch}%'))
+		</if>
+		<if test="aprvDateFromSearch != ''">
+			AND a.suim_rpt_aprv_date >= unix_timestamp(#{aprvDateFromSearch})
+		</if>
+		<if test="aprvDateToSearch != ''">
+			AND a.suim_rpt_aprv_date &lt; unix_timestamp(DATE_ADD(#{aprvDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="closeDateFromSearch != ''">
+			AND a.close_date >= unix_timestamp(#{closeDateFromSearch})
+		</if>
+		<if test="closeDateToSearch != ''">
+			AND a.close_date &lt; unix_timestamp(DATE_ADD(#{closeDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="insuNmSearch != ''">
+			AND a.pkgName like '%${insuNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.contractorName like '%${policyhNmSearch}%'
+		</if>
+		<if test="policyNoSearch != ''">
+			AND a.plcyNo like '%${policyNoSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="searchMainSimpleQueryTxt != ''">
+			AND (a.contractorName like '%${searchMainSimpleQueryTxt}%')
+		</if>
+		
+		<if test="notSearch == 1">
+			AND 1 = 0
+		</if>
+	</select>
+
+	<select id="searchMainSuit10RptListExcel" resultType="kr.co.toplac.topsuit.SuimSuit_10VO">
+		SELECT	a.suim_rpt_no suimRptNo,														<!-- 해당 건 키값 -->
+				a.suim_rpt_state suimRptState,													<!-- 건 상태-->
+				a.lock_flag lockFlag, 															<!-- 락여부 --> 
+				a.suim_accept_no suimAcceptNo, 													<!-- 접수번호 -->
+				a.suim_close_no suimCloseNo, 													<!-- 종결번호 -->
+				a.ptnr_id ptnrId, getTopPtnrBscPtnrNick(a.ptnr_id) ptnrNick, 					<!-- 보험사 코드, 이름 -->
+				getTopPtnrBscPtnrName(a.ptnr_id) ptnrName,										<!-- 약명 -->
+				a.team_id teamId, getTopTmBscTeamName(a.team_id) teamName, 						<!-- 팀코드 , 팀여 -->
+				getTopTmBscTeamMark(a.team_id) teamMark,										<!-- 팀마크 -->
+				a.user_no userNo, getTopMbrBscUserName(a.user_no) userName, 					<!-- 담당자 -->
+				a.bd_type bdType, <!-- 건물  getCodeValue('top_suitability_10','bd_type',replace(a.bd_type,'0','')) bdName,  -->
+				a.policyholder_nm policyholderNm,												<!-- 계약자명 -->		
+				DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') regDate,						<!-- 수임일 -->
+				DATE_FORMAT(FROM_UNIXTIME(a.close_date), '%Y-%m-%d') closeDate,					<!-- 종결일 -->
+				a.del_date delDate,
+				getDateDiff(a.reg_date)+1 pastDateOld,<!-- 수임부터 경과 일자 -->
+				a.suim_cancel_date, if(a.suim_cancel_date = null || a.suim_cancel_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.suim_cancel_date), '%Y-%m-%d')) suimCancelDateFmt	
+		FROM top_suitability_10 a
+		WHERE a.del_date >= 0
+		<if test="stateSearch != 9999">
+			AND a.suim_rpt_state = #{stateSearch}
+		</if>
+		<if test="noUserSearch == 'on'">
+			AND ifnull(a.user_no,0) = 0
+		</if>
+		<if test="regDateFromSearch != ''">
+			AND a.reg_date >= unix_timestamp(#{regDateFromSearch})
+		</if>
+		<if test="regDateToSearch != ''">
+			AND a.reg_date &lt; unix_timestamp(DATE_ADD(#{regDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="cancelDateFromSearch != ''">
+			AND a.suim_cancel_date >= unix_timestamp(#{cancelDateFromSearch})
+		</if>
+		<if test="cancelDateToSearch != ''">
+			AND a.suim_cancel_date &lt; unix_timestamp(DATE_ADD(#{cancelDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="tmSearch != 0">
+			<choose>
+				<when test="tmGubun == -1">
+					and a.team_id in (SELECT team_id FROM top_tm_bsc WHERE team_group_order
+											= (SELECT team_group_order FROM top_tm_bsc WHERE team_id = #{tmSearch}))
+				</when>
+				<otherwise>
+					and a.team_id = #{tmSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="userNmSearch != ''">
+			AND a.user_no in ((SELECT user_no FROM top_mbr_bsc WHERE user_name like '%${userNmSearch}%'))
+		</if>
+		<if test="aprvDateFromSearch != ''">
+			AND a.suim_rpt_aprv_date >= unix_timestamp(#{aprvDateFromSearch})
+		</if>
+		<if test="aprvDateToSearch != ''">
+			AND a.suim_rpt_aprv_date &lt; unix_timestamp(DATE_ADD(#{aprvDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="closeDateFromSearch != ''">
+			AND a.close_date >= unix_timestamp(#{closeDateFromSearch})
+		</if>
+		<if test="closeDateToSearch != ''">
+			AND a.close_date &lt; unix_timestamp(DATE_ADD(#{closeDateToSearch},INTERVAL 1 day))
+		</if>
+		<if test="ptnrSearch != 0">
+			<choose>
+				<when test="ptnrGubun == -1">
+					and a.ptnr_id in (SELECT ptnr_id FROM top_ptnr_bsc WHERE ptnr_group_order
+											= (SELECT ptnr_group_order FROM top_ptnr_bsc WHERE ptnr_id = #{ptnrSearch}))
+				</when>
+				<otherwise>
+					and a.ptnr_id = #{ptnrSearch}
+				</otherwise>
+			</choose>
+		</if>
+		<if test="insuNmSearch != ''">
+			AND a.pkgName like '%${insuNmSearch}%'
+		</if>
+		<if test="policyhNmSearch != ''">
+			AND a.contractorName like '%${policyhNmSearch}%'
+		</if>
+		<if test="policyNoSearch != ''">
+			AND a.plcyNo like '%${policyNoSearch}%'
+		</if>
+		<if test="acceptNoSearch != ''">
+			AND a.suim_accept_no like '%${acceptNoSearch}%'
+		</if>
+		<if test="searchMainSimpleQueryTxt != ''">
+			AND (a.contractorName like '%${searchMainSimpleQueryTxt}%')
+		</if>
+		
+		<if test="notSearch == 1">
+			AND 1 = 0
+		</if>		
+		ORDER BY a.suim_rpt_no DESC
+	</select>
+
+</mapper>

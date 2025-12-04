@@ -1,0 +1,1900 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TmMainLeftUtilMapper">
+	<!-- 담당관리부서 적용  -->
+	<select id="getAdmin23TeamId" parameterType="String" resultType="String">
+		SELECT LS_ADMIN23
+		  FROM ls_admin
+		 WHERE USER_ID = #{_prameter}		
+	</select>
+	
+	<!-- 위임취소프로세스용 담당팀 ID (보고서 종결권한) -->
+	<select id="getAdmin7TeamId" parameterType="String" resultType="String">
+		SELECT ls_admin7
+		  FROM ls_admin
+		 WHERE USER_ID = #{_prameter}		
+	</select>
+	
+	<!-- 위임취소프로세스용 담당팀 ID (보고서 위임취소 결재권한) -->
+	<select id="getRptCancelApprovalTeamId" parameterType="String" resultType="String">
+		SELECT rpt_cancel_approval
+		  FROM ls_admin
+		 WHERE USER_ID = #{_prameter}		
+	</select>
+	
+	
+	<select id="suimTotalCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE team_id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<select id="suimState0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1 
+		   AND suim_rpt_state in (0,1,11)
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<select id="siteCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(distinct a.suim_rpt_no) 
+		  FROM top_rpt_site_interim a, top_rpt_head b
+		 WHERE 1=1
+		   AND a.suim_rpt_no = b.suim_rpt_no 
+		   AND b.suim_rpt_state = 0
+		   AND a.interim_flag = 0 
+		   AND a.site_date > -1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<select id="interimCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(a.suim_rpt_no)
+		  FROM top_rpt_head a
+		  LEFT JOIN (
+	  					SELECT distinct d.suim_rpt_no 
+	  					  FROM top_rpt_head c, top_rpt_site_interim d
+						 WHERE 1=1 
+						   AND c.suim_rpt_state = 0 
+						   AND c.del_date > -1
+						   AND c.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+						   AND team_id in 
+						<foreach collection="list" item="item" open="(" close=")" separator=",">
+							#{item}
+						</foreach>
+					) e
+			ON a.suim_rpt_no = e.suim_rpt_no
+		 WHERE 1=1
+		   AND a.suim_rpt_state = 0
+		   AND a.del_date > -1
+		   AND a.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+		   AND e.suim_rpt_no IS NULL
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<select id="suimState1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+         WHERE 1=1
+           AND suim_rpt_state = 1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<select id="suimState11Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1 
+		   AND suim_rpt_state = 11
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<select id="aIACnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_mbr_sanction = 2
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="aIACntState1AllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE suim_rpt_state = 1 
+		   AND ptnr_mbr_sanction = 1
+	</select>
+	
+	<select id="aIACntState11AllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE suim_rpt_state = 11 
+		   AND ptnr_mbr_sanction = 1
+	</select>
+	
+	<select id="aIACntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE ptnr_mbr_sanction = 2
+	</select>
+	
+	<select id="suimState2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1 
+		   AND suim_rpt_state = 2
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suimState3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1 
+		   AND suim_rpt_state = 3
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suimNoUserCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1 
+		   AND suim_rpt_state = 0 
+		   AND IFNULL(user_no,0) = 0 
+		   AND IFNULL(del_date,0) = 0
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="cHelpState0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1
+		   AND help_state = 0
+		   AND client_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="cHelpState1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1 
+		   AND help_state = 1
+		   AND client_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="cHelpState2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1 
+		   AND help_state = 2
+		   AND client_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="cHelpState3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1
+		   AND help_state = 3
+		   AND client_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="aHelpState0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1 
+		   AND help_state = 0
+		   AND accept_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="aHelpState1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1 
+		   AND help_state = 1
+		   AND accept_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	
+	<select id="aHelpState2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1
+		   AND help_state = 2
+		   AND accept_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	
+	<select id="aHelpState3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_rpt_help 
+		 WHERE 1=1
+		   AND help_state = 3
+		   AND accept_team in
+   		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>   
+	</select>
+	
+	<select id="suit10TotalCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_10 
+		 WHERE 1=1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit10State0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_10 
+		 WHERE 1=1
+		   AND suim_rpt_state = 0
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	
+	<select id="suit10State1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_10 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	
+	<select id="suit10State11Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_10 
+		 WHERE 1=1
+		   AND suim_rpt_state = 11
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	
+	<select id="suit10State2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_10 
+		 WHERE 1=1
+		   AND suim_rpt_state = 2
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit10State3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_10 
+		 WHERE 1=1 
+		   AND suim_rpt_state = 3
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	
+	<select id="suit12TotalCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_12 
+		 WHERE 1=1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit12State0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_12 
+		 WHERE 1=1
+		   AND suim_rpt_state = 0
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	
+	<select id="suit12State1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_12 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit12State11Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_12 
+		 WHERE 1=1
+		   AND suim_rpt_state = 11
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>  
+	</select>
+	<select id="suit12State2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_12 
+		 WHERE 1=1
+		   AND suim_rpt_state = 2
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit12State3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_12 
+		 WHERE 1=1
+		   AND suim_rpt_state = 3
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit17TotalCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_17 
+		 WHERE 1=1
+ 		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit17State0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_17 
+		 WHERE 1=1
+		   AND suim_rpt_state = 0
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit17State1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_17 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit17State11Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_17 
+		 WHERE 1=1
+		   AND suim_rpt_state = 11
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit17State2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_17 
+		 WHERE 1=1
+		   AND suim_rpt_state = 2
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit17State3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_17 
+		 WHERE 1=1
+		   AND suim_rpt_state = 3
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit18TotalCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_contract 
+		 WHERE 1=1 
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit18State0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_contract 
+		 WHERE 1=1
+		   AND suim_rpt_state = 0
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit18State1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_contract 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit18State11Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_contract 
+		 WHERE 1=1
+		   AND suim_rpt_state = 11
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit18State2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_contract 
+		 WHERE 1=1
+		   AND suim_rpt_state = 2
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit18State3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_contract 
+		 WHERE 1=1
+		   AND suim_rpt_state = 3
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="suit10State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_10 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="suit12State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_12 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="suit17State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_suitability_17 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="suit18State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_contract 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="primTotalCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_prim_biz_rpt_head 
+		 WHERE 1=1
+ 		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="primState0Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_prim_biz_rpt_head 
+		 WHERE 1=1
+		   AND suim_rpt_state = 0
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="primState1Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_prim_biz_rpt_head 
+		 WHERE 1=1
+		   AND suim_rpt_state = 1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="primState11Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_prim_biz_rpt_head 
+		 WHERE 1=1
+		   AND suim_rpt_state = 11
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="primState2Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_prim_biz_rpt_head 
+		 WHERE 1=1
+		   AND suim_rpt_state = 2
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="primState3Cnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_prim_biz_rpt_head 
+		 WHERE 1=1
+		   AND suim_rpt_state = 3
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="ptnr19State0CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 19 
+		   AND suim_rpt_state = 0
+	</select>
+	
+	<select id="ptnr19State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 19 
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="ptnr27State0CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 27 
+		   AND suim_rpt_state = 0
+	</select>
+	
+	<select id="ptnr27State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 27 
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="ptnr26State0CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 26 
+		   AND suim_rpt_state = 0
+	</select>
+	
+	<select id="ptnr26State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 26 
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="ptnr29State0CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 29 
+		   AND suim_rpt_state = 0
+	</select>
+	
+	<select id="ptnr29State1CntAllTm2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) 
+		  FROM top_rpt_head 
+		 WHERE 1=1
+		   AND ptnr_id = 29 
+		   AND suim_rpt_state = 1
+	</select>
+	
+	<select id="reqHelpDesk2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(board_no) 
+		  FROM brd_help_desk 
+		 WHERE solve_state = 0
+	</select>
+	
+	<select id="reqEmpCert2" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) 
+		  FROM top_emp_cert 
+		 WHERE issue_state = 0
+	</select>
+	
+	<select id="dayoffStateCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(user_no) 
+		  FROM top_dayoff 
+		 WHERE 1=1
+		   AND state = 1
+		   AND team_id in 
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach> 
+	</select>
+	
+	<select id="dayoffFinalCnt2" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT COUNT(user_no) 
+		  FROM top_dayoff 
+		 WHERE state = 5
+		   
+	</select>
+
+	<!-- 위임취소 프로세스 -->
+	<select id="rptCancelCnt" parameterType="java.util.ArrayList" resultType="java.lang.String">
+		SELECT SUM(cnt)
+		  FROM 
+		  		(
+				SELECT COUNT(a.suim_rpt_no) cnt
+				  FROM top_rpt_head a
+				 INNER JOIN (
+				 				SELECT *
+				 				  FROM top_rpt_cancel
+				 				 WHERE del_date = 0
+				 			) b
+				 	ON a.suim_rpt_no = b.suim_rpt_no
+				 WHERE 1=1 
+				   AND suim_rpt_state = 31
+				   AND team_id in 
+				<foreach collection="list" item="item" open="(" close=")" separator=",">
+					#{item}
+				</foreach> 
+				
+				UNION ALL
+				
+				SELECT COUNT(a.suim_rpt_no) cnt
+				  FROM top_prim_biz_rpt_head a 
+				 INNER JOIN (
+				 				SELECT *
+				 				  FROM top_rpt_cancel
+				 				 WHERE del_date = 0
+				 			) b
+				 	ON a.suim_rpt_no = b.suim_rpt_no
+				 WHERE 1=1 
+				   AND suim_rpt_state = 31
+				   AND team_id in 
+				<foreach collection="list" item="item" open="(" close=")" separator=",">
+					#{item}
+				</foreach> 
+				) A
+	</select>
+
+
+	<!-- 담당 관리부서 적용 후, 현재 미사용 170602 by.lds -->
+	<select id="suimTotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id}
+	</select>
+	<select id="suimState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0
+	</select>
+	<select id="siteCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+			WHERE a.suim_rpt_no = b.suim_rpt_no AND b.team_id = #{team_id} AND b.suim_rpt_state = 0
+			AND a.interim_flag = 0 AND a.site_date > 0
+	</select>
+	<select id="interimCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(a.suim_rpt_no)
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT distinct d.suim_rpt_no FROM top_rpt_head c, top_rpt_site_interim d
+							WHERE c.team_id = #{team_id} AND c.suim_rpt_state = 0 AND c.del_date > -1
+							AND c.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+							AND c.suim_rpt_no = d.suim_rpt_no AND d.interim_flag = 1 AND d.site_date > 0) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.team_id = #{team_id}
+		AND a.suim_rpt_state = 0
+		AND a.del_date > -1
+		AND a.reg_date &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+		AND e.suim_rpt_no IS NULL
+	</select>
+	<select id="interimCnt_170210" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(a.suim_rpt_no)
+		FROM top_rpt_head a
+				LEFT JOIN (SELECT distinct d.suim_rpt_no FROM top_rpt_head c, top_rpt_site_interim d
+							WHERE c.team_id = #{team_id} AND c.suim_rpt_state IN (0,1,11) AND c.del_date > -1
+							AND c.suim_rpt_no = d.suim_rpt_no AND d.site_date > 0) e
+				ON a.suim_rpt_no = e.suim_rpt_no
+		WHERE a.team_id = #{team_id}
+		AND a.suim_rpt_state IN (0,1,11)
+		AND a.del_date > -1
+		AND e.suim_rpt_no IS NULL
+	</select>
+	<select id="suimState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 1
+	</select>
+	<select id="suimState11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 11
+	</select>
+	<select id="aIACnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND ptnr_mbr_sanction = 2
+	</select>
+	<select id="aIACntState1AllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE suim_rpt_state = 1 AND ptnr_mbr_sanction = 1
+	</select>
+	<select id="aIACntState11AllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE suim_rpt_state = 11 AND ptnr_mbr_sanction = 1
+	</select>
+	<select id="aIACntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_mbr_sanction = 2
+	</select>
+	<select id="suimState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 2
+	</select>
+	<select id="suimState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 3
+	</select>
+	<select id="suimNoUserCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0 AND IFNULL(user_no,0) = 0 AND IFNULL(del_date,0) = 0
+	</select>
+	<select id="cHelpState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 0
+	</select>
+	<select id="cHelpState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 1
+	</select>
+	<select id="cHelpState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 2
+	</select>
+	<select id="cHelpState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 3
+	</select>
+	<select id="aHelpState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 0
+	</select>
+	<select id="aHelpState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 1
+	</select>
+	<select id="aHelpState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 2
+	</select>
+	<select id="aHelpState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 3
+	</select>
+	<select id="suit10TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id}
+	</select>
+	<select id="suit10State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 0
+	</select>
+	<select id="suit10State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 1
+	</select>
+	<select id="suit10State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 11
+	</select>
+	<select id="suit10State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 2
+	</select>
+	<select id="suit10State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 3
+	</select>
+	<select id="suit12TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id}
+	</select>
+	<select id="suit12State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 0
+	</select>
+	<select id="suit12State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 1
+	</select>
+	<select id="suit12State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 11
+	</select>
+	<select id="suit12State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 2
+	</select>
+	<select id="suit12State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 3
+	</select>
+	<select id="suit17TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id}
+	</select>
+	<select id="suit17State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 0
+	</select>
+	<select id="suit17State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 1
+	</select>
+	<select id="suit17State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 11
+	</select>
+	<select id="suit17State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 2
+	</select>
+	<select id="suit17State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 3
+	</select>
+	<select id="suit18TotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id}
+	</select>
+	<select id="suit18State0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 0
+	</select>
+	<select id="suit18State1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 1
+	</select>
+	<select id="suit18State11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 11
+	</select>
+	<select id="suit18State2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 2
+	</select>
+	<select id="suit18State3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 3
+	</select>
+	<select id="suit10State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE suim_rpt_state = 1
+	</select>
+	<select id="suit12State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE suim_rpt_state = 1
+	</select>
+	<select id="suit17State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE suim_rpt_state = 1
+	</select>
+	<select id="suit18State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_contract WHERE suim_rpt_state = 1
+	</select>
+	<select id="primTotalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id}
+	</select>
+	<select id="primState0Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0
+	</select>
+	<select id="primState1Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 1
+	</select>
+	<select id="primState11Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 11
+	</select>
+	<select id="primState2Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 2
+	</select>
+	<select id="primState3Cnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 3
+	</select>
+	<select id="ptnr19State0CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 19 AND suim_rpt_state = 0
+	</select>
+	<select id="ptnr19State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 19 AND suim_rpt_state = 1
+	</select>
+	<select id="ptnr27State0CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 27 AND suim_rpt_state = 0
+	</select>
+	<select id="ptnr27State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 27 AND suim_rpt_state = 1
+	</select>
+	<select id="ptnr26State0CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 26 AND suim_rpt_state = 0
+	</select>
+	<select id="ptnr26State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 26 AND suim_rpt_state = 1
+	</select>
+	<select id="ptnr29State0CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 29 AND suim_rpt_state = 0
+	</select>
+	<select id="ptnr29State1CntAllTm" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 29 AND suim_rpt_state = 1
+	</select>
+	<select id="reqHelpDesk" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(board_no) FROM brd_help_desk WHERE solve_state = 0
+	</select>
+	<select id="reqEmpCert" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(serial_no) FROM top_emp_cert WHERE issue_state = 0
+	</select>
+	<select id="dayoffStateCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(user_no) FROM top_dayoff WHERE team_id = #{team_id} AND state = 1
+	</select>
+	<select id="dayoffStateMainCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(user_no) FROM top_dayoff WHERE (team_id = 129 OR team_id = 44 OR team_id = 128) AND state = 1
+	</select>
+	<select id="dayoffFinalCnt" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT COUNT(user_no) FROM top_dayoff WHERE state = 5
+	</select>
+
+	<select id="mainLeftTmSuimState_170207" resultType="kr.co.toplac.topmain.MainLeftSuimVO">
+		SELECT
+			(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id}) suimTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0) suimState0Cnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.team_id = #{team_id} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 0 AND a.site_date > 0) siteCnt
+			,(SELECT COUNT(distinct a.suim_rpt_no) FROM top_rpt_site_interim a, top_rpt_head b
+				WHERE a.suim_rpt_no = b.suim_rpt_no AND b.team_id = #{team_id} AND b.suim_rpt_state = 0
+				AND a.interim_flag = 1 AND a.site_date > 0) interimCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 1) suimState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 11) suimState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND ptnr_mbr_sanction = 2) aIACnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE suim_rpt_state = 1 AND ptnr_mbr_sanction = 1) aIACntState1AllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE suim_rpt_state = 11 AND ptnr_mbr_sanction = 1) aIACntState11AllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_mbr_sanction = 2) aIACntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 2) suimState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 3) suimState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0 AND IFNULL(user_no,0) = 0 AND IFNULL(del_date,0) = 0) suimNoUserCnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 0) cHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 1) cHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 2) cHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE client_team = #{team_id} AND help_state = 3) cHelpState3Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 0) aHelpState0Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 1) aHelpState1Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 2) aHelpState2Cnt
+			,(SELECT COUNT(serial_no) FROM top_rpt_help WHERE accept_team = #{team_id} AND help_state = 3) aHelpState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id}) suit10TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit10State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit10State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit10State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit10State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit10State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id}) suit12TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit12State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit12State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit12State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit12State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit12State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id}) suit17TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit17State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit17State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit17State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit17State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit17State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id}) suit18TotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 0) suit18State0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 1) suit18State1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 11) suit18State11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 2) suit18State2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE team_id = #{team_id} AND suim_rpt_state = 3) suit18State3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_10 WHERE suim_rpt_state = 1) suit10State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_12 WHERE suim_rpt_state = 1) suit12State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_suitability_17 WHERE suim_rpt_state = 1) suit17State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_contract WHERE suim_rpt_state = 1) suit18State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id}) primTotalCnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 0) primState0Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 1) primState1Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 11) primState11Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 2) primState2Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_prim_biz_rpt_head WHERE team_id = #{team_id} AND suim_rpt_state = 3) primState3Cnt
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 19 AND suim_rpt_state = 0) ptnr19State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 19 AND suim_rpt_state = 1) ptnr19State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 27 AND suim_rpt_state = 0) ptnr27State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 27 AND suim_rpt_state = 1) ptnr27State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 26 AND suim_rpt_state = 0) ptnr26State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 26 AND suim_rpt_state = 1) ptnr26State1CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 29 AND suim_rpt_state = 0) ptnr29State0CntAllTm
+			,(SELECT COUNT(suim_rpt_no) FROM top_rpt_head WHERE ptnr_id = 29 AND suim_rpt_state = 1) ptnr29State1CntAllTm
+			,(SELECT COUNT(board_no) FROM brd_help_desk WHERE solve_state = 0) reqHelpDesk
+			,(SELECT COUNT(serial_no) FROM top_emp_cert WHERE issue_state = 0) reqEmpCert
+			,(SELECT COUNT(user_no) FROM top_dayoff WHERE team_id = #{team_id} AND state = 1) dayoffStateCnt
+			,(SELECT COUNT(user_no) FROM top_dayoff WHERE (team_id = 129 OR team_id = 44 OR team_id = 128) AND state = 1) dayoffStateMainCnt
+			,(SELECT COUNT(user_no) FROM top_dayoff WHERE team_id = #{team_id} AND (state = 1 or state = 5)) dayoffFinalCnt
+	</select>
+
+	<select id="selectSubTeamApprovalCnt" parameterType="String" resultType="integer">
+		SELECT
+			SUM(GA.approvalCnt) AS totalCnt
+		FROM
+		(
+			SELECT 
+				COUNT(*) AS approvalCnt 
+			FROM top_rpt_head 
+			WHERE team_id = #{sub_team_id}
+			AND suim_rpt_state = 1
+			
+			UNION ALL
+			
+			SELECT 
+				COUNT(*) AS approvalCnt 
+			FROM top_prim_biz_rpt_head 
+			WHERE team_id = #{sub_team_id}
+			AND suim_rpt_state = 1
+		)GA
+	</select>
+	
+	<select id="selectApprovalSiteList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			suim_rpt_no
+			,suim_accept_no
+			,user_no
+			,getTopMbrBscUserName(user_no) user_name
+			,team_id
+			,getTopTmBscTeamName(team_id) team_name			
+			,suim_rpt_type1
+			,getCodeValue('top_rpt_head','suim_rpt_type1',suim_rpt_type1) suim_rpt_type1_nm
+			,suim_rpt_state
+			,getCodeValue('top_rpt_head', 'suim_rpt_state',suim_rpt_state) suim_rpt_state_nm
+			,ptnr_id
+			,getTopPtnrBscPtnrName(ptnr_id) ptnr_name
+			,beneficiary_nm
+			,reg_date
+			,DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d') reg_date_fmt
+		FROM top_rpt_head
+		where site_rpt_state = 1
+		AND (pendncy_trget_at = 1 OR pendncy_trget_at = 4)
+		AND team_id in ( ${approval_team} )
+		ORDER BY suim_rpt_no
+	</select>
+	
+	<select id="selectApprovalSiteCnt" parameterType="hashmap" resultType="Integer">
+		SELECT 
+			COUNT(*) as nCnt 
+		FROM top_rpt_head
+		where site_rpt_state = 1
+		AND (pendncy_trget_at = 1 OR pendncy_trget_at = 4)
+		AND team_id in ( ${approval_team} )
+	</select>	
+
+	<select id="selectLeftTeamStatistic" parameterType="hashmap" resultType="AsraMap">
+		SELECT  GA.TEAM_ID
+		       , SUM(CNT01) AS CNT01, SUM(CNT02) AS CNT02, SUM(CNT03) AS CNT03, SUM(CNT04) AS CNT04, SUM(CNT05) AS CNT05
+		       , SUM(CNT06) AS CNT06, SUM(CNT07) AS CNT07, SUM(CNT08) AS CNT08, SUM(CNT09) AS CNT09, SUM(CNT10) AS CNT10
+		       , SUM(CNT11) AS CNT11, SUM(CNT12) AS CNT12, SUM(CNT13) AS CNT13, SUM(CNT14) AS CNT14, SUM(CNT15) AS CNT15
+		       , SUM(CNT16) AS CNT16, SUM(CNT17) AS CNT17, SUM(CNT18) AS CNT18, SUM(CNT19) AS CNT19, SUM(CNT20) AS CNT20
+		       , SUM(CNT21) AS CNT21, SUM(CNT22) AS CNT22, SUM(CNT23) AS CNT23, SUM(CNT24) AS CNT24, SUM(CNT25) AS CNT25
+		       , SUM(CNT26) AS CNT26, SUM(CNT27) AS CNT27, SUM(CNT28) AS CNT28, SUM(CNT29) AS CNT29, SUM(CNT30) AS CNT30
+		       , SUM(CNT31) AS CNT31, SUM(CNT32) AS CNT32, SUM(CNT33) AS CNT33, SUM(CNT34) AS CNT34, SUM(CNT35) AS CNT35
+		       , SUM(CNT36) AS CNT36, SUM(CNT37) AS CNT37, SUM(CNT38) AS CNT38, SUM(CNT39) AS CNT39, SUM(CNT40) AS CNT40
+		       , SUM(CNT41) AS CNT41, SUM(CNT42) AS CNT42, SUM(CNT43) AS CNT43, SUM(CNT44) AS CNT44, SUM(CNT45) AS CNT45
+		       , SUM(CNT46) AS CNT46, SUM(CNT47) AS CNT47, SUM(CNT48) AS CNT48, SUM(CNT49) AS CNT49, SUM(CNT50) AS CNT50
+		       , SUM(CNT51) AS CNT51, SUM(CNT52) AS CNT52, SUM(CNT53) AS CNT53, SUM(CNT54) AS CNT54, SUM(CNT55) AS CNT55
+		       , SUM(CNT56) AS CNT56, SUM(CNT57) AS CNT57, SUM(CNT58) AS CNT58, SUM(CNT59) AS CNT59, SUM(CNT60) AS CNT60
+		       , SUM(CNT61) AS CNT61, SUM(CNT62) AS CNT62, SUM(CNT63) AS CNT63, SUM(CNT64) AS CNT64, SUM(CNT65) AS CNT65
+		       , SUM(CNT66) AS CNT66, SUM(CNT67) AS CNT67, SUM(CNT68) AS CNT68, SUM(CNT69) AS CNT69, SUM(CNT70) AS CNT70
+		       , SUM(CNT71) AS CNT71, SUM(CNT72) AS CNT72, SUM(CNT73) AS CNT73, SUM(CNT74) AS CNT74, SUM(CNT75) AS CNT75
+		       , SUM(CNT76) AS CNT76, SUM(CNT77) AS CNT77
+		  FROM  (
+		          SELECT  A.TEAM_ID 
+		                 ,1 AS CNT01
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT02
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT03
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT04
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT05
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT06
+		                 ,CASE WHEN A.PTNR_MBR_SANCTION = 2 THEN 1 ELSE 0 END AS CNT07
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 AND IFNULL(A.USER_NO, 0) = 0 AND IFNULL(A.DEL_DATE, 0) = 0 THEN 1 ELSE 0 END AS CNT08
+		                 , 0 AS CNT09, 0 AS CNT10, 0 AS CNT11, 0 AS CNT12, 0 AS CNT13, 0 AS CNT14
+		                 , 0 AS CNT15, 0 AS CNT16, 0 AS CNT17, 0 AS CNT18, 0 AS CNT19, 0 AS CNT20
+		                 , 0 AS CNT21, 0 AS CNT22, 0 AS CNT23, 0 AS CNT24, 0 AS CNT25, 0 AS CNT26
+		                 , 0 AS CNT27, 0 AS CNT28, 0 AS CNT29, 0 AS CNT30, 0 AS CNT31, 0 AS CNT32
+		                 , 0 AS CNT33, 0 AS CNT34, 0 AS CNT35, 0 AS CNT36, 0 AS CNT37, 0 AS CNT38
+		                 , 0 AS CNT39, 0 AS CNT40, 0 AS CNT41, 0 AS CNT42, 0 AS CNT43, 0 AS CNT44
+		                 , 0 AS CNT45, 0 AS CNT46, 0 AS CNT47, 0 AS CNT48, 0 AS CNT49, 0 AS CNT50
+		                 , 0 AS CNT51, 0 AS CNT52, 0 AS CNT53, 0 AS CNT54, 0 AS CNT55, 0 AS CNT56
+		                 , 0 AS CNT57, 0 AS CNT58, 0 AS CNT59, 0 AS CNT60, 0 AS CNT61, 0 AS CNT62
+		                 , 0 AS CNT63, 0 AS CNT64, 0 AS CNT65, 0 AS CNT66, 0 AS CNT67, 0 AS CNT68
+		                 , 0 AS CNT69, 0 AS CNT70, 0 AS CNT71, 0 AS CNT72, 0 AS CNT73, 0 AS CNT74
+		                 , 0 AS CNT75
+		                 ,CASE WHEN A.site_rpt_state = 1 AND (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4) THEN 1 ELSE 0 END AS CNT76
+		                 , 0 AS CNT77
+		            FROM  top_rpt_head A
+		            		 ,top_rpt_body B 
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO
+		             AND  A.TEAM_ID = #{team_id}
+		          UNION ALL
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT09
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT10
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.PTNR_MBR_SANCTION = 1  
+		          UNION ALL    
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT11
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.PTNR_MBR_SANCTION = 2   
+		          UNION ALL
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0
+		                 ,COUNT(DISTINCT A.SUIM_RPT_NO) AS CNT12
+		                 , 0, 0, 0, 0, 0 
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_head A
+		                 ,top_rpt_site_interim B
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		             AND  A.TEAM_ID = #{team_id}
+		             AND  A.SUIM_RPT_STATE = 0
+		             AND  B.INTERIM_FLAG = 0
+		             AND  B.SITE_DATE > 0
+		          GROUP BY A.TEAM_ID 
+		          UNION ALL
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0 
+		                 ,COUNT(C.SUIM_RPT_NO) AS CNT13
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_head C
+		            LEFT  JOIN (
+		                        SELECT  DISTINCT A.SUIM_RPT_NO 
+		                          FROM  top_rpt_head A
+		                               ,top_rpt_site_interim B
+		                         WHERE  1=1
+		                           AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                           AND  A.TEAM_ID = #{team_id}
+		                           AND  A.SUIM_RPT_STATE = 0
+		                           AND  A.DEL_DATE > -1
+		                           AND  A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+		                           AND  B.INTERIM_FLAG = 1
+		                           AND  B.SITE_DATE > 0    
+		                       ) D
+		              ON  C.SUIM_RPT_NO = D.SUIM_RPT_NO            
+		           WHERE  1=1 
+		             AND  C.TEAM_ID = #{team_id}
+		             AND  C.SUIM_RPT_STATE = 0
+		             AND  C.DEL_DATE > -1
+		             AND  C.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 1 MONTH))
+		             AND  D.SUIM_RPT_NO IS NULL 
+		          GROUP BY C.TEAM_ID    
+		          UNION ALL
+		          SELECT  A.CLIENT_TEAM
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0  
+		                 ,CASE WHEN A.HELP_STATE = 0 THEN 1 ELSE 0 END AS CNT14
+		                 ,CASE WHEN A.HELP_STATE = 1 THEN 1 ELSE 0 END AS CNT15
+		                 ,CASE WHEN A.HELP_STATE = 2 THEN 1 ELSE 0 END AS CNT16
+		                 ,CASE WHEN A.HELP_STATE = 3 THEN 1 ELSE 0 END AS CNT17
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_help A
+		           WHERE  1=1
+		             AND  A.CLIENT_TEAM = #{team_id}
+		          UNION ALL
+		          SELECT  A.ACCEPT_TEAM
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0  
+		                 ,CASE WHEN A.HELP_STATE = 0 THEN 1 ELSE 0 END AS CNT18
+		                 ,CASE WHEN A.HELP_STATE = 1 THEN 1 ELSE 0 END AS CNT19
+		                 ,CASE WHEN A.HELP_STATE = 2 THEN 1 ELSE 0 END AS CNT20
+		                 ,CASE WHEN A.HELP_STATE = 3 THEN 1 ELSE 0 END AS CNT21
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_help A
+		           WHERE  1=1
+		             AND  A.ACCEPT_TEAM = #{team_id}
+		          UNION ALL
+		          SELECT  A.TEAM_ID
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0 
+		                 ,1 AS CNT22
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT23
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT24
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT25
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT26
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT27
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_10 A
+		           WHERE  1=1
+		             AND  A.TEAM_ID = #{team_id}
+		          UNION ALL    
+		          SELECT  A.TEAM_ID
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0  
+		                 ,1 AS CNT28
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT29
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT30
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT31
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT32
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT33
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_12 A
+		           WHERE  1=1
+		             AND  A.TEAM_ID = #{team_id}
+		          UNION ALL
+		          SELECT  A.TEAM_ID 
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0  
+		                 ,1 AS CNT34
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT35
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT36
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT37
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT38
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT39
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_17 A
+		           WHERE  1=1
+		             AND  A.TEAM_ID = #{team_id}    
+		          UNION ALL
+		          SELECT  A.TEAM_ID
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0  
+		                 ,1 AS CNT40
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT41
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT42
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT43
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT44
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT45
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_contract A
+		           WHERE  1=1
+		             AND  A.TEAM_ID = #{team_id}
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT46
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_10 A
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_STATE = '1'  
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT47
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_12 A
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_STATE = '1'  
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT48
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_suitability_17 A
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_STATE = '1'  
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT49
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_contract A
+		           WHERE  1=1
+		             AND  A.SUIM_RPT_STATE = '1'
+		          UNION ALL
+		          SELECT  A.TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,1 AS CNT50
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT51
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT52
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 2 THEN 1 ELSE 0 END AS CNT53
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 3 THEN 1 ELSE 0 END AS CNT54
+		                 ,CASE WHEN A.SUIM_RPT_STATE = 11 THEN 1 ELSE 0 END AS CNT55
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_prim_biz_rpt_head A
+		           WHERE  1=1
+		             AND  A.TEAM_ID = #{team_id}      
+		          UNION ALL
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,CASE WHEN A.PTNR_ID = 19 AND A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT56
+		                 ,CASE WHEN A.PTNR_ID = 19 AND A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT57
+		                 ,CASE WHEN A.PTNR_ID = 26 AND A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT58
+		                 ,CASE WHEN A.PTNR_ID = 26 AND A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT59
+		                 ,CASE WHEN A.PTNR_ID = 27 AND A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT60
+		                 ,CASE WHEN A.PTNR_ID = 27 AND A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT61
+		                 ,CASE WHEN A.PTNR_ID = 29 AND A.SUIM_RPT_STATE = 0 THEN 1 ELSE 0 END AS CNT62
+		                 ,CASE WHEN A.PTNR_ID = 29 AND A.SUIM_RPT_STATE = 1 THEN 1 ELSE 0 END AS CNT63
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0       
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_rpt_head A
+		           WHERE  1=1
+		             AND  A.PTNR_ID IN(19, 26, 27, 29)
+		             AND  A.SUIM_RPT_STATE IN(0, 1)
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0
+		                 ,COUNT(*) AS CNT64
+		                 , 0, 0, 0, 0, 0, 0  
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0   
+		            FROM  brd_help_desk A
+		           WHERE  1=1
+		             AND  A.SOLVE_STATE = 0   
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT65
+		                 , 0, 0, 0, 0, 0     
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_emp_cert A
+		           WHERE  1=1
+		             AND  A.ISSUE_STATE = 0   
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT66
+		                 , 0, 0, 0, 0    
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_dayoff A
+		           WHERE  1=1
+		             AND  A.SUB_USER = #{user_no}
+		             AND  A.STATE = 1   
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT67
+		                 , 0, 0, 0    
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_dayoff A
+		           WHERE  1=1
+		             AND  A.TEAM_ID IN(129, 44, 128)
+		             AND  A.STATE = 1            
+		          UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT68
+		                 , 0, 0    
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  top_dayoff A
+		           WHERE  1=1
+		             AND  A.STATE = 5 
+				   UNION ALL
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,SUM(CNT) AS CNT69
+		                 , 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0, 0
+		            FROM  (
+		                    SELECT  COUNT(*) AS CNT
+		                      FROM  top_rpt_head A
+		                           ,top_rpt_cancel B
+		                     WHERE  1=1
+		                       AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                       AND  A.SUIM_RPT_STATE = 31
+		                       AND  A.TEAM_ID IN(
+		                                          SELECT  A.TEAM_ID
+		                                            FROM  top_tm_bsc A
+		                                           WHERE  1=1
+		                                             AND  FIND_IN_SET(A.TEAM_ID, (SELECT REPLACE(LS_ADMIN7,'|',',') FROM ls_admin WHERE USER_ID = #{user_no}))    
+		                                        )
+		                    UNION ALL                    
+		                    SELECT  COUNT(*) AS CNT
+		                      FROM  top_prim_biz_rpt_head A
+		                           ,top_rpt_cancel B
+		                     WHERE  1=1
+		                       AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                       AND  A.SUIM_RPT_STATE = 31
+		                       AND  A.TEAM_ID IN(
+		                                          SELECT  A.TEAM_ID
+		                                            FROM  top_tm_bsc A
+		                                           WHERE  1=1
+		                                             AND  FIND_IN_SET(A.TEAM_ID, (SELECT REPLACE(LS_ADMIN7,'|',',') FROM ls_admin WHERE USER_ID = #{user_no}))    
+		                                        )      
+		                   ) A   
+				   UNION ALL   
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT70
+		                 , 0, 0, 0, 0, 0, 0, 0
+		            FROM  top_rpt_head C
+		            LEFT  JOIN (
+										 SELECT DISTINCT(SUIM_RPT_NO)
+										   FROM top_rpt_alarm
+									     WHERE 1=1
+										    AND ALARM_DATE &lt;= unix_timestamp(now())
+										    AND END_DATE is null         
+		                       ) D
+		              ON  C.SUIM_RPT_NO = D.SUIM_RPT_NO
+		           WHERE  1=1
+		           	 AND  C.TEAM_ID = #{team_id}   
+					 AND  ( C.SUIM_RPT_TYPE1 = 14 OR C.SUIM_RPT_TYPE1 = 18 )  
+		             AND  C.DEL_DATE = 0
+		             AND  D.SUIM_RPT_NO IS NOT NULL
+
+		          UNION ALL
+		          -- 현장 3일 이내
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT71
+		                 , 0, 0, 0, 0, 0, 0
+				    FROM  top_rpt_head A
+				   WHERE  1=1
+				     AND  A.TEAM_ID = #{team_id}      
+				     AND  A.DEL_DATE > -1
+				     AND  A.SUIM_RPT_STATE IN (0,1,11)
+				     AND  A.SUIM_RPT_TYPE1 != 14
+		 		     AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+		 		     AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+		 	   	     AND  
+		 	   	     (
+		 	   	     	CASE
+		 	   	     		WHEN ( A.trans_date IS NULL )
+		 	   	     		THEN (
+		 	   	     			A.reg_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							    		    FROM ( SELECT holiday_date
+									  			     FROM sysadm_holiday
+												    WHERE holiday_code IN (2,3,4,5,6)
+								 		  			  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+												    ORDER BY holiday_date DESC
+											        LIMIT 0,3) tmp ) 
+		 	   	     		)
+		 	   	     		ELSE (
+		 	   	     			A.trans_date >= ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+							    		    FROM ( SELECT holiday_date
+									  			     FROM sysadm_holiday
+												    WHERE holiday_code IN (2,3,4,5,6)
+								 		  			  AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+												    ORDER BY holiday_date DESC
+											        LIMIT 0,3) tmp )
+		 	   	     		)		 	   	     	
+		 	   	     	END
+		 	   	     )
+		          GROUP BY A.TEAM_ID											        
+		          UNION ALL
+		          -- 현장 3일 초과
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT72
+		                 , 0, 0, 0, 0, 0
+					FROM  top_rpt_head A
+				   WHERE  1=1
+				     AND  A.TEAM_ID = #{team_id}   				   
+					 AND  A.DEL_DATE > -1
+					 AND  A.SUIM_RPT_STATE IN (0,1,11)
+					 AND  A.SUIM_RPT_TYPE1 != 14
+					 AND  (A.pendncy_trget_at = 1 OR A.pendncy_trget_at = 4)
+			 		 AND  A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE SITE_DATE > -1)
+			 	   	 AND  
+			 	   	 (
+			 	   	 	CASE
+			 	   	 		WHEN ( A.trans_date IS NULL )
+			 	   	 		THEN (
+			 	   	 			A.reg_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp ) 
+			 	   	 		)
+			 	   	 		ELSE (
+			 	   	 			A.trans_date &lt; ( SELECT UNIX_TIMESTAMP(MIN(tmp.holiday_date))
+								    		  FROM ( SELECT holiday_date
+										  			   FROM sysadm_holiday
+													  WHERE holiday_code IN (2,3,4,5,6)
+									 		  			AND holiday_date &lt;= DATE_FORMAT(NOW(), '%Y-%m-%d')
+													  ORDER BY holiday_date DESC
+												      LIMIT 0,3) tmp )
+			 	   	 		)			 	   	 		
+			 	   	 	END
+			 	   	 )
+		           GROUP BY A.TEAM_ID												      
+				   UNION ALL
+		          -- 중간 5일전
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT73
+		                 , 0, 0, 0, 0
+				    FROM top_rpt_head A
+				   WHERE  1=1
+				     AND  A.TEAM_ID = #{team_id}   				   
+				     AND A.DEL_DATE > -1
+				     AND A.SUIM_RPT_STATE IN(0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND A.pendncy_trget_at = 1
+				     AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 25 DAY))
+				     AND A.REG_DATE > UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+				     AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		           GROUP BY A.TEAM_ID				     
+				   UNION ALL
+		          -- 중간 5일 초과
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 ,COUNT(*) AS CNT74, 0, 0, 0
+				    FROM top_rpt_head A
+				   WHERE  1=1
+				     AND A.TEAM_ID = #{team_id}   				   
+				     AND A.DEL_DATE > -1
+				     AND A.pendncy_trget_at = 1
+				     AND A.SUIM_RPT_STATE IN(0,1,11)
+				     AND A.SUIM_RPT_TYPE1 != 14
+				     AND A.REG_DATE &lt;= UNIX_TIMESTAMP(DATE_SUB(NOW(),INTERVAL 30 DAY))
+				     AND A.SUIM_RPT_NO NOT IN(SELECT SUIM_RPT_NO FROM top_rpt_site_interim WHERE INTERIM_FLAG = 1 AND SITE_DATE > -1)
+		           GROUP BY A.TEAM_ID
+		           
+		          -- 빠른 결재요청건수 추가 by top3009 
+		           UNION ALL
+				  SELECT  #{team_id} AS TEAM_ID
+					 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+					 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+					 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+					 , 0, 0, 0, 0, 0, 0, 0, 0
+					 , 0, 0, 0, 0, 0, 0
+					 , SUM(CNT) AS CNT75, 0, 0
+				    FROM  (
+					    SELECT  COUNT(*) AS CNT
+					      FROM  top_rpt_head A						   
+					     WHERE  1=1					        
+					       AND  A.SUIM_RPT_STATE = 1					       
+					       AND  A.TEAM_ID IN(
+								  SELECT  A.TEAM_ID
+								    FROM  top_tm_bsc A
+								   WHERE  1=1
+								     AND  FIND_IN_SET(A.TEAM_ID, (SELECT REPLACE(LS_ADMIN_QUICK,'|',',') FROM ls_admin WHERE USER_ID = #{user_no}))    
+								)
+					    UNION ALL                    
+					    SELECT  COUNT(*) AS CNT
+					      FROM  top_prim_biz_rpt_head A						   
+					     WHERE  1=1					       
+					       AND  A.SUIM_RPT_STATE = 1					       					       					      
+					       AND  A.TEAM_ID IN(
+								  SELECT  A.TEAM_ID
+								    FROM  top_tm_bsc A
+								   WHERE  1=1
+								     AND  FIND_IN_SET(A.TEAM_ID, (SELECT REPLACE(LS_ADMIN_QUICK,'|',',') FROM ls_admin WHERE USER_ID = #{user_no}))    
+								)      
+					   ) A
+					   
+		           -- 위임취소 결재권한 추가 by top3009 (20240725)
+		           UNION ALL
+		          SELECT  #{team_id} AS TEAM_ID
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0, 0, 0, 0, 0, 0, 0, 0
+		                 , 0
+		                 , 0
+		                 , 0, 0, 0, 0, 0
+		                 , 0
+		                 , SUM(CNT) AS CNT77
+		            FROM  (
+		                    SELECT  COUNT(*) AS CNT
+		                      FROM  top_rpt_head A
+		                           ,top_rpt_cancel B
+		                     WHERE  1=1
+		                       AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                       AND  A.SUIM_RPT_STATE = 31
+		                       AND  A.TEAM_ID IN(
+		                                          SELECT  A.TEAM_ID
+		                                            FROM  top_tm_bsc A
+		                                           WHERE  1=1
+		                                             AND  FIND_IN_SET(A.TEAM_ID, (SELECT REPLACE(RPT_CANCEL_APPROVAL,'|',',') FROM ls_admin WHERE USER_ID = #{user_no}))    
+		                                        )
+		                    UNION ALL                    
+		                    SELECT  COUNT(*) AS CNT
+		                      FROM  top_prim_biz_rpt_head A
+		                           ,top_rpt_cancel B
+		                     WHERE  1=1
+		                       AND  A.SUIM_RPT_NO = B.SUIM_RPT_NO 
+		                       AND  A.SUIM_RPT_STATE = 31
+		                       AND  A.TEAM_ID IN(
+		                                          SELECT  A.TEAM_ID
+		                                            FROM  top_tm_bsc A
+		                                           WHERE  1=1
+		                                             AND  FIND_IN_SET(A.TEAM_ID, (SELECT REPLACE(RPT_CANCEL_APPROVAL,'|',',') FROM ls_admin WHERE USER_ID = #{user_no}))    
+		                                        )      
+		                   ) A
+		        ) GA
+		GROUP BY GA.TEAM_ID  
+	</select>
+	
+	
+	<select id="selectLeftVacationCnt" parameterType="HashMap" resultType="HashMap">
+		SELECT MAX(GA.vacationTeamCnt) AS vacationTeamCnt
+			  ,MAX(GA.vacation1Cnt) AS vacation1Cnt
+			  ,MAX(GA.vacation4Cnt) AS vacation4Cnt
+		  FROM (
+					SELECT count(*) AS vacationTeamCnt
+						  ,0 vacation1Cnt
+						  ,0 vacation4Cnt
+					  FROM top_mbr_vacation a
+					 INNER JOIN top_tm_bsc b
+					    ON a.team_id = b.team_id
+					 WHERE 1=1
+					   AND a.vacation_state = 0
+					   AND a.sub_aprv_user_no = #{user_no}
+					 UNION ALL
+					 
+					SELECT 0 
+						  ,count(*) vacation1Cnt
+						  ,0
+					  FROM top_mbr_vacation a
+					 INNER JOIN top_tm_bsc b
+					    ON a.team_id = b.team_id
+					 WHERE 1=1
+					   AND a.vacation_state = 1
+					   AND a.team_type = 1
+					 UNION ALL
+					 
+					SELECT 0 
+						  ,0
+						  ,count(*) vacation4Cnt
+					  FROM top_mbr_vacation a
+					 INNER JOIN top_tm_bsc b
+					    ON a.team_id = b.team_id
+					 WHERE 1=1
+					   AND a.vacation_state = 1
+					   AND a.team_type = 4   
+		   		) GA	
+	</select>
+
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisSuitability12TmMbrMapper">
+
+	<select id="getMisSuitability12TmMbr" parameterType="kr.co.toplac.topstatistics.MisTmBscViewVO" resultType="kr.co.toplac.topstatistics.MisSuitability12VO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, tmMbr.team_name
+			, ifnull(reg_m,0) reg_m, ifnull(reg_y,0) reg_y, ifnull(end_m,0) end_m, ifnull(end_y,0) end_y
+			, ifnull(end_m_fail,0) end_m_fail, ifnull(end_y_fail,0) end_y_fail
+			, ifnull(end_m,0) + ifnull(end_m_fail,0) end_sum_m, ifnull(end_y,0) + ifnull(end_y_fail,0) end_sum_y
+			, ifnull(end_mi,0) end_mi
+			, ifnull(price_a,0) price_a, ifnull(price_b,0) price_b
+			, ifnull(price_a,0) + ifnull(price_b,0) price_sum
+		FROM
+			(SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name, tmBsc.team_name
+				FROM top_mbr_bsc mbrBsc, top_tm_bsc tmBsc
+				WHERE mbrBsc.user_no = #{user_no}
+				AND mbrBsc.team_id_main = tmBsc.team_id) tmMbr
+			, (SELECT COUNT(suim_rpt_no) reg_m FROM top_suitability_12
+						WHERE user_no=#{user_no} AND suim_rpt_state!='3'
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromDate})
+						and reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+				) a
+			, (SELECT COUNT(suim_rpt_no) reg_y FROM top_suitability_12
+						WHERE user_no=#{user_no} AND suim_rpt_state!='3'
+						and reg_date>=UNIX_TIMESTAMP(#{viewFromYear})
+						and reg_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+				) b
+			, (SELECT COUNT(suim_rpt_no) end_m FROM top_suitability_12
+						WHERE user_no=#{user_no} and rstPptyNvCpltYn='1'
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+						and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+				) c
+			, (SELECT COUNT(suim_rpt_no) end_y FROM top_suitability_12
+						WHERE user_no=#{user_no} and rstPptyNvCpltYn='1'
+						and close_date>=UNIX_TIMESTAMP(#{viewFromYear})
+						and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+				) d
+			, (SELECT COUNT(suim_rpt_no) end_m_fail FROM top_suitability_12
+						WHERE user_no=#{user_no} and rstPptyNvCpltYn!='1'
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+						and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+				) e
+			, (SELECT COUNT(suim_rpt_no) end_y_fail FROM top_suitability_12
+						WHERE user_no=#{user_no} and rstPptyNvCpltYn!='1'
+						and close_date>=UNIX_TIMESTAMP(#{viewFromYear})
+						and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToYear},INTERVAL 1 day))
+				) f
+			, (SELECT COUNT(suim_rpt_no) end_mi FROM top_suitability_12
+						WHERE user_no=#{user_no} AND suim_rpt_state &lt; 2
+				) g
+			, (SELECT COUNT(suim_rpt_no) * 30000 price_a FROM top_suitability_12
+						WHERE user_no=#{user_no} and rstPptyNvCpltYn='1' and bd_type='1'
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+						and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+				) h
+			, (SELECT COUNT(suim_rpt_no) * 40000 price_b FROM top_suitability_12
+						WHERE user_no=#{user_no} and rstPptyNvCpltYn='1' and bd_type!='1'
+						and close_date>=UNIX_TIMESTAMP(#{viewFromDate})
+						and close_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))
+				) i
+	</select>
+
+</mapper>

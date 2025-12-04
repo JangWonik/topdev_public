@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CodeDic2Mapper"> 
+
+	<select id="allTableList" resultType="java.lang.String">
+		SHOW TABLES
+	</select>
+
+	<select id="allColumnList" parameterType="kr.co.toplac.sysadm.CodeDic2InsViewVO" resultType="java.lang.String">
+		SELECT column_name FROM Information_schema.columns
+		WHERE table_schema = 'toplac'
+		AND table_name = #{selectUserTable}
+	</select>
+
+	<select id="codeDicList1" parameterType="kr.co.toplac.sysadm.CodeDic2InsViewVO" resultType="kr.co.toplac.sysadm.SysAdmCodeDic2VO">
+		SELECT tbl_nm, col_nm, col_cd col_cd1, col_val
+		FROM sysadm_codedic
+		WHERE tbl_nm = #{selectUserTable}
+		<if test="selectColumn != null and selectColumn != ''">
+			AND col_nm = #{selectColumn}
+		</if>
+		ORDER BY tbl_nm, col_nm, col_cd
+	</select>
+
+	<select id="codeDicList2" parameterType="kr.co.toplac.sysadm.CodeDic2InsViewVO" resultType="kr.co.toplac.sysadm.SysAdmCodeDic2VO">
+		SELECT tbl_nm, col_nm, col_cd1, col_cd2, col_val
+		FROM sysadm_codedic2
+		WHERE tbl_nm = #{selectUserTable}
+		<if test="selectColumn != null and selectColumn != ''">
+			AND col_nm = #{selectColumn}
+		</if>
+		ORDER BY tbl_nm, col_nm, col_cd1, col_cd2
+	</select>
+
+	<insert id="codeWrite1" parameterType="kr.co.toplac.sysadm.CodeDic2InsViewVO" >
+		INSERT INTO sysadm_codedic(tbl_nm, col_nm, col_cd, col_val)
+		VALUES(#{selectUserTable}, #{selectColumn}, #{insertCode1}, #{insertCodeValue})
+	</insert>
+
+	<insert id="codeWrite2" parameterType="kr.co.toplac.sysadm.CodeDic2InsViewVO" >
+		INSERT INTO sysadm_codedic2(tbl_nm, col_nm, col_cd1, col_cd2, col_val)
+		VALUES(#{selectUserTable}, #{selectColumn}, #{insertCode1}, #{insertCode2}, #{insertCodeValue})
+	</insert>
+
+	<delete id = "codeDelete1" parameterType="kr.co.toplac.sysadm.CodeDic2InsViewVO">
+		DELETE FROM sysadm_codedic
+		WHERE tbl_nm = #{selectUserTable} AND col_nm = #{selectColumn} AND col_cd = #{insertCode1}
+	</delete>
+
+	<delete id = "codeDelete2" parameterType="kr.co.toplac.sysadm.CodeDic2InsViewVO">
+		DELETE FROM sysadm_codedic2
+		WHERE tbl_nm = #{selectUserTable} AND col_nm = #{selectColumn} AND col_cd1 = #{insertCode1} AND col_cd2 = #{insertCode2}
+	</delete>
+
+</mapper>

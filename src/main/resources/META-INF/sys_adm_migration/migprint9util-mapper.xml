@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MigPrint9UtilMapper">
+
+	<delete id="print951DeleteAll">
+		DELETE FROM top_rpt_print_9_5_1
+	</delete>
+
+	<select id="report9Forprint951List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		SELECT a.no, replace(replace(e_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_9 a
+		WHERE a.e_1cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print951Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		INSERT INTO top_rpt_print_9_5_1 (rpt_print_no, process_date_s, process_date_e, process_dtl, process_hospital)
+		VALUES(#{rpt_print_no}, #{process_date_s}, #{process_date_e}, #{process_dtl}, #{process_hospital})
+	</insert>
+
+	<update id="print951UpdateSpaceData1">
+		UPDATE top_rpt_print_9_5_1 SET process_date_s = ''
+		WHERE process_date_s = '-'
+		OR process_date_s = '--'
+	</update>
+
+	<update id="print951UpdateSpaceData2">
+		UPDATE top_rpt_print_9_5_1 SET process_date_e = ''
+		WHERE process_date_e = '-'
+		OR process_date_e = '--'
+	</update>
+
+	<update id="print951UpdateSpaceData3">
+		UPDATE top_rpt_print_9_5_1 SET process_dtl = ''
+		WHERE process_dtl = '-'
+		OR process_dtl = '--'
+	</update>
+
+	<update id="print951UpdateSpaceData4">
+		UPDATE top_rpt_print_9_5_1 SET process_hospital = ''
+		WHERE process_hospital = '-'
+		OR process_hospital = '--'
+	</update>
+
+	<delete id="print951DeleteSpaceData">
+		DELETE FROM top_rpt_print_9_5_1
+		WHERE process_date_s = ''
+		AND process_date_e = ''
+		AND process_dtl = ''
+		AND process_hospital = ''
+	</delete>
+
+	<update id="print951UpdateSpaceData11">
+		UPDATE top_rpt_print_9_5_1 SET process_date_s = LEFT(process_date_s,CHAR_LENGTH(process_date_s)-1)
+		WHERE RIGHT(process_date_s,1) = '-'
+	</update>
+
+	<update id="print951UpdateSpaceData12">
+		UPDATE top_rpt_print_9_5_1 SET process_date_s = trim(process_date_s)
+		WHERE CHAR_LENGTH(process_date_s) > 11
+	</update>
+
+	<update id="print951UpdateSpaceData13">
+		UPDATE top_rpt_print_9_5_1 SET process_date_e = RIGHT(process_date_e,CHAR_LENGTH(process_date_e)-1)
+		WHERE LEFT(process_date_e,1) = '-'
+	</update>
+
+	<update id="print951UpdateSpaceData14">
+		UPDATE top_rpt_print_9_5_1 SET process_date_e = trim(process_date_e)
+		WHERE CHAR_LENGTH(process_date_e) > 11
+	</update>
+
+	<update id="print951UpdateSpaceData15">
+		UPDATE top_rpt_print_9_5_1 SET process_dtl = LEFT(process_dtl,CHAR_LENGTH(process_dtl)-1)
+		WHERE RIGHT(process_dtl,1) = '-'
+	</update>
+
+	<update id="print951UpdateSpaceData16">
+		UPDATE top_rpt_print_9_5_1 SET process_dtl = RIGHT(process_dtl,CHAR_LENGTH(process_dtl)-1)
+		WHERE LEFT(process_dtl,1) = '-'
+	</update>
+
+	<update id="print951UpdateSpaceData17">
+		UPDATE top_rpt_print_9_5_1 SET process_hospital = LEFT(process_hospital,CHAR_LENGTH(process_hospital)-1)
+		WHERE RIGHT(process_hospital,1) = '-'
+	</update>
+
+	<update id="print951UpdateSpaceData18">
+		UPDATE top_rpt_print_9_5_1 SET process_hospital = RIGHT(process_hospital,CHAR_LENGTH(process_hospital)-1)
+		WHERE LEFT(process_hospital,1) = '-'
+	</update>
+
+	<delete id="print952DeleteAll">
+		DELETE FROM top_rpt_print_9_5_2
+	</delete>
+
+	<select id="report9Forprint952List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		SELECT a.no, replace(replace(e_2,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_9 a
+		WHERE a.e_2cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print952Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		INSERT INTO top_rpt_print_9_5_2 (rpt_print_no, other_insu_com, other_insu_contract, other_insu_process, other_insu_etc_memo)
+		VALUES(#{rpt_print_no}, #{other_insu_com}, #{other_insu_contract}, #{other_insu_process}, #{other_insu_etc_memo})
+	</insert>
+
+	<update id="print952UpdateSpaceData1">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_com = ''
+		WHERE other_insu_com = '-'
+		OR other_insu_com = '--'
+	</update>
+
+	<update id="print952UpdateSpaceData2">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_contract = ''
+		WHERE other_insu_contract = '-'
+		OR other_insu_contract = '--'
+	</update>
+
+	<update id="print952UpdateSpaceData3">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_process = ''
+		WHERE other_insu_process = '-'
+		OR other_insu_process = '--'
+	</update>
+
+	<update id="print952UpdateSpaceData4">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_etc_memo = ''
+		WHERE other_insu_etc_memo = '-'
+		OR other_insu_etc_memo = '--'
+	</update>
+
+	<delete id="print952DeleteSpaceData">
+		DELETE FROM top_rpt_print_9_5_2
+		WHERE other_insu_com = ''
+		AND other_insu_contract = ''
+		AND other_insu_process = ''
+		AND other_insu_etc_memo = ''
+	</delete>
+
+	<update id="print952UpdateSpaceData11">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_com = LEFT(other_insu_com,CHAR_LENGTH(other_insu_com)-1)
+		WHERE RIGHT(other_insu_com,1) = '-'
+	</update>
+
+	<update id="print952UpdateSpaceData12">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_com = trim(other_insu_com)
+		WHERE CHAR_LENGTH(other_insu_com) > 11
+	</update>
+
+	<update id="print952UpdateSpaceData13">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_contract = RIGHT(other_insu_contract,CHAR_LENGTH(other_insu_contract)-1)
+		WHERE LEFT(other_insu_contract,1) = '-'
+	</update>
+
+	<update id="print952UpdateSpaceData14">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_contract = trim(other_insu_contract)
+		WHERE CHAR_LENGTH(other_insu_contract) > 11
+	</update>
+
+	<update id="print952UpdateSpaceData15">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_process = LEFT(other_insu_process,CHAR_LENGTH(other_insu_process)-1)
+		WHERE RIGHT(other_insu_process,1) = '-'
+	</update>
+
+	<update id="print952UpdateSpaceData16">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_process = RIGHT(other_insu_process,CHAR_LENGTH(other_insu_process)-1)
+		WHERE LEFT(other_insu_process,1) = '-'
+	</update>
+
+	<update id="print952UpdateSpaceData17">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_etc_memo = LEFT(other_insu_etc_memo,CHAR_LENGTH(other_insu_etc_memo)-1)
+		WHERE RIGHT(other_insu_etc_memo,1) = '-'
+	</update>
+
+	<update id="print952UpdateSpaceData18">
+		UPDATE top_rpt_print_9_5_2 SET other_insu_etc_memo = RIGHT(other_insu_etc_memo,CHAR_LENGTH(other_insu_etc_memo)-1)
+		WHERE LEFT(other_insu_etc_memo,1) = '-'
+	</update>
+
+	<delete id="print96DeleteAll">
+		DELETE FROM top_rpt_print_9_6
+	</delete>
+
+	<select id="report9Forprint96List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		SELECT a.no, replace(replace(f_6,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_1 a
+		WHERE a.f_6cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print96Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		INSERT INTO top_rpt_print_9_6 (rpt_print_no, investigate_outline, investigate_dtl)
+		VALUES(#{rpt_print_no}, #{investigate_outline}, #{investigate_dtl})
+	</insert>
+
+	<update id="print96UpdateSpaceData1">
+		UPDATE top_rpt_print_9_6 SET investigate_outline = ''
+		WHERE investigate_outline = '-'
+		OR investigate_outline = '--'
+	</update>
+
+	<update id="print96UpdateSpaceData2">
+		UPDATE top_rpt_print_9_6 SET investigate_dtl = ''
+		WHERE investigate_dtl = '-'
+		OR investigate_dtl = '--'
+	</update>
+
+	<delete id="print96DeleteSpaceData">
+		DELETE FROM top_rpt_print_9_6
+		WHERE investigate_outline = '' AND investigate_dtl = ''
+	</delete>
+
+	<update id="print96UpdateSpaceData3">
+		UPDATE top_rpt_print_9_6 SET investigate_outline = LEFT(investigate_outline,CHAR_LENGTH(investigate_outline)-1)
+		WHERE RIGHT(investigate_outline,1) = '-'
+	</update>
+
+	<update id="print96UpdateSpaceData4">
+		UPDATE top_rpt_print_9_6 SET investigate_dtl = RIGHT(investigate_dtl,CHAR_LENGTH(investigate_dtl)-1)
+		WHERE LEFT(investigate_dtl,1) = '-'
+	</update>
+
+	<delete id="print98DeleteAll">
+		DELETE FROM top_rpt_print_9_8
+	</delete>
+
+	<select id="report9Forprint98List" resultType = "kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		SELECT a.no, replace(replace(h_1,'/+/','enterpoint'),'|+|','-breakpoint-') splitTargetData
+		FROM ls_report_1 a
+		WHERE a.h_1cn > 0
+		ORDER BY a.no
+	</select>
+
+	<insert id="print98Write" parameterType="kr.co.toplac.sysadm.migration.MigrationPrint9VO">
+		INSERT INTO top_rpt_print_9_8 (rpt_print_no, attach_name, attach_copy, attach_etc_memo)
+		VALUES(#{rpt_print_no}, #{attach_name}, #{attach_copy}, #{attach_etc_memo})
+	</insert>
+
+	<update id="print98UpdateSpaceData1">
+		UPDATE top_rpt_print_9_8 SET attach_name = ''
+		WHERE attach_name = '-'
+		OR attach_name = '--'
+	</update>
+
+	<update id="print98UpdateSpaceData2">
+		UPDATE top_rpt_print_9_8 SET attach_copy = ''
+		WHERE attach_copy = '-'
+		OR attach_copy = '--'
+	</update>
+
+	<update id="print98UpdateSpaceData3">
+		UPDATE top_rpt_print_9_8 SET attach_etc_memo = ''
+		WHERE attach_etc_memo = '-'
+		OR attach_etc_memo = '--'
+	</update>
+
+	<delete id="print98DeleteSpaceData">
+		DELETE FROM top_rpt_print_9_8
+		WHERE attach_name = ''
+		AND attach_copy = ''
+		AND attach_etc_memo = ''
+	</delete>
+
+	<update id="print98UpdateSpaceData4">
+		UPDATE top_rpt_print_9_8 SET attach_name = LEFT(attach_name,CHAR_LENGTH(attach_name)-1)
+		WHERE RIGHT(attach_name,1) = '-'
+	</update>
+
+	<update id="print98UpdateSpaceData5">
+		UPDATE top_rpt_print_9_8 SET attach_etc_memo = RIGHT(attach_etc_memo,CHAR_LENGTH(attach_etc_memo)-1)
+		WHERE LEFT(attach_etc_memo,1) = '-'
+	</update>
+
+	<update id="print98UpdateSpaceData6">
+		UPDATE top_rpt_print_9_8 SET attach_copy = LEFT(attach_copy,CHAR_LENGTH(attach_copy)-1)
+		WHERE RIGHT(attach_copy,1) = '-'
+	</update>
+
+	<update id="print98UpdateSpaceData7">
+		UPDATE top_rpt_print_9_8 SET attach_copy = RIGHT(attach_copy,CHAR_LENGTH(attach_copy)-1)
+		WHERE LEFT(attach_copy,1) = '-'
+	</update>
+
+</mapper>

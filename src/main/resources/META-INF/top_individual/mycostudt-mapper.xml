@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="MyCostUdt">
+	
+	<update id="udtMyCost" parameterType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO">
+	
+		UPDATE
+			top_cost_item
+		SET
+			cost_class_no = #{cost_class_no},
+			cost_occur_date = unix_timestamp(#{cost_occur_date}),
+			cost_pay_place = #{cost_pay_place},
+			cost_involved_com = #{cost_involved_com},
+			cost_involved_man = #{cost_involved_man},
+			cost_memo = #{cost_memo},
+			cost_pay_amt = #{cost_pay_amt},
+			cost_pay_type = #{cost_pay_type},
+			cost_bill_ea = #{cost_bill_ea},
+			cost_reg_date = unix_timestamp(now())
+		WHERE
+			cost_no = #{cost_no}
+	</update>
+	
+	<delete id="delMyCost" parameterType="kr.co.toplac.topindividual.TopMyCostInsCompositeVO">
+		delete 
+		from
+			top_cost_item
+		WHERE 
+			cost_no = #{cost_no}
+	</delete>
+	 
+	<!-- 영수증 원본 파일 파일 업로드 키값 구하기 & dummy 컬럼 생성-->
+	<insert id="myCostBillFileUploadForSelectKey" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey">
+		INSERT INTO top_cost_file
+		( cost_deposit_no, file_path, file_name, reg_date)
+		VALUES
+		( #{cost_deposit_no}, #{filePath}, #{fileName}, unix_timestamp(now()))
+		
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+	</insert>
+	
+	<!-- 현장보고서 dummy 컬럼에 실제 Data Update -->
+	<update id="myCostBillFileUpload" parameterType="java.util.HashMap">
+		UPDATE 
+			top_cost_file
+		SET 
+			  cost_deposit_no = #{cost_deposit_no}
+			, file_path = #{filePath}			
+			, file_name = #{fileName}	  		
+		WHERE 
+			serial_no = #{nextMyCostBillFileSerial}
+	</update>
+	
+
+	<update id="myCostDepositUdt" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_cost_deposit
+		SET
+			cost_sum_mbr_ins = #{sum_cost},
+			date_mbr_ins = unix_timestamp(now())
+		WHERE
+			cost_deposit_no = #{cost_deposit_no}
+	</update>
+	
+	<!-- 영수증 파일 다운로드용 파일명 가져오기  -->
+	<select id="getMyCostBillFileNameForDown" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,file_name) Path 
+ 		FROM 
+ 			top_cost_file
+ 		WHERE 
+ 			serial_no = #{key}
+	
+	</select>
+	
+	
+	<!-- 영수증 파일 삭제용 풀패스 가져오기  -->
+	<select id="getMyCostBillFilePathForDel" parameterType="String" resultType="String">
+	
+		SELECT 
+ 			CONCAT(file_path,file_name) 
+ 		FROM 
+ 			top_cost_file
+ 		WHERE 
+ 			serial_no = #{serialNo}
+	
+	</select>
+	
+	<!-- 영수증 원본 파일 삭제하기 -->
+	<delete id="delMyCostBillFile" parameterType="String">
+	
+		DELETE FROM
+			top_cost_file
+		WHERE
+			serial_no = #{serialNo}
+	
+	</delete>
+	
+
+</mapper>

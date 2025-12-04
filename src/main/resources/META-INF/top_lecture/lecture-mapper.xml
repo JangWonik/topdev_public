@@ -1,0 +1,1808 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="LectureMapper">
+
+	<select id="selectLectureQuizQrderOne" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			r.rkey
+			,r.ekey
+			,r.qkey
+			,r.reg_ord
+			,q.title
+			,q.question
+			,q.ex1
+			,q.ex2
+			,q.ex3
+			,q.ex4
+			,q.ex5
+			,q.answer
+			,q.comment
+			,(SELECT COUNT(*) FROM top_lecture_quiz_relation WHERE ekey = #{ekey} AND reg_ord > #{reg_ord}) AS next_cnt
+		FROM top_lecture_quiz_relation r, top_lecture_quiz q
+		WHERE r.qkey = q.qkey
+		AND r.ekey = #{ekey}
+		AND r.reg_ord = #{reg_ord}
+		AND q.is_use = 0	
+	</select>
+	
+	<select id="selectLectureQuizOne" parameterType="String" resultType="hashmap">
+		SELECT
+			qkey
+			,title
+			,question
+			,ex1
+			,ex2
+			,ex3
+			,ex4
+			,ex5
+			,answer
+			,comment
+			,is_use
+			,regdate
+			,DATE_FORMAT(regdate, '%Y-%m-%d') AS regdate_fmt
+		FROM top_lecture_quiz
+		WHERE 1=1
+		AND qkey = #{qkey}
+	</select>
+
+	<select id="selectLectureQuizList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			qkey
+			,title
+			,question
+			,ex1
+			,ex2
+			,ex3
+			,ex4
+			,ex5
+			,answer
+			,comment
+			,is_use
+			,regdate
+			,DATE_FORMAT(regdate, '%Y-%m-%d') AS regdate_fmt
+		FROM top_lecture_quiz
+		WHERE 1=1
+		<if test='notInQkeys != NULL and notInQkeys != ""'>
+			AND qkey not in (${notInQkeys})
+		</if>
+		ORDER BY regdate DESC
+	</select>
+	
+	<select id="selectLectureProcesslistQna" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			pkey
+			,p_title 
+		FROM top_lecture_process 
+		WHERE qna_use = 1		
+		ORDER BY pkey DESC
+	</select>
+
+	<delete id="deleteLectureProcess" parameterType="hashmap">
+		DELETE FROM top_lecture_process
+			WHERE 1=1
+			AND pkey = #{pkey}
+	</delete>
+	
+	<delete id="deleteLectureOpenInfo" parameterType="hashmap">
+		DELETE FROM top_lecture_open_info
+			WHERE 1=1
+			AND okey = #{okey}
+	</delete>
+
+	<delete id="deleteLectureInfo" parameterType="hashmap">
+		DELETE FROM top_lecture_info
+			WHERE 1=1
+			AND ekey = #{ekey}
+	</delete>
+	
+	<delete id="deleteLectureCategory" parameterType="hashmap">
+		DELETE FROM top_lecture_category
+			WHERE 1=1
+			AND ckey = #{ckey}
+	</delete>
+	
+	<update id="updateLectureProcess" parameterType="hashmap">
+		UPDATE top_lecture_process SET
+			team_type = #{team_type}
+			,category_no = #{category_no}
+			,lecture_type = #{lecture_type}
+			,p_title = #{p_title}
+			,p_content = #{p_content}
+			,apply_sdate = #{apply_sdate}
+			,apply_edate = #{apply_edate}
+			,show_sdate = #{show_sdate}
+			,show_edate = #{show_edate}
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now()			
+			,isuse = #{isuse}
+			,qna_use = #{qna_use}
+		WHERE 1=1
+		AND pkey = #{pkey}
+	</update>
+	
+	<update id="updateLectureOpenFile" parameterType="hashmap">
+		UPDATE top_lecture_open_info SET
+			file_path = ''
+			,file_org_name = ''
+			,file_enc_name = ''
+		WHERE 1=1
+		AND okey = #{okey}
+	</update>
+	
+	<update id="updateLectureInfoFile" parameterType="hashmap">
+		UPDATE top_lecture_info SET
+			file_path = ''
+			,file_org_name = ''
+			,file_enc_name = ''
+		WHERE 1=1
+		AND ekey = #{ekey}
+	</update>
+	
+	<update id="updateLectureOpenInfo" parameterType="hashmap">
+		UPDATE top_lecture_open_info SET
+			team_type = #{team_type}
+			,ckey = #{ckey} 
+			,subject = #{subject}
+			,manager_name = #{manager_name}			
+			,reg_user_no = #{reg_user_no}
+			,introduce = #{introduce}
+			,link_path = #{link_path}
+			<if test='file_path != null and file_path != ""'>
+				,file_path = #{file_path}
+				,file_org_name = #{file_org_name}
+				,file_enc_name = #{file_enc_name}
+			</if>			
+		WHERE 1=1
+		AND okey = #{okey}
+	</update>
+	
+	<update id="updateLectureInfo" parameterType="hashmap">
+		UPDATE top_lecture_info SET
+			team_type = #{team_type} 
+			,subject = #{subject}
+			,manager_name = #{manager_name}			
+			,reg_user_no = #{reg_user_no}
+			,introduce = #{introduce}
+			,link_path = #{link_path}
+			,time_second = #{time_second}
+			,reg_date = now()
+			<if test='file_path != null and file_path != ""'>
+				,file_path = #{file_path}
+				,file_org_name = #{file_org_name}
+				,file_enc_name = #{file_enc_name}
+			</if>
+			,preview_flag = #{preview_flag}
+		WHERE 1=1
+		AND ekey = #{ekey}
+	</update>
+	
+	<update id="updateLectureCategory" parameterType="hashmap">
+		UPDATE top_lecture_category SET
+			category_name = #{category_name}
+			,category_ord = #{category_ord}
+			,isuse = #{category_isuse}
+		WHERE 1=1
+		AND ckey = #{ckey}
+	</update>
+	
+	<delete id="deleteLectureQuiz" parameterType="hashmap">
+		DELETE FROM top_lecture_quiz
+		WHERE qkey = #{qkey}
+	</delete>
+	
+	<update id="updateLectureQuiz" parameterType="hashmap">
+		UPDATE top_lecture_quiz SET
+			title = #{title}
+			,question = #{question}
+			,ex1 = #{ex1}
+			,ex2 = #{ex2}
+			,ex3 = #{ex3}
+			,ex4 = #{ex4}
+			,ex5 = #{ex5}
+			,answer = #{answer}
+			,comment = #{comment}
+			,is_use = #{is_use}
+		WHERE qkey = #{qkey}
+	</update>
+	
+	<insert id="insertLectureQuiz" parameterType="hashmap">
+		INSERT INTO top_lecture_quiz(
+			title
+			,question
+			,ex1
+			,ex2
+			,ex3
+			,ex4
+			,ex5
+			,answer
+			,comment
+			,is_use
+			,regdate
+		)VALUES(
+			#{title}
+			,#{question}
+			,#{ex1}
+			,#{ex2}
+			,#{ex3}
+			,#{ex4}
+			,#{ex5}
+			,#{answer}
+			,#{comment}
+			,#{is_use}
+			,now()
+		)
+	</insert>
+	
+	<insert id="insertLectureOpenInfo" parameterType="hashmap">
+		INSERT INTO top_lecture_open_info(
+			team_type
+			,ckey
+			,subject
+			,manager_name
+			,reg_user_no
+			,introduce
+			,link_path			
+			,reg_date
+			<if test='file_path != null and file_path != ""'>
+				,file_path
+				,file_org_name
+				,file_enc_name
+			</if>			
+		)VALUES(
+			#{team_type}
+			,#{ckey}
+			,#{subject}
+			,#{manager_name}
+			,#{reg_user_no}
+			,#{introduce}
+			,#{link_path}			
+			,now()
+			<if test='file_path != null and file_path != ""'>
+				,#{file_path}
+				,#{file_org_name}
+				,#{file_enc_name}
+			</if>			
+		)
+	</insert>
+
+	<insert id="insertLectureCategory" parameterType="hashmap">
+		INSERT INTO top_lecture_category(
+			category_name
+			,category_ord	
+		)VALUES(
+			#{category_name}
+			,#{category_ord}
+		)
+	</insert>
+	
+	<insert id="insertLectureInfo" parameterType="hashmap">
+		INSERT INTO top_lecture_info(
+			team_type
+			,subject
+			,manager_name
+			,reg_user_no
+			,introduce
+			,link_path
+			,time_second
+			,reg_date
+			<if test='file_path != null and file_path != ""'>
+				,file_path
+				,file_org_name
+				,file_enc_name
+			</if>
+			,preview_flag
+		)VALUES(
+			#{team_type}
+			,#{subject}
+			,#{manager_name}
+			,#{reg_user_no}
+			,#{introduce}
+			,#{link_path}
+			,#{time_second}
+			,now()
+			<if test='file_path != null and file_path != ""'>
+				,#{file_path}
+				,#{file_org_name}
+				,#{file_enc_name}
+			</if>
+			,#{preview_flag}
+		)
+	</insert>
+	
+	<!-- 사용자 수강신청 취소시 결재정보 삭제 -->
+	<delete id="deleteLectureUserApprovalCancel" parameterType="hashmap">
+		DELETE FROM top_lecture_approval
+		WHERE  1=1
+		AND user_no = #{user_no}
+		AND pkey = #{pkey}
+		
+	</delete>	
+	
+	<!-- 관리자 수강신청 결재 -->
+	<update id="updateLectureManagerAppoval" parameterType="hashmap">
+		UPDATE top_lecture_approval SET
+			ap_state = #{ap_state}
+			,ap_user_no = #{ap_user_no}
+			,ap_comment = #{ap_comment}
+			,ap_date = now()
+		WHERE 1=1		
+		AND akey = #{akey}	
+	</update>
+	
+	<!-- 사용자 수강신청 취소 (취소시 결재 정보를 삭제하는것으로 바꾼다.)-->
+	<update id="updateLectureUserAppovalCancel_bk" parameterType="hashmap">
+		UPDATE top_lecture_approval SET
+			ap_state = #{ap_state}
+			,reg_date = now()
+		WHERE 1=1
+		AND user_no = #{user_no}
+		AND pkey = #{pkey}	
+	</update>
+	
+	<!-- 사용자 수강신청 -->
+	<insert id="insertLectureUserAppoval" parameterType="hashmap">
+		INSERT INTO top_lecture_approval(
+			pkey
+			,user_no
+			,team_id
+			,ap_state
+			,user_comment
+			,reg_date
+		)VALUES(
+			#{pkey}
+			,#{user_no}
+			,#{team_id}
+			,#{ap_state}
+			,#{user_comment}
+			,now()
+		)
+	</insert>
+	
+	<insert id="insertLectureQuizRelation" parameterType="hashmap">
+		INSERT INTO top_lecture_quiz_relation(
+			ekey
+			,qkey
+			,reg_ord
+		)VALUES(
+			#{ekey}
+			,#{qkey}
+			,#{reg_ord}
+		)
+	</insert>
+	
+	<insert id="insertLectureRelation" parameterType="hashmap">
+		INSERT INTO top_lecture_relation(
+			ekey
+			,pkey
+			,reg_ord
+		)VALUES(
+			#{ekey}
+			,#{pkey}
+			,#{reg_ord}
+		)
+	</insert>
+	
+	<delete id="deleteLectureRelationEkey" parameterType="hashmap">
+		DELETE FROM top_lecture_relation 
+		WHERE ekey = #{ekey}
+	</delete>
+	
+	<delete id="deleteLectureRelationQuizEkey" parameterType="hashmap">
+		DELETE FROM top_lecture_quiz_relation 
+		WHERE ekey = #{ekey}
+	</delete>
+	
+	<delete id="deleteLectureRelationPkey" parameterType="hashmap">
+		DELETE FROM top_lecture_relation 
+		WHERE pkey = #{pkey}
+	</delete>
+	
+	<insert id="insertLectureProcess" parameterType="hashmap">
+		INSERT INTO top_lecture_process(
+			team_type
+			,category_no
+			,p_title
+			,p_content
+			,apply_sdate
+			,apply_edate
+			,show_sdate
+			,show_edate
+			,reg_user_no
+			,reg_date			
+			,isuse
+			,lecture_type
+			,qna_use
+		)VALUES(
+			#{team_type}
+			,#{category_no}
+			,#{p_title}
+			,#{p_content}
+			,#{apply_sdate}
+			,#{apply_edate}
+			,#{show_sdate}
+			,#{show_edate}
+			,#{reg_user_no}
+			,now()			
+			,#{isuse}
+			,#{lecture_type}
+			,#{qna_use}
+		)
+	</insert>
+	
+	<select id="selectLectureApprovalListCnt" parameterType="hashmap" resultType="int">
+		SELECT 
+			count(*) as nCnt
+		FROM top_lecture_approval ap, top_lecture_process ps
+		WHERE ap.pkey = ps.pkey
+		<if test='ap_state != NULL and ap_state != ""'>
+			AND ap.ap_state IN (${ap_state})
+		</if>		
+		ORDER BY ap.reg_date DESC
+	</select>
+		
+	<select id="selectLectureApprovalList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			ap.akey
+			,ap.pkey
+			,getTopTmbscCenterName(ap.team_id) AS center_name
+			,getTopTmBscTeamName(ap.team_id) AS team_name
+			,getTopMbrBscUserName(ap.user_no) AS user_name
+			,ps.p_title
+			,ap.reg_date
+			,DATE_FORMAT(ap.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			,ps.show_sdate
+			,DATE_FORMAT(ps.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,ps.show_edate
+			,DATE_FORMAT(ps.show_edate, '%Y-%m-%d') AS show_edate_fmt
+			,ap.user_comment
+			,ap.ap_state
+			,CASE ap.ap_state
+				WHEN 10
+				THEN '결재대기'
+				WHEN 11
+				THEN '결재완료'
+				WHEN 12
+				THEN '반려'
+			END AS ap_state_val
+		FROM top_lecture_approval ap, top_lecture_process ps
+		WHERE ap.pkey = ps.pkey
+		<if test='ap_state != NULL and ap_state != ""'>
+			AND ap.ap_state IN (${ap_state})
+		</if>		
+		ORDER BY ap.reg_date DESC
+		LIMIT #{limitPage}, #{sizePerPage}
+	</select>
+	
+	<!-- 첫 페이지 MyMenu 수강내역 목록 불러오기. 교육기간 옵션 추가 by top3009-->
+	<select id="selectFrontLectureProgress" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GB.ekey			
+			,GB.subject
+			,GB.time_second			
+			,PG.view_second
+			,PG.end_flag
+			,CASE
+				WHEN PG.view_second > 0
+				THEN FORMAT(((PG.view_second * 100) / GB.time_second), 0)
+				ELSE 0
+			END AS progress_per
+			,GB.pkey			
+			,GB.show_sdate
+			,DATE_FORMAT(GB.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,GB.show_edate
+			,DATE_FORMAT(GB.show_edate, '%Y-%m-%d') AS show_edate_fmt
+			,CASE
+				WHEN GB.show_sdate > NOW()
+				THEN 1
+				WHEN GB.show_edate &lt; NOW()
+				THEN 2				
+				ELSE 0
+			END AS show_enable
+		FROM
+		(
+		
+			SELECT
+				DISTINCT(I.ekey)
+				,I.subject
+				,I.time_second
+				,GA.pkey
+				,GA.show_sdate
+				,GA.show_edate
+			FROM
+			(
+				SELECT 
+					r.ekey
+					,r.pkey
+					,p.show_sdate
+					,p.show_edate
+				FROM top_lecture_approval a, top_lecture_relation r, top_lecture_process p
+				WHERE a.pkey = r.pkey
+				AND r.pkey = p.pkey
+				AND user_no = #{user_no}
+				AND ap_state = #{ap_state}
+				ORDER BY a.pkey DESC, r.reg_ord
+			)GA, top_lecture_info I
+			WHERE GA.ekey = I.ekey
+		)GB LEFT JOIN top_lecture_progress PG
+		ON GB.ekey = PG.ekey
+		WHERE PG.user_no = #{user_no}
+		LIMIT 16
+	</select>
+	
+	
+	<!-- 첫 페이지 MyMenu 수강내역 목록 불러오기 -->
+	<select id="selectFrontLectureProgress_20210115" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GB.ekey
+			,GB.subject
+			,GB.time_second
+			,PG.view_second
+			,PG.end_flag
+			,CASE
+				WHEN PG.view_second > 0
+				THEN FORMAT(((PG.view_second * 100) / GB.time_second), 0)
+				ELSE 0
+			END AS progress_per
+		FROM
+		(
+		
+			SELECT
+				DISTINCT(I.ekey)
+				,I.subject
+				,I.time_second
+			FROM
+			(
+				SELECT 
+					r.ekey
+				FROM top_lecture_approval a, top_lecture_relation r
+				WHERE a.pkey = r.pkey
+				AND user_no = #{user_no} 
+				AND ap_state = #{ap_state}
+				ORDER BY a.pkey DESC, r.reg_ord
+			)GA, top_lecture_info I
+			WHERE GA.ekey = I.ekey
+		)GB LEFT JOIN top_lecture_progress PG
+		ON GB.ekey = PG.ekey
+		WHERE PG.user_no = #{user_no}
+		LIMIT 16
+	</select>
+		
+	<!-- 공개강의실 목록 불러오기 -->
+	<select id="lectureOpenClassList" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType="kr.co.toplac.brd.common.BoardVO">
+		SELECT
+			a.okey
+			,a.team_type
+			,a.ckey
+			,b.category_name			
+			,a.subject
+			,a.manager_name
+			,a.reg_user_no
+			,getTopMbrBscUserName( a.reg_user_no ) as reg_user_name
+			,a.introduce
+			,trim(a.link_path) as link_path			
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,a.file_path
+			,a.file_org_name
+			,a.file_enc_name
+			,DATEDIFF(NOW(),a.reg_date) AS day_cnt
+			,(SELECT COUNT(*) FROM top_lecture_open_info_log WHERE okey = a.okey) as view_cnt							
+		FROM top_lecture_open_info a
+		LEFT JOIN top_lecture_category b
+		ON a.ckey = b.ckey
+		WHERE 1=1
+		<if test='teamType != null and teamType != ""'>
+			AND a.team_type = #{teamType}
+		</if>
+		<if test='categoryType != null and categoryType != ""'>
+			AND a.ckey = #{categoryType}
+		</if>
+		
+		<if test='subjectSearch != null and subjectSearch != ""'>
+			AND a.subject like '%${subjectSearch}%'
+		</if>	
+		ORDER BY a.okey DESC
+		LIMIT #{queryPgNoInt}, 18
+	</select>
+	
+	<select id="lectureOpenClassListCnt" parameterType="kr.co.toplac.brd.common.BoardSearchVO" resultType = "int">
+		SELECT
+			COUNT(*) AS nCnt						
+		FROM top_lecture_open_info a
+		LEFT JOIN top_lecture_category b
+		ON a.ckey = b.ckey
+		WHERE 1=1
+		<if test='teamType != null and teamType != ""'>
+			AND a.team_type = #{teamType}
+		</if>
+		<if test='categoryType != null and categoryType != ""'>
+			AND a.ckey = #{categoryType}
+		</if>		
+		<if test='subjectSearch != null and subjectSearch != ""'>
+			AND a.subject like '%${subjectSearch}%'
+		</if>
+	</select>
+	
+	<select id="selectLectureCategory" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			ckey
+			,category_name
+			,category_ord
+			,isuse
+			,isdel
+		FROM top_lecture_category
+		WHERE 1=1
+		AND isdel = 0
+		ORDER BY category_ord, ckey DESC	
+	</select>
+	
+	<!-- 퀴즈 완료 후 end_flag 갱신하기 -->
+	<update id="updateLectureProgressInfoQuizEnd" parameterType="hashmap">
+		UPDATE top_lecture_progress SET			
+			end_flag = 2
+			,reg_date = now()
+			,end_date = now()
+		WHERE 1=1
+		AND user_no = #{user_no}
+		AND ekey = #{ekey}
+	</update>
+	
+	<!-- 수강완료 일자 체크하기 -->
+	<select id="selectLectureEndDateChk" parameterType="hashmap" resultType="String">
+		SELECT 
+			IFNULL(end_date,'ING') AS sFlag
+		FROM top_lecture_progress 
+		WHERE user_no = #{user_no}
+		AND ekey = #{ekey}
+	</select>
+	
+	<!-- 진도율 갱신하기 -->
+	<update id="updateLectureProgressInfo" parameterType="hashmap">
+		UPDATE top_lecture_progress SET
+			view_second = #{view_second}
+			,end_flag = #{end_flag}
+			,reg_date = now()
+			<if test="end_flag == 2">
+			,end_date = now()
+			</if>			
+		WHERE 1=1
+		AND user_no = #{user_no}
+		AND ekey = #{ekey}
+	</update>
+	
+	<!-- 진도율 초기화값 추가하기 -->
+	<insert id="insertLectureProgressInfo" parameterType="hashmap">
+		INSERT INTO top_lecture_progress(			
+			user_no
+			,ekey
+			,reg_date			
+		)VALUES(
+			#{user_no}
+			,#{ekey}
+			,now()			
+		)
+	</insert>
+	
+	<!-- 진도율 정보가 있는지 확인하기 -->
+	<select id="selectLectureProgressChk" parameterType="hashmap" resultType="integer">
+		SELECT
+			count(*) as nCnt
+		FROM top_lecture_progress
+		WHERE 1=1
+		AND user_no = #{user_no}
+		AND ekey = #{ekey}
+	</select>
+	
+	<!-- 주제내 quiz 가 있는지 체크 -->
+	<select id="selectLectureQuizChk" parameterType="String" resultType="integer">
+		SELECT 
+			count(*) as nCnt
+		FROM top_lecture_quiz_relation
+		WHERE ekey = #{ekey}	
+	</select>
+	
+	<!-- 진도율 정보가져오기 -->
+	<select id="selectLectureProgressOne" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			pkey
+			,user_no
+			,ekey
+			,view_second
+			,end_flag
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') as reg_date_fmt
+			,end_date
+			,DATE_FORMAT(end_date, '%Y-%m-%d') as end_date_fmt
+		FROM top_lecture_progress
+		WHERE 1=1
+		AND user_no = #{user_no}
+		AND ekey = #{ekey}
+	</select>
+	
+	<insert id="insertLectureOpenLog" parameterType="hashmap">
+		INSERT INTO top_lecture_open_info_log (
+			okey
+			,user_no
+			,user_name
+			,team_id
+			,team_name
+			,center_name
+			,user_ip
+			,reg_date
+		) VALUES (
+			#{okey}
+			,#{user_no}
+			,#{user_name}
+			,#{team_id}
+			,#{team_name}
+			,#{center_name}
+			,#{user_ip}
+			,now()
+		)
+	</insert>
+	
+	<select id="countLectureOpenLog" parameterType="hashmap" resultType="integer">
+		SELECT
+			COUNT(*) as nCnt
+		FROM top_lecture_open_info_log
+		WHERE okey = #{okey}
+		AND user_no = #{user_no}
+	</select>
+	
+	<select id="selectLectureOpenLogList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			lkey
+			,okey
+			,user_no
+			,user_name
+			,team_id
+			,team_name
+			,center_name
+			,user_ip
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') as reg_date_fmt
+		FROM top_lecture_open_info_log
+		WHERE okey = #{okey}
+		ORDER BY user_name	
+	</select>
+	
+	<select id="selectLectureOpenOne" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			a.okey
+			,a.team_type
+			,a.ckey
+			,b.category_name			
+			,a.subject
+			,a.manager_name
+			,a.reg_user_no
+			,getTopMbrBscUserName( a.reg_user_no ) as reg_user_name
+			,a.introduce
+			,trim(a.link_path) as link_path			
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,a.file_path
+			,a.file_org_name
+			,a.file_enc_name
+			,DATEDIFF(NOW(),a.reg_date) AS day_cnt
+			,(SELECT COUNT(*) FROM top_lecture_open_info_log WHERE okey = a.okey) as view_cnt							
+		FROM top_lecture_open_info a
+		LEFT JOIN top_lecture_category b
+		ON a.ckey = b.ckey
+		WHERE a.okey = #{okey}			
+	</select>
+	
+	<select id="selectLectureInfoOne" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			ekey
+			,team_type
+			,subject
+			,manager_name
+			,reg_user_no
+			,getTopMbrBscUserName( reg_user_no ) as reg_user_name
+			,introduce
+			,trim(link_path) as link_path
+			,time_second
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') as reg_date_fmt
+			,file_path
+			,file_org_name
+			,file_enc_name
+			,preview_flag			
+		FROM top_lecture_info
+		WHERE 1=1
+		AND ekey = #{ekey}			
+	</select>
+	
+	<!-- 교육 개인별통계 불러오기 -->
+	<select id="selectLecturePersonList" parameterType="hashmap" resultType="hashmap">
+		SELECT a.user_no
+				, a.user_name
+				, a.user_id
+				, b.team_name
+				, getTopTmBscCenterName(b.team_id) center_name				
+      			, getCodeValue('top_mbr_bsc','work_level',a.work_level) work_level
+      			, IFNULL(getCodeValue('top_mbr_bsc','work_rank',a.work_rank),'-') work_rank      			
+				, getCodeValue('top_mbr_bsc','work_type',a.work_type) work_type
+      			, getCodeValue('top_mbr_bsc','user_state',a.user_state) user_state						
+				, DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') join_date
+			    , DATE_FORMAT(FROM_UNIXTIME(a.out_date), '%Y-%m-%d') out_date
+			    , CASE a.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+				,( SELECT	count(*) FROM top_lecture_approval WHERE user_no = a.user_no AND ap_state = 10 ) as approval_cnt				
+		  FROM top_mbr_bsc a, top_tm_bsc b
+		 WHERE 
+			a.team_id_loc = b.team_id  
+			and a.user_state != 1
+			<choose>
+				<when test="srchGubun == 1">
+					and b.team_type in (0,1)
+				</when>
+				<when test="srchGubun == 4">
+					and b.team_type = 4
+				</when>
+			</choose>
+			<if test="srchTeamId != 0">
+				and b.team_id = #{srchTeamId}
+			</if>
+			<if test='srchUserName != NULL and srchUserName != ""'>
+				and a.user_name like '%${srchUserName}%'				
+			</if>
+		 ORDER BY
+		b.team_group_order desc, b.team_order desc, new_work_order, a.work_level desc, a.join_date
+	</select>
+	
+	<select id="selectLectureApprovalEndProcessList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			user_no
+		FROM top_lecture_approval
+		WHERE pkey = #{pkey}
+		AND ap_state = 11
+	</select>
+	
+	<!-- 과정별 통계보기 신청한 모든 인원 보기 -->
+	<select id="selectLectureApprovalMemberListAll" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.pkey	
+			,GA.user_no	
+			,GA.reg_date
+			,DATE_FORMAT(GA.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			,getTopTmBscCenterName(tm.team_id) center_name
+			,tm.team_name
+			,GA.user_name			
+		FROM
+			(
+			SELECT 
+				tp.pkey
+				,tb.user_no	
+				,tb.user_name
+				,tb.team_id_main
+				,tb.work_level
+				,tb.join_date
+				,tp.reg_date
+				,CASE tb.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+			FROM top_lecture_approval tp, top_mbr_bsc tb
+			WHERE tp.user_no = tb.user_no
+			AND tp.pkey = #{pkey}			
+			AND tp.ap_state IN(10,11)			
+			)GA LEFT JOIN top_tm_bsc tm
+			ON GA.team_id_main = tm.team_id	
+			ORDER BY
+			tm.team_group_order DESC, tm.team_order DESC, new_work_order, GA.work_level DESC, GA.join_date	
+	</select>
+		
+	<!-- 과정별 통계보기 신청후 결재완료한 모든 인원 보기 -->
+	<select id="selectLectureApprovalMemberList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.pkey	
+			,GA.user_no	
+			,GA.reg_date
+			,DATE_FORMAT(GA.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			,getTopTmBscCenterName(tm.team_id) center_name
+			,tm.team_name
+			,GA.user_name			
+		FROM
+			(
+			SELECT 
+				tp.pkey
+				,tb.user_no	
+				,tb.user_name
+				,tb.team_id_main
+				,tb.work_level
+				,tb.join_date
+				,tp.reg_date
+				,CASE tb.work_type
+					WHEN 1 THEN 1
+					WHEN 2 THEN 2
+					WHEN 6 THEN 3
+					WHEN 14 THEN 4
+					WHEN 15 THEN 5
+					WHEN 3 THEN 6
+					WHEN 7 THEN 7
+					WHEN 4 THEN 8
+					WHEN 8 THEN 9
+					WHEN 5 THEN 10
+					WHEN 9 THEN 11
+					WHEN 10 THEN 12
+					WHEN 12 THEN 13
+					WHEN 11 THEN 14
+					WHEN 13 THEN 15	
+				END AS new_work_order
+			FROM top_lecture_approval tp, top_mbr_bsc tb
+			WHERE tp.user_no = tb.user_no
+			AND tp.pkey = #{pkey}			
+			AND tp.ap_state = 11			
+			)GA LEFT JOIN top_tm_bsc tm
+			ON GA.team_id_main = tm.team_id	
+			ORDER BY
+			tm.team_group_order DESC, tm.team_order DESC, new_work_order, GA.work_level DESC, GA.join_date	
+	</select>
+	
+	<!-- 개인별 통계보기 신청중인 상태 보기 -->
+	<select id="selectLectureApprovalPersonList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			TA.pkey
+			,getTopMbrBscUserName( TA.user_no ) as user_name
+			,TP.p_title
+			,TP.show_sdate
+			,DATE_FORMAT(TP.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,TP.show_edate
+			,DATE_FORMAT(TP.show_edate, '%Y-%m-%d') AS show_edate_fmt			
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE 1=1
+		AND TA.pkey = TP.pkey
+		AND TA.user_no = #{user_no}
+		AND TA.ap_state = 10
+		<if test='srchShowDate != NULL and srchShowDate != ""'>
+			AND #{srchShowDate} BETWEEN TP.show_sdate AND DATE_ADD(TP.show_edate,INTERVAL 1 DAY)
+		</if>	
+	</select>
+	
+	<select id="selectLectureApprovalEndPersonList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			TA.pkey
+			,getTopMbrBscUserName( TA.user_no ) as user_name
+			,TP.p_title
+			,TP.show_sdate
+			,DATE_FORMAT(TP.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,TP.show_edate
+			,DATE_FORMAT(TP.show_edate, '%Y-%m-%d') AS show_edate_fmt
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE 1=1
+		AND TA.pkey = TP.pkey
+		AND TA.user_no = #{user_no}
+		AND TA.ap_state = 11
+		<if test='srchShowDate != NULL and srchShowDate != ""'>
+			AND #{srchShowDate} BETWEEN TP.show_sdate AND DATE_ADD(TP.show_edate,INTERVAL 1 DAY)
+		</if>		
+	</select>
+	
+	<select id="selectLectureOpenInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			a.okey
+			,a.team_type
+			,a.ckey
+			,b.category_name			
+			,a.subject
+			,a.manager_name
+			,a.reg_user_no
+			,getTopMbrBscUserName( a.reg_user_no ) as reg_user_name
+			,a.introduce
+			,trim(a.link_path) as link_path			
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,a.file_path
+			,a.file_org_name
+			,a.file_enc_name				
+			,DATEDIFF(NOW(),a.reg_date) AS day_cnt
+			,(SELECT COUNT(*) FROM top_lecture_open_info_log WHERE okey = a.okey) as view_cnt			
+		FROM top_lecture_open_info a
+		LEFT JOIN top_lecture_category b
+		ON a.ckey = b.ckey
+		WHERE 1=1
+		<if test='srchTeamType != NULL and srchTeamType != ""'>
+			AND a.team_type = #{srchTeamType}
+		</if>
+		<if test='srchCategory != NULL and srchCategory != ""'>
+			AND a.ckey = #{srchCategory}
+		</if>
+		<if test='srchSubject != NULL and srchSubject != ""'>
+			AND a.subject like '%${srchSubject}%'
+		</if>		
+		ORDER BY a.okey DESC
+	
+	</select>
+	
+	<select id="selectLectureInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			a.ekey
+			,a.team_type
+			,a.subject
+			,a.manager_name
+			,a.reg_user_no
+			,getTopMbrBscUserName( a.reg_user_no ) as reg_user_name
+			,a.introduce
+			,trim(a.link_path) as link_path
+			,a.time_second
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,a.file_path
+			,a.file_org_name
+			,a.file_enc_name
+			,a.preview_flag
+			,(SELECT COUNT(*) FROM top_lecture_quiz_relation WHERE ekey = a.ekey) AS quiz_cnt			
+		FROM top_lecture_info a
+		WHERE 1=1
+		<if test='notInEkeys != NULL and notInEkeys != ""'>
+			AND a.ekey not in (${notInEkeys})
+		</if>
+		ORDER BY ekey DESC	
+	</select>
+	
+	<!-- 총교육과정 시간을 가져온다. -->
+	<select id="selectLectureProcessTotalTime" parameterType="hashmap" resultType="String">
+		SELECT 	
+			TIME_FORMAT(SEC_TO_TIME(SUM(I.time_second)), '%H시간 %i분 %s초') AS total_time_fmt			
+		FROM top_lecture_relation R, top_lecture_info I
+		WHERE R.ekey = I.ekey
+		AND R.pkey = #{pkey}	
+	</select>
+	
+	<!-- 나의 총교육 수강 시간, 수강완료 회차, 수강중인 회차 -->
+	<select id="selectLectureMyinfoTotal" parameterType="hashmap" resultType="hashmap">
+		SELECT	
+			TIME_FORMAT(SEC_TO_TIME(SUM(GA.total_time)), '%H시간 %i분 %s초') AS total_time_fmt	
+			,SUM(GA.total_time) AS total_time
+			,SUM(GA.info_ing_cnt) + SUM(GA.info_end_cnt) AS info_total_cnt
+			,SUM(GA.info_ing_cnt) AS info_ing_cnt
+			,SUM(GA.info_end_cnt) AS info_end_cnt
+		FROM(
+			SELECT 
+				SUM(view_second) AS total_time	
+				,0 AS info_ing_cnt
+				,0 AS info_end_cnt	
+			FROM top_lecture_progress
+			WHERE user_no = #{user_no}
+		
+			UNION ALL
+		
+			SELECT 
+				0 AS total_time	
+				,COUNT(*) AS info_ing_cnt
+				,0 AS info_end_cnt	
+			FROM top_lecture_progress
+			WHERE user_no = #{user_no}
+			AND end_flag = 1
+		
+			UNION ALL
+		
+			SELECT 
+				0 AS total_time	
+				,0 AS info_ing_cnt
+				,COUNT(*) AS info_end_cnt	
+			FROM top_lecture_progress
+			WHERE user_no = #{user_no}
+			AND end_flag = 2
+		)GA
+	</select>
+	
+	<!-- 교육과정 진도완료여부 체크 (완료안된 과정의 숫자를 리턴한다.)-->
+	<select id="selectLectureProcessToProgressEnd" parameterType="hashmap" resultType="integer">
+		SELECT
+			COUNT(*) AS cnt
+		FROM (	
+			SELECT 
+				ekey 
+			FROM top_lecture_relation
+			WHERE pkey = #{pkey}
+		)GA, top_lecture_progress PG
+		WHERE GA.ekey = PG.ekey
+		AND PG.user_no = #{user_no}
+		AND end_flag != 2
+	</select>
+	
+	<!-- 교육과정키 pkey와 사번을 가지고 과정에 대한 수료일자를 가져온다. -->
+	<select id="selectLectureProgressEndDate" parameterType="hashmap" resultType="String">	
+		SELECT
+			CASE
+				WHEN COUNT(GA.end_date_fmt) = 0
+				THEN '-'
+				ELSE MAX(GA.end_date_fmt)
+			END AS end_date_fmt	
+		FROM
+		(
+			SELECT	
+				CASE 
+					WHEN P.end_date IS NOT NULL
+					THEN DATE_FORMAT(P.end_date, '%Y-%m-%d')
+					WHEN P.reg_date IS NOT NULL
+					THEN DATE_FORMAT(P.reg_date, '%Y-%m-%d')
+					ELSE '-'
+				END AS end_date_fmt
+			FROM top_lecture_relation R, top_lecture_progress P
+			WHERE R.ekey = P.ekey
+			AND R.pkey = #{pkey}
+			AND P.user_no = #{user_no}
+			AND P.end_flag = 2
+		)GA
+	</select>
+	
+	<!-- 교육과정키 pkey와 사번을 가지고 과정 진행률을 계산한다. -->
+	<select id="selectLectureProcessToProgressCal" parameterType="hashmap" resultType="String">
+		SELECT
+			CASE 
+				WHEN GB.view_second > 0 
+				THEN FORMAT(((GB.view_second * 100) / GB.time_second),1)
+				ELSE 0
+			END AS progress_per
+		FROM
+		(
+			SELECT
+				SUM(GA.time_second) AS time_second
+				,SUM(GA.view_second) AS view_second
+			FROM
+			(
+				SELECT 	
+					SUM(I.time_second) AS time_second
+					,0 AS view_second
+				FROM top_lecture_relation R, top_lecture_info I
+				WHERE R.ekey = I.ekey
+				AND R.pkey = #{pkey}
+		
+				UNION ALL
+		
+				SELECT
+					0 AS time_second
+					,SUM(view_second) AS view_second
+				FROM top_lecture_relation R, top_lecture_progress P
+				WHERE R.ekey = P.ekey
+				AND R.pkey = #{pkey}
+				AND P.user_no = #{user_no}
+			)GA
+		)GB
+	</select>
+	
+	<!-- MyPage 첫화면 과정 정보 가져오기 -->
+	<select id="selectFrontLectureProcessInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			TP.pkey
+			,TP.team_type
+			,TP.category_no
+			,(SELECT category_name FROM top_lecture_category WHERE ckey = TP.category_no) AS category_name
+			,TP.p_title
+			,TP.apply_sdate
+			,DATE_FORMAT(TP.apply_sdate, '%Y-%m-%d') AS apply_sdate_fmt
+			,TP.apply_edate
+			,DATE_FORMAT(TP.apply_edate, '%Y-%m-%d') AS apply_edate_fmt
+			,TP.show_sdate
+			,DATE_FORMAT(TP.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,TP.show_edate
+			,DATE_FORMAT(TP.show_edate, '%Y-%m-%d') AS show_edate_fmt
+			,getTopMbrBscUserName( TP.reg_user_no ) AS reg_user_name
+			,TP.reg_date
+			,DATE_FORMAT(TP.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			,CASE
+				WHEN TP.show_sdate > NOW()
+				THEN 1
+				WHEN TP.show_edate &lt; NOW()
+				THEN 2				
+				ELSE 0
+			END AS show_enable
+			,TP.p_content	
+			,TP.qna_use					
+		FROM top_lecture_process TP
+		WHERE 1=1
+		AND TP.pkey = ${pkey}		
+	</select>
+	
+	<select id="selectFrontLectureProcessAllCnt" parameterType="hashmap" resultType="integer">
+		SELECT 
+			COUNT(*) as all_cnt						
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE 1=1
+		AND TA.pkey = TP.pkey
+		AND TA.user_no = #{user_no}
+		AND TA.ap_state = #{ap_state}
+		AND TP.isuse = 0								
+	</select>
+	
+	<select id="selectFrontLectureProcessEndCnt" parameterType="hashmap" resultType="integer">
+		SELECT 
+			COUNT(*) as end_cnt						
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE 1=1
+		AND TA.pkey = TP.pkey
+		AND TA.user_no = #{user_no}
+		AND TA.ap_state = #{ap_state}
+		AND TP.isuse = 0
+		AND TP.show_edate &lt; NOW()								
+	</select>
+	
+	<!-- MyPage 첫화면 과정목록 불러오기 -->
+	<select id="selectFrontLectureProcessListPkeyAll" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			TP.pkey								
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE 1=1
+		AND TA.pkey = TP.pkey
+		AND TA.user_no = #{user_no}
+		AND TA.ap_state = #{ap_state}
+		AND TP.isuse = 0		
+		AND TP.show_sdate &lt; now()
+		AND TP.show_edate > now()						
+	</select>
+	
+	<!-- MyPage 첫화면 과정목록 불러오기 -->
+	<select id="selectFrontLectureProcessList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			TP.pkey
+			,TP.team_type
+			,TP.category_no
+			,(SELECT category_name FROM top_lecture_category WHERE ckey = TP.category_no) AS category_name
+			,TP.p_title
+			,TP.apply_sdate
+			,DATE_FORMAT(TP.apply_sdate, '%Y-%m-%d') AS apply_sdate_fmt
+			,TP.apply_edate
+			,DATE_FORMAT(TP.apply_edate, '%Y-%m-%d') AS apply_edate_fmt
+			,TP.show_sdate
+			,DATE_FORMAT(TP.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,TP.show_edate
+			,DATE_FORMAT(TP.show_edate, '%Y-%m-%d') AS show_edate_fmt
+			,getTopMbrBscUserName( TP.reg_user_no ) AS reg_user_name
+			,TP.reg_date
+			,DATE_FORMAT(TP.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			,CASE
+				WHEN TP.show_sdate > NOW()
+				THEN 1
+				WHEN TP.show_edate &lt; NOW()
+				THEN 2				
+				ELSE 0
+			END AS show_enable
+			,TP.p_content
+			,TP.qna_use
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE 1=1
+		AND TA.pkey = TP.pkey
+		AND TA.user_no = #{user_no}
+		AND TA.ap_state = #{ap_state}
+		AND TP.isuse = 0
+		<if test="ptype == 'Ing' or ptype == 'Done'">
+			AND TP.show_sdate &lt; now()
+			AND TP.show_edate > now() 
+		</if>
+		<if test="ptype == 'End'">
+			AND TP.show_edate &lt; now()
+		</if>
+		LIMIT 8				
+	</select>
+	
+	<select id="selectLectureRoomUser" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			TP.pkey
+			,TP.team_type
+			,TP.category_no
+			,(SELECT category_name FROM top_lecture_category WHERE ckey = TP.category_no) AS category_name
+			,TP.p_title
+			,TP.apply_sdate
+			,DATE_FORMAT(TP.apply_sdate, '%Y-%m-%d') AS apply_sdate_fmt
+			,TP.apply_edate
+			,DATE_FORMAT(TP.apply_edate, '%Y-%m-%d') AS apply_edate_fmt
+			,TP.show_sdate
+			,DATE_FORMAT(TP.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,TP.show_edate
+			,DATE_FORMAT(TP.show_edate, '%Y-%m-%d') AS show_edate_fmt
+			,getTopMbrBscUserName( TP.reg_user_no ) AS reg_user_name
+			,TP.reg_date
+			,DATE_FORMAT(TP.reg_date, '%Y-%m-%d') AS reg_date_fmt
+			,TP.p_content
+			,CASE
+				WHEN TP.show_sdate > NOW()
+				THEN 1
+				WHEN TP.show_edate &lt; NOW()
+				THEN 2				
+				ELSE 0
+			END AS show_enable			
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE 1=1
+		AND TA.pkey = TP.pkey
+		AND TA.user_no = #{user_no}
+		AND TA.ap_state = #{ap_state}		
+		ORDER BY TP.reg_date DESC	
+	</select>
+	
+	<!-- 첫페이지 결재 목록 가져오기 (신청기간에 속하면서 결재완료가 아닌것만 가져온다.) by top3009-->	
+	<select id="selectFrontLectureApplyUser" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.*
+		FROM
+			(
+				SELECT
+					p.pkey
+					,p.team_type
+					,p.category_no
+					,c.category_name
+					,p.p_title
+					,p.apply_sdate
+					,DATE_FORMAT(p.apply_sdate, '%Y-%m-%d') AS apply_sdate_fmt
+					,p.apply_edate
+					,DATE_FORMAT(p.apply_edate, '%Y-%m-%d') AS apply_edate_fmt
+					,p.show_sdate
+					,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+					,p.show_edate
+					,DATE_FORMAT(p.show_edate, '%Y-%m-%d') AS show_edate_fmt
+					,getTopMbrBscUserName( p.reg_user_no ) AS reg_user_name
+					,p.reg_date
+					,DATE_FORMAT(p.reg_date, '%Y-%m-%d') AS reg_date_fmt
+					,(SELECT COUNT(*) FROM top_lecture_relation WHERE pkey = p.pkey) AS lecture_cnt
+					,p.isuse
+					,IFNULL( (SELECT ap_state FROM top_lecture_approval WHERE pkey = p.pkey AND user_no = #{user_no} ORDER BY reg_date DESC LIMIT 1 ), '00') AS ap_state
+					,CASE
+						WHEN (p.show_sdate &lt; NOW() AND p.show_edate > NOW())
+						THEN 1
+						ELSE 0
+					END AS show_enable
+					,CASE
+						WHEN (p.apply_sdate &lt; NOW() AND p.apply_edate > NOW())
+						THEN 1
+						ELSE 0
+					END AS apply_enable
+				FROM top_lecture_process AS p
+				LEFT JOIN top_lecture_category AS c
+				ON p.category_no = c.ckey		
+				WHERE 1=1
+				AND p.isuse = 0		 
+				ORDER BY p.reg_date DESC
+			)GA 
+		WHERE GA.apply_sdate &lt; NOW()
+		AND GA.apply_edate > NOW()
+		AND GA.ap_state != 11
+		AND GA.isuse = 0
+		LIMIT 10
+	</select>
+	
+	<select id="selectFrontLectureOpenUser" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			a.okey
+			,a.team_type
+			,a.ckey
+			,b.category_name			
+			,a.subject
+			,a.manager_name
+			,a.reg_user_no
+			,getTopMbrBscUserName( a.reg_user_no ) as reg_user_name
+			,a.introduce
+			,trim(a.link_path) as link_path			
+			,a.reg_date
+			,DATE_FORMAT(a.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,a.file_path
+			,a.file_org_name
+			,a.file_enc_name				
+			,DATEDIFF(NOW(),a.reg_date) AS day_cnt
+			,(SELECT COUNT(*) FROM top_lecture_open_info_log WHERE okey = a.okey) as view_cnt			
+		FROM top_lecture_open_info a
+		LEFT JOIN top_lecture_category b
+		ON a.ckey = b.ckey
+		ORDER BY a.okey DESC
+		LIMIT 10
+	</select>	
+	
+	<!-- 첫페이지 결재 목록 가져오기 -->
+	<select id="selectFrontLectureApplyUser_20210120" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			p.pkey
+			,p.team_type
+			,p.category_no
+			,c.category_name
+			,p.p_title
+			,p.apply_sdate
+			,DATE_FORMAT(p.apply_sdate, '%Y-%m-%d') as apply_sdate_fmt
+			,p.apply_edate
+			,DATE_FORMAT(p.apply_edate, '%Y-%m-%d') as apply_edate_fmt
+			,p.show_sdate
+			,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') as show_sdate_fmt
+			,p.show_edate
+			,DATE_FORMAT(p.show_edate, '%Y-%m-%d') as show_edate_fmt
+			,getTopMbrBscUserName( p.reg_user_no ) as reg_user_name
+			,p.reg_date
+			,DATE_FORMAT(p.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,(select count(*) from top_lecture_relation where pkey = p.pkey) as lecture_cnt
+			,p.isuse
+			,IFNULL( (SELECT ap_state FROM top_lecture_approval WHERE pkey = p.pkey AND user_no = #{user_no} ORDER BY reg_date DESC LIMIT 1 ), '00') AS ap_state
+			,CASE
+				WHEN (p.show_sdate &lt; NOW() AND p.show_edate > NOW())
+				THEN 1
+				ELSE 0
+			END AS show_enable
+			,CASE
+				WHEN (p.apply_sdate &lt; NOW() AND p.apply_edate > NOW())
+				THEN 1
+				ELSE 0
+			END AS apply_enable
+		FROM top_lecture_process as p
+		LEFT JOIN top_lecture_category as c
+		ON p.category_no = c.ckey		
+		WHERE 1=1
+		AND p.isuse = 0		 
+		ORDER BY p.reg_date DESC
+		LIMIT 10
+	</select>
+	
+	<select id="selectLectureProcessUser" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			p.pkey
+			,p.team_type
+			,p.category_no
+			,c.category_name
+			,p.p_title
+			,p.apply_sdate
+			,DATE_FORMAT(p.apply_sdate, '%Y-%m-%d') as apply_sdate_fmt
+			,p.apply_edate
+			,DATE_FORMAT(p.apply_edate, '%Y-%m-%d') as apply_edate_fmt
+			,p.show_sdate
+			,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') as show_sdate_fmt
+			,p.show_edate
+			,DATE_FORMAT(p.show_edate, '%Y-%m-%d') as show_edate_fmt
+			,getTopMbrBscUserName( p.reg_user_no ) as reg_user_name
+			,p.reg_date
+			,DATE_FORMAT(p.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,(select count(*) from top_lecture_relation where pkey = p.pkey) as lecture_cnt
+			,p.isuse
+			,IFNULL( (SELECT ap_state FROM top_lecture_approval WHERE pkey = p.pkey AND user_no = #{user_no} ORDER BY reg_date DESC LIMIT 1 ), '00') AS ap_state
+		FROM top_lecture_process as p
+		LEFT JOIN top_lecture_category as c
+		ON p.category_no = c.ckey		
+		WHERE 1=1
+		AND p.isuse = 0
+		AND p.apply_sdate &lt; now()
+		AND p.apply_edate > now() 
+		ORDER BY p.reg_date DESC
+	</select>
+	
+	<!-- 교육과정별 통계목록, 수강신청 기간도 조건에 추가 -->
+	<select id="selectLectureProcessSearch" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			p.pkey
+			,p.team_type
+			,p.category_no			
+			,p.lecture_type
+			,p.p_title
+			,p.reg_date
+			,(select count(*) from top_lecture_approval where pkey = p.pkey and ap_state in (10, 11)) as apCnt
+			,p.apply_sdate
+			,DATE_FORMAT(p.apply_sdate, '%Y-%m-%d') as apply_sdate_fmt
+			,p.apply_edate
+			,DATE_FORMAT(p.apply_edate, '%Y-%m-%d') as apply_edate_fmt			
+			,p.show_sdate
+			,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') as show_sdate_fmt
+			,p.show_edate
+			,DATE_FORMAT(p.show_edate, '%Y-%m-%d') as show_edate_fmt					
+		FROM top_lecture_process p
+		WHERE 1=1
+		<if test="srchLectureType != 9">
+			AND p.lecture_type = #{srchLectureType}
+		</if>
+		<choose>
+			<when test="srchPgubun == 1">
+				AND p.team_type in (0,1)
+			</when>
+			<when test="srchPgubun == 4">
+				AND p.team_type = 4
+			</when>			
+		</choose>
+		<if test='srchPtitle != NULL and srchPtitle != ""'>
+			AND p.p_title like '%${srchPtitle}%'
+		</if>
+		<if test='srchShowProDate != NULL and srchShowProDate != ""'>
+			AND ( 
+				(#{srchShowProDate} BETWEEN p.show_sdate AND DATE_ADD(p.show_edate,INTERVAL 1 DAY)) 
+				OR 
+				(#{srchShowProDate} BETWEEN p.apply_sdate AND DATE_ADD(p.apply_edate,INTERVAL 1 DAY))				 
+				)
+		</if>
+		ORDER BY p.reg_date DESC
+	</select>
+	
+	<select id="selectLectureProcessSearch_20210405" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			p.pkey
+			,p.team_type
+			,p.category_no			
+			,p.lecture_type
+			,p.p_title
+			,p.reg_date
+			,(select count(*) from top_lecture_approval where pkey = p.pkey and ap_state in (10, 11)) as apCnt
+			,p.show_sdate
+			,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') as show_sdate_fmt
+			,p.show_edate
+			,DATE_FORMAT(p.show_edate, '%Y-%m-%d') as show_edate_fmt					
+		FROM top_lecture_process p
+		WHERE 1=1
+		<if test="srchLectureType != 9">
+			AND p.lecture_type = #{srchLectureType}
+		</if>
+		<choose>
+			<when test="srchPgubun == 1">
+				AND p.team_type in (0,1)
+			</when>
+			<when test="srchPgubun == 4">
+				AND p.team_type = 4
+			</when>			
+		</choose>
+		<if test='srchPtitle != NULL and srchPtitle != ""'>
+			AND p.p_title like '%${srchPtitle}%'
+		</if>
+		<if test='srchShowProDate != NULL and srchShowProDate != ""'>
+			AND #{srchShowProDate} BETWEEN p.show_sdate AND DATE_ADD(p.show_edate,INTERVAL 1 DAY)
+		</if>
+		ORDER BY p.reg_date DESC
+	</select>
+	
+	<select id="selectLectureProcess" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			p.pkey
+			,p.team_type
+			,p.category_no
+			,c.category_name
+			,p.lecture_type
+			,p.p_title
+			,p.p_content
+			,p.apply_sdate
+			,DATE_FORMAT(p.apply_sdate, '%Y-%m-%d') as apply_sdate_fmt
+			,p.apply_edate
+			,DATE_FORMAT(p.apply_edate, '%Y-%m-%d') as apply_edate_fmt
+			,p.show_sdate
+			,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') as show_sdate_fmt
+			,p.show_edate
+			,DATE_FORMAT(p.show_edate, '%Y-%m-%d') as show_edate_fmt
+			,getTopMbrBscUserName( p.reg_user_no ) as reg_user_name
+			,p.reg_date
+			,DATE_FORMAT(p.reg_date, '%Y-%m-%d') as reg_date_fmt
+			,(select count(*) from top_lecture_relation where pkey = p.pkey) as lecture_cnt
+			,p.isuse
+			,p.qna_use
+		FROM top_lecture_process as p
+		LEFT JOIN top_lecture_category as c
+		ON p.category_no = c.ckey 		
+		WHERE 1=1		
+		ORDER BY p.reg_date DESC
+	</select>
+	
+	<select id="selectProcessLectureInfoExtra" parameterType="hashmap" resultType="String">
+		SELECT 
+			IFNULL(GROUP_CONCAT(ekey),'') AS extra_ekey 
+		FROM top_lecture_relation 
+		WHERE pkey = #{pkey}
+	</select>
+	
+	<select id="selectLectureInfoQuizExtra" parameterType="hashmap" resultType="String">
+		SELECT 
+			IFNULL(GROUP_CONCAT(qkey),'') AS extra_qkey 
+		FROM top_lecture_quiz_relation 
+		WHERE ekey = #{ekey}
+	</select>
+	
+	<select id="selectLectureInfoToQuiz" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			A.title
+			,A.qkey
+		FROM top_lecture_quiz A, top_lecture_quiz_relation B
+		WHERE A.qkey = B.qkey
+		AND B.ekey = #{ekey}
+		ORDER BY reg_ord
+	</select>
+	
+	<select id="selectProcessLectureInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.ekey
+			,GA.team_type
+			,GA.subject
+			,GA.manager_name
+			,GA.reg_user_no
+			,GA.reg_user_name
+			,GA.introduce
+			,GA.link_path
+			,GA.time_second
+			,GA.time_second_fmt
+			,GA.reg_date
+			,GA.reg_date_fmt
+			,GA.file_path
+			,GA.file_org_name
+			,GA.file_enc_name	
+			,CASE
+				WHEN GA.view_second > 0
+				THEN FORMAT(((GA.view_second * 100) / GA.time_second), 0)
+				ELSE 0
+			END AS progress_per
+			,GA.preview_flag
+		FROM
+		(
+			SELECT 
+				i.ekey
+				,i.team_type
+				,i.subject
+				,i.manager_name
+				,i.reg_user_no
+				,getTopMbrBscUserName( i.reg_user_no ) AS reg_user_name
+				,i.introduce
+				,i.link_path
+				,i.time_second
+				,TIME_FORMAT(SEC_TO_TIME(i.time_second), '%H시간 %i분 %s초') AS time_second_fmt
+				,i.reg_date
+				,DATE_FORMAT(i.reg_date, '%Y-%m-%d') AS reg_date_fmt
+				,i.file_path
+				,i.file_org_name
+				,i.file_enc_name		
+				,(SELECT view_second FROM top_lecture_progress WHERE user_no = #{user_no} AND ekey = i.ekey) AS view_second
+				,i.preview_flag
+			FROM top_lecture_relation r, top_lecture_info i 
+			WHERE r.ekey = i.ekey
+			AND r.pkey = #{pkey}
+			ORDER BY r.reg_ord
+		)GA
+	</select>
+	
+	<select id="selectLectureProcessOne" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			p.pkey
+			,p.team_type
+			,p.category_no
+			,c.category_name
+			,p.lecture_type
+			,p.p_title
+			,p.p_content
+			,p.apply_sdate
+			,DATE_FORMAT(p.apply_sdate, '%Y-%m-%d') as apply_sdate_fmt
+			,p.apply_edate
+			,DATE_FORMAT(p.apply_edate, '%Y-%m-%d') as apply_edate_fmt
+			,p.show_sdate
+			,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') as show_sdate_fmt
+			,p.show_edate
+			,DATE_FORMAT(p.show_edate, '%Y-%m-%d') as show_edate_fmt
+			,getTopMbrBscUserName( p.reg_user_no ) as reg_user_name
+			,p.reg_date
+			,DATE_FORMAT(p.reg_date, '%Y-%m-%d') as reg_date_fmt			
+			,p.isuse
+			,p.qna_use			
+		FROM top_lecture_process as p
+		LEFT JOIN top_lecture_category as c
+		ON p.category_no = c.ckey 		
+		WHERE 1=1		
+		AND p.pkey = #{pkey}		
+	</select>
+	
+	<select id="selectLectureProcessApOne" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			GA.pkey
+			,GA.team_type
+			,GA.category_no
+			,GA.category_name
+			,GA.p_title
+			,GA.apply_sdate
+			,GA.apply_sdate_fmt
+			,GA.apply_edate
+			,GA.apply_edate_fmt
+			,GA.show_sdate
+			,GA.show_sdate_fmt
+			,GA.show_edate
+			,GA.show_edate_fmt
+			,GA.reg_user_name
+			,GA.reg_date
+			,GA.reg_date_fmt			
+			,GA.isuse
+			,GA.qna_use
+			,AP.akey	
+			,AP.user_no
+			,getTopMbrBscUserName(AP.user_no) AS user_name	
+			,AP.ap_state
+			,AP.ap_user_no
+			,getTopMbrBscUserName(AP.ap_user_no) AS ap_user_name	
+			,AP.user_comment
+			,AP.ap_comment
+			,AP.reg_date
+			,DATE_FORMAT(AP.reg_date, '%Y-%m-%d') AS ap_user_reg_date_fmt
+			,AP.ap_date
+			,DATE_FORMAT(AP.ap_date, '%Y-%m-%d') AS ap_approval_date_fmt
+		FROM
+			(
+				SELECT
+					p.pkey
+					,p.team_type
+					,p.category_no
+					,c.category_name
+					,p.p_title
+					,p.apply_sdate
+					,DATE_FORMAT(p.apply_sdate, '%Y-%m-%d') AS apply_sdate_fmt
+					,p.apply_edate
+					,DATE_FORMAT(p.apply_edate, '%Y-%m-%d') AS apply_edate_fmt
+					,p.show_sdate
+					,DATE_FORMAT(p.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+					,p.show_edate
+					,DATE_FORMAT(p.show_edate, '%Y-%m-%d') AS show_edate_fmt
+					,getTopMbrBscUserName( p.reg_user_no ) AS reg_user_name
+					,p.reg_date
+					,DATE_FORMAT(p.reg_date, '%Y-%m-%d') AS reg_date_fmt			
+					,p.isuse	
+					,p.qna_use
+				FROM top_lecture_process AS p
+				LEFT JOIN top_lecture_category AS c
+				ON p.category_no = c.ckey
+				WHERE 1=1		
+				AND p.pkey = #{pkey}
+		
+			)GA, top_lecture_approval AP
+			WHERE 1=1
+			AND GA.pkey = AP.pkey
+			AND AP.user_no = #{user_no}				
+	</select>
+	
+	<!-- 수강신청 결재정보 불러오기 -->
+	<select id="selectLectureApprovalManageOne" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			TA.akey
+			,TA.user_no
+			,getTopMbrBscUserName(TA.user_no) AS user_name
+			,TP.pkey	
+			,TP.p_title
+			,TP.reg_user_no
+			,getTopMbrBscUserName(TP.reg_user_no) AS reg_user_name	
+			,TP.apply_sdate
+			,DATE_FORMAT(TP.apply_sdate, '%Y-%m-%d') AS apply_sdate_fmt
+			,TP.apply_edate
+			,DATE_FORMAT(TP.apply_edate, '%Y-%m-%d') AS apply_edate_fmt
+			,TP.show_sdate
+			,DATE_FORMAT(TP.show_sdate, '%Y-%m-%d') AS show_sdate_fmt
+			,TP.show_edate
+			,DATE_FORMAT(TP.show_edate, '%Y-%m-%d') AS show_edate_fmt
+			,TA.user_comment
+			,TA.ap_comment
+			,TA.ap_state
+			,TA.ap_user_no
+			,getTopMbrBscUserName(TA.ap_user_no) AS ap_user_name
+			,TA.ap_date
+			,DATE_FORMAT(TA.ap_date, '%Y-%m-%d') AS ap_date_fmt
+			,CASE TA.ap_state
+				WHEN 10
+				THEN '결재대기'
+				WHEN 11
+				THEN '결재완료'
+				WHEN 12
+				THEN '반려'
+			END AS ap_state_val			
+		FROM top_lecture_approval TA, top_lecture_process TP
+		WHERE TA.pkey = TP.pkey
+		AND TA.akey = #{akey}
+	</select>
+</mapper>

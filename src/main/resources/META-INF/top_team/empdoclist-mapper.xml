@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="EmpDocList">
+	<select id="getEmpDocList" resultType="kr.co.toplac.topindividual.TopMbrDocVO">
+		SELECT 
+			a.serial_no, a.doc_type, a.doc_title, a.doc_state, a.file_path, a.file_name, getCodeValue('top_mbr_doc', 'doc_type', doc_type) col_val, b.user_name
+		  FROM 
+		  	top_mbr_doc a
+		 INNER JOIN top_mbr_bsc b 
+		 WHERE a.user_no = b.user_no
+		   AND a.doc_state != 9
+		   AND a.doc_state IN (0,8)
+		 ORDER BY a.serial_no DESC;
+   	</select>
+</mapper>

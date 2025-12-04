@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CloseRptMgmtMapper"> 
+
+	<select id="selectPtnrList" parameterType="HashMap" resultType="HashMap">
+		SELECT ptnr_id
+			  ,ptnr_nick
+		  FROM top_ptnr_bsc
+		 WHERE ptnr_level = 1
+		 order by ptnr_group_order desc, ptnr_order desc	
+	</select>
+	
+	<select id="selectMemberList" parameterType="HashMap" resultType="HashMap">
+		SELECT b.team_name, b.team_order, b.team_group_order, a.user_name, a.team_id_main 
+			FROM 	top_mbr_bsc a, top_tm_bsc b 
+			<!-- user_state = 0 -->
+			where a.team_id_main = b.team_id and a.user_state != 1 AND b.team_level &lt;&gt; 0 
+			ORDER BY b.team_level, b.team_group_order DESC, b.team_name, a.work_type, a.work_level DESC	
+	</select>	
+	
+	<select id="selectTeamList" parameterType="HashMap" resultType="HashMap">
+		SELECT distinct(b.team_name)as team_name, b.team_id
+			FROM top_mbr_bsc a, top_tm_bsc b 
+			<!-- user_state = 0 -->
+			where a.team_id_main = b.team_id and a.user_state != 1 AND b.team_level &lt;&gt; 0 
+			ORDER BY b.team_level, b.team_group_order DESC, b.team_name
+	</select>
+	
+	<select id="selectCloseRptList" parameterType="HashMap" resultType="HashMap">
+		SELECT CONCAT('(',a.suim_accept_no,')') suimAcceptNo
+		      ,a.suim_close_no suimCloseNo
+		      ,d.accident_no accidentNo
+		      ,DATE_FORMAT(FROM_UNIXTIME(b.deposit_date), '%Y-%m-%d') depositDate
+		      ,a.close_date closeDate
+		      ,getTopMbrBscUserName(a.user_no) userNm
+		      ,getTopTmBscTeamName(c.team_id_main) teamNm
+		      ,getTopTmBscCenterName(c.team_id_main) centerNm
+		      ,a.beneficiary_nm beneficiaryNm
+		      ,c.team_id_main teamId
+		      ,a.user_no userNo
+		      ,getTopPtnrBscPtnrName(a.ptnr_id) ptnrNm   
+		      ,DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d') del_date		      
+		  FROM top_rpt_head a
+		 INNER JOIN top_rpt_invoice b
+		    ON a.suim_rpt_no = b.suim_rpt_no
+    	 INNER JOIN top_mbr_bsc c
+		    ON a.user_no = c.user_no
+		 INNER JOIN top_rpt_body d
+		    ON a.suim_rpt_no = d.suim_rpt_no
+		 INNER JOIN top_tm_bsc e
+		    ON c.team_id_main = e.team_id
+		 WHERE 1=1
+		   AND a.del_date > UNIX_TIMESTAMP(#{startDate}) 
+		   AND a.del_date &lt; UNIX_TIMESTAMP(#{endDate})
+		   <choose>
+		   		<when test="ptnrId == 16">
+		   			AND a.ptnr_id = #{ptnrId}
+		   			AND a.suim_rpt_type1 != 14
+		   		</when>
+		   		<otherwise>
+		   			AND a.ptnr_id = #{ptnrId}
+		   		</otherwise>
+		   </choose>
+		   AND c.user_state != 1
+		 ORDER BY e.team_group_order DESC, e.team_order DESC,c.work_type, c.work_level DESC, c.user_no
+		 
+	</select>
+	
+	<select id="selectCloseRptListEmail" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+		      getTopTmBscTeamName(c.team_id_main) teamNm
+		      ,getTopTmBscCenterName(c.team_id_main) centerNm
+		      ,e.team_id		      		      
+		  FROM top_rpt_head a
+		 INNER JOIN top_rpt_invoice b
+		    ON a.suim_rpt_no = b.suim_rpt_no
+    	 INNER JOIN top_mbr_bsc c
+		    ON a.user_no = c.user_no
+		 INNER JOIN top_rpt_body d
+		    ON a.suim_rpt_no = d.suim_rpt_no
+		 INNER JOIN top_tm_bsc e
+		    ON c.team_id_main = e.team_id
+		 WHERE 1=1
+		   AND a.del_date > UNIX_TIMESTAMP(#{startDate}) 
+		   AND a.del_date &lt; UNIX_TIMESTAMP(#{endDate})
+		   <choose>
+		   		<when test="ptnrId == 16">
+		   			AND a.ptnr_id = #{ptnrId}
+		   			AND a.suim_rpt_type1 != 14
+		   		</when>
+		   		<otherwise>
+		   			AND a.ptnr_id = #{ptnrId}
+		   		</otherwise>
+		   </choose>
+		   AND c.user_state != 1
+		   group by e.team_id
+		 ORDER BY e.team_group_order DESC, e.team_order DESC,c.work_type, c.work_level DESC, c.user_no		 
+	</select>
+	
+	<select id="selectMbrCenterUser" parameterType="HashMap" resultType="HashMap">
+		SELECT user_no
+			  ,user_name
+			  ,email as user_email
+			  ,CASE work_type
+				WHEN 1 THEN 1
+				WHEN 2 THEN 2
+				WHEN 6 THEN 3
+				WHEN 14 THEN 4
+				WHEN 15 THEN 5
+				WHEN 3 THEN 6
+				WHEN 7 THEN 7
+				WHEN 4 THEN 8
+				WHEN 8 THEN 9
+				WHEN 5 THEN 10
+				WHEN 9 THEN 11
+				WHEN 10 THEN 12
+				WHEN 12 THEN 13
+				WHEN 11 THEN 14
+				WHEN 13 THEN 15	
+			END AS new_work_order
+		  FROM top_mbr_bsc
+		 WHERE user_state != 1
+		 AND team_id_main = #{team_id}
+		 order by new_work_order limit 1
+	</select>
+</mapper>

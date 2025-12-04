@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="InvoiceDtlMapper">
+	
+	<!-- 세금계산서 번호 수동등록 -->
+	<update id="updateInvInvoiceNoData" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		UPDATE top_rpt_invoice SET
+			tax_invoice_no = #{taxNo}
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</update>
+
+	<!-- 세금계산서 번호 자동등록 -->
+	<update id="updateInvInvoiceNoAuto" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		UPDATE top_rpt_invoice SET
+			tax_invoice_no = #{rptInvNo}
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</update>
+	
+	<!-- 세금계산서 번호를 수임번호검색으로 자동등록 -->
+	<update id="updateInvInvoiceNoAutoSuimNo" parameterType="String">
+		UPDATE top_rpt_invoice SET 
+			tax_invoice_no = rpt_invoice_no 
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+
+	<!-- 기존 세금계산서 번호초기화 -->
+	<update id="updateInvInvoiceNoEmpty" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		UPDATE top_rpt_invoice SET
+			tax_invoice_no = ""
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</update>
+
+	<!-- 기존 세금계산서 번호가져오기 -->
+	<select id="selectInvInvoiceNo" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO" resultType="String">
+		SELECT 
+			IFNULL(tax_invoice_no,"") AS tax_invoice_no 
+		FROM top_rpt_invoice 
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</select>
+	
+	<!-- 보험사 세금계산서 담당자 이름 수정 -->
+	<update id="updatePtnrTaxMbrNm" parameterType="HashMap">
+		UPDATE top_ptnr_mbr_bsc SET
+			ptnr_tax_nm = #{ptnr_tax_mbr_nm}
+		WHERE ptnr_mbr_no = #{ptnr_mbr_no}
+	</update>
+
+	<insert id="insertInvTax" parameterType="HashMap">
+		INSERT INTO top_rpt_invoice_tax 
+		(
+			suim_rpt_no			
+			<if test='publish_date != null and !publish_date.equals("")'>
+			, publish_date
+			</if>
+			, publish_amount
+			<if test='deposit_date != null and !deposit_date.equals("")'>
+			, deposit_date
+			</if>
+			, deposit_amount
+			, reg_date
+		) VALUES (
+			#{suim_rpt_no}
+			<if test='publish_date != null and !publish_date.equals("")'>
+			,#{publish_date}
+			</if>
+			,#{publish_amount}
+			<if test='deposit_date != null and !deposit_date.equals("")'>
+			,#{deposit_date}
+			</if>
+			,#{deposit_amount}
+			, now()
+		)
+	
+	</insert>
+
+	<delete id = "deleteInvTax" parameterType="String">
+		DELETE FROM top_rpt_invoice_tax		
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</delete>
+	
+	<update id="updateTaxWork" parameterType="Hashmap">
+		UPDATE top_rpt_invoice SET
+			tax_edit_end = #{tax_edit_end}
+		WHERE
+			suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<delete id = "deleteInvTaxNo" parameterType="Hashmap">
+		DELETE FROM top_rpt_invoice_tax		
+		WHERE tax_no = #{tax_no}
+	</delete>
+	
+	<update id="updateTaxInvoiceNoBySuimRptNo" parameterType="Hashmap">
+		UPDATE top_rpt_invoice SET
+			tax_invoice_no = #{tax_invoice_no}
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</update>
+	
+	<select id="getInoviceTaxNo" parameterType="String" resultType="String">
+		SELECT 
+			IFNULL(tax_invoice_no,'') AS tax_invoice_no
+		FROM top_rpt_invoice
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<select id="getInvTaxCnt" parameterType="String" resultType="integer">
+		SELECT count(*) as nCnt
+		FROM top_rpt_invoice_tax
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+	
+	<select id="getInvTaxDepositCnt" parameterType="String" resultType="integer">
+		SELECT count(*) as nCnt
+		FROM top_rpt_invoice_tax
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND deposit_date IS NOT NULL 
+		AND deposit_amount != 0 
+	</select>
+	
+	<select id="getInvTaxPublishCnt" parameterType="String" resultType="integer">
+		SELECT count(*) as nCnt
+		FROM top_rpt_invoice_tax
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND publish_date IS NOT NULL 
+		AND publish_amount != 0 
+	</select>
+	
+	<update id="updateInvDepositDate" parameterType="Hashmap">
+		UPDATE top_rpt_invoice SET
+			deposit_date = unix_timestamp(#{deposit_date})
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND ( deposit_date IS NULL OR deposit_date = 0 )
+	</update>
+	
+	<update id="updateInvPublishDate" parameterType="Hashmap">
+		UPDATE top_rpt_invoice SET
+			tax_date = unix_timestamp(#{publish_date})
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		AND ( tax_date IS NULL OR tax_date = 0 )
+	</update>
+	
+	<insert id="insertInComeLogInfo" parameterType="Hashmap">
+		INSERT INTO income_file_upload_log (
+			work_no
+			,suim_rpt_no
+			,suim_accept_no
+			,accident_no
+			,writer_no
+			,policyholder_nm
+			,deposit_date
+			,tax_date
+			,work_user_no
+			,work_date
+			,action_flag
+		)VALUES(
+			#{work_no}
+			,#{suim_rpt_no}
+			,#{suim_accept_no}
+			,#{accident_no}
+			,#{writer_no}
+			,#{policyholder_nm}
+			,#{deposit_date}
+			,#{tax_date}
+			,#{work_user_no}
+			,NOW()
+			,#{action_flag}
+		)		
+	</insert>
+	
+	<select id="selectInComeLogInfo" parameterType="String" resultType="Hashmap">
+		SELECT 
+			a.suim_rpt_no
+			,a.suim_accept_no
+			,b.accident_no
+			,a.user_no AS writer_no
+			,a.policyholder_nm	
+			,DATE_FORMAT(FROM_UNIXTIME(c.deposit_date), '%Y-%m-%d') deposit_date
+			,DATE_FORMAT(FROM_UNIXTIME(c.tax_date), '%Y-%m-%d') tax_date	
+		FROM top_rpt_head a, top_rpt_body b, top_rpt_invoice c
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		AND a.suim_rpt_no = c.suim_rpt_no
+		AND a.suim_rpt_no = #{suim_rpt_no}	
+	</select>
+	
+	<!-- 인보이스 세금계산서의 입금금액과 세금계산서금액 합이 동일한지 체크 -->
+	<select id="chkInvTaxAmountSum" parameterType="String" resultType="integer">
+		SELECT
+			CASE
+				WHEN GA.publish = GA.deposit
+				THEN 1
+				ELSE 0
+			END AS result
+		FROM
+			(
+				SELECT 
+					SUM(publish_amount) AS publish
+					,SUM(deposit_amount) AS deposit
+				FROM top_rpt_invoice_tax 
+				WHERE suim_rpt_no = #{suim_rpt_no}
+			)GA
+	</select>
+	
+	<update id="updateInvTaxDeposit" parameterType="Hashmap">
+		UPDATE top_rpt_invoice_tax SET
+			deposit_date = #{deposit_date}
+			,deposit_amount = #{deposit_amount}
+			,reg_date = now()
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		ORDER BY reg_date desc
+		LIMIT 1
+	</update>
+	
+	<update id="updateInvWorkClean" parameterType="Hashmap">
+		UPDATE top_rpt_invoice SET
+			work_state = 0
+			,work_user_no = 0
+		WHERE suim_rpt_no = #{suim_rpt_no}	
+	</update>
+	
+	<update id="updateInvTaxPublish" parameterType="Hashmap">
+		UPDATE top_rpt_invoice_tax SET
+			publish_date = #{publish_date}
+			,publish_amount = #{publish_amount}
+			,reg_date = now()
+		WHERE suim_rpt_no = #{suim_rpt_no}
+		ORDER BY reg_date desc
+		LIMIT 1
+	</update>
+	
+	<select id="selectDepositSearchList" parameterType="Hashmap" resultType="Hashmap">
+		SELECT 
+			dkey
+			,ptnr_id
+			,getTopPtnrBscPtnrNick(ptnr_id) AS ptnr_name
+			,income_amount
+			,tax_amount
+			,IFNULL(extra_memo,'') AS extra_memo
+			,IFNULL(income_date,'') AS income_date
+			,IFNULL(DATE_FORMAT(income_date, '%Y-%m-%d'),'') AS income_date_fmt
+			,IFNULL(reg_date,'') AS reg_date
+			,IFNULL(DATE_FORMAT(reg_date, '%Y-%m-%d'),'') AS reg_date_fmt
+			,reg_user_no
+			,IFNULL(getTopMbrBscUserName(reg_user_no),'') AS reg_user_name	
+			,IFNULL(modify_date,'') AS modify_date
+			,IFNULL(DATE_FORMAT(modify_date, '%Y-%m-%d'),'') AS modify_date_fmt
+			,modify_user_no
+			,IFNULL(getTopMbrBscUserName(modify_user_no),'') AS modify_user_name	
+			,IFNULL(del_date,'') AS del_date
+			,IFNULL(DATE_FORMAT(del_date, '%Y-%m-%d'),'') AS del_date_fmt
+			,del_user_no
+			,IFNULL(getTopMbrBscUserName(del_user_no),'') AS del_user_name
+			,del_flag
+		FROM top_small_deposit_manage
+		WHERE 1=1
+		<if test="ptnrSearch !=0">
+			AND ptnr_id = #{ptnrSearch}			
+		</if>
+		<if test="s_income_date != ''">
+			AND income_date >= #{s_income_date} 
+		</if>
+		<if test="e_income_date != ''">
+			AND income_date &lt;= #{e_income_date} 
+		</if>
+		<if test="searchStr != ''">
+			AND extra_memo like CONCAT('%',#{searchStr},'%')			
+		</if>
+		AND del_flag=0
+		ORDER BY 
+		<choose>
+			<when test='ptnrOrder == "DESC"'>
+				ptnr_name DESC
+			</when>
+			<when test='ptnrOrder == "ASC"'>
+				ptnr_name ASC
+			</when>
+			<when test='incomeAmountOrder == "DESC"'>
+				income_amount DESC
+			</when>
+			<when test='incomeAmountOrder == "ASC"'>
+				income_amount ASC
+			</when>
+			<when test='taxAmountOrder == "DESC"'>
+				tax_amount DESC
+			</when>
+			<when test='taxAmountOrder == "ASC"'>
+				tax_amount ASC
+			</when>
+			<when test='incomeDateOrder == "DESC"'>
+				income_date DESC
+			</when>
+			<when test='incomeDateOrder == "ASC"'>
+				income_date ASC
+			</when>
+			<when test='regDateOrder == "DESC"'>
+				reg_date DESC
+			</when>
+			<when test='regDateOrder == "ASC"'>
+				reg_date ASC
+			</when>
+			<otherwise>
+				reg_date DESC		
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectInComeLogSearchList" parameterType="Hashmap" resultType="Hashmap">
+		SELECT 
+			ikey
+			,work_no
+			,suim_rpt_no
+			,suim_accept_no
+			,accident_no
+			,writer_no
+			,getTopMbrBscUserName(writer_no) AS writer_nm
+			,policyholder_nm
+			,deposit_date
+			,IFNULL(DATE_FORMAT(deposit_date, '%Y-%m-%d'),'') AS deposit_date_fmt
+			,tax_date
+			,IFNULL(DATE_FORMAT(tax_date, '%Y-%m-%d'),'') AS tax_date_fmt
+			,getTopMbrBscUserName(work_user_no) AS work_user_nm
+			,action_flag
+		FROM income_file_upload_log
+		WHERE 1=1
+		<if test='work_no != ""'>
+			AND work_no = #{work_no}
+		</if>
+		<if test='deposit_date != ""'>
+			AND deposit_date = #{deposit_date}
+		</if>
+		<if test='suim_accept_no != ""'>			 
+			AND suim_accept_no like CONCAT('%',#{suim_accept_no},'%')
+		</if>
+		<if test='accident_no != ""'>			 
+			AND accident_no like CONCAT('%',#{accident_no},'%')
+		</if>
+		<if test='policyholder_nm != ""'>			 
+			AND policyholder_nm like CONCAT('%',#{policyholder_nm},'%')
+		</if>		
+	</select>
+	
+	<select id="countTopRptHeadBySuimAcceptNo" parameterType="String" resultType="integer">
+		SELECT 
+			COUNT(*) AS nCnt 
+		FROM top_rpt_head 
+		WHERE suim_accept_no = #{suim_accept_no} 
+	</select>
+	
+	<select id="getInvTotalAmt" parameterType="String" resultType="integer">
+		SELECT SUM(amt_total) as amt_total
+		FROM top_rpt_invoice
+		WHERE suim_rpt_no = #{suim_rpt_no}
+	</select>
+
+	<select id="getInvoiceDtl" parameterType="String" resultType="kr.co.toplac.toprptinv.TopRptInvCompositeVO">
+		SELECT a.rpt_invoice_no,a.suim_rpt_no
+			  ,IFNULL(a.amt_basic,0) amt_basic,a.amt_basic_dtl
+			  ,IFNULL(a.amt_daily,0) amt_daily,a.amt_daily_dtl
+			  ,IFNULL(a.amt_traffic,0) amt_traffic,a.amt_traffic_dtl
+			  ,IFNULL(a.amt_counsel,0) amt_counsel,a.amt_counsel_dtl
+			  ,IFNULL(a.amt_etc,0) amt_etc,a.amt_etc_dtl
+			  ,IFNULL(a.amt_total,0) amt_total
+			  ,a.rpt_invoice_memo
+			  ,a.tax_invoice_no
+			  ,a.invoice_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(a.invoice_date), '%Y-%m-%d') invoice_date_fmt
+			  ,a.deposit_date
+			  ,IF(a.deposit_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.deposit_date), '%Y-%m-%d')) deposit_date_fmt
+			  ,a.tax_date
+			  ,IF(a.tax_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(a.tax_date), '%Y-%m-%d')) tax_date_fmt
+			  ,a.edit_amt_cnt
+			  ,a.edit_date_cnt
+			  ,a.tax_edit_end
+			  ,b.close_date
+			  ,DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d') close_date_fmt
+			  ,b.ptnr_id
+			  ,getTopPtnrBscPtnrNick(ptnr_id) ptnr_name
+			  ,b.ptnr_mbr_no
+			  ,getTopPtnrMbrBscPtnrMbrName(ptnr_mbr_no) ptnr_mbr_name
+			  ,getTopPtnrMbrBscPtnrTaxName(ptnr_mbr_no) ptnr_tax_nm
+			  ,b.team_id
+			  ,getTopTmBscTeamName(team_id) team_name
+			  ,b.user_no
+			  ,getTopMbrBscUserName(user_no) user_name
+			  ,b.policyholder_nm
+			  ,b.beneficiary_nm
+			  ,b.suim_accept_no
+			  ,b.suim_close_no
+			  ,c.accident_no
+			  ,c.policy_no
+			  ,b.suim_rpt_ea
+			  ,a.work_state
+			  ,a.work_user_no
+			  ,IFNULL(getTopMbrBscUserName(a.work_user_no),'') AS work_user_nm
+		  FROM top_rpt_invoice a , top_rpt_head b, top_rpt_body c
+		 WHERE a.rpt_invoice_no = #{no}
+	       AND a.suim_rpt_no=b.suim_rpt_no
+	       AND a.suim_rpt_no=c.suim_rpt_no
+	</select>
+	
+	<!-- 인보이스 작업상태 정보가져오기 -->
+	<select id="getInvWorkStateInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			rpt_invoice_no
+			,suim_rpt_no
+			,work_state
+			,work_user_no
+			,IFNULL(getTopMbrBscUserName(work_user_no),'') AS work_user_nm
+		FROM top_rpt_invoice
+		WHERE suim_rpt_no = #{suim_rpt_no}	
+	</select>
+	
+	<!-- 인보이스 작업 상태 갱신 -->
+	<update id="updateInvWorkStateInfo" parameterType="hashmap">
+		UPDATE top_rpt_invoice SET
+			work_state = #{work_state}
+			,work_user_no = #{user_no}
+		WHERE suim_rpt_no = #{suim_rpt_no}	
+	</update>
+	
+	<!-- 세금계산서 목록 가져오기 -->
+	<select id="getInvTaxList" parameterType="String" resultType="kr.co.toplac.toprptinv.TopRptInvTaxBean">
+		SELECT
+			tax_no
+			,suim_rpt_no
+			,publish_date
+			,DATE_FORMAT(publish_date, '%Y-%m-%d') publish_date_fmt
+			,publish_amount
+			,deposit_date
+			,DATE_FORMAT(deposit_date, '%Y-%m-%d') deposit_date_fmt
+			,deposit_amount			
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') reg_date_fmt
+		FROM
+			top_rpt_invoice_tax
+		WHERE 	1=1
+		AND suim_rpt_no = #{suim_rpt_no}
+		ORDER BY reg_date desc	
+	</select>
+
+	<select id="getInvoiceLogList" parameterType="String" resultType="kr.co.toplac.toprptinv.TopRptInvLogVO">
+		SELECT	serial_no
+			,amt_basic,amt_basic_dtl,amt_daily,amt_daily_dtl
+			,amt_etc,amt_etc_dtl,amt_traffic,amt_traffic_dtl
+			,amt_counsel,amt_counsel_dtl,amt_total
+			,rpt_invoice_memo,tax_invoice_no
+			,invoice_date,DATE_FORMAT(FROM_UNIXTIME(invoice_date), '%Y-%m-%d') invoice_date_fmt
+			,deposit_date,if(deposit_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(deposit_date), '%Y-%m-%d')) deposit_date_fmt
+			,tax_date,if(tax_date &lt; 1,'',DATE_FORMAT(FROM_UNIXTIME(tax_date), '%Y-%m-%d')) tax_date_fmt
+			,reg_date,DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			,reg_user_no,getTopMbrBscUserName(reg_user_no) reg_user_nm
+		FROM top_rpt_invoice_log
+		WHERE rpt_invoice_no = #{no}
+		ORDER BY serial_no
+	</select>
+
+	<update id="updateRptInvDtl" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		UPDATE top_rpt_invoice a, top_rpt_head b
+		SET
+			<if test="editAmtYn != 0">
+				a.edit_amt_cnt = a.edit_amt_cnt + 1,
+			</if>
+			<if test="editDateYn != 0">
+				a.edit_date_cnt = a.edit_date_cnt + 1,
+			</if>
+			<choose>
+				<when test="invoiceDate != ''">
+					a.invoice_date = unix_timestamp(#{invoiceDate}),
+				</when>
+				<otherwise>
+					a.invoice_date = NULL,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="depositDate != ''">
+					a.deposit_date = unix_timestamp(#{depositDate}),
+				</when>
+				<otherwise>
+					a.deposit_date = NULL,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="taxDate != ''">
+					a.tax_date = unix_timestamp(#{taxDate}),
+				</when>
+				<otherwise>
+					a.tax_date = NULL,
+				</otherwise>
+			</choose>
+			a.amt_basic = #{amtBasic},
+			a.amt_basic_dtl = #{amtBasicText},
+			a.amt_daily = #{amtDaily},
+			a.amt_daily_dtl = #{amtDailyText},
+			a.amt_etc = #{amtEtc},
+			a.amt_etc_dtl = #{amtEtcText},
+			a.amt_traffic = #{amtTraffic},
+			a.amt_traffic_dtl = #{amtTrafficText},
+			a.amt_counsel = #{amtCounsel},
+			a.amt_counsel_dtl = #{amtCounselText},
+			a.amt_total = #{amtTotal},
+			a.rpt_invoice_memo = #{memo},
+			<!-- a.tax_invoice_no = #{taxNo}, -->
+			a.tax_no_flag = 1,
+			b.suim_rpt_ea = #{suimRptEa}
+		WHERE a.suim_rpt_no = b.suim_rpt_no
+		  AND a.rpt_invoice_no = #{rptInvNo}
+		
+	</update>
+
+	<insert id="insertRptInvLog" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+		INSERT INTO top_rpt_invoice_log (rpt_invoice_no,suim_rpt_no
+			,amt_basic,amt_basic_dtl,amt_daily,amt_daily_dtl
+			,amt_etc,amt_etc_dtl,amt_traffic,amt_traffic_dtl
+			,amt_counsel,amt_counsel_dtl,amt_total
+			,rpt_invoice_memo,tax_invoice_no
+			,invoice_date,deposit_date,tax_date
+			,reg_date,reg_user_no,edit_amt_cnt,edit_date_cnt)
+		SELECT	rpt_invoice_no,suim_rpt_no
+			,amt_basic,amt_basic_dtl,amt_daily,amt_daily_dtl
+			,amt_etc,amt_etc_dtl,amt_traffic,amt_traffic_dtl
+			,amt_counsel,amt_counsel_dtl,amt_total
+			,rpt_invoice_memo,tax_invoice_no
+			,invoice_date,deposit_date,tax_date
+			,unix_timestamp(now()),#{regUserNo},edit_amt_cnt,edit_date_cnt
+		FROM top_rpt_invoice
+		WHERE rpt_invoice_no = #{rptInvNo}
+	</insert>
+	
+	<!-- invoice amtTotal 값 수정 by top3009 20231229 -->
+	<select id="getInvoiceDtlForRptDtl" parameterType="String" resultType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">		
+		select 
+			  a.rpt_invoice_no rptInvNo
+			 ,a.amt_basic amtBasic
+			 ,a.amt_basic_dtl amtBasicText
+			 ,a.amt_daily amtDaily
+			 ,a.amt_daily_dtl amtDailyText
+			 ,a.amt_traffic amtTraffic
+			 ,a.amt_traffic_dtl amtTrafficText
+			 ,a.amt_counsel amtCounsel
+			 ,a.amt_counsel_dtl amtCounselText
+			 ,a.amt_etc amtEtc
+			 ,a.amt_etc_dtl amtEtcText
+			 <!-- ,sum(a.amt_basic + a.amt_daily + a.amt_traffic + a.amt_counsel + a.amt_etc) amtTotal -->
+			 ,a.amt_total amtTotal
+			 ,DATE_FORMAT(FROM_UNIXTIME(a.invoice_date), '%Y-%m-%d') invoiceDate
+		from 
+			top_rpt_invoice a
+		where 
+	    	a.suim_rpt_no= #{suimRptNo}
+	</select>
+	
+	<!-- 보고서 상세 팝업 시 추출 lsh -->
+	<select id="getInvoiceDtlForRptDtl_20231229" parameterType="String" resultType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">		
+		select 
+			  a.rpt_invoice_no rptInvNo
+			 ,a.amt_basic amtBasic
+			 ,a.amt_basic_dtl amtBasicText
+			 ,a.amt_daily amtDaily
+			 ,a.amt_daily_dtl amtDailyText
+			 ,a.amt_traffic amtTraffic
+			 ,a.amt_traffic_dtl amtTrafficText
+			 ,a.amt_counsel amtCounsel
+			 ,a.amt_counsel_dtl amtCounselText
+			 ,a.amt_etc amtEtc
+			 ,a.amt_etc_dtl amtEtcText
+			 ,sum(a.amt_basic + a.amt_daily + a.amt_traffic + a.amt_counsel + a.amt_etc) amtTotal
+			 ,DATE_FORMAT(FROM_UNIXTIME(a.invoice_date), '%Y-%m-%d') invoiceDate
+		from 
+			top_rpt_invoice a
+		where 
+	    	a.suim_rpt_no= #{suimRptNo}
+	</select>
+	
+	<!-- 보고서 상세 팝업 인보이스 정보 수정 lsh -->
+	<update id="invoiceUdtForRptDtl" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO">
+	
+		UPDATE
+			top_rpt_invoice
+		SET
+			amt_basic = #{amtBasic}
+			,amt_basic_dtl = #{amtBasicText}
+			,amt_daily = #{amtDaily}
+			,amt_daily_dtl = #{amtDailyText}
+			,amt_traffic = #{amtTraffic}
+			,amt_traffic_dtl = #{amtTrafficText}
+			,amt_counsel = #{amtCounsel}
+			,amt_counsel_dtl = #{amtCounselText}
+			,amt_etc = #{amtEtc}
+			,amt_etc_dtl = #{amtEtcText}
+			,amt_total = #{amtTotal}
+			,invoice_date =  unix_timestamp(#{invoiceDate})
+		WHERE
+			rpt_invoice_no = #{rptInvNo}
+	</update>
+	
+	<insert id = "invoiceLogInsForRptDtl" parameterType="kr.co.toplac.toprptinv.TopRptInvDtlViewVO" >
+		
+		INSERT INTO top_rpt_invoice_log
+		
+		(
+			rpt_invoice_no, suim_rpt_no, amt_basic, amt_basic_dtl, amt_daily, amt_daily_dtl, amt_etc, amt_etc_dtl
+			, amt_traffic, amt_traffic_dtl, amt_counsel, amt_counsel_dtl, amt_total, invoice_date, reg_date, reg_user_no
+		)
+		VALUES
+		(
+			#{rptInvNo}, #{suimRptNo}, #{amtBasic}, #{amtBasicText}, #{amtDaily}, #{amtDailyText}, #{amtEtc}, #{amtEtcText},
+			 #{amtTraffic}, #{amtTrafficText}, #{amtCounsel}, #{amtCounselText}, #{amtTotal}, unix_timestamp(#{invoiceDate}), unix_timestamp(now()), #{regUserNo}
+		)
+	
+	</insert>
+
+</mapper>

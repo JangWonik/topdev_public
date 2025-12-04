@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="AprvUserMapper"> 
+
+	<select id="taskCodeList" resultType="kr.co.toplac.sysadm.SysAdmCodeDicVO">
+		SELECT a.col_cd, a.col_val
+		FROM sysadm_codedic a
+		WHERE a.tbl_nm = 'sysadm_aprv_user'
+		AND a.col_nm = 'task_code'
+	</select>
+
+	<insert id="aprvUserIns" parameterType="kr.co.toplac.util.memo.MemoUtilViewVO" >
+		INSERT INTO sysadm_aprv_user
+		(team_id, task_code, aprv_user_no, reg_reason, reg_date, reg_ip, reg_user_no)
+		VALUES(#{teamNo}, #{taskNo}, #{mbrNo1}, #{chgAprvUserReason}, unix_timestamp(now()), #{regIp}, #{regUser})
+	</insert>
+
+	<select id="selectOneAprvUser" parameterType="kr.co.toplac.sysadm.AprvUserInsViewVO" resultType = "kr.co.toplac.sysadm.SysAdmAprvUserVO">
+		SELECT a.serial_no
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_nm
+			, a.task_code, getCodeValue('sysadm_aprv_user','task_code',a.task_code) task_code_nm
+			, a.aprv_user_no, getTopMbrBscUserName(a.aprv_user_no) aprv_user_nm
+			, a.reg_reason
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, a.reg_ip
+			, a.reg_user_no, getTopMbrBscUserName(a.reg_user_no) reg_user_nm
+			, ifnull(a.del_reason,'') del_reason
+			, ifnull(a.del_date,'') del_date
+			, ifnull(DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d %H:%i:%s'),'') del_date_fmt
+			, ifnull(a.del_ip,'') del_ip
+			, ifnull(a.del_user_no,'') del_user_no
+			, ifnull(getTopMbrBscUserName(a.del_user_no),'') del_user_nm
+		FROM sysadm_aprv_user a
+		WHERE a.team_id = #{teamNo}
+		AND a.task_code = #{taskNo}
+		ORDER BY a.serial_no DESC
+		LIMIT 0, 1
+	</select>
+
+	<select id="aprvUserList" parameterType="kr.co.toplac.sysadm.AprvUserInsViewVO" resultType = "kr.co.toplac.sysadm.SysAdmAprvUserVO">
+		SELECT a.serial_no
+			, a.team_id, getTopTmBscTeamName(a.team_id) team_nm
+			, a.task_code, getCodeValue('sysadm_aprv_user','task_code',a.task_code) task_code_nm
+			, a.aprv_user_no, getTopMbrBscUserName(a.aprv_user_no) aprv_user_nm
+			, a.reg_reason
+			, a.reg_date, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d %H:%i:%s') reg_date_fmt
+			, a.reg_ip
+			, a.reg_user_no, getTopMbrBscUserName(a.reg_user_no) reg_user_nm
+			, ifnull(a.del_reason,'') del_reason
+			, ifnull(a.del_date,'') del_date
+			, ifnull(DATE_FORMAT(FROM_UNIXTIME(a.del_date), '%Y-%m-%d %H:%i:%s'),'') del_date_fmt
+			, ifnull(a.del_ip,'') del_ip
+			, ifnull(a.del_user_no,'') del_user_no
+			, ifnull(getTopMbrBscUserName(a.del_user_no),'') del_user_nm
+		FROM sysadm_aprv_user a
+		WHERE a.team_id = #{teamNo}
+		<if test="taskNo != 0">
+			AND a.task_code = #{taskNo}
+		</if>
+		ORDER BY a.serial_no DESC
+	</select>
+
+	<update id = "deleteAprvUser" parameterType="kr.co.toplac.sysadm.AprvUserInsViewVO">
+		UPDATE sysadm_aprv_user
+		SET del_reason = #{delReason}, del_date = unix_timestamp(now()), del_ip = #{regIp}, del_user_no = #{regUser}
+		WHERE serial_no = #{serialNo}
+	</update>
+	
+	<!-- 보고서 결재용 결재자 정보 추출 -->
+	<select id="selectOneAprvUserForRptSub" parameterType="kr.co.toplac.sysadm.AprvUserInsViewVO" resultType = "String">
+		SELECT 
+			  a.aprv_user_no
+		FROM sysadm_aprv_user a
+		WHERE a.team_id = #{teamNo}
+		AND a.task_code = #{taskNo}
+		ORDER BY a.serial_no DESC
+		LIMIT 0, 1
+	</select>
+	
+	<!-- 보고서 결재용 결재자 정보 추출 @@@ 4종 별도.-->
+	<select id="selectOneAprvUserForRptInbo" parameterType="String" resultType = "String">
+		SELECT suim_rpt_aprv_user_no
+		  FROM top_rpt_body
+		 WHERE suim_rpt_no = #{_parameter}
+	</select>
+
+</mapper>

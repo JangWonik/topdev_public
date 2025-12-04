@@ -1,0 +1,630 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="SuimRptSiteMapper">
+
+	<select id="getSuimBookDtl" resultType="kr.co.toplac.topsuim.SuimRptSiteCompositeVO" parameterType="String">
+		SELECT 
+		  a.suim_rpt_no suimRptNo
+		, a.accident_no accidentNo
+		, a.policy_no policyNo
+		, a.insurance_nm insuranceNm
+		, a.policyholder_ssn policyholderSsn
+		, a.policyholder_tel policyholderTel
+		, a.beneficiary_ssn beneficiarySsn
+		, a.beneficiary_tel beneficiaryTel
+		, a.damaged_tel damagedTel
+		, a.accident_facts accidentFacts
+		, a.investigate_postcode investigatePostcode
+		, a.insu_term insuTerm
+		, a.amt_compensation_limit amtCompensationLimit
+		, a.insu_mortgage insuMortgage
+		, a.investigate_addr1 investigateAddr1
+		, a.investigate_addr2 investigateAddr2
+		, a.amt_estimated_damage amtEstimatedDamage
+		, a.commission_estimated commissionEstimated
+		, a.policyholder_contact policyholderContact
+		, a.policyholder_addr policyholderAddr
+		, a.reference_facts referenceFacts
+		, a.damaged_facts damagedFacts
+		, a.amt_self_pay amtSelfPay
+		, a.ptnr_mbr_position_nm_4edit ptnrMbrPositionNm4edit
+		, b.suim_rpt_no suimRptNo
+		, b.suim_accept_no suimAcceptNo
+		, b.suim_close_no suimCloseNo
+		, b.suim_rpt_type1 suimRptType1
+		, getCodeValue('top_rpt_head','suim_rpt_type1',b.suim_rpt_type1) suimRptType1Nm
+		, getCodeValue('top_rpt_head','suim_rpt_type2',b.suim_rpt_type2) suimRptType2Nm
+		, b.suim_rpt_type2 suimRptType2
+		, b.team_id teamId
+		, getTopTmBscTeamName(b.team_id) teamName
+		, b.user_no userNo
+		, getTopMbrBscUserName(b.user_no) userName
+		, b.ptnr_id ptnrId
+		, getTopPtnrBscPtnrNick(b.ptnr_id) ptnrNick
+		, getTopPtnrBscPtnrName(b.ptnr_id) ptnrName
+		, b.ptnr_dept_id ptnrDeptId
+		, getTopPtnrDeptBscPtnrDeptName(b.ptnr_dept_id) ptnrDeptNm
+		, b.ptnr_mbr_no ptnrMbrNo
+		, getTopPtnrMbrBscPtnrMbrName(b.ptnr_mbr_no) ptnrMbrNm
+		, b.policyholder_nm policyholderNm
+		, b.beneficiary_nm beneficiaryNm
+		, b.damaged_nm damagedNm
+		, DATE_FORMAT(FROM_UNIXTIME(b.accident_date), '%Y-%m-%d') accidentDate
+		, DATE_FORMAT(FROM_UNIXTIME(b.reg_date), '%Y-%m-%d') regDate
+		, DATE_FORMAT(FROM_UNIXTIME(b.trans_date), '%Y-%m-%d') transDate 
+		, DATE_FORMAT(FROM_UNIXTIME(b.close_date), '%Y-%m-%d') closeDate
+		, c.ptnr_mbr_hp ptnrMbrHp
+		, c.ptnr_mbr_office_tel
+		, d.handphone rptUserHp
+		, d.office_fax officeFax
+		, a.memo_problem memoProblem
+		, a.memo_remedy memoRemedy
+		, a.amt_compensation_limit_unit compensationLimitUnit
+		, a.amt_self_pay_unit selfPayLimitUnit
+		FROM
+			top_rpt_head b
+		INNER JOIN top_rpt_body a
+		   ON b.suim_rpt_no = a.suim_rpt_no
+		INNER JOIN  top_mbr_bsc d
+		   ON b.user_no = d.user_no
+ 		 LEFT OUTER JOIN top_ptnr_mbr_bsc c
+ 		   ON b.ptnr_mbr_no = c.ptnr_mbr_no
+		WHERE 
+			b.suim_rpt_no = #{suimRptNo}
+	</select>
+	
+	<select id="getLatestSiteNo" parameterType="kr.co.toplac.topsuim.SuimRptSiteCompositeVO" resultType="Integer">
+	
+		SELECT 
+			max(rpt_site_no)
+		FROM
+			top_rpt_site_interim
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			and interim_flag = #{interimFlag}
+	</select>
+	
+	<select id="countExistOrderNo" parameterType="kr.co.toplac.topsuim.SuimRptSiteCompositeVO" resultType="Integer">
+	
+		SELECT 
+			count(rpt_site_no)
+		FROM
+			top_rpt_site_interim
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			and interim_flag = #{interimFlag}
+	</select>
+	
+	<select id="maxExistOrderNo" parameterType="kr.co.toplac.topsuim.SuimRptSiteCompositeVO" resultType="Integer">
+	
+		SELECT 
+			max(order_no)
+		FROM
+			top_rpt_site_interim
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+			and interim_flag = #{interimFlag}
+			
+	</select>
+	
+	<update id = "setSiteId" parameterType="java.util.HashMap">
+	
+		UPDATE
+			top_rpt_site_interim
+		SET
+			site_report_id = #{site_report_id}
+		WHERE
+			rpt_site_no = #{rpt_site_no}
+	
+	</update>
+	
+	<select id="selectSiteResultFlagHead" parameterType="String" resultType="String">
+		SELECT 
+			site_result_flag 
+		FROM top_rpt_head
+		WHERE suim_rpt_no = #{suimRptNo}		
+	</select>
+	
+	<update id = "udtRptBscHead" parameterType="kr.co.toplac.topsuim.SuimRptSiteCompositeVO">
+	
+		UPDATE
+			top_rpt_head
+		SET
+			policyholder_nm = #{policyholderNm}
+			,beneficiary_nm = #{beneficiaryNm}
+			,accident_date = unix_timestamp(#{accidentDate})
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	<update id = "udtRptBscBody" parameterType="kr.co.toplac.topsuim.SuimRptSiteCompositeVO">
+	
+		UPDATE
+			top_rpt_body
+		SET
+			accident_no = #{accidentNo}
+			,ptnr_mbr_position_nm_4edit = #{ptnrMbrPositionNm4edit}
+			,insurance_nm = #{insuranceNm}
+			,policy_no = #{policyNo}
+			,policyholder_ssn = #{policyholderSsn}
+			,beneficiary_ssn = #{beneficiarySsn}
+			,insu_term = #{insuTerm}
+			,amt_compensation_limit = #{amtCompensationLimit}
+			,amt_compensation_limit_unit = #{compensationLimitUnit}
+			,insu_mortgage = #{insuMortgage}
+			,investigate_addr1 = #{investigateAddr1}
+			,investigate_addr2 = #{investigateAddr2}
+			,reference_facts = #{referenceFacts}
+			,accident_facts = #{accidentFacts}
+			,damaged_facts = #{damagedFacts}
+			,amt_estimated_damage = #{amtEstimatedDamage}
+			,amt_self_pay = #{amtSelfPay}
+			,amt_self_pay_unit = #{selfPayLimitUnit}
+			,policyholder_contact = #{policyholderContact}
+			
+		WHERE
+			suim_rpt_no = #{suimRptNo}
+	
+	</update>
+	
+	
+	<insert id = "insNewSiteRpt" parameterType="kr.co.toplac.topsuim.SuimRptSiteCompositeVO">
+ 	
+ 		INSERT INTO top_rpt_site_interim
+ 		
+ 		(
+ 			suim_rpt_no, site_report_id, interim_flag, order_no, site_date , site_chamjo, site_zone, exemption_flag
+ 			, dmg_ctgr, dmg_ctgr_etc_nm, memo_problem, memo_remedy, memo_attach, compensation_limit_flag, compensation_limit_etc_amt
+ 			, self_pay_flag, self_pay_etc_amt, damaged_negligence, reg_date, sub_date
+ 		)
+ 		
+ 		VALUES
+ 		
+ 		(
+ 			#{suimRptNo},0 , #{interimFlag}, #{orderNo}, unix_timestamp(#{siteDate}), #{siteChamjo}, #{siteZone}, #{exemptionFlag}
+ 			, #{dmgCtgr}, #{dmgCtgrEtcNm}, #{memoProblem}, #{memoRemedy}, #{memoAttach}, #{compensationLimitFlag}, #{compensationLimitEtcAmt}
+ 			, #{selfPayFlag}, #{selfPayEtcAmt}, #{damagedNegligence}, unix_timestamp(now()), 0
+ 		)
+		
+ 	</insert>
+ 	
+ 	
+ 	<select id="getSiteListForRptDtl" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+ 	
+ 		SELECT
+ 			rpt_site_no rptSiteNo
+ 			, DATE_FORMAT(FROM_UNIXTIME(sub_date), '%Y-%m-%d') subDate
+ 			, DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+ 			, DATE_FORMAT(DATE_ADD(FROM_UNIXTIME(site_date), INTERVAL 30 DAY), '%Y-%m-%d') submitPrarnDate
+ 			, CONCAT(file_path,'/', file_name) filePath
+ 			, file_name fileName
+ 			, site_flag siteFlag
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			suim_rpt_no = #{suim_rpt_no}
+ 			and interim_flag = 0
+ 		ORDER BY siteDate ASC
+ 	</select>
+ 	
+ 	<select id="getSiteListFileCnt" resultType="integer">
+ 		SELECT
+ 			COUNT(*)   
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			suim_rpt_no = #{suim_rpt_no}
+ 			and interim_flag = 0
+ 			and file_name != ''
+ 	</select>
+ 	
+ 	<select id="getInterimListForRptDtl" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+ 	
+ 		SELECT
+ 			rpt_site_no rptSiteNo
+ 			, DATE_FORMAT(FROM_UNIXTIME(sub_date), '%Y-%m-%d') subDate
+ 			, DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+ 			, DATE_FORMAT(DATE_ADD(FROM_UNIXTIME(site_date), INTERVAL 30 DAY), '%Y-%m-%d') submitPrarnDate
+ 			, CONCAT(file_path,'/', file_name) filePath
+ 			, file_name fileName   
+ 			   
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			suim_rpt_no = #{suim_rpt_no}
+ 			and interim_flag = 1
+ 		ORDER BY siteDate ASC
+ 	</select>
+ 	<select id="getPrgssListForRptDtl" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+
+ 		SELECT
+ 			rpt_site_no rptSiteNo
+ 			, DATE_FORMAT(FROM_UNIXTIME(sub_date), '%Y-%m-%d') subDate
+ 			, DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+ 			, DATE_FORMAT(DATE_ADD(FROM_UNIXTIME(site_date), INTERVAL 30 DAY), '%Y-%m-%d') submitPrarnDate
+ 			, CONCAT(file_path,'/', file_name) filePath
+ 			, file_name fileName
+
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			suim_rpt_no = #{suim_rpt_no}
+ 			and interim_flag = 2
+ 	</select>
+
+ 	<select id="getSiteInterimListForDelete" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+ 	
+ 		SELECT
+ 			rpt_site_no rptSiteNo
+ 			, DATE_FORMAT(FROM_UNIXTIME(sub_date), '%Y-%m-%d') subDate
+ 			, DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+ 			, CONCAT(file_path,'/', file_name) filePath
+ 			, file_name fileName   
+ 			   
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			suim_rpt_no = #{suim_rpt_no}
+ 	</select>
+ 	
+	<select id="getSiteOne" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+ 	
+ 		SELECT
+ 			 suim_rpt_no suimRptNo
+ 			,site_report_id siteReportId 
+ 			,rpt_site_no rptSiteNo
+ 			,order_no orderNo
+ 			,DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+ 			,site_chamjo siteChamjo
+ 			,site_zone siteZone
+ 			,exemption_flag exemptionFlag
+ 			,dmg_ctgr dmgCtgr
+ 			,dmg_ctgr_etc_nm dmgCtgrEtcNm
+ 			,memo_problem memoProblem
+ 			,memo_remedy memoRemedy
+ 			,memo_attach memoAttach
+ 			,compensation_limit_flag compensationLimitFlag
+ 			,compensation_limit_etc_amt compensationLimitEtcAmt
+ 			,self_pay_flag selfPayFlag
+ 			,self_pay_etc_amt selfPayEtcAmt
+ 			,damaged_negligence damagedNegligence
+ 			,sub_date subDate 	
+ 			,file_path filePath
+ 			,file_name fileName
+ 			,site_flag siteFlag
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			rpt_site_no = #{rptSiteNo}
+ 			and interim_flag = 0
+ 	</select>
+ 	
+ 	<select id="getInterimOne" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+ 	
+ 		SELECT
+ 			 suim_rpt_no suimRptNo
+ 			,rpt_site_no rptSiteNo
+ 			,site_report_id siteReportId 
+ 			,order_no orderNo
+ 			,DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+ 			,site_chamjo siteChamjo
+ 			,site_zone siteZone
+ 			,exemption_flag exemptionFlag
+ 			,dmg_ctgr dmgCtgr
+ 			,dmg_ctgr_etc_nm dmgCtgrEtcNm
+ 			,memo_problem memoProblem
+ 			,memo_remedy memoRemedy
+ 			,memo_attach memoAttach
+ 			,compensation_limit_flag compensationLimitFlag
+ 			,compensation_limit_etc_amt compensationLimitEtcAmt
+ 			,self_pay_flag selfPayFlag
+ 			,self_pay_etc_amt selfPayEtcAmt
+ 			,damaged_negligence damagedNegligence
+ 			,sub_date subDate 			   
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			rpt_site_no = #{rptSiteNo}
+ 			and interim_flag = 1
+ 	</select>
+
+ 	<select id="getPrgssOne" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+
+ 		SELECT
+ 			 suim_rpt_no suimRptNo
+ 			,rpt_site_no rptSiteNo
+ 			,site_report_id siteReportId
+ 			,order_no orderNo
+ 			,DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+ 			,site_chamjo siteChamjo
+ 			,site_zone siteZone
+ 			,exemption_flag exemptionFlag
+ 			,dmg_ctgr dmgCtgr
+ 			,dmg_ctgr_etc_nm dmgCtgrEtcNm
+ 			,memo_problem memoProblem
+ 			,memo_remedy memoRemedy
+ 			,memo_attach memoAttach
+ 			,compensation_limit_flag compensationLimitFlag
+ 			,compensation_limit_etc_amt compensationLimitEtcAmt
+ 			,self_pay_flag selfPayFlag
+ 			,self_pay_etc_amt selfPayEtcAmt
+ 			,damaged_negligence damagedNegligence
+ 			,sub_date subDate
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			rpt_site_no = #{rptSiteNo}
+ 			and interim_flag = 2
+ 	</select>
+
+	<select id="selectRecentSite" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+
+		SELECT  suim_rpt_no suimRptNo
+			   ,site_report_id siteReportId
+  			   ,rpt_site_no rptSiteNo
+			   ,order_no orderNo
+			   ,DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d') siteDate
+			   ,site_chamjo siteChamjo
+			   ,site_zone siteZone
+			   ,exemption_flag exemptionFlag
+			   ,dmg_ctgr dmgCtgr
+			   ,dmg_ctgr_etc_nm dmgCtgrEtcNm
+			   ,memo_problem memoProblem
+			   ,memo_remedy memoRemedy
+			   ,memo_attach memoAttach
+			   ,compensation_limit_flag compensationLimitFlag
+			   ,compensation_limit_etc_amt compensationLimitEtcAmt
+			   ,self_pay_flag selfPayFlag
+			   ,self_pay_etc_amt selfPayEtcAmt
+			   ,damaged_negligence damagedNegligence
+			   ,sub_date subDate
+		  FROM  top_rpt_site_interim
+		 WHERE  suim_rpt_no = #{suimRptNo}
+		ORDER BY RPT_SITE_NO DESC LIMIT 0, 1
+	</select>
+
+
+
+
+
+ 	<update id = "udtSiteRpt" parameterType="kr.co.toplac.topsuim.SuimRptSiteVO" >
+ 	
+ 		UPDATE
+ 			top_rpt_site_interim
+ 		SET
+ 			  site_date = unix_timestamp(#{siteDate})
+ 			, order_no = #{orderNo}
+ 			, site_chamjo = #{siteChamjo}
+ 			, site_zone = #{siteZone}
+ 			, exemption_flag = #{exemptionFlag}
+ 			, dmg_ctgr = #{dmgCtgr}
+ 			, dmg_ctgr_etc_nm = #{dmgCtgrEtcNm}
+ 			, memo_attach = #{memoAttach}
+ 			, memo_problem = #{memoProblem}
+ 			, memo_remedy = #{memoRemedy}
+ 			, compensation_limit_flag = #{compensationLimitFlag}
+ 			, compensation_limit_etc_amt = #{compensationLimitEtcAmt}
+ 			, self_pay_flag = #{selfPayFlag}
+ 			, self_pay_etc_amt = #{selfPayEtcAmt}
+ 			, damaged_negligence = #{damagedNegligence}
+ 			, site_flag = #{siteFlag}
+ 		WHERE
+ 			rpt_site_no = #{rptSiteNo}
+ 		
+ 	</update>
+ 	
+ 	<delete id= "siteRptDel" parameterType="String">
+ 	
+ 		DELETE FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			rpt_site_no = #{rptSiteNo}
+ 	
+ 	</delete>
+
+ 	<!-- 현장보고서 이미지 파일 업로드 키값 구하기 & dummy 컬럼 생성-->
+ 	<insert id="insImg" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="primaryKey" keyColumn="primaryKey"> 	
+ 		INSERT INTO top_rpt_site_img
+ 			( rpt_site_no, img_subject, img_name ,img_path, reg_date )
+ 		VALUES
+ 			( #{rptSiteNo}, #{subject}, #{filename}, #{path}, unix_timestamp(now()) )
+			
+		<selectKey keyProperty="primaryKey" resultType="String" >
+	        SELECT LAST_INSERT_ID() 
+	    </selectKey>
+ 	</insert>
+ 	
+	<!-- 현장보고서 dummy 컬럼에 실제 Data Update -->
+	<update id="udtImg" parameterType="java.util.HashMap">
+		UPDATE 
+			top_rpt_site_img 
+		SET 
+			  rpt_site_no = #{rptSiteNo}
+			, img_subject = #{imgSubject}
+			, img_path = #{imgPath}			
+			, img_name = #{imgName}	  		
+		WHERE 
+			rpt_site_img_no = #{nextRptSiteImgNo}
+	</update>
+ 	
+ 	<select id="getSiteInterimImgList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptSiteImgVO">
+ 	 
+ 	SELECT
+ 		rpt_site_img_no rptSiteImgNo,
+ 		rpt_site_no rptSiteNo,
+ 		img_subject imgSubject,
+ 		CONCAT(img_path,'/',img_name) imgPath, 
+<!--  		img_path imgPath, -->
+ 		img_name imgName,
+ 		reg_date regDate
+ 	FROM
+ 		top_rpt_site_img
+ 	WHERE
+ 		rpt_site_no = #{rptSiteNo}
+ 	ORDER BY 
+ 		rpt_site_img_no asc
+ 	</select>
+ 	
+ 	<select id="getSiteInterimImgOne" parameterType="Integer" resultType="kr.co.toplac.topsuim.SuimRptSiteImgVO">
+ 	 
+ 	SELECT
+ 		img_subject imgSubject,
+ 		img_name imgName
+ 	FROM
+ 		top_rpt_site_img
+ 	WHERE
+ 		rpt_site_img_no = #{siteImgSerial}
+ 	
+ 	</select>
+ 	
+ 	<update id = "siteImgSubjectEdit" parameterType="java.util.HashMap" >
+ 	
+ 		UPDATE
+ 			top_rpt_site_img
+ 		SET
+ 			img_subject = #{subject}
+ 		WHERE
+ 			rpt_site_img_no = #{imgSerial}
+ 		
+ 	</update>
+ 	
+ 	<delete id="siteImgDel" parameterType="String" >
+ 	
+ 		DELETE FROM
+ 			top_rpt_site_img
+ 		WHERE
+ 			rpt_site_img_no = #{imgSerial}
+ 	</delete>
+ 	
+ 	<select id="getSiteImgPathForDel" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+ 			CONCAT(img_path,img_name)  
+ 		FROM
+ 			top_rpt_site_img
+ 		WHERE
+ 			rpt_site_img_no = #{imgSerial}
+ 	</select>
+ 	
+ 	<select id="getSiteFilePathForDel" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+ 			CONCAT(file_path,'/', file_name) file_path 
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			rpt_site_no = #{siteRptNo}
+ 	</select>
+ 	
+ 	<update id = "delSiteInterimFile" parameterType="String" >
+ 	
+ 		UPDATE
+ 			top_rpt_site_interim
+ 		SET
+ 			  file_path = ''
+ 			  ,file_name = ''
+ 			  ,sub_date = 0
+ 			
+ 		WHERE
+ 			rpt_site_no = #{siteRptNo}
+ 		
+ 	</update>
+ 	
+ 	<update id = "insSiteInterimFile" parameterType="java.util.HashMap" >
+ 	
+ 		UPDATE
+ 			top_rpt_site_interim
+ 		SET
+ 			  file_path = #{path}
+ 			  ,file_name = #{filename}
+ 			  ,sub_date = unix_timestamp(now())
+ 			<if test='site_flag != null and site_flag != ""'>
+				,site_flag = #{site_flag}
+			</if>
+ 		WHERE
+ 			rpt_site_no = #{rptSiteNo}
+ 		
+ 	</update>
+ 	
+ 	<select id="getSiteFilePathForDown" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+ 			CONCAT(file_path,file_name)
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			rpt_site_no = #{key}
+ 	
+ 	</select>
+ 	
+ 	<select id="latestInterimSubDate" parameterType="String" resultType="String">
+ 	
+ 		SELECT
+ 			DATE_FORMAT(FROM_UNIXTIME(max(site_date)), '%Y-%m-%d')
+ 		FROM
+ 			top_rpt_site_interim
+ 		WHERE
+ 			suim_rpt_no = #{suimRptNo}
+ 			and interim_flag = 1
+ 	
+ 	</select>
+ 	
+ 	
+ 	<!-- 2017.02.01 추가  -->
+ 	<!-- 중간보고서 차수 입력을 위함 -->
+	<select id="getInterimOrderNoList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+	 	SELECT
+<!-- 	 		@rownum := @rownum+1 AS orderNo -->
+			order_no orderNo
+			,suim_rpt_no suimRptNo
+			,rpt_site_no rptSiteNo
+			,site_report_id siteReportId 
+			,DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d %H:%i:%s') site_date
+		  FROM
+			top_rpt_site_interim, (SELECT @rownum :=0) AS R
+		 WHERE
+			suim_rpt_no = #{suimRptNo}
+			and interim_flag = 1
+		 ORDER BY 
+		 	site_date
+ 	</select>
+
+	<select id="getPrgssOrderNoList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+	 	SELECT
+<!-- 	 		@rownum := @rownum+1 AS orderNo -->
+	 		order_no orderNo
+			,suim_rpt_no suimRptNo
+			,rpt_site_no rptSiteNo
+			,site_report_id siteReportId
+			,DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d %H:%i:%s') site_date
+		  FROM
+			top_rpt_site_interim, (SELECT @rownum :=0) AS R
+		 WHERE
+			suim_rpt_no = #{suimRptNo}
+			and interim_flag = 2
+		 ORDER BY
+		 	site_date
+ 	</select>
+
+	<select id="getSiteOrderNoList" parameterType="String" resultType="kr.co.toplac.topsuim.SuimRptSiteVO">
+	 	SELECT
+<!-- 	 		@rownum := @rownum+1 AS orderNo -->
+	 		order_no orderNo
+			,suim_rpt_no suimRptNo
+			,rpt_site_no rptSiteNo
+			,site_report_id siteReportId 
+			,DATE_FORMAT(FROM_UNIXTIME(site_date), '%Y-%m-%d %H:%i:%s') site_date
+		  FROM
+			top_rpt_site_interim, (SELECT @rownum :=0) AS R
+		 WHERE
+			suim_rpt_no = #{suimRptNo}
+			and interim_flag = 0
+		 ORDER BY 
+		 	site_date
+ 	</select>
+
+</mapper>

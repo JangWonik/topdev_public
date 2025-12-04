@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="LsReportMapper">
+
+	<select id="reportp" parameterType="java.util.List" resultType="kr.co.toplac.lslog.Ls_ReportVO">
+		select
+			a.suim_rpt_no	rid
+			a.suim_accept_no	report_id
+			a.suim_close_no	result_id
+			a.suim_rpt_type1	report_type
+			a.suim_rpt_type2	report_type2
+			a.suim_rpt_type3	report_type3
+			a.suim_rpt_state	report_ch
+			a.ptnr_id	ig_id
+			a.ptnr_dept_id	ig_team
+			a.user_no	user_id
+			a.close_date	end_date
+			a.accident_date	trouble_date
+			a.reg_date	reg_date
+			a.policyholder_nm	ig_client
+			a.beneficiary_nm	ig_insured
+			a.damaged_nm	report_4
+
+			b.moral_flag	key_moral
+			b.minwon_flag	minwon
+			b.policyholder_ssn	ig_client_ju
+			b.policyholder_tel	ig_client_hp
+			b.beneficiary_ssn	ig_insured_ju
+			b.beneficiary_tel	ig_insured_hp
+			b.damaged_tel	report_4_hp
+			b.accident_facts	report_5
+			b.accident_no	report_1
+			b.policy_no	report_2
+			b.insurance_nm	report_3
+			b.amt_estimated_damage	price_estimated
+			b.commission_estimated	price_top
+		from top_rpt_head a, top_rpt_body b
+		where a.suim_rpt_no = #{rid}
+		and a.suim_rpt_no = b.suim_rpt_no
+	</select>
+
+</mapper>

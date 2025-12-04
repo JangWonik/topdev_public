@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MemoUtilMapper">
+
+	<select id="memoList" parameterType="kr.co.toplac.util.memo.MemoUtilViewVO" resultType = "kr.co.toplac.util.memo.TopRptMemoVO">
+		SELECT memo_no, fk_no, user_no, getTopMbrBscUserName(user_no) user_nm, memo
+		, reg_ip, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date
+		FROM
+		<choose>
+			<when test="targetStr == 'TopReport'">
+				top_rpt_memo
+			</when>
+			<when test="targetStr == 'TopPrimBiz'">
+				top_prim_biz_rpt_memo
+			</when>
+			<otherwise>
+				top_rpt_memo
+			</otherwise>
+		</choose>
+		WHERE fk_no = #{linkNo}
+		ORDER BY memo_no
+	</select>
+
+	<insert id="memoWrite" parameterType="kr.co.toplac.util.memo.MemoUtilViewVO" >
+		INSERT INTO
+		<choose>
+			<when test="targetStr == 'TopReport'">
+				top_rpt_memo
+			</when>
+			<when test="targetStr == 'TopPrimBiz'">
+				top_prim_biz_rpt_memo
+			</when>
+			<otherwise>
+				top_rpt_memo
+			</otherwise>
+		</choose>
+		(fk_no, user_no, memo, reg_ip, reg_date)
+		VALUES(#{linkNo}, #{userNo}, #{mContents}, #{regIp}, unix_timestamp(now()))
+	</insert>
+
+	<select id="oneMemo" parameterType="kr.co.toplac.util.memo.MemoUtilViewVO" resultType = "kr.co.toplac.util.memo.TopRptMemoVO">
+		SELECT memo_no, fk_no, user_no, getTopMbrBscUserName(user_no) user_nm, memo
+		, reg_ip, DATE_FORMAT(FROM_UNIXTIME(reg_date), '%Y-%m-%d %H:%i:%s') reg_date
+		FROM
+		<choose>
+			<when test="targetStr == 'TopReport'">
+				top_rpt_memo
+			</when>
+			<when test="targetStr == 'TopPrimBiz'">
+				top_prim_biz_rpt_memo
+			</when>
+			<otherwise>
+				top_rpt_memo
+			</otherwise>
+		</choose>
+		WHERE fk_no = #{linkNo}
+		ORDER BY memo_no DESC
+		LIMIT 0, 1
+	</select>
+
+	<delete id = "memoDelete" parameterType="kr.co.toplac.util.memo.MemoUtilViewVO">
+		DELETE FROM
+		<choose>
+			<when test="targetStr == 'TopReport'">
+				top_rpt_memo
+			</when>
+			<when test="targetStr == 'TopPrimBiz'">
+				top_prim_biz_rpt_memo
+			</when>
+			<otherwise>
+				top_rpt_memo
+			</otherwise>
+		</choose>
+		WHERE memo_no = #{memoNo}
+	</delete>
+
+	<update id = "memoUpdate" parameterType="kr.co.toplac.util.memo.MemoUtilViewVO">
+		UPDATE
+		<choose>
+			<when test="targetStr == 'TopReport'">
+				top_rpt_memo
+			</when>
+			<when test="targetStr == 'TopPrimBiz'">
+				top_prim_biz_rpt_memo
+			</when>
+			<otherwise>
+				top_rpt_memo
+			</otherwise>
+		</choose>
+		SET memo = #{mContents}
+		WHERE memo_no = #{memoNo}
+	</update>
+
+</mapper>

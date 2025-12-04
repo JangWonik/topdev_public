@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="PopPtnrMbrMapper">
+
+	<select id="selectPtnrMbrMax" resultType="String">
+		SELECT MAX(ptnr_mbr_no) FROM top_ptnr_mbr_bsc
+	</select>
+
+	<insert id="insertPtnrMbrLog" parameterType="hashmap">
+		INSERT INTO top_ptnr_mbr_bsc_log
+		(
+			ptnr_mbr_no
+			,action_flag
+			,manager_no
+			,reg_date			
+		)VALUES(
+			#{ptnr_mbr_no}
+			,#{action_flag}
+			,#{manager_no}
+			,now()
+		)
+	</insert>
+	
+	<update id="updatePtnrMbrInfoDel" parameterType="hashmap">		
+		UPDATE 	top_ptnr_mbr_bsc SET
+			del_state = 1
+			,del_date = unix_timestamp(now())
+		WHERE ptnr_mbr_no = #{ptnr_mbr_no}
+	</update>
+	
+	<update id="updatePtnrMbrInfo" parameterType="hashmap">
+		UPDATE top_ptnr_mbr_bsc SET
+			ptnr_id = #{ptnr_id}
+			,ptnr_dept_id = #{ptnr_dept_id}
+			,ptnr_tm_nm = #{ptnr_tm_nm}
+			,ptnr_tm2_nm = #{ptnr_tm2_nm}
+			,ptnr_mbr_nm = #{ptnr_mbr_nm}
+			,ptnr_mbr_work_type = #{ptnr_mbr_work_type}
+			,ptnr_mbr_position_nm = #{ptnr_mbr_position_nm}
+			,ptnr_mbr_job_memo = #{ptnr_mbr_job_memo}
+			,ptnr_mbr_hp = #{ptnr_mbr_hp}
+			,ptnr_mbr_office_tel = #{ptnr_mbr_office_tel}
+			,ptnr_mbr_office_fax = #{ptnr_mbr_office_fax}
+			,ptnr_mbr_office_email = #{ptnr_mbr_office_email}
+			,ptnr_mbr_office_postcode = #{ptnr_mbr_office_postcode}
+			,ptnr_mbr_office_addr1 = #{ptnr_mbr_office_addr1}
+			,ptnr_mbr_office_addr2 = #{ptnr_mbr_office_addr2}
+			,ptnr_mbr_work_memo = #{ptnr_mbr_work_memo}
+			,ptnr_tax_nm = #{ptnr_tax_nm}
+		WHERE ptnr_mbr_no = #{ptnr_mbr_no}
+	</update>
+	
+	<insert id="insertPtnrMbrInfo" parameterType="hashmap">
+		insert into top_ptnr_mbr_bsc	(
+			ptnr_id
+			,ptnr_dept_id
+			,ptnr_tm_nm
+			,ptnr_tm2_nm
+			,ptnr_mbr_nm
+			,ptnr_mbr_work_type
+			,ptnr_mbr_position_nm
+			,ptnr_mbr_job_memo
+			,ptnr_mbr_hp
+			,ptnr_mbr_office_tel
+			,ptnr_mbr_office_fax
+			,ptnr_mbr_office_email
+			,ptnr_mbr_office_postcode
+			,ptnr_mbr_office_addr1
+			,ptnr_mbr_office_addr2
+			,ptnr_mbr_work_memo
+			,ptnr_tax_nm
+			,reg_date
+			,del_state
+		) values	(
+			#{ptnr_id}
+			,#{ptnr_dept_id}			
+			,#{ptnr_tm_nm}
+			,#{ptnr_tm2_nm}
+			,#{ptnr_mbr_nm}
+			,#{ptnr_mbr_work_type}
+			,#{ptnr_mbr_position_nm}
+			,#{ptnr_mbr_job_memo}
+			,#{ptnr_mbr_hp}
+			,#{ptnr_mbr_office_tel}
+			,#{ptnr_mbr_office_fax}
+			,#{ptnr_mbr_office_email}
+			,#{ptnr_mbr_office_postcode}
+			,#{ptnr_mbr_office_addr1}
+			,#{ptnr_mbr_office_addr2}
+			,#{ptnr_mbr_work_memo}
+			,#{ptnr_tax_nm}
+			,unix_timestamp(now())
+			,0
+		)
+	</insert>
+	
+	<insert id="insertPtnrMbr">
+		insert into top_ptnr_mbr_bsc	(
+			ptnr_id
+			,ptnr_dept_id
+			,ptnr_tm_nm
+			,ptnr_tm2_nm
+			,ptnr_mbr_nm
+			,ptnr_mbr_work_type
+			,ptnr_mbr_position_nm
+			,ptnr_mbr_job_memo
+			,ptnr_mbr_hp
+			,ptnr_mbr_office_tel
+			,ptnr_mbr_office_fax
+			,ptnr_mbr_office_email
+			,ptnr_mbr_office_postcode
+			,ptnr_mbr_office_addr1
+			,ptnr_mbr_office_addr2
+			,ptnr_mbr_work_memo
+			,ptnr_tax_nm
+			,reg_date
+			,del_state
+		) values	(
+			#{ptnr_id}
+			,#{ptnr_dept_id}
+			,#{ptnr_dept_nm}
+			,#{ptnr_tm_nm}
+			,#{ptnr_mbr_nm}
+			,#{ptnr_mbr_work_type}
+			,#{ptnr_mbr_position_nm}
+			,#{ptnr_mbr_job_memo}
+			,#{ptnr_mbr_hp}
+			,#{ptnr_mbr_office_tel}
+			,#{ptnr_mbr_office_fax}
+			,#{ptnr_mbr_office_email}
+			,#{ptnr_mbr_office_postcode}
+			,#{ptnr_mbr_office_addr1}
+			,#{ptnr_mbr_office_addr2}
+			,#{ptnr_mbr_work_memo}
+			,#{ptnr_tax_nm}
+			,unix_timestamp(now())
+			,0
+		)
+	</insert>
+	
+	<select id="getPtnrMbr" resultType="kr.co.toplac.topgeneral.TopPtnrMbrBscVO">
+		SELECT
+			  b.ptnr_nick
+			, b.ptnr_id
+			, b.ptnr_name
+			, a.ptnr_mbr_no
+			, a.ptnr_dept_id
+			, a.ptnr_tm_nm
+			, a.ptnr_tm2_nm
+			, a.ptnr_mbr_nm
+			, a.ptnr_mbr_work_type
+			, a.ptnr_mbr_position_nm
+			, a.ptnr_mbr_job_memo
+			, a.ptnr_mbr_hp
+			, a.ptnr_mbr_office_tel
+			, a.ptnr_mbr_office_fax
+			, a.ptnr_mbr_office_email
+			, a.ptnr_mbr_office_postcode
+			, a.ptnr_mbr_office_addr1
+			, a.ptnr_mbr_office_addr2
+			, a.ptnr_mbr_work_memo
+			, a.ptnr_tax_nm
+		  FROM top_ptnr_mbr_bsc a, top_ptnr_bsc b
+		 WHERE a.ptnr_id = b.ptnr_id 
+    	   AND ptnr_mbr_no = #{ptnr_mbr_no};
+	</select>
+	
+	<update id="updatePtnrMbr">
+		update 
+		top_ptnr_mbr_bsc
+		set ptnr_id = #{ptnr_id}
+		, ptnr_dept_id = #{ptnr_dept_id}
+		, ptnr_tm2_nm = #{ptnr_tm_nm}
+		, ptnr_mbr_nm = #{ptnr_mbr_nm}
+		, ptnr_mbr_work_type = #{ptnr_mbr_work_type}
+		, ptnr_mbr_position_nm = #{ptnr_mbr_position_nm}
+		, ptnr_mbr_job_memo = #{ptnr_mbr_job_memo}
+		, ptnr_mbr_hp = #{ptnr_mbr_hp}
+		, ptnr_mbr_office_tel = #{ptnr_mbr_office_tel}
+		, ptnr_mbr_office_fax = #{ptnr_mbr_office_fax}
+		, ptnr_mbr_office_email = #{ptnr_mbr_office_email}
+		, ptnr_mbr_office_postcode = #{ptnr_mbr_office_postcode}
+		, ptnr_mbr_office_addr1 = #{ptnr_mbr_office_addr1}
+		, ptnr_mbr_office_addr2 = #{ptnr_mbr_office_addr2}
+		, ptnr_mbr_work_memo = #{ptnr_mbr_work_memo}
+		, ptnr_tax_nm = #{ptnr_tax_nm}
+		where ptnr_mbr_no = #{ptnr_mbr_no}
+	</update>
+	
+	<update id="updateDelflagPtnrMbr">
+		update top_ptnr_mbr_bsc set del_state = 1, del_date = unix_timestamp(now()) where ptnr_mbr_no = #{ptnr_mbr_no}		
+	</update>
+	
+	<delete id="delPtnrMbr">
+		delete from top_ptnr_mbr_bsc where ptnr_mbr_no = #{ptnr_mbr_no}
+	</delete>
+	
+	<!-- not used 170731 lds -->	
+	<select id="getPtnrList" resultType="kr.co.toplac.topptnr.TopPtnrBscVO">
+		select 
+		ptnr_level, ptnr_id, ptnr_nick, ptnr_name
+		from 
+		top_ptnr_bsc
+		order by
+		ptnr_group_order DESC, ptnr_level , ptnr_order DESC
+	</select>
+	<select id="getThisDept" parameterType="String" resultType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+		SELECT 
+			ptnr_dept_id,
+			ptnr_dept_nm
+		FROM
+			top_ptnr_dept_bsc
+		WHERE
+			ptnr_id = #{ptnr_id}
+			and del_state != 1
+	</select>
+	
+	<select id="getThisDeptOrd" parameterType="String" resultType="kr.co.toplac.topptnr.TopPtnrDeptBscVO">
+		SELECT 
+			ptnr_dept_id,
+			ptnr_dept_nm
+		FROM
+			top_ptnr_dept_bsc
+		WHERE
+			ptnr_id = #{ptnr_id}
+			and del_state != 1
+		ORDER BY ptnr_dept_nm
+	</select>
+	
+	<select id="getPtnrInfo" resultType="kr.co.toplac.topptnr.TopPtnrBscVO" parameterType="String">
+		SELECT ptnr_id, ptnr_name
+		  FROM top_ptnr_bsc
+		 WHERE ptnr_id = #{_parameter}
+	
+	
+	</select>
+	
+</mapper>

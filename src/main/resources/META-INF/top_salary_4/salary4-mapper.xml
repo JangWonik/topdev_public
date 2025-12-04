@@ -1,0 +1,1921 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="Salary4Mapper">
+	<!-- 직원 인사 및 기본급 정보 가져오기 -->
+	<select id="selectSalaryInsaForBaseOne" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			GA.user_no
+			,GA.user_name
+			,GA.work_level
+			,GA.work_level_nm
+			,GA.team_id
+			,GA.center_name
+			,GA.team_name
+			,GA.salary_4_insu
+			,GA.insu_name
+			,GA.salary_4_part
+			,GA.part_name
+			,GA.join_date_fmt
+			,GA.work_month
+			,GA.career_month
+			,GA.leave_month	
+			,GA.total_work_month
+			,CASE
+				WHEN(GA.total_work_month >= 12 AND GA.total_work_month &lt; 24)
+				THEN 2
+				WHEN(GA.total_work_month >= 24 AND GA.total_work_month &lt; 36)
+				THEN 3
+				WHEN(GA.total_work_month >= 36)
+				THEN 4
+				ELSE 1
+			END AS total_work_year
+			,GA.pay_flag
+			,GA.career_pay
+			,GA.work_pay
+			,GA.manager_pay
+			,GA.base_total_pay
+		FROM
+		(
+			SELECT 
+				a.user_no
+				,a.user_name
+				,b.work_level
+				,getCodeValue("top_mbr_bsc", "work_level", b.work_level) AS work_level_nm
+				,b.team_id
+				,getTopTmBscCenterName(b.team_id) AS center_name
+				,getTopTmBscTeamName(b.team_id) AS team_name
+				,a.salary_4_insu
+				,(SELECT insu_name FROM top_salary_4_insu WHERE ikey = a.salary_4_insu) AS insu_name
+				,a.salary_4_part
+				,(SELECT part_name FROM top_salary_4_part WHERE pkey = a.salary_4_part) AS part_name
+				,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') AS join_date_fmt	
+				,b.work_month
+				,b.career_month
+				,b.leave_month
+				,(b.work_month+b.career_month-b.leave_month) AS total_work_month
+				,b.pay_flag
+				,b.career_pay
+				,b.work_pay
+				,b.manager_pay
+				,b.base_total_pay
+			FROM top_mbr_bsc a
+			LEFT JOIN top_salary_4_base b
+			ON a.user_no = b.user_no
+			WHERE 1=1
+			AND a.user_no = #{user_no}
+			AND b.sales_date = #{sales_date}
+		)GA		
+	</select>
+
+	<!-- 실제 보험사내 직무 존재여부 체크 -->
+	<select id="chkInsuForPart" parameterType="HashMap" resultType="integer">
+		SELECT 
+			count(*) AS nCnt 
+		FROM top_salary_4_part			
+		WHERE pkey = #{salary_4_part}
+		AND ikey = #{salary_4_insu}
+		AND is_del = 0
+		AND is_use = 0		
+	</select>	
+
+	<!-- 직무 정보 갱신 -->
+	<update id="updateTopMbrSalary4Part" parameterType="HashMap">
+		UPDATE top_mbr_bsc SET
+			salary_4_insu = #{salary_4_insu}
+			,salary_4_part = #{salary_4_part}
+		WHERE user_no = #{user_no}		
+	</update>
+
+	<!-- 직무 선택용 직무 목록 -->
+	<select id="selectInsuPartListSel" parameterType="String" resultType="HashMap">
+		SELECT 
+			pkey
+			,ikey
+			,part_name
+		FROM top_salary_4_part
+		WHERE ikey = #{ikey} 
+		AND is_del = 0		
+		AND is_use = 0				
+		ORDER BY pkey DESC
+	</select>
+	
+	<!-- 직무 선택용 직무 목록 -->
+	<select id="selectPartListSel" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			pkey	
+			,part_name			
+		FROM top_salary_4_part
+		WHERE is_del = 0		
+		AND is_use = 0				
+		ORDER BY pkey
+	</select>
+
+	<!-- 직무 선택용 보험사 목록 -->
+	<select id="selectInsuCompanyListSel" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			ikey	
+			,insu_name			
+		FROM top_salary_4_insu
+		WHERE is_del = 0		
+		AND is_use = 0				
+		ORDER BY insu_name
+	</select>
+
+	<!-- 성과급 구분 보험사 목록 -->
+	<select id="selectInsuCompanyList" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			ikey	
+			,insu_name
+			,is_use	
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_name
+			,DATE_FORMAT(reg_date,'%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_4_insu
+		WHERE is_del = 0
+		<if test='is_use != NULL and is_use != ""'>
+			AND is_use = #{is_use}
+		</if>		
+		ORDER BY ikey DESC
+	</select>
+	
+	<!-- 예외자 문자열 -->
+	<select id="selectSalaryExceptMemberInfoOne" resultType="String">
+		SELECT 
+			IFNULL(GROUP_CONCAT(user_no),'9999') AS except_user_no
+		FROM top_salary_4_except
+	</select>
+	
+	<!-- 보험사 삭제 -->
+	<update id="deleteSalaryInsuCompany" parameterType="HashMap">		
+		UPDATE top_salary_4_insu SET is_del = 1 WHERE ikey = #{ikey}		
+	</update>
+	
+	<!-- 예외자 삭제 -->
+	<delete id="deleteSalaryExceptMember" parameterType="HashMap">
+		DELETE FROM top_salary_4_except WHERE ekey = #{ekey}
+	</delete>
+	
+	<!-- 예외자 목록 -->
+	<select id="selectExceptMemberList" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			a.ekey	
+			,getTopTmBscCenterName(b.team_id_main) AS center_name
+			,getTopTmBscTeamName(b.team_id_main) AS team_name
+			,getCodeValue("top_mbr_bsc", "work_level", b.work_level) AS work_level_nm
+			,b.user_name
+			,DATE_FORMAT(FROM_UNIXTIME(b.join_date), '%Y-%m-%d') AS join_date_fmt	
+			,getTopMbrBscUserName(a.reg_user_no) AS reg_user_name
+			,DATE_FORMAT(a.reg_date,'%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_4_except a
+		LEFT JOIN top_mbr_bsc b
+		ON a.user_no = b.user_no
+		ORDER BY a.reg_date DESC
+	</select>
+	
+	<!-- 성과급 보험사 정보 수정 -->
+	<update id="updateSalaryInsuCompany" parameterType="HashMap">
+		UPDATE top_salary_4_insu SET 
+			insu_name = #{insu_name}
+			,is_use = #{is_use}
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now()
+		WHERE ikey = #{ikey}	
+	</update>
+	
+	<!-- 성과급 보험사 등록 -->
+	<insert id="insertSalaryInsuCompany" parameterType="HashMap">
+		INSERT INTO top_salary_4_insu (
+			insu_name
+			,is_use
+			,reg_user_no
+			,reg_date
+		) VALUES (
+			#{insu_name}
+			,#{is_use}
+			,#{reg_user_no}
+			,now()
+		)
+	</insert>
+	
+	<!-- 예외자 목록 등록 -->
+	<insert id="insertSalaryExceptMember" parameterType="HashMap">
+		INSERT INTO top_salary_4_except (
+			user_no
+			,reg_user_no
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{reg_user_no}
+			,now()
+		)
+	</insert>
+	
+	<!-- 보험사 정보수정시 기존 등록여부 체크 -->	
+	<select id="selectSalaryInsuExceptModCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) as nCnt
+		FROM top_salary_4_insu
+		WHERE insu_name = #{insu_name}	
+		AND ikey != #{ikey}
+		AND is_del = 0
+	</select>
+	
+	<!-- 보험사 목록 등록 여부 체크 -->	
+	<select id="selectSalaryInsuExceptCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) as nCnt
+		FROM top_salary_4_insu
+		WHERE insu_name = #{insu_name}	
+		AND is_del = 0
+	</select>
+	
+	<!-- 예외자 목록 등록 여부 체크 -->
+	<select id="selectSalaryExceptCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) as nCnt
+		FROM top_salary_4_except
+		WHERE user_no = #{user_no}	
+	</select>
+	
+	<!-- 직원 경력 기간 설정정보 추가 -->
+	<insert id="insertMemberLeaveMonth" parameterType="HashMap">
+		INSERT INTO top_salary_4_leave (
+			user_no
+			,leave_month
+			,reg_user_no
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{leave_month}
+			,#{reg_user_no}
+			,now()
+		)		
+	</insert>
+	
+	<!-- 직원 무급휴직 기간 삭제 -->
+	<delete id="deleteMemberLeaveMonth" parameterType="HashMap">
+		DELETE FROM top_salary_4_leave
+		WHERE user_no = #{user_no}
+	</delete>
+	
+	<!-- 직원 경력 기간 설정정보 추가 -->
+	<insert id="insertMemeberCareerMonth" parameterType="HashMap">
+		INSERT INTO top_salary_4_career (
+			user_no
+			,career_month
+			,reg_user_no
+			,reg_date
+		) VALUES (
+			#{user_no}
+			,#{career_month}
+			,#{reg_user_no}
+			,now()
+		)		
+	</insert>
+	
+	<delete id="deleteMemeberCareerMonth" parameterType="HashMap">
+		DELETE FROM top_salary_4_career
+		WHERE user_no = #{user_no}	
+	</delete>
+	
+	<!-- 직원 팀장 기간 조회전 카운트 -->
+	<select id="selectMemberManagerDate" parameterType="HashMap" resultType="HashMap">
+		SELECT 
+			mkey			
+			,manager_sdate
+			,DATE_FORMAT(manager_sdate, '%Y-%m-%d') AS manager_sdate_fmt
+			,manager_edate
+			,DATE_FORMAT(manager_edate, '%Y-%m-%d') AS manager_edate_fmt
+		FROM top_salary_manager
+		WHERE user_no = #{user_no}
+		AND (
+			(#{base_sdate} BETWEEN manager_sdate AND manager_edate) 
+			OR (#{base_edate} BETWEEN manager_sdate AND manager_edate)
+			OR (#{base_sdate} &lt;= manager_sdate AND #{base_edate} >= manager_edate) 
+		)
+	</select>
+
+	<!-- 직원 팀장 기간 조회전 카운트 -->
+	<select id="selectMemberManagerCnt" parameterType="HashMap" resultType="Integer">
+		SELECT 
+			COUNT(*) as nCnt
+		FROM top_salary_manager
+		WHERE user_no = #{user_no}
+		AND (
+			(#{base_sdate} BETWEEN manager_sdate AND manager_edate) 
+			OR (#{base_edate} BETWEEN manager_sdate AND manager_edate)
+			OR (#{base_sdate} &lt;= manager_sdate AND #{base_edate} >= manager_edate)
+		)
+	</select>
+	
+	<!-- 연봉저장정보 삭제 -->
+	<delete id="deleteSalaryAnnualInfo" parameterType="HashMap">
+		DELETE FROM top_salary_4_annual WHERE akey = #{akey}	
+	</delete>
+	
+	<!-- 연봉계약정보 수정 -->
+	<update id="updateSalaryAnnualInfo" parameterType="HashMap">
+		UPDATE top_salary_4_annual SET
+			annual_pay = #{annual_pay}
+			,annual_sdate = #{annual_sdate}
+			,annual_edate = #{annual_edate}
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now()
+		WHERE akey = #{akey}		
+	</update>
+	
+	<!-- 연봉계약정보 추가 -->
+	<insert id="insertSalaryAnnualInfo" parameterType="HashMap">
+		INSERT INTO top_salary_4_annual (
+			user_no
+			,annual_pay
+			,annual_sdate
+			,annual_edate
+			,reg_user_no
+			,reg_date		
+		) VALUES (
+			#{user_no}
+			,#{annual_pay}
+			,#{annual_sdate}
+			,#{annual_edate}
+			,#{reg_user_no}
+			,now()
+		)		
+	</insert>
+	
+	<!-- 기존 연봉 계약 정보와 중복되는 지 확인 -->
+	<select id="selectBeforeAnnualCnt" parameterType="HashMap" resultType="Integer">
+		SELECT
+			count(*) as beforeCnt
+		FROM top_salary_4_annual
+		WHERE user_no = #{user_no}
+		<if test='akey != null and akey != "" '>
+			AND akey != ${akey}
+		</if>		
+		AND (#{annual_sdate} BETWEEN annual_sdate AND annual_edate OR #{annual_edate} BETWEEN annual_sdate AND annual_edate)
+	</select>
+	
+	<!-- 직원 팀장 기간 삭제 -->
+	<delete id="deleteSalaryManagerInfo" parameterType="HashMap">
+		DELETE FROM top_salary_manager WHERE mkey = #{mkey}	
+	</delete>
+	
+	<!-- 직원 팀장 기간 설정정보 수정 -->
+	<update id="updateSalaryManagerInfo" parameterType="HashMap">
+		UPDATE top_salary_manager SET
+			manager_sdate = #{manager_sdate}
+			,manager_edate = #{manager_edate}
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now()
+		WHERE mkey = #{mkey}
+	</update>
+	
+	<!-- 직원 팀장 기간 설정정보 추가 -->
+	<insert id="insertSalaryManagerInfo" parameterType="HashMap">
+		INSERT INTO top_salary_manager (
+			user_no
+			,manager_sdate
+			,manager_edate
+			,reg_user_no
+			,reg_date		
+		) VALUES (
+			#{user_no}
+			,#{manager_sdate}
+			,#{manager_edate}
+			,#{reg_user_no}
+			,now()
+		)		
+	</insert>
+	
+	<!-- 해당직원의 급여기간 내 연봉계약 목록 가져오기 -->
+	<select id="selectSalaryMemberAnnualListSearch" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			akey
+			,user_no
+			,annual_pay
+			,annual_sdate
+			,DATE_FORMAT(annual_sdate, '%Y-%m-%d') AS annual_sdate_fmt
+			,annual_edate
+			,DATE_FORMAT(annual_edate, '%Y-%m-%d') AS annual_edate_fmt
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_nm			
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_4_annual
+		WHERE user_no = #{user_no}
+		AND (#{base_sdate} BETWEEN annual_sdate AND annual_edate OR #{base_edate} BETWEEN annual_sdate AND annual_edate) 
+		ORDER BY annual_sdate ASC
+	</select>	
+	
+	<!-- 해당직원의 연봉제 정보가 검색기간내 몇개가 존재하는지 체크한다. -->
+	<select id="selectSalaryAnnualMemberCnt" parameterType="HashMap" resultType="Integer">
+		SELECT
+			count(*) as annualCnt
+		FROM top_salary_4_annual
+		WHERE user_no = #{user_no}
+		AND (#{base_sdate} BETWEEN annual_sdate AND annual_edate OR #{base_edate} BETWEEN annual_sdate AND annual_edate)		
+	</select>
+
+	<!-- 기존 팀장설정기간에 포함되는 지 확인 -->
+	<select id="selectBeforeManagerCnt" parameterType="HashMap" resultType="Integer">
+		SELECT
+			count(*) as beforeCnt
+		FROM top_salary_manager
+		WHERE user_no = #{user_no}
+		<if test='mkey != null and mkey != "" '>
+			AND mkey != ${mkey}
+		</if>
+		AND (#{manager_sdate} BETWEEN manager_sdate AND manager_edate OR #{manager_edate} BETWEEN manager_sdate AND manager_edate)
+	</select>
+
+	<!-- 인보험 직원 기본급 정보 가져오기 -->
+	<select id="selectSalary4MemberDetailOne" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GA.user_no
+			,GA.user_state
+			,GA.team_id			
+			,getTopTmBscCenterName(GA.team_id) AS center_name  
+			,GA.team_name AS team_name			
+			,GA.user_name AS user_name
+			,GA.work_level
+			,GA.work_level_nm
+			,GA.join_date_fmt
+			,TIMESTAMPDIFF(MONTH,GA.join_date_fmt, #{base_edate}) AS work_month
+			,GA.career_month
+			,GA.leave_month
+		FROM (
+			SELECT
+				a.user_no
+				,a.user_name
+				,a.work_level
+				,getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level_nm
+				,a.join_date
+				,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') AS join_date_fmt
+				,a.user_state
+				,b.team_id
+				,b.team_name
+				,(SELECT IFNULL(SUM(career_month),0) FROM top_salary_4_career WHERE user_no = a.user_no) AS career_month
+				,(SELECT IFNULL(SUM(leave_month),0) FROM top_salary_4_leave WHERE user_no = a.user_no) AS leave_month  
+				FROM top_mbr_bsc a, top_tm_bsc b
+  				WHERE a.team_id_main = b.team_id
+  				AND a.user_no = #{user_no}			   
+ 			)GA
+	</select>
+	
+	<!-- 인보험 예외자 검색용 직원 명단 불러오기 -->
+	<select id="selectSalary4ExceptMemberList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GA.user_no
+			,GA.user_state			
+			,getTopTmBscCenterName(GA.team_id) AS center_name  
+			,GA.team_name AS team_name			
+			,GA.user_name AS user_name
+			,GA.work_level
+			,GA.work_level_nm
+			,GA.join_date_fmt			
+		FROM (
+			SELECT
+				a.user_no
+				,a.user_name
+				,a.work_level
+				,getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level_nm
+				,a.join_date
+				,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') AS join_date_fmt
+				,a.user_state
+				,b.team_id
+				,b.team_name
+				,b.team_group_order
+				,b.team_order  
+				,CASE a.work_type
+					 WHEN 1 THEN 1
+					 WHEN 2 THEN 2
+					 WHEN 6 THEN 3
+					 WHEN 14 THEN 4
+					 WHEN 15 THEN 5
+					 WHEN 3 THEN 6
+					 WHEN 7 THEN 7
+					 WHEN 4 THEN 8
+					 WHEN 8 THEN 9
+					 WHEN 5 THEN 10
+					 WHEN 9 THEN 11
+					 WHEN 10 THEN 12
+					 WHEN 12 THEN 13
+					 WHEN 11 THEN 14
+					 WHEN 13 THEN 15 
+				END AS new_work_order 
+				FROM top_mbr_bsc a, top_tm_bsc b
+  				WHERE a.team_id_main = b.team_id  				
+  				AND b.team_type = 4
+  				AND a.user_state != 1
+ 			)GA
+ 			ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	</select>
+	
+	<!-- 인보험 직원 명단 성과금 직무 불러오기 -->
+	<select id="selectSalary4PartMemberList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GA.user_no
+			,GA.user_state			
+			,getTopTmBscCenterName(GA.team_id) AS center_name  
+			,GA.team_name AS team_name			
+			,GA.user_name AS user_name
+			,GA.work_level
+			,GA.work_level_nm
+			,GA.join_date_fmt
+			,GA.salary_4_insu
+			,GA.salary_4_insu_name
+			,GA.salary_4_part
+			,GA.salary_4_part_name			
+		FROM (
+			SELECT
+				a.user_no
+				,a.user_name
+				,a.work_level
+				,getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level_nm
+				,a.join_date
+				,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') AS join_date_fmt
+				,a.user_state
+				,b.team_id
+				,b.team_name
+				,b.team_group_order
+				,b.team_order  
+				,CASE a.work_type
+					 WHEN 1 THEN 1
+					 WHEN 2 THEN 2
+					 WHEN 6 THEN 3
+					 WHEN 14 THEN 4
+					 WHEN 15 THEN 5
+					 WHEN 3 THEN 6
+					 WHEN 7 THEN 7
+					 WHEN 4 THEN 8
+					 WHEN 8 THEN 9
+					 WHEN 5 THEN 10
+					 WHEN 9 THEN 11
+					 WHEN 10 THEN 12
+					 WHEN 12 THEN 13
+					 WHEN 11 THEN 14
+					 WHEN 13 THEN 15 
+				END AS new_work_order
+				,a.salary_4_insu
+				,(SELECT IFNULL(insu_name,'-') FROM top_salary_4_insu WHERE ikey = a.salary_4_insu) AS salary_4_insu_name
+				,a.salary_4_part
+				,(SELECT IFNULL(part_name,'-') FROM top_salary_4_part WHERE pkey = a.salary_4_part) AS salary_4_part_name				  
+				FROM top_mbr_bsc a, top_tm_bsc b
+  				WHERE a.team_id_main = b.team_id
+  				<if test="srchPartTeamId != 0">
+  					AND b.team_id = #{srchPartTeamId}
+  				</if>  				
+	   			<if test="srchPartUserName != ''">
+	   				AND a.user_name LIKE CONCAT('%',#{srchPartUserName},'%')
+	   			</if>
+	   			<if test="srchPartUserState != 99">
+	   				AND a.user_state = #{srchPartUserState}
+	   			</if>	   			 
+	   			<if test='except_user_no != "9999"'>
+	   				AND a.user_no NOT IN ( ${except_user_no} )
+	   			</if>
+	   			<choose>
+					<when test="srchPartState == 0">
+						AND salary_4_insu != 0
+						AND salary_4_part != 0
+					</when>
+					<when test="srchPartState == 1">
+						AND salary_4_insu = 0
+						AND salary_4_part = 0
+					</when>
+				</choose>
+  				AND b.team_type = 4  				   
+ 			)GA 
+ 			WHERE 1=1	
+ 			ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	</select>
+	
+	<select id="selectSalary4SalsePayOne" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			skey           
+			,user_no        
+			,loss_rate      
+			,minwon_cnt     
+			,part_pay			       
+			,self_option_pay
+			,job_option_pay 
+			,etc1_option_pay
+			,etc2_option_pay
+			,( self_option_pay + job_option_pay + etc1_option_pay + etc2_option_pay ) as sum_etc_pay
+			,result_cnt     
+			,result_sales   
+			,sum_sales_pay  
+			,etc_memo       
+			,chk_sdate
+			,DATE_FORMAT(chk_sdate, '%Y-%m-%d') AS chk_sdate_fmt      
+			,chk_edate
+			,DATE_FORMAT(chk_edate, '%Y-%m-%d') AS chk_edate_fmt      
+			,sales_date
+			,DATE_FORMAT(sales_date, '%Y-%m-%d') AS sales_date_fmt     
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_name    
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt				
+		FROM top_salary_4_sales
+		WHERE user_no = #{user_no}
+		AND sales_date = #{sales_date}
+	</select>
+	
+	<!-- 인보험 성과급 등록 여부 체크 -->
+	<select id="selectSalary4SalsePayChk" parameterType="hashmap"  resultType="integer">
+		SELECT
+			count(*) as nCnt
+		FROM top_salary_4_sales
+		WHERE user_no = #{user_no}
+		AND sales_date = #{sales_date}
+	</select>
+	
+	<!-- 인보험 성과급 대상 직원 명단 불러오기 -->
+	<select id="selectSalary4SalesMemberList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GB.user_no
+			,GB.user_state			
+			,GB.center_name  
+			,GB.team_name			
+			,GB.user_name
+			,GB.work_level
+			,GB.work_level_nm
+			,GB.join_date
+			,GB.join_date_fmt
+			,GB.work_month			
+			,GB.career_month
+			,GB.leave_month
+			,(GB.work_month + GB.career_month - GB.leave_month) AS total_work_month		
+			,GB.salary_4_insu
+			,GB.salary_4_insu_nm
+			,GB.salary_4_part
+			,GB.salary_4_part_nm	
+		FROM (		
+			SELECT
+				GA.user_no
+				,GA.user_state			
+				,getTopTmBscCenterName(GA.team_id) AS center_name  
+				,GA.team_name AS team_name			
+				,GA.user_name AS user_name
+				,GA.work_level
+				,GA.work_level_nm
+				,GA.join_date
+				,GA.join_date_fmt
+				,TIMESTAMPDIFF(MONTH,GA.join_date_fmt, #{chk_edate}) AS work_month			
+				,GA.career_month
+				,GA.leave_month		
+				,GA.salary_4_insu
+				,GA.salary_4_insu_nm
+				,GA.salary_4_part
+				,GA.salary_4_part_nm
+				,GA.team_group_order
+				,GA.team_order	
+				,GA.new_work_order
+			FROM (
+				SELECT
+					a.user_no
+					,a.user_name
+					,a.work_level
+					,getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level_nm
+					,a.join_date
+					,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') AS join_date_fmt
+					,a.user_state
+					,a.salary_4_insu
+					,(SELECT insu_name FROM top_salary_4_insu WHERE ikey = a.salary_4_insu) AS salary_4_insu_nm
+					,a.salary_4_part
+					,(SELECT part_name FROM top_salary_4_part WHERE pkey = a.salary_4_part) AS salary_4_part_nm
+					,b.team_id
+					,b.team_name
+					,b.team_group_order
+					,b.team_order
+					,CASE a.work_type
+						 WHEN 1 THEN 1
+						 WHEN 2 THEN 2
+						 WHEN 6 THEN 3
+						 WHEN 14 THEN 4
+						 WHEN 15 THEN 5
+						 WHEN 3 THEN 6
+						 WHEN 7 THEN 7
+						 WHEN 4 THEN 8
+						 WHEN 8 THEN 9
+						 WHEN 5 THEN 10
+						 WHEN 9 THEN 11
+						 WHEN 10 THEN 12
+						 WHEN 12 THEN 13
+						 WHEN 11 THEN 14
+						 WHEN 13 THEN 15 
+					END AS new_work_order				
+					,(SELECT IFNULL(SUM(career_month),0) FROM top_salary_4_career WHERE user_no = a.user_no) AS career_month
+					,(SELECT IFNULL(SUM(leave_month),0) FROM top_salary_4_leave WHERE user_no = a.user_no) AS leave_month				  
+					FROM top_mbr_bsc a, top_tm_bsc b
+	  				WHERE a.team_id_main = b.team_id
+	  				<if test="srchTeamId != 0">
+	  					AND b.team_id = #{srchTeamId}
+	  				</if>
+		   			<if test="srchUserName != ''">
+		   				AND a.user_name LIKE CONCAT('%',#{srchUserName},'%')
+		   			</if>
+		   			<if test="srchUserState != 99">
+		   				AND a.user_state = #{srchUserState}
+		   			</if>
+		   			<if test='except_user_no != "9999"'>
+		   				AND a.user_no NOT IN ( ${except_user_no} )
+		   			</if>
+		   			AND a.salary_4_insu != 0
+		   			AND a.salary_4_part != 0
+	  				AND b.team_type = 4  				   
+	 			)GA 
+	 			WHERE GA.join_date_fmt &lt;= #{chk_edate}
+	 		)GB
+ 		ORDER BY GB.user_state, GB.team_group_order DESC, GB.team_order DESC, GB.work_level DESC, GB.join_date, GB.new_work_order
+	</select>
+	
+	<!-- 기본급 확정취소 -->
+	<delete id="deleteBasePayCancel" parameterType="hashmap">
+		DELETE FROM top_salary_4_base 
+		WHERE bkey = #{bkey}
+	</delete>
+	
+	<!-- 성과급 확정자 명단 불러오기 -->
+	<select id="selectSalesConfirmList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GA.skey
+			,GA.pkey
+			,GA.user_no
+			,GA.user_name	
+			,GA.team_id
+			,GA.join_date
+			,GA.join_date_fmt
+			,GA.team_name
+			,GA.work_level
+			,GA.work_level_nm	
+			,GA.loss_rate
+			,GA.minwon_cnt
+			,GA.part_pay
+			,GA.self_option_pay
+			,GA.job_option_pay
+			,GA.etc1_option_pay
+			,GA.etc2_option_pay
+			,( GA.self_option_pay + GA.job_option_pay + GA.etc1_option_pay + GA.etc2_option_pay ) as sum_etc_pay
+			,GA.result_cnt
+			,GA.result_sales
+			,GA.sum_sales_pay	
+			,GA.etc_memo
+			,GA.chk_sdate
+			,GA.chk_edate
+			,GA.sales_date	
+			,GA.sales_date_fmt
+			,GA.reg_user_no
+			,GA.reg_user_name
+			,GA.reg_date		
+			,GA.reg_date_fmt
+			,GA.new_work_order	
+			,GA.team_group_order
+			,GA.team_order	
+			,GA.unit_sales
+			,GA.incentive_type
+			,GA.base_sales_min			 
+			,GA.cal_result_sales
+			,GA.cal_reason_text
+		FROM(
+			SELECT
+				a.skey
+				,d.pkey
+				,a.user_no
+				,b.user_name	
+				,b.team_id_main AS team_id
+				,b.join_date
+				,DATE_FORMAT(FROM_UNIXTIME(b.join_date), '%Y-%m-%d') AS join_date_fmt
+				,c.team_name				
+				,b.work_level
+				,getCodeValue("top_mbr_bsc", "work_level", b.work_level) AS work_level_nm	
+				,a.loss_rate
+				,a.minwon_cnt
+				,a.part_pay
+				,a.self_option_pay
+				,a.job_option_pay
+				,a.etc1_option_pay
+				,a.etc2_option_pay
+				,a.result_cnt
+				,a.result_sales
+				,a.sum_sales_pay	
+				,a.etc_memo
+				,a.chk_sdate
+				,a.chk_edate
+				,a.sales_date	
+				,DATE_FORMAT(a.sales_date, '%Y-%m-%d') AS sales_date_fmt
+				,a.reg_user_no
+				,getTopMbrBscUserName(a.reg_user_no) AS reg_user_name
+				,a.reg_date		
+				,DATE_FORMAT(a.reg_date, '%Y-%m-%d') AS reg_date_fmt
+				,CASE b.work_type
+					 WHEN 1 THEN 1
+					 WHEN 2 THEN 2
+					 WHEN 6 THEN 3
+					 WHEN 14 THEN 4
+					 WHEN 15 THEN 5
+					 WHEN 3 THEN 6
+					 WHEN 7 THEN 7
+					 WHEN 4 THEN 8
+					 WHEN 8 THEN 9
+					 WHEN 5 THEN 10
+					 WHEN 9 THEN 11
+					 WHEN 10 THEN 12
+					 WHEN 12 THEN 13
+					 WHEN 11 THEN 14
+					 WHEN 13 THEN 15 
+				END AS new_work_order	
+				,c.team_group_order
+				,c.team_order	
+				,d.unit_sales
+				,d.incentive_type
+				,CASE d.incentive_type
+					WHEN 1 THEN (d.base_count * d.unit_sales)				 
+					WHEN 2 THEN d.base_sales
+				END AS base_sales_min
+				,a.cal_result_sales
+				,a.cal_reason_text
+			FROM top_salary_4_sales a
+			LEFT JOIN top_mbr_bsc b
+			ON a.user_no = b.user_no
+			LEFT JOIN top_tm_bsc c
+			ON b.team_id_main = c.team_id
+			LEFT JOIN top_salary_4_part d
+			ON b.salary_4_part = d.pkey			
+		)GA
+		WHERE GA.sales_date = #{sales_date}
+		<if test="srchResultTeamId != 0">
+			AND GA.team_id = #{srchResultTeamId}
+		</if>
+		<if test="srchResultUserName != ''">
+  			AND GA.user_name LIKE CONCAT('%',#{srchResultUserName},'%')
+  		</if>
+  		<if test="srchInsuType != 0">
+			AND GA.incentive_type = #{srchInsuType}
+		</if>		
+		ORDER BY GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date_fmt, GA.new_work_order	
+	</select>	
+	
+	<!-- 기본급 확정자 명단 불러오기 -->
+	<select id="selectBaseConfirmList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GA.bkey
+			,GA.user_no
+			,GA.user_name	
+			,GA.team_id
+			,GA.team_name
+			,GA.work_level
+			,GA.work_level_nm
+			,GA.join_date_fmt
+			,GA.work_month
+			,GA.career_month
+			,GA.leave_month
+			,GA.pay_flag
+			,GA.career_pay
+			,GA.work_pay
+			,GA.manager_pay
+			,GA.base_total_pay
+			,GA.sales_date
+			,GA.sales_date_fmt
+			,GA.reg_user_no
+			,GA.reg_date
+			,GA.new_work_order
+			,GA.team_group_order
+			,GA.team_order
+			,GA.reg_user_name
+			,GA.reg_date_fmt
+		FROM 
+		(
+			SELECT
+				a.bkey
+				,a.user_no
+				,b.user_name	
+				,a.team_id
+				,c.team_name
+				,a.work_level
+				,getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level_nm
+				,DATE_FORMAT(a.join_date_fmt, '%Y-%m-%d') AS join_date_fmt				
+				,a.work_month
+				,a.career_month
+				,a.leave_month
+				,a.pay_flag
+				,a.career_pay
+				,a.work_pay
+				,a.manager_pay
+				,a.base_total_pay
+				,a.sales_date
+				,DATE_FORMAT(a.sales_date, '%Y-%m-%d') AS sales_date_fmt
+				,a.reg_user_no
+				,getTopMbrBscUserName(a.reg_user_no) AS reg_user_name
+				,a.reg_date		
+				,DATE_FORMAT(a.reg_date, '%Y-%m-%d') AS reg_date_fmt
+				,CASE b.work_type
+					 WHEN 1 THEN 1
+					 WHEN 2 THEN 2
+					 WHEN 6 THEN 3
+					 WHEN 14 THEN 4
+					 WHEN 15 THEN 5
+					 WHEN 3 THEN 6
+					 WHEN 7 THEN 7
+					 WHEN 4 THEN 8
+					 WHEN 8 THEN 9
+					 WHEN 5 THEN 10
+					 WHEN 9 THEN 11
+					 WHEN 10 THEN 12
+					 WHEN 12 THEN 13
+					 WHEN 11 THEN 14
+					 WHEN 13 THEN 15 
+				END AS new_work_order	
+				,c.team_group_order
+				,c.team_order	
+			FROM top_salary_4_base a
+			LEFT JOIN top_mbr_bsc b
+			ON a.user_no = b.user_no
+			LEFT JOIN top_tm_bsc c
+			ON a.team_id = c.team_id
+		)GA
+		WHERE GA.sales_date = #{sales_date}
+		<if test="srchConfirmTeamId != 0">
+			AND GA.team_id = #{srchConfirmTeamId}
+		</if>
+		<if test="srchConfirmUserName != ''">
+  			AND GA.user_name LIKE CONCAT('%',#{srchConfirmUserName},'%')
+  		</if>
+  		<if test="srchPayFlag != 9">
+			AND GA.pay_flag = #{srchPayFlag}
+		</if>		
+		ORDER BY GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date_fmt, GA.new_work_order
+	</select>
+	
+	<!-- 인보험 통합조회 직원 명단 불러오기 -->
+	<select id="selectSalary4MasterList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GB.user_no
+			,GB.user_name
+			,GB.user_state
+			,GB.work_level
+			,GB.work_level_nm
+			,GB.center_name
+			,GB.join_date
+			,GB.join_date_fmt
+			,GB.team_id
+			,GB.team_name
+			,GB.team_group_order
+			,GB.team_order
+			,GB.new_work_order
+			,GB.insu_name
+			,GB.part_name
+			,GB.sales_date	
+			,IFNULL(GB.work_month,0) AS work_month
+			,IFNULL(GB.career_month,0) AS career_month
+			,IFNULL(GB.leave_month,0) AS leave_month
+			,IFNULL((GB.work_month + GB.career_month - GB.leave_month),0) AS total_work_month
+			,GB.pay_flag
+			,IFNULL(GB.incentive_type,'') AS incentive_type
+			,IFNULL(GB.base_sales,0) AS base_sales
+			,IFNULL(GB.career_pay,0) AS career_pay
+			,IFNULL(GB.work_pay,0) AS work_pay
+			,IFNULL(GB.manager_pay,0) AS manager_pay
+			,IFNULL(GB.base_total_pay,0) AS base_total_pay
+			,IFNULL(GB.loss_rate,0) AS loss_rate
+			,IFNULL(GB.minwon_cnt,0) AS minwon_cnt
+			,IFNULL(GB.part_pay,0) AS part_pay
+			,IFNULL(GB.self_option_pay,0) AS self_option_pay
+			,IFNULL(GB.job_option_pay,0) AS job_option_pay
+			,IFNULL(GB.etc1_option_pay,0) AS etc1_option_pay
+			,IFNULL(GB.etc2_option_pay,0) AS etc2_option_pay
+			,IFNULL(GB.result_cnt,0) AS result_cnt
+			,IFNULL(GB.result_sales,0) AS result_sales
+			,IFNULL(GB.cal_result_sales,0) AS cal_result_sales
+			,IFNULL(GB.cal_reason_text,'') AS cal_reason_text
+			,IFNULL(GB.sum_sales_pay,0) AS sum_sales_pay
+			,IFNULL(GB.etc_memo,'') AS etc_memo
+		FROM(
+			SELECT
+				GA.user_no
+				,GA.user_name
+				,GA.user_state
+				,GA.work_level
+				,GA.work_level_nm
+				,GA.center_name
+				,GA.join_date
+				,GA.join_date_fmt
+				,GA.team_id
+				,GA.team_name
+				,GA.team_group_order
+				,GA.team_order
+				,GA.new_work_order
+				,IFNULL(GA.insu_name, '미지정') AS insu_name
+				,IFNULL(GA.part_name, '미지정') AS part_name
+				,GA.incentive_type
+				,GA.base_sales
+				,BA.sales_date
+				,BA.work_month
+				,BA.career_month
+				,BA.leave_month
+				,BA.pay_flag
+				,BA.career_pay
+				,BA.work_pay
+				,BA.manager_pay
+				,BA.base_total_pay
+				,SA.loss_rate
+				,SA.minwon_cnt
+				,SA.part_pay
+				,SA.self_option_pay
+				,SA.job_option_pay
+				,SA.etc1_option_pay
+				,SA.etc2_option_pay
+				,SA.result_cnt
+				,SA.result_sales
+				,SA.cal_result_sales
+				,SA.cal_reason_text
+				,SA.sum_sales_pay
+				,SA.etc_memo
+			FROM(
+				SELECT 
+					a.user_no		
+					,a.user_name
+					,a.user_state
+					,a.work_level
+					,getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level_nm
+					,getTopTmBscCenterName(b.team_id) AS center_name
+					,a.join_date
+					,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') AS join_date_fmt
+					,b.team_id	
+					,b.team_name	
+					,b.team_group_order
+					,b.team_order  
+					,CASE a.work_type
+						 WHEN 1 THEN 1
+						 WHEN 2 THEN 2
+						 WHEN 6 THEN 3
+						 WHEN 14 THEN 4
+						 WHEN 15 THEN 5
+						 WHEN 3 THEN 6
+						 WHEN 7 THEN 7
+						 WHEN 4 THEN 8
+						 WHEN 8 THEN 9
+						 WHEN 5 THEN 10
+						 WHEN 9 THEN 11
+						 WHEN 10 THEN 12
+						 WHEN 12 THEN 13
+						 WHEN 11 THEN 14
+						 WHEN 13 THEN 15 
+					END AS new_work_order
+					,(SELECT insu_name FROM top_salary_4_insu WHERE ikey = a.salary_4_insu) AS insu_name
+					,(SELECT part_name FROM top_salary_4_part WHERE pkey = a.salary_4_part) AS part_name
+					,(SELECT incentive_type FROM top_salary_4_part WHERE pkey = a.salary_4_part) AS incentive_type
+					,(SELECT base_sales FROM top_salary_4_part WHERE pkey = a.salary_4_part) AS base_sales
+				FROM top_mbr_bsc a, top_tm_bsc b
+				WHERE a.team_id_main = b.team_id
+				<if test="srchTeamId != 0">
+  					AND b.team_id = #{srchTeamId}
+  				</if>
+				<if test="srchUserName != ''">
+	   				AND a.user_name LIKE CONCAT('%',#{srchUserName},'%')
+	   			</if>
+				<if test="srchUserState != 99">
+	   				AND a.user_state = #{srchUserState}
+	   			</if>
+	   			<if test='except_user_no != "9999"'>
+	   				AND a.user_no NOT IN ( ${except_user_no} )
+	   			</if>
+				<if test="srchInsuId != 0">
+					AND a.salary_4_insu = #{srchInsuId}
+				</if>				
+				AND b.team_type = 4
+			)GA LEFT JOIN top_salary_4_base BA
+			ON GA.user_no = BA.user_no
+			LEFT JOIN top_salary_4_sales SA
+			ON GA.user_no = SA.user_no
+			WHERE 1=1	
+		)GB
+		WHERE 1=1
+		AND GB.sales_date = #{sales_date}
+		ORDER BY FIELD(GB.insu_name,'미지정') ASC, GB.insu_name,FIELD(GB.part_name,'미지정') ASC, GB.part_name, GB.join_date
+	</select>
+
+	<!-- 인보험 기본급 직원 명단 불러오기 -->
+	<select id="selectSalary4MemberList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GA.user_no
+			,GA.user_state			
+			,getTopTmBscCenterName(GA.team_id) AS center_name
+			,GA.team_id  
+			,GA.team_name AS team_name			
+			,GA.user_name AS user_name
+			,GA.work_level
+			,GA.work_level_nm
+			,GA.join_date_fmt
+			,TIMESTAMPDIFF(MONTH,GA.join_date_fmt, #{base_edate}) AS work_month			
+			,GA.career_month
+			,GA.leave_month
+		FROM (
+			SELECT
+				a.user_no
+				,a.user_name
+				,a.work_level
+				,getCodeValue("top_mbr_bsc", "work_level", a.work_level) AS work_level_nm
+				,a.join_date
+				,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d') AS join_date_fmt
+				,a.user_state
+				,b.team_id
+				,b.team_name
+				,b.team_group_order
+				,b.team_order  
+				,CASE a.work_type
+					 WHEN 1 THEN 1
+					 WHEN 2 THEN 2
+					 WHEN 6 THEN 3
+					 WHEN 14 THEN 4
+					 WHEN 15 THEN 5
+					 WHEN 3 THEN 6
+					 WHEN 7 THEN 7
+					 WHEN 4 THEN 8
+					 WHEN 8 THEN 9
+					 WHEN 5 THEN 10
+					 WHEN 9 THEN 11
+					 WHEN 10 THEN 12
+					 WHEN 12 THEN 13
+					 WHEN 11 THEN 14
+					 WHEN 13 THEN 15 
+				END AS new_work_order				
+				,(SELECT IFNULL(SUM(career_month),0) FROM top_salary_4_career WHERE user_no = a.user_no) AS career_month
+				,(SELECT IFNULL(SUM(leave_month),0) FROM top_salary_4_leave WHERE user_no = a.user_no) AS leave_month				  
+				FROM top_mbr_bsc a, top_tm_bsc b
+  				WHERE a.team_id_main = b.team_id
+  				<if test="srchTeamId != 0">
+  					AND b.team_id = #{srchTeamId}
+  				</if>
+	   			<if test="srchUserName != ''">
+	   				AND a.user_name LIKE CONCAT('%',#{srchUserName},'%')
+	   			</if>
+	   			<if test="srchUserState != 99">
+	   				AND a.user_state = #{srchUserState}
+	   			</if>
+	   			<if test='except_user_no != "9999"'>
+	   				AND a.user_no NOT IN ( ${except_user_no} )
+	   			</if>
+  				AND b.team_type = 4  				   
+ 			)GA 
+ 			WHERE GA.join_date_fmt &lt;= #{base_edate}	
+ 			ORDER BY GA.user_state, GA.team_group_order DESC, GA.team_order DESC, GA.work_level DESC, GA.join_date, GA.new_work_order
+	</select>
+
+	<!-- 인보험 검색용 팀 리스트 불러오기 -->
+	<select id="team4SearchList" parameterType="HashMap" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT 
+			team_id
+			,team_name
+			,team_level
+			,team_type
+			,team_written
+		FROM top_tm_bsc
+		WHERE team_level != 2		
+			AND team_type = 4				  
+		ORDER BY team_group_order desc, team_order desc
+	</select>
+	
+	<!-- 사번으로 연봉설정 목록 불러오기 -->
+	<select id="selectMemberAnnualList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			akey
+			,user_no
+			,annual_pay
+			,annual_sdate
+			,DATE_FORMAT(annual_sdate, '%Y-%m-%d') AS annual_sdate_fmt
+			,annual_edate
+			,DATE_FORMAT(annual_edate, '%Y-%m-%d') AS annual_edate_fmt
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_nm			
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_4_annual
+		WHERE user_no = #{user_no}
+		ORDER BY annual_sdate DESC
+	</select>
+	
+	<!-- 사번으로 팀장설정 목록 불러오기 -->
+	<select id="selectMemberManagerList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			mkey
+			,user_no
+			,manager_sdate
+			,DATE_FORMAT(manager_sdate, '%Y-%m-%d') AS manager_sdate_fmt
+			,manager_edate
+			,DATE_FORMAT(manager_edate, '%Y-%m-%d') AS manager_edate_fmt
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_nm			
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_manager
+		WHERE user_no = #{user_no}
+		ORDER BY reg_date DESC
+	</select>
+	
+	<!-- 기본급 확정내역이 있는지 사번과 정산일자로 체크한다. -->
+	<select id="selectSalaryCountBasePay" parameterType="hashmap"  resultType="integer">
+		SELECT
+			COUNT(*) as nCnt
+		FROM top_salary_4_base
+		WHERE user_no = #{user_no}
+		AND sales_date = #{sales_date}	
+	</select>
+	
+	<!-- 기준일자로 기본급 정보 가져오기 -->
+	<select id="selectSalarySetupInfoSearch" parameterType="String"  resultType="hashmap">
+		SELECT 
+			skey
+			,salary_subject
+			,term_sdate
+			,DATE_FORMAT(term_sdate, '%Y-%m-%d') AS term_sdate_fmt
+			,term_edate
+			,DATE_FORMAT(term_edate, '%Y-%m-%d') AS term_edate_fmt
+			,intern_pay
+			,intern_pay_1
+			,intern_pay_2
+			,intern_pay_3
+			,career_pay_1
+			,career_pay_2
+			,career_pay_3
+			,career_pay_4
+			,conti_pay_1
+			,conti_pay_2
+			,conti_pay_3
+			,conti_pay_4
+			,manager_pay
+			,max_pay
+			,is_use
+			,is_del
+			,reg_date
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_nm
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_setup_info
+		WHERE 1=1		
+		AND term_sdate &lt;= #{base_edate}
+		AND term_edate >= #{base_edate}
+		AND is_del = 0
+	</select>
+	
+	<!-- 직원 총경력 및 인사정보 가져오기 -->
+	<select id="selectCalTotalWorkMonth" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			GA.user_no
+			,GA.user_name
+			,GA.team_name
+			,GA.salary_4_insu_nm
+			,GA.salary_4_part_nm
+			,(GA.work_month + GA.career_month - leave_month) AS total_work_month
+		FROM(	
+			SELECT
+				a.user_no
+				,a.user_name
+				,getTopTmBscTeamName(a.team_id_main) AS team_name
+				,(SELECT insu_name FROM top_salary_4_insu WHERE ikey = a.salary_4_insu) AS salary_4_insu_nm				
+				,(SELECT part_name FROM top_salary_4_part WHERE pkey = a.salary_4_part) AS salary_4_part_nm				
+				,TIMESTAMPDIFF(MONTH,DATE_FORMAT(FROM_UNIXTIME(a.join_date), '%Y-%m-%d'), #{chk_edate}) AS work_month
+				,IFNULL(SUM(b.career_month),0) AS career_month
+				,IFNULL(SUM(c.leave_month),0) AS leave_month
+			FROM top_mbr_bsc a
+			LEFT JOIN top_salary_4_career b
+			ON a.user_no = b.user_no
+			LEFT JOIN top_salary_4_leave c
+			ON a.user_no = c.user_no
+			WHERE a.user_no = #{user_no}
+		)GA
+	</select>
+	
+	<!-- 실적등록 여부 확인 -->
+	<select id="selectSalarySalesInfoOneSearchCnt" parameterType="hashmap"  resultType="integer">
+		SELECT
+			COUNT(*) AS nCnt
+		FROM top_salary_4_sales
+		WHERE user_no = #{user_no}
+		AND sales_date = #{sales_date}
+	</select>
+	
+	<!-- 실적등록 정보 가져오기 -->
+	<select id="selectSalarySalesInfoOneSearch" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			skey           
+			,user_no        
+			,loss_rate      
+			,minwon_cnt     
+			,part_pay			       
+			,self_option_pay
+			,job_option_pay 
+			,etc1_option_pay
+			,etc2_option_pay
+			,( self_option_pay + job_option_pay + etc1_option_pay + etc2_option_pay ) as sum_etc_pay
+			,result_cnt     
+			,result_sales
+			,cal_result_sales
+			,cal_reason_text   
+			,sum_sales_pay  
+			,etc_memo       
+			,chk_sdate
+			,DATE_FORMAT(chk_sdate, '%Y-%m-%d') AS chk_sdate_fmt      
+			,chk_edate
+			,DATE_FORMAT(chk_edate, '%Y-%m-%d') AS chk_edate_fmt      
+			,sales_date
+			,DATE_FORMAT(sales_date, '%Y-%m-%d') AS sales_date_fmt     
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_name    
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt				
+		FROM top_salary_4_sales
+		WHERE user_no = #{user_no}
+		AND sales_date = #{sales_date}		
+	</select>
+	
+	<select id="selectSalarySalesInfoOne" parameterType="String"  resultType="hashmap">
+		SELECT
+			skey           
+			,user_no        
+			,loss_rate      
+			,minwon_cnt     
+			,part_pay			       
+			,self_option_pay
+			,job_option_pay 
+			,etc1_option_pay
+			,etc2_option_pay
+			,( self_option_pay + job_option_pay + etc1_option_pay + etc2_option_pay ) as sum_etc_pay
+			,result_cnt     
+			,result_sales
+			,cal_result_sales
+			,cal_reason_text   
+			,sum_sales_pay  
+			,etc_memo       
+			,chk_sdate
+			,DATE_FORMAT(chk_sdate, '%Y-%m-%d') AS chk_sdate_fmt      
+			,chk_edate
+			,DATE_FORMAT(chk_edate, '%Y-%m-%d') AS chk_edate_fmt      
+			,sales_date
+			,DATE_FORMAT(sales_date, '%Y-%m-%d') AS sales_date_fmt     
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_name    
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt				
+		FROM top_salary_4_sales
+		WHERE skey = #{skey}		
+	</select>
+	
+	<!-- 성과급 설정 상세정보 가져오기 -->
+	<select id="selectSalaryPartInfoOne" parameterType="String"  resultType="hashmap">
+		SELECT
+			a.pkey
+			,a.ikey			
+			,a.part_name
+			,a.unit_sales
+			,a.loss_rate
+			,a.incentive_type
+			,a.base_count
+			,a.base_sales
+			,a.payout_rate_1
+			,a.payout_rate_2
+			,a.payout_rate_3
+			,a.payout_rate_4
+			,a.count_chk_point_1_1
+			,a.count_chk_point_1_2
+			,a.count_chk_point_1_3
+			,a.count_chk_point_2_1
+			,a.count_chk_point_2_2
+			,a.count_chk_point_2_3
+			,a.count_chk_point_3_1
+			,a.count_chk_point_3_2
+			,a.count_chk_point_3_3
+			,a.count_chk_point_4_1
+			,a.count_chk_point_4_2
+			,a.count_chk_point_4_3
+			,a.sales_chk_point_1_1
+			,a.sales_chk_point_1_2
+			,a.sales_chk_point_1_3
+			,a.sales_chk_point_2_1
+			,a.sales_chk_point_2_2
+			,a.sales_chk_point_2_3
+			,a.sales_chk_point_3_1
+			,a.sales_chk_point_3_2
+			,a.sales_chk_point_3_3
+			,a.sales_chk_point_4_1
+			,a.sales_chk_point_4_2
+			,a.sales_chk_point_4_3
+			,a.fail_rate
+			,a.is_use
+			,a.is_del
+			,a.reg_user_no
+			,a.reg_date
+			,getTopMbrBscUserName(a.reg_user_no) AS reg_user_name
+			,DATE_FORMAT(a.reg_date,'%Y-%m-%d') AS reg_date_fmt			
+			,b.insu_name
+		FROM top_salary_4_part a
+		LEFT JOIN top_salary_4_insu b
+		ON a.ikey = b.ikey
+		WHERE 1=1
+		AND a.pkey = #{pkey}
+	</select>
+	
+	<!-- 기본급 설정 상세정보 가져오기 -->
+	<select id="selectSalarySetupInfoOne" parameterType="String"  resultType="hashmap">
+		SELECT 
+			skey
+			,salary_subject
+			,term_sdate
+			,DATE_FORMAT(term_sdate, '%Y-%m-%d') AS term_sdate_fmt
+			,term_edate
+			,DATE_FORMAT(term_edate, '%Y-%m-%d') AS term_edate_fmt
+			,intern_pay
+			,intern_pay_1
+			,intern_pay_2
+			,intern_pay_3
+			,career_pay_1
+			,career_pay_2
+			,career_pay_3
+			,career_pay_4
+			,conti_pay_1
+			,conti_pay_2
+			,conti_pay_3
+			,conti_pay_4
+			,manager_pay
+			,max_pay
+			,is_use
+			,is_del
+			,reg_date
+			,reg_user_no
+			,getTopMbrBscUserName(reg_user_no) AS reg_user_nm
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_setup_info
+		WHERE 1=1		
+		AND skey = #{skey}		
+	</select>
+	
+	<!-- 성과급 직물 설정 목록 가져오기 -->
+	<select id="selectSalaryPartInfoList" parameterType="hashmap"  resultType="hashmap">
+		SELECT
+			a.pkey
+			,a.ikey			
+			,a.part_name
+			,a.unit_sales
+			,a.loss_rate
+			,a.incentive_type
+			,a.base_count
+			,a.base_sales
+			,a.payout_rate_1
+			,a.payout_rate_2
+			,a.payout_rate_3
+			,a.payout_rate_4
+			,a.count_chk_point_1_1
+			,a.count_chk_point_1_2
+			,a.count_chk_point_1_3
+			,a.count_chk_point_2_1
+			,a.count_chk_point_2_2
+			,a.count_chk_point_2_3
+			,a.count_chk_point_3_1
+			,a.count_chk_point_3_2
+			,a.count_chk_point_3_3
+			,a.count_chk_point_4_1
+			,a.count_chk_point_4_2
+			,a.count_chk_point_4_3
+			,a.sales_chk_point_1_1
+			,a.sales_chk_point_1_2
+			,a.sales_chk_point_1_3
+			,a.sales_chk_point_2_1
+			,a.sales_chk_point_2_2
+			,a.sales_chk_point_2_3
+			,a.sales_chk_point_3_1
+			,a.sales_chk_point_3_2
+			,a.sales_chk_point_3_3
+			,a.sales_chk_point_4_1
+			,a.sales_chk_point_4_2
+			,a.sales_chk_point_4_3
+			,a.fail_rate
+			,a.is_use
+			,a.is_del
+			,a.reg_user_no
+			,a.reg_date
+			,getTopMbrBscUserName(a.reg_user_no) AS reg_user_name
+			,DATE_FORMAT(a.reg_date,'%Y-%m-%d') AS reg_date_fmt			
+			,b.insu_name
+		FROM top_salary_4_part a
+		LEFT JOIN top_salary_4_insu b
+		ON a.ikey = b.ikey
+		WHERE 1=1
+		AND a.is_del = 0
+		<if test="srchInsuCompany != 0">
+			AND a.ikey = #{srchInsuCompany}
+		</if>	
+		<if test='srchPartName != NULL and srchPartName !="" '>
+			AND a.part_name like CONCAT('%',#{srchPartName},'%')			
+		</if>
+		<if test="srchIncentiveType != 0">
+			AND a.incentive_type = #{srchIncentiveType}
+		</if>
+		<if test="srchPartIsUse != 9">
+			AND a.is_use = #{srchPartIsUse}
+		</if>
+	</select>
+
+	<!-- 기본급 설정 목록 가져오기 -->
+	<select id="selectSalarySetupInfoList" parameterType="hashmap"  resultType="hashmap">
+		SELECT 
+			skey
+			,salary_subject
+			,term_sdate
+			,DATE_FORMAT(term_sdate, '%Y-%m-%d') AS term_sdate_fmt
+			,term_edate
+			,DATE_FORMAT(term_edate, '%Y-%m-%d') AS term_edate_fmt
+			,intern_pay
+			,intern_pay_1
+			,intern_pay_2
+			,intern_pay_3
+			,career_pay_1
+			,career_pay_2
+			,career_pay_3
+			,career_pay_4
+			,conti_pay_1
+			,conti_pay_2
+			,conti_pay_3
+			,conti_pay_4
+			,manager_pay
+			,max_pay
+			,is_use
+			,is_del
+			,reg_date
+			,DATE_FORMAT(reg_date, '%Y-%m-%d') AS reg_date_fmt
+		FROM top_salary_setup_info
+		WHERE 1=1		
+		AND is_del != 1		
+	</select>
+	
+	<!-- 직무설정 삭제 -->
+	<update id="deleteSalaryPartInfo" parameterType="hashmap">
+		UPDATE top_salary_4_part SET
+			is_del = 1
+		WHERE pkey = #{pkey}
+	</update>
+	
+	<!-- 기본급 정보 삭제(플래그처리) -->
+	<update id="deleteSalarySetInfo" parameterType="hashmap">
+		UPDATE top_salary_setup_info SET
+			is_del = 1
+		WHERE skey = #{skey}
+	</update>
+	
+	<!-- 성과급 설정 정보 수정 -->
+	<update id="updateSalaryPartInfo" parameterType="hashmap">
+		UPDATE top_salary_4_part SET
+			ikey = #{ikey}
+			,part_name = #{part_name}
+			,unit_sales = #{unit_sales}
+			,loss_rate = #{loss_rate}
+			,incentive_type = #{incentive_type}
+			,base_count = #{base_count}
+			,base_sales = #{base_sales}
+			,payout_rate_1 = #{payout_rate_1}
+			,payout_rate_2 = #{payout_rate_2}
+			,payout_rate_3 = #{payout_rate_3}
+			,payout_rate_4 = #{payout_rate_4}
+			,count_chk_point_1_1 = #{count_chk_point_1_1}
+			,count_chk_point_1_2 = #{count_chk_point_1_2}
+			,count_chk_point_1_3 = #{count_chk_point_1_3}
+			,count_chk_point_2_1 = #{count_chk_point_2_1}
+			,count_chk_point_2_2 = #{count_chk_point_2_2}
+			,count_chk_point_2_3 = #{count_chk_point_2_3}
+			,count_chk_point_3_1 = #{count_chk_point_3_1}
+			,count_chk_point_3_2 = #{count_chk_point_3_2}
+			,count_chk_point_3_3 = #{count_chk_point_3_3}
+			,count_chk_point_4_1 = #{count_chk_point_4_1}
+			,count_chk_point_4_2 = #{count_chk_point_4_2}
+			,count_chk_point_4_3 = #{count_chk_point_4_3}
+			,sales_chk_point_1_1 = #{sales_chk_point_1_1}
+			,sales_chk_point_1_2 = #{sales_chk_point_1_2}
+			,sales_chk_point_1_3 = #{sales_chk_point_1_3}
+			,sales_chk_point_2_1 = #{sales_chk_point_2_1}
+			,sales_chk_point_2_2 = #{sales_chk_point_2_2}
+			,sales_chk_point_2_3 = #{sales_chk_point_2_3}
+			,sales_chk_point_3_1 = #{sales_chk_point_3_1}
+			,sales_chk_point_3_2 = #{sales_chk_point_3_2}
+			,sales_chk_point_3_3 = #{sales_chk_point_3_3}
+			,sales_chk_point_4_1 = #{sales_chk_point_4_1}
+			,sales_chk_point_4_2 = #{sales_chk_point_4_2}
+			,sales_chk_point_4_3 = #{sales_chk_point_4_3}
+			,fail_rate = #{fail_rate}
+			,is_use = #{is_use}
+			,is_del = 0
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now()
+		WHERE pkey = #{pkey}
+	</update>
+	
+	<!-- 기본급 설정 정보 수정 -->
+	<update id="updateSalarySetInfo" parameterType="hashmap">
+		UPDATE top_salary_setup_info SET
+			salary_subject = #{salary_subject} 
+			,term_sdate = #{term_sdate}
+			,term_edate = #{term_edate} 
+			,intern_pay = #{intern_pay}
+			,intern_pay_1 = #{intern_pay_1}
+			,intern_pay_2 = #{intern_pay_2} 
+			,intern_pay_3 = #{intern_pay_3} 
+			,career_pay_1 = #{career_pay_1} 
+			,career_pay_2 = #{career_pay_2}
+			,career_pay_3 = #{career_pay_3}
+			,career_pay_4 = #{career_pay_4}
+			,conti_pay_1 = #{conti_pay_1}
+			,conti_pay_2 = #{conti_pay_2}
+			,conti_pay_3 = #{conti_pay_3}
+			,conti_pay_4 = #{conti_pay_4}
+			,manager_pay = #{manager_pay}
+			,max_pay = #{max_pay}
+			,is_use = #{is_use}
+			,reg_date = now()
+			,reg_user_no = #{reg_user_no}
+		WHERE skey = #{skey}
+	</update>
+	
+	<!-- 기본급 월별 확정금액 수정 -->
+	<update id="updateSalaryBasePay" parameterType="hashmap">
+		UPDATE top_salary_4_base SET			
+			team_id = #{team_id}
+			,work_level = #{work_level} 
+			,join_date_fmt = #{join_date_fmt}
+			,work_month = #{work_month}
+			,career_month = #{career_month}
+			,leave_month = #{leave_month}
+			,pay_flag = #{pay_flag}
+			,career_pay = #{career_pay}
+			,work_pay = #{work_pay} 
+			,manager_pay = #{manager_pay}
+			,base_total_pay = #{base_total_pay} 		
+			,reg_user_no = #{reg_user_no} 
+			,reg_date = now()
+		WHERE user_no = #{user_no}
+		AND sales_date = #{sales_date}
+	</update>
+	
+	<!-- 성과급 월별 실적 삭제 -->
+	<delete id="deleteSalaryIncentivePay" parameterType="hashmap">
+		DELETE FROM top_salary_4_sales
+		WHERE skey = #{skey}
+	</delete>
+	
+	<!-- 성과급 월별 실적 수정 -->
+	<update id="updateSalaryIncentivePay" parameterType="hashmap">
+		UPDATE top_salary_4_sales SET
+			loss_rate = #{loss_rate}
+			,minwon_cnt = #{minwon_cnt}	
+			,part_pay = #{part_pay}
+			,self_option_pay = #{self_option_pay}
+			,job_option_pay = #{job_option_pay}
+			,etc1_option_pay = #{etc1_option_pay}
+			,etc2_option_pay = #{etc2_option_pay}
+			,result_cnt = #{result_cnt}
+			,result_sales = #{result_sales}
+			,cal_result_sales = #{cal_result_sales} 
+			,cal_reason_text	= #{cal_reason_text}
+			,sum_sales_pay = #{sum_sales_pay}
+			,etc_memo = #{etc_memo}
+			,chk_sdate = #{chk_sdate}
+			,chk_edate = #{chk_edate}
+			,sales_date = #{sales_date}
+			,reg_user_no = #{reg_user_no}
+			,reg_date = now()
+		WHERE skey = #{skey}
+	</update>
+	
+	<!-- 성과급 월별 실적 등록 -->
+	<insert id="insertSalaryIncentivePay" parameterType="hashmap">
+		INSERT INTO top_salary_4_sales (
+			user_no		
+			,loss_rate	
+			,minwon_cnt	
+			,part_pay	
+			,self_option_pay
+			,job_option_pay	
+			,etc1_option_pay
+			,etc2_option_pay
+			,result_cnt	
+			,result_sales	
+			,cal_result_sales
+			,cal_reason_text
+			,sum_sales_pay	
+			,etc_memo	
+			,chk_sdate	
+			,chk_edate	
+			,sales_date	
+			,reg_user_no	
+			,reg_date
+		)VALUES(
+			#{user_no}		
+			,#{loss_rate}	
+			,#{minwon_cnt}	
+			,#{part_pay}
+			,#{self_option_pay}
+			,#{job_option_pay}	
+			,#{etc1_option_pay}
+			,#{etc2_option_pay}
+			,#{result_cnt}
+			,#{result_sales}
+			,#{cal_result_sales}
+			,#{cal_reason_text}	
+			,#{sum_sales_pay}	
+			,#{etc_memo}
+			,#{chk_sdate}	
+			,#{chk_edate}	
+			,#{sales_date	}
+			,#{reg_user_no}	
+			,now()
+		)	
+	</insert>	
+	
+	<!-- 기본급 월별 확정금액 등록 -->
+	<insert id="insertSalaryBasePay" parameterType="hashmap">
+		INSERT INTO top_salary_4_base (
+			user_no
+			,team_id
+			,work_level
+			,join_date_fmt
+			,work_month
+			,career_month
+			,leave_month
+			,pay_flag
+			,career_pay
+			,work_pay
+			,manager_pay
+			,base_total_pay
+			,sales_date
+			,reg_user_no
+			,reg_date
+		) VALUES (
+			#{user_no}       
+			,#{team_id}       
+			,#{work_level}    
+			,#{join_date_fmt} 
+			,#{work_month}
+			,#{career_month}
+			,#{leave_month}
+			,#{pay_flag}
+			,#{career_pay}
+			,#{work_pay}
+			,#{manager_pay}
+			,#{base_total_pay}
+			,#{sales_date}
+			,#{reg_user_no}   
+			,now()
+		)
+	</insert>
+	
+	<!-- 직무설정 정보 등록 -->
+	<insert id="insertSalaryPartInfo" parameterType="hashmap">
+		INSERT INTO top_salary_4_part (
+			ikey
+			,part_name
+			,unit_sales
+			,loss_rate
+			,incentive_type
+			,base_count
+			,base_sales
+			,payout_rate_1
+			,payout_rate_2
+			,payout_rate_3
+			,payout_rate_4
+			,count_chk_point_1_1
+			,count_chk_point_1_2
+			,count_chk_point_1_3
+			,count_chk_point_2_1
+			,count_chk_point_2_2
+			,count_chk_point_2_3
+			,count_chk_point_3_1
+			,count_chk_point_3_2
+			,count_chk_point_3_3
+			,count_chk_point_4_1
+			,count_chk_point_4_2
+			,count_chk_point_4_3
+			,sales_chk_point_1_1
+			,sales_chk_point_1_2
+			,sales_chk_point_1_3
+			,sales_chk_point_2_1
+			,sales_chk_point_2_2
+			,sales_chk_point_2_3
+			,sales_chk_point_3_1
+			,sales_chk_point_3_2
+			,sales_chk_point_3_3
+			,sales_chk_point_4_1
+			,sales_chk_point_4_2
+			,sales_chk_point_4_3
+			,fail_rate
+			,is_use
+			,is_del
+			,reg_user_no
+			,reg_date
+		) VALUES (
+			#{ikey}
+			,#{part_name}
+			,#{unit_sales}
+			,#{loss_rate}
+			,#{incentive_type}
+			,#{base_count}
+			,#{base_sales}
+			,#{payout_rate_1}
+			,#{payout_rate_2}
+			,#{payout_rate_3}
+			,#{payout_rate_4}
+			,#{count_chk_point_1_1}
+			,#{count_chk_point_1_2}
+			,#{count_chk_point_1_3}
+			,#{count_chk_point_2_1}
+			,#{count_chk_point_2_2}
+			,#{count_chk_point_2_3}
+			,#{count_chk_point_3_1}
+			,#{count_chk_point_3_2}
+			,#{count_chk_point_3_3}
+			,#{count_chk_point_4_1}
+			,#{count_chk_point_4_2}
+			,#{count_chk_point_4_3}
+			,#{sales_chk_point_1_1}
+			,#{sales_chk_point_1_2}
+			,#{sales_chk_point_1_3}
+			,#{sales_chk_point_2_1}
+			,#{sales_chk_point_2_2}
+			,#{sales_chk_point_2_3}
+			,#{sales_chk_point_3_1}
+			,#{sales_chk_point_3_2}
+			,#{sales_chk_point_3_3}
+			,#{sales_chk_point_4_1}
+			,#{sales_chk_point_4_2}
+			,#{sales_chk_point_4_3}
+			,#{fail_rate}
+			,#{is_use}
+			,0
+			,#{reg_user_no}
+			,now()
+		)	
+	</insert>
+
+	<!-- 기본급 설정 정보 등록 -->
+	<insert id="insertSalarySetInfo" parameterType="hashmap">
+		INSERT INTO top_salary_setup_info (
+			salary_subject
+			,term_sdate
+			,term_edate
+			,intern_pay
+			,intern_pay_1
+			,intern_pay_2
+			,intern_pay_3
+			,career_pay_1
+			,career_pay_2
+			,career_pay_3
+			,career_pay_4
+			,conti_pay_1
+			,conti_pay_2
+			,conti_pay_3
+			,conti_pay_4
+			,manager_pay
+			,max_pay
+			,is_use
+			,is_del
+			,reg_date
+			,reg_user_no
+		) VALUES (
+			#{salary_subject}
+			,#{term_sdate}
+			,#{term_edate}						
+			,#{intern_pay}
+			,#{intern_pay_1}
+			,#{intern_pay_2}
+			,#{intern_pay_3}
+			,#{career_pay_1}
+			,#{career_pay_2}
+			,#{career_pay_3}
+			,#{career_pay_4}
+			,#{conti_pay_1}
+			,#{conti_pay_2}
+			,#{conti_pay_3}
+			,#{conti_pay_4}
+			,#{manager_pay}	
+			,#{max_pay}		
+			,#{is_use}
+			,0
+			,now()
+			,#{reg_user_no}
+		)
+		
+	</insert>
+
+	<!-- 급여관리 접근로그 추가-->
+	<insert id="insertSalaryAccLog" parameterType="hashmap">
+		INSERT INTO top_salary_4_log(
+			acc_user_no
+			,acc_ip
+			,reg_date
+			,action_flag
+		) VALUES (
+			#{acc_user_no}
+			,#{acc_ip}
+			,now()
+			,#{action_flag}			
+		)
+	</insert>
+</mapper>

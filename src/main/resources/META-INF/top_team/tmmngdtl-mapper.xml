@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="TmMngDtlMapper">
+
+	<select id="selectOneTeam" parameterType="String" resultType="kr.co.toplac.topteam.TopTmBscVO">
+		SELECT 
+			team_id ,
+			team_level ,
+			team_group_order ,
+			team_order ,
+			team_type ,
+			suim_scode ,
+			suim_ecode ,
+			team_name , 
+			team_interphone ,
+			team_telephone ,
+			team_fax ,
+			team_addr ,
+			team_mark ,
+			team_statistics1 ,
+			team_statistics4 ,
+			only_statistics,
+			team_sector,
+			team_center,
+			getCodeValue('top_tm_bsc','team_sector',team_sector) AS team_sector_val,
+			getCodeValue('top_tm_bsc','team_center',team_center) AS team_center_val,
+			team_written,			
+			written_ptnr_id,
+			team_part,
+			team_zone,
+			team_ptnr_id
+		FROM 
+			top_tm_bsc
+		WHERE 
+			team_id = #{team_id}
+	</select>
+	
+	<select id="countMemberNum" parameterType="String" resultType="Integer">
+		SELECT count(user_no)
+		FROM top_mbr_bsc
+		WHERE team_id_main = #{team_id}
+	</select> 
+	
+	<select id="idCheck" parameterType="String" resultType="String">
+		SELECT 
+			team_name
+		FROM 
+			top_tm_bsc
+		WHERE 
+			team_id = #{team_id}
+	</select>
+	
+	<insert id="newTeam" parameterType="kr.co.toplac.topteam.TopTmBscVO">
+		INSERT INTO 
+			
+			top_tm_bsc
+			
+			(
+				team_id ,team_level ,team_group_order ,team_order ,team_type ,suim_scode ,suim_ecode ,team_name
+				,team_interphone ,team_telephone ,team_fax ,team_addr ,team_mark ,team_manager, team_statistics1 ,team_statistics4 ,only_statistics ,team_sector ,team_center ,team_written, written_ptnr_id, team_part, team_zone, team_ptnr_id
+			) 
+		VALUES
+		 
+			(
+				#{team_id },#{team_level },#{team_group_order },#{team_order },#{team_type },
+				#{suim_scode },#{suim_ecode },#{team_name },#{team_interphone },#{team_telephone},#{team_fax },
+				#{team_addr },#{team_mark },#{team_manager},#{team_statistics1 },#{team_statistics4 },#{only_statistics },#{team_sector},#{team_center},#{team_written},#{written_ptnr_id},#{team_part}, #{team_zone}, #{team_ptnr_id}
+			)
+	</insert>
+	
+	<update id="updateTeam" parameterType="kr.co.toplac.topteam.TopTmBscVO">
+		<![CDATA[
+		
+		UPDATE 
+			top_tm_bsc 
+		SET  
+			team_id =#{team_id},
+			team_level=#{team_level},
+			team_group_order=#{team_group_order},
+			team_order=#{team_order},
+			team_type=#{team_type},
+			suim_scode=#{suim_scode},
+			suim_ecode=#{suim_ecode},
+			team_name= #{team_name},
+			team_interphone=#{team_interphone},
+			team_telephone=#{team_telephone},  
+			team_fax=#{team_fax},
+			team_addr=#{team_addr},
+			team_mark=#{team_mark},
+			team_manager = #{team_manager},
+			team_statistics1=#{team_statistics1},
+			team_statistics4=#{team_statistics4},
+			only_statistics=#{only_statistics},
+			team_sector=#{team_sector},
+			team_center=#{team_center},
+			team_written = #{team_written},
+			written_ptnr_id = #{written_ptnr_id},
+			team_part = #{team_part},
+			team_zone = #{team_zone},
+			team_ptnr_id = #{team_ptnr_id}
+		WHERE
+			team_id =#{originTeamCode}
+		]]>
+	</update>
+	
+	<delete id="delTeam" parameterType="String">
+		DELETE FROM
+			top_tm_bsc
+		WHERE
+			team_id = #{team_id}
+	</delete>
+	
+	<select id="getAllMember" resultType="kr.co.toplac.topteam.TopMbrBscVO">
+		SELECT user_name, user_no
+  	 	  FROM top_mbr_bsc
+		 WHERE user_state != 1
+	</select>
+
+	<select id="getTeamManager" resultType="kr.co.toplac.topteam.TopMbrBscVO" parameterType="String">
+		SELECT team_manager user_no, getTopMbrBscUserName(team_manager) user_name
+  	 	  FROM top_tm_bsc
+		 WHERE team_id = #{team_id}
+	</select>
+</mapper>

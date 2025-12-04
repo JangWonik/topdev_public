@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MisResultPtnrMapper">
+
+	<select id="MisResultPtnr" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisResultPtnrVO">
+		SELECT tmPtnr.ptnr_id, tmPtnr.ptnr_nick
+			, result_9, result_8, result_7, result_6, result_5, result_4, result_3, result_2, result_1
+			
+		FROM
+			(SELECT ptnr_id, ptnr_nick FROM top_ptnr_bsc WHERE ptnr_level='1' AND statistics_yn='1' 
+				ORDER BY statistics_order ASC, ptnr_order DESC, ptnr_id ASC) tmPtnr
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_1
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='1' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a1 ON tmPtnr.ptnr_id = a1.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_2
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='2' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a2 ON tmPtnr.ptnr_id = a2.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_3
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='3' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a3 ON tmPtnr.ptnr_id = a3.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_4
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='4' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a4 ON tmPtnr.ptnr_id = a4.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_5
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='5' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a5 ON tmPtnr.ptnr_id = a5.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_6
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='6' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a6 ON tmPtnr.ptnr_id = a6.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_7
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='7' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a7 ON tmPtnr.ptnr_id = a7.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_8
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='8' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a8 ON tmPtnr.ptnr_id = a8.ptnr_id
+			LEFT JOIN (SELECT ptnr_id, count(suim_rpt_no) result_9
+						FROM top_rpt_head
+						WHERE
+						suim_rpt_type1_close34='9' AND suim_rpt_type1 in (3,4)
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY ptnr_id) a9 ON tmPtnr.ptnr_id = a9.ptnr_id
+	</select>
+	
+	
+	<select id="MisResultPtnrTm" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisResultPtnrVO">
+		SELECT tmBsc.team_id, tmBsc.team_name, tmBsc.team_type
+			, result_9, result_8, result_7, result_6, result_5, result_4, result_3, result_2, result_1
+		FROM
+			(SELECT team_order, team_id, team_name, team_type FROM top_tm_bsc
+				WHERE team_type=4 AND team_statistics4=0 AND team_level > 0) tmBsc
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_1
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='1'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a1 ON tmBsc.team_id = a1.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_2
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='2'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a2 ON tmBsc.team_id = a2.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_3
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='3'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a3 ON tmBsc.team_id = a3.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_4
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='4'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a4 ON tmBsc.team_id = a4.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_5
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='5'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a5 ON tmBsc.team_id = a5.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_6
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='6'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a6 ON tmBsc.team_id = a6.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_7
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='7'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a7 ON tmBsc.team_id = a7.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_8
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='8'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a8 ON tmBsc.team_id = a8.team_id
+			LEFT JOIN (SELECT team_id, count(suim_rpt_no) result_9
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND suim_rpt_type1_close34='9'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY team_id) a9 ON tmBsc.team_id = a9.team_id
+
+		ORDER BY tmBsc.team_order DESC, tmBsc.team_id ASC
+	</select>
+	
+	<select id="MisResultPtnrMbr" parameterType="kr.co.toplac.topstatistics.StatisticsNowVO" resultType="kr.co.toplac.topstatistics.MisResultPtnrVO">
+		SELECT tmMbr.user_no, tmMbr.user_name, tmMbr.team_id, getTopTmBscTeamName(tmMbr.team_id) team_name
+			, result_9, result_8, result_7, result_6, result_5, result_4, result_3, result_2, result_1
+		FROM
+			(SELECT mbrBsc.team_id_main team_id, mbrBsc.user_no, mbrBsc.user_name
+			FROM top_mbr_bsc mbrBsc
+			WHERE mbrBsc.team_id_main = #{team_id}
+			AND ((mbrBsc.user_state='1' AND mbrBsc.out_date >= UNIX_TIMESTAMP(#{viewFromDate}))
+				OR (mbrBsc.user_state!='1' AND mbrBsc.join_date &lt; UNIX_TIMESTAMP(DATE_ADD(#{viewToDate},INTERVAL 1 day))))
+			ORDER BY mbrBsc.work_type, mbrBsc.work_level DESC, mbrBsc.user_no ASC) tmMbr
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_1
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='1'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a1 ON tmMbr.user_no = a1.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_2
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='2'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a2 ON tmMbr.user_no = a2.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_3
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='3'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a3 ON tmMbr.user_no = a3.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_4
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='4'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a4 ON tmMbr.user_no = a4.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_5
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='5'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a5 ON tmMbr.user_no = a5.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_6
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='6'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a6 ON tmMbr.user_no = a6.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_7
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='7'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a7 ON tmMbr.user_no = a7.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_8
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='8'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a8 ON tmMbr.user_no = a8.user_no
+			LEFT JOIN (SELECT user_no, count(suim_rpt_no) result_9
+						FROM top_rpt_head
+						WHERE suim_rpt_type1 in (3,4)
+						AND ptnr_id = #{ptnr_id}
+						AND team_id = #{team_id}
+						AND suim_rpt_type1_close34='9'
+						AND close_date >= unix_timestamp(#{viewFromDate})
+						AND close_date &lt; unix_timestamp(#{viewToDate})
+						GROUP BY user_no) a9 ON tmMbr.user_no = a9.user_no
+			
+	</select>
+
+	
+
+</mapper>

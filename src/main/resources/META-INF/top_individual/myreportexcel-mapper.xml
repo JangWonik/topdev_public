@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="MyReportExcel">
+	
+	<!-- 일반 보고서에 농작물보고서 미결현황 추가 by top3009-->
+	<select id="getMyReportExcel" resultType="kr.co.toplac.topindividual.MyReportExcelVO" parameterType="java.util.HashMap">
+		SELECT 
+			a.suim_rpt_no
+			,a.suim_accept_no
+			, a.team_id
+			, getTopTmBscTeamName(a.team_id) team_name
+			, a.user_no
+			, getTopMbrBscUserName(a.user_no) user_name
+			, a.ptnr_id 
+			, getTopPtnrBscPtnrNick(a.ptnr_id) ptnr_nick
+			, a.policyholder_nm
+			, a.beneficiary_nm
+			, a.damaged_nm
+			, a.suim_rpt_state
+			, DATE_FORMAT(FROM_UNIXTIME(a.reg_date), '%Y-%m-%d') reg_date
+			, b.insurance_nm
+			, b.accident_no
+			, b.policy_no
+			, b.accident_facts
+			<!-- , getDateDiff(a.reg_date)+1 past_date -->
+			, getDateDiff(a.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(a.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			, (select count(rpt_site_no) from top_rpt_site_interim where interim_flag = '0' and suim_rpt_no = a.suim_rpt_no) site_Cnt
+			, (select count(rpt_site_no) from top_rpt_site_interim where interim_flag = '1' and suim_rpt_no = a.suim_rpt_no) interim_Cnt
+			
+			FROM top_rpt_head a, top_rpt_body b
+			WHERE a.user_no = #{user_no}
+			and a.suim_rpt_state in (0,1)
+			and a.suim_rpt_no = b.suim_rpt_no
+			
+		UNION ALL
+
+		SELECT 
+			c.suim_rpt_no
+			,c.suim_accept_no
+			, c.team_id
+			, getTopTmBscTeamName(c.team_id) team_name
+			, c.user_no
+			, getTopMbrBscUserName(c.user_no) user_name
+			, c.ptnr_id 
+			, getTopPtnrBscPtnrNick(c.ptnr_id) ptnr_nick
+			, c.policyholder_nm
+			, c.beneficiary_nm
+			, c.damaged_nm
+			, c.suim_rpt_state
+			, DATE_FORMAT(FROM_UNIXTIME(c.reg_date), '%Y-%m-%d') reg_date
+			, d.insurance_nm
+			, d.accident_no
+			, d.policy_no
+			, d.accident_facts
+			<!-- , getDateDiff(c.reg_date)+1 past_date -->
+			, getDateDiff(c.reg_date)+(SELECT COUNT(*) FROM sysadm_holiday WHERE holiday_date = DATE_FORMAT(FROM_UNIXTIME(c.reg_date),'%Y-%m-%d') AND holiday_code IN (2,3,4,5,6)) past_date
+			, 0 as site_Cnt
+			, 0 as interim_Cnt
+			
+		FROM top_prim_biz_rpt_head c, top_prim_biz_rpt_body d
+		WHERE c.user_no = #{user_no}
+		AND c.suim_rpt_state IN (0,1)
+		AND c.suim_rpt_no = d.suim_rpt_no		
+
+	</select>		
+
+</mapper>
