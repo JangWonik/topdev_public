@@ -9,3 +9,6 @@ application-prod.yml
 .env 
 config/ 
 secrets/ 
+src/main/webapp/WEB-INF/spring/root-context.xml 
+src/main/webapp/WEB-INF/spring/root-context.xml 
+src/main/webapp/WEB-INF/spring/*-context.xml 
