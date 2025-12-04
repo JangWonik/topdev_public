@@ -5,7 +5,7 @@
 
 [![Java](https://img.shields.io/badge/Java-1.7-ED8B00?style=for-the-badge&logo=openjdk)](https://www.oracle.com/java/technologies/javase/javase7-archive-downloads.html)
 [![Spring](https://img.shields.io/badge/Spring-4.3-6DB33F?style=for-the-badge&logo=spring)](https://spring.io/)
-[![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle)](https://www.oracle.com/database/)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![JSP](https://img.shields.io/badge/JSP-007396?style=for-the-badge&logo=java)](https://www.oracle.com/java/technologies/jsp.html)
 
 ---
