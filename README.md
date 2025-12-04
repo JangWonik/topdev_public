@@ -1,7 +1,7 @@
 # topdev - 인사/근태/급여 관리 시스템
 
 > **실제 운영 중인 기업용 인사관리 시스템 기반 포트폴리오**  
-> Java 1.7 + Spring 4.3 + JSP + Oracle + Naver Cloud
+> Java 1.7 + Spring 4.3 + JSP + MySQL + Naver Cloud
 
 [![Java](https://img.shields.io/badge/Java-1.7-ED8B00?style=for-the-badge&logo=openjdk)](https://www.oracle.com/java/technologies/javase/javase7-archive-downloads.html)
 [![Spring](https://img.shields.io/badge/Spring-4.3-6DB33F?style=for-the-badge&logo=spring)](https://spring.io/)
